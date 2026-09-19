@@ -638,6 +638,8 @@ Done
 
 AIはこの流れを無視して独自のGit Workflowを導入しない。
 
+AIは、作業開始時に `In Progress`、PR作成時に `In Review`、Merge後に `Done` へGitHub ProjectsのStatusを更新する。承認要件と状態遷移の正本は `CONTRIBUTING.md` とし、必要なApproveがないPRをMergeしたり、保護ルールをbypassしたりしない。
+
 ---
 
 ## 19. Branch Strategy
