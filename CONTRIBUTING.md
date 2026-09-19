@@ -27,6 +27,8 @@
 18. Issue / Projectが `Done` になったことを確認する
 19. Merge済みの作業Branchを削除する
 
+担当者は、各操作を完了した時点でGitHub ProjectsのStatusも更新します。実装中・レビュー待ち・Merge済みを同じStatusのまま放置しません。
+
 ---
 
 ## Branch運用
@@ -238,6 +240,18 @@ Statusは以下を使用します。
     ↓
     Done
 
+担当者は次のタイミングでIssueのStatusを更新します。
+
+| タイミング | Status |
+| --- | --- |
+| Issueを作成し、まだ着手条件を満たしていない | Backlog |
+| 目的・完了条件・Assignee・Scopeが決まり、着手できる | Ready |
+| Branchを作成して作業を開始する | In Progress |
+| Pull Requestを作成してレビューを依頼する | In Review |
+| PRが `main` へMergeされ、IssueがCloseされたことを確認する | Done |
+
+`Request changes`を受けた場合は `In Progress` に戻し、修正後に再レビューを依頼したら `In Review` に戻します。
+
 ### Backlog
 
 まだ着手できる状態になっていないIssueです。
@@ -392,7 +406,8 @@ Pull Requestでは以下を守ります。
 
 - 原則としてIssueと紐付ける
 - `main` へ直接pushしない
-- Review後にMergeする
+- `main` を対象とするPRは、書き込み権限を持つ別メンバーのApproveが最低1件付くまでMergeしない
+- 保護ルールのbypassや、承認待ちのままのMergeを行わない
 - Merge方式はSquash Mergeを使用する
 - レビューコメントは解決してからMergeする
 - 無関係な変更を同じPRに含めない
@@ -676,11 +691,11 @@ GitHubのSecret ProtectionやPush Protectionも有効にしていますが、こ
 
 ## Merge
 
-Reviewが完了したらSquash Mergeします。
+書き込み権限を持つ別メンバーのApproveが最低1件付き、Reviewが完了したらSquash Mergeします。保護ルールのbypassは使用しません。
 
 Merge前に以下を確認してください。
 
-- [ ] 必要なApproveがある
+- [ ] 書き込み権限を持つ別メンバーのApproveが最低1件ある
 - [ ] 未解決のレビューコメントがない
 - [ ] Issueの完了条件を満たしている
 - [ ] 必要な動作確認が完了している
