@@ -5,13 +5,15 @@ description: 実装、仕様、設計、環境変数、API、開発フローな�
 
 # ドキュメント同期
 
-すべての変更について、ドキュメントへの影響があるか確認する。
+すべての変更について、ドキュメントへの影響があるか確認する。毎回すべての文書を更新する必要はなく、変更に関係する正本だけを必要に応じて更新する。
+正式採択の記録は[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照する。
 
-以下を確認する。
+以下は確認対象の例。未作成の文書やディレクトリを確認目的だけで追加しない。
 
 - `README.md`
 - `CONTRIBUTING.md`
 - `docs/DEVELOPMENT_GUIDE.md`
+- `AI_DEVELOPMENT_TOOLS.md`
 - `docs/product/`
 - `docs/architecture/`
 - `docs/decisions/`

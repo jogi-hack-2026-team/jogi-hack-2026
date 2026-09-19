@@ -407,6 +407,7 @@ Pull Request作成前にセルフレビューする場合。
 ### `documentation-sync`
 
 変更後にコードとドキュメントの整合性を確認する場合。
+正式採択と適用範囲は[AI開発ツールガイド](AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照する。
 
 Skillは、リポジトリ内に実際に存在することを確認してから利用する。
 
@@ -528,6 +529,8 @@ Context7へSecretや不要な内部情報を渡さない。
 ### Playwright
 
 UIやUser Flowへ影響する変更を実ブラウザで確認するときに使用する。
+[採択済み方針](AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、CLI＋Skillを利用する。Playwright MCPは常時MCPに追加しない。
+CLI・対応Skillの導入、設定、E2E整備はUI実装時に行い、利用前に導入状況を確認する。
 
 主な用途：
 
@@ -544,13 +547,9 @@ UIやUser Flowへ影響する変更を実ブラウザで確認するときに使
 
 ### GitHub
 
-GitHub操作は原則として、
-
-- `git`
-- `gh`
-- GitHub Web UI
-
-を使用する。
+GitHub操作は[採択済み方針](AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、基本は`gh` CLIを使用する。
+未導入・認証不可などで利用できない場合はGitHub Web UIで代替する。
+ローカルのブランチ・コミット操作は`git`を使用する。
 
 GitHub MCPは使用しない。
 
@@ -947,7 +946,7 @@ Merge前に修正が必要。
 
 を確認する。
 
-必要に応じて `documentation-sync` Skillを利用する。
+[documentation-sync](.agents/skills/documentation-sync/SKILL.md)で変更に関係する正本への影響を確認し、必要な文書だけ更新する。毎回すべての文書を更新する必要はない。
 
 確認対象：
 

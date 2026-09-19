@@ -9,6 +9,11 @@ GitHub、Issue、Branch、Pull Requestなどを使った開発に慣れていな
 [CONTRIBUTING.md](../CONTRIBUTING.md)
 を参照してください。
 
+GitHub操作は基本的に`gh` CLIを使用し、利用できない場合はGitHub Web UIで代替します。
+Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
+[AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
+このガイドのGitHub Web UIの手順も、代替手段として利用できます。
+
 ---
 
 # 1. 最初に覚える開発の流れ
@@ -218,7 +223,14 @@ Assigneeは、
 
 です。
 
-自分が担当するIssueには、自分をAssigneeとして設定します。
+作業を始める本人が、着手前に自分をAssigneeとして設定します。
+
+1. Issue作成画面の `Select assignees` を開きます。
+2. 自分のGitHubアカウントを選択します。
+3. 作成済みのIssueでは、右側の `Assignees` の編集、または `Assign yourself` で設定します。
+
+Issueを作った人ではなく、実際に作業する人を設定してください。担当が変わったらAssigneeも更新します。
+運用ルールの正本は [CONTRIBUTINGのAssignee](../CONTRIBUTING.md#assignee) を参照してください。
 
 担当者が決まっていないIssueを誰かが勝手に実装し始めることは避けます。
 
@@ -387,6 +399,10 @@ git status
 ---
 
 # 14. 作業を始める前に
+
+自分がIssueのAssigneeに設定されていることを確認します。
+Branch作成後はIssue本文の「開発情報」にBranch名を記載し、Push後にBranchのリンクを追記します。
+記載形式は [CONTRIBUTINGの紐付けルール](../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
 
 新しい作業を始める前に、mainを最新状態にします。
 
@@ -594,6 +610,10 @@ In Review
 ---
 
 # 22. IssueとPRを紐付ける
+
+担当者はPR作成後、Issue本文の「開発情報」にPRのURLまたは `#<PR番号>` を追記します。
+Branch名・リンクも記載済みか確認してください。未作成の間は「未作成」としておきます。
+記載例は [CONTRIBUTINGの紐付けルール](../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
 
 PRには、
 
