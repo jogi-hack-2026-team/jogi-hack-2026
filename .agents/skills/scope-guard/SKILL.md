@@ -16,13 +16,9 @@ description: JOGI HACK 2026で機能追加、機能削除、優先順位変更�
 - 他機能への依存はあるか。
 - テストコストはどの程度か。
 - Must機能の完成度を下げないか。
-- 2026-10-12のCode Freezeまでに完成可能か。
+- [READMEの日程](../../../README.md#現在の状態)にあるコードフリーズまでに完成可能か。
 
-以下に分類する。
-
-- Must
-- Should
-- Could
+[CONTRIBUTINGのScope定義](../../../CONTRIBUTING.md#statusとscope) に沿って分類案を提示する。
 
 AIは最終的な採否を決定しない。
 
