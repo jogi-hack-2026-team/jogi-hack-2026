@@ -6,5 +6,11 @@ JOGI HACK 2026に向けたWebアプリケーション開発リポジトリです
 
 ## Development
 
-開発フローやブランチ運用、Issue・Pull Requestのルールについては
-[CONTRIBUTING.md](./CONTRIBUTING.md) を参照してください。
+## Development
+
+このプロジェクトでは、Issue → Branch → Pull Request → Review → Merge の流れで開発します。
+
+開発に参加する前に、以下のドキュメントを確認してください。
+
+- [開発ルール](./CONTRIBUTING.md)
+- [初心者向け開発運用ガイド](./docs/DEVELOPMENT_GUIDE.md)
