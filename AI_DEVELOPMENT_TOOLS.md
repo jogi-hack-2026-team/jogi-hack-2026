@@ -1,6 +1,6 @@
 # AI開発ツールガイド
 
-この文書は、Issue #10で整理したツール利用方針の正本です。共通の開発ルールは [CONTRIBUTING](CONTRIBUTING.md) を参照してください。
+この文書は、Issue #10で整理したツール利用方針の正本です。共通の開発ルールは [CONTRIBUTING](CONTRIBUTING.md) を参照してください。日常的な導入・利用手順は[AI開発ワークフローガイド](docs/AI_WORKFLOW_GUIDE.md)を参照してください。
 
 ## 採択済みの運用方針
 
