@@ -240,19 +240,17 @@ Statusは以下を使用します。
     ↓
     Done
 
-ProjectにはIssueとPull Requestのカードが自動追加されることがあります。担当者は、存在する関連カードを同じ進捗のStatusに更新します。
+ProjectではIssueカードだけを管理します。Pull RequestはIssue本文の「開発情報」とDevelopment欄で関連付けて追跡します。
 
-| 対象 | タイミング | Status |
-| --- | --- | --- |
-| Issue | Issueを作成し、まだ着手条件を満たしていない | Backlog |
-| Issue | 目的・完了条件・Assignee・Scopeが決まり、着手できる | Ready |
-| Issue | Branchを作成して作業を開始する | In Progress |
-| Issue・作成済みPRカード | Pull Requestを作成してレビューを依頼する | In Review |
-| Issue・PRカード | `Request changes`を受けて修正する | In Progress |
-| Issue・PRカード | 修正後に再レビューを依頼する | In Review |
-| Issue・PRカード | PRが `main` へMergeされ、IssueがCloseされたことを確認する | Done |
-
-自動追加されたPRカードも、PRの状態に合わせて更新します。
+| タイミング | Status |
+| --- | --- |
+| Issueを作成し、まだ着手条件を満たしていない | Backlog |
+| 目的・完了条件・Assignee・Scopeが決まり、着手できる | Ready |
+| Branchを作成して作業を開始する | In Progress |
+| Pull Requestを作成してレビューを依頼する | In Review |
+| `Request changes`を受けて修正する | In Progress |
+| 修正後に再レビューを依頼する | In Review |
+| PRが `main` へMergeされ、IssueがCloseされたことを確認する | Done |
 
 ### Backlog
 

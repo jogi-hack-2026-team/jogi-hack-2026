@@ -17,7 +17,7 @@ description: GitHub Issueをもとに、ブランチ作成、実装、検証、P
 ## 実装
 
 - Issueのスコープ外の変更を行わない。
-- Branchを作成して作業を開始した時点で、IssueカードのGitHub Projects Statusを `In Progress` に更新する。PR作成後は、存在するPRカードも同じ進捗に更新する。更新タイミングの正本は [CONTRIBUTINGのGitHub Projects](../../../CONTRIBUTING.md#github-projects) を参照する。
+- Branchを作成して作業を開始した時点で、GitHub ProjectsのIssueカードのStatusを `In Progress` に更新する。更新タイミングの正本は [CONTRIBUTINGのGitHub Projects](../../../CONTRIBUTING.md#github-projects) を参照する。
 - Branch作成後にIssue本文の「開発情報」へBranch名を記載し、Push後にBranchのリンクを追記する。記載形式は [CONTRIBUTINGの紐付けルール](../../../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) に従う。
 - コードの参照関係を調べる必要がある場合はSerenaを利用する。
 - ライブラリやフレームワークの仕様確認が必要な場合はContext7を利用する。
@@ -37,6 +37,6 @@ description: GitHub Issueをもとに、ブランチ作成、実装、検証、P
 5. [review-gate](../review-gate/SKILL.md)でセルフレビューを行う。
 6. `CONTRIBUTING.md` に従ってPull Requestを作成する。
 7. PR本文に `Closes #<Issue番号>` を記載し、作成後にIssue本文の「開発情報」へPRのURLまたは番号を追記する。Branchの記載とAssigneeも確認する。
-8. PRを作成してレビューを依頼した時点で、Issueカードと自動追加されたPRカードのGitHub Projects Statusを `In Review` に更新する。修正対応では両方を `In Progress` に戻し、再レビュー依頼後に `In Review` に戻す。
+8. PRを作成してレビューを依頼した時点で、GitHub ProjectsのIssueカードのStatusを `In Review` に更新する。修正対応では `In Progress` に戻し、再レビュー依頼後に `In Review` に戻す。
 
 `main` を対象とするPRは、書き込み権限を持つ別メンバーのApproveが最低1件必要です。ユーザーから明示的な指示がない限り、Pull Requestを自動でMergeしません。指示がある場合も、保護ルールをbypassしません。
