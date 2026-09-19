@@ -20,20 +20,12 @@ description: GitHub Issueをもとに、ブランチ作成、実装、検証、P
 - Branch作成後にIssue本文の「開発情報」へBranch名を記載し、Push後にBranchのリンクを追記する。記載形式は [CONTRIBUTINGの紐付けルール](../../../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) に従う。
 - コードの参照関係を調べる必要がある場合はSerenaを利用する。
 - ライブラリやフレームワークの仕様確認が必要な場合はContext7を利用する。
-- リポジトリで定義されたformatter、lint、typecheck、testを実行する。
-- UI変更は必要な実ブラウザ検証を行う。Playwright CLI＋Skillの利用方針と導入状況は[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を確認する。
+- リポジトリで定義済みのformatter、lint、typecheck、testのうち変更に必要な検証を実行する。未定義のコマンドは創作せず、未検証の理由を記録する。
+- UI変更は必要な実ブラウザ検証を行う。Playwright CLI＋Skillの利用方針と導入状況は [AI開発ツールガイド](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針) を確認する。
 
 ## ドキュメント
 
-[documentation-sync](../documentation-sync/SKILL.md)で、変更に関係する文書への影響を確認し、必要な正本だけ更新する。以下は確認対象の例。
-
-- `README.md`
-- `CONTRIBUTING.md`
-- `docs/DEVELOPMENT_GUIDE.md`
-- `docs/architecture/`
-- `docs/decisions/`
-
-ドキュメントが古くなる変更を行った場合は、実装と同じタスク内で更新する。
+[documentation-sync](../documentation-sync/SKILL.md)で、変更による正本への影響を確認し、更新が必要な文書だけを実装と同じタスク内で更新する。
 
 ## Pull Request作成前
 
@@ -41,7 +33,7 @@ description: GitHub Issueをもとに、ブランチ作成、実装、検証、P
 2. Issueの完了条件をすべて満たしているか確認する。
 3. 不要な変更が含まれていないか確認する。
 4. ドキュメントとの整合性を確認する。
-5. セルフレビューを行う。
+5. [review-gate](../review-gate/SKILL.md)でセルフレビューを行う。
 6. `CONTRIBUTING.md` に従ってPull Requestを作成する。
 7. PR本文に `Closes #<Issue番号>` を記載し、作成後にIssue本文の「開発情報」へPRのURLまたは番号を追記する。Branchの記載とAssigneeも確認する。
 

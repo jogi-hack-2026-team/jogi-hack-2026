@@ -2,9 +2,9 @@
 name: Feature
 about: 新しい機能の追加や、既存機能の拡張に関するIssue
 title: "[Feature] "
-labels: bug
+labels: ''
 assignees: ''
-type: Bug
+type: Feature
 
 ---
 

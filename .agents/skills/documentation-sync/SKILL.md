@@ -6,13 +6,15 @@ description: 実装、仕様、設計、環境変数、API、開発フローな�
 # ドキュメント同期
 
 すべての変更について、ドキュメントへの影響があるか確認する。毎回すべての文書を更新する必要はなく、変更に関係する正本だけを必要に応じて更新する。
-正式採択の記録は[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照する。
+正式採択の記録は [AI開発ツールガイド](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針) を参照する。
 
-以下は確認対象の例。未作成の文書やディレクトリを確認目的だけで追加しない。
+まず [READMEの正本一覧](../../../README.md#情報の正本) を確認し、変更に関係する文書を調べる。
+以下は確認対象の例。未作成のディレクトリを監査目的だけで追加しない。
 
 - `README.md`
 - `CONTRIBUTING.md`
 - `docs/DEVELOPMENT_GUIDE.md`
+- `AGENTS.md`
 - `AI_DEVELOPMENT_TOOLS.md`
 - `docs/product/`
 - `docs/architecture/`

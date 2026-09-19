@@ -41,7 +41,8 @@ description: 他メンバーが作成したGitHub Pull Requestをレビュワー
 
 # 2. Pull Requestの前提を確認する
 
-[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、基本は`gh` CLIで対象Pull Requestを確認する。利用できない場合はGitHub Web UIで代替する。どちらでも取得できない場合は未確認と明記する。
+[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、基本はGitHub CLIで対象Pull Requestを確認する。
+未導入・認証不可などで利用できない場合はGitHub Web UIで代替する。
 
 例:
 
@@ -278,7 +279,8 @@ TypeScriptを使用している場合は特に以下を確認する。
 
 UI変更がある場合は、コードだけでレビューを完了しない。
 
-[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、Playwright CLI＋Skillで必要な実ブラウザ確認を行う。利用できない場合は未検証の範囲と理由を記録する。
+[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、Playwright CLI＋Skillを使って必要な実ブラウザ検証を行う。
+導入・設定が整っておらず確認できない場合は、未検証の範囲と理由を明記する。
 
 確認する。
 
