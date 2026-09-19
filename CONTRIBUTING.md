@@ -9,17 +9,17 @@
 
 1. Issueを作成する
 2. Issueの目的・内容・完了条件を確認する
-3. AssigneeとScopeを設定する
+3. 担当者が自分をAssigneeに設定し、Scopeを設定する
 4. Issueを `Ready` にする
 5. 最新の `main` から作業Branchを作成する
-6. Issueに作業Branchを記載する
+6. Issue本文の「開発情報」に作業Branchを記載し、Push後にリンクを追記する
 7. 作業開始時に `In Progress` にする
 8. 実装・動作確認を行う
 9. 変更内容を確認してCommitする
 10. Pushする
 11. Pull Requestを作成する
 12. PRに対応Issueを `Closes #<Issue番号>` で記載する
-13. IssueにPull Requestを記載する
+13. Issue本文の「開発情報」にPull Requestのリンクを記載する
 14. `In Review` にする
 15. レビューを受ける
 16. 指摘がある場合は修正し、再レビューを依頼する
@@ -150,14 +150,16 @@ Issueは以下の4種類を使用します。
 
 ## IssueとBranch / Pull Requestの紐付け
 
-Issueには、対応するBranchとPull Requestを記載します。
+担当者は、Issue本文の「開発情報」に対応するBranchとPull Requestを記載します。
+Branchを作成した時点で名前を記載し、GitHub上に作成・PushしたらBranchのリンクを追記してください。
+PR作成後はPRのリンクも追記します。IssueのDevelopment欄で関連付けた場合も、本文の開発情報を更新してください。
 
 Issue本文の末尾などに、以下の形式で記載してください。
 
     ## 開発情報
 
-    - Branch: `feat/12-search`
-    - Pull Request: #18
+    - Branch: [feat/12-search](https://github.com/jogi-hack-2026-team/jogi-hack-2026/tree/feat/12-search)
+    - Pull Request: #18（またはPRのURL）
 
 Pull Requestをまだ作成していない場合：
 
@@ -166,7 +168,8 @@ Pull Requestをまだ作成していない場合：
     - Branch: `feat/12-search`
     - Pull Request: 未作成
 
-PRを作成したらIssueを更新します。
+上記のBranch名・Issue番号・PR番号は記載例です。実際に作成したものに置き換えてください。
+同じリポジトリのPRは `#18` のように番号を書いてもリンクになります。未作成のBranch・PRは「未作成」とし、存在しないリンクを記載しないでください。
 
 ### Branch
 
@@ -200,7 +203,10 @@ PRが `main` へMergeされると、対応Issueも自動的にCloseされます�
 
 Assigneeは、そのIssueを担当する人です。
 
-自分が担当するIssueには自分を設定してください。
+チケットに着手する本人が、作業開始前に自分をAssigneeとして設定してください。
+Issue作成時は `Select assignees` から自分のGitHubアカウントを選択します。
+作成後はIssue右側の `Assignees` の編集、または `Assign yourself` で設定できます。
+Issue作成者と作業担当者が異なる場合も、実際に作業する人を設定します。担当が変わったらAssigneeも更新してください。
 
 担当者が分からない状態のIssueを勝手に実装し始めないようにします。
 
@@ -271,7 +277,7 @@ Issueを `Ready` にするには、最低限以下を満たしている必要が
 - [ ] やることが分かる
 - [ ] 完了条件が分かる
 - [ ] Scopeが設定されている
-- [ ] Assigneeが決まっている
+- [ ] 実際の作業担当者がAssigneeに設定されている
 - [ ] 大きすぎるIssueになっていない
 - [ ] 必要な前提作業が完了している
 
