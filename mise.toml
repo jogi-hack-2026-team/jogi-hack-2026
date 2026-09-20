@@ -1,0 +1,16 @@
+# Application runtimes and package managers remain undecided.
+# Official Doppler CLI release, verified 2026-09-20.
+[tools]
+doppler = "3.76.5"
+
+[tasks.check]
+description = "Check repository documentation and configuration (no application tests)"
+run = "pwsh -NoProfile -File scripts/check-foundation.ps1"
+
+[tasks."check:staged"]
+description = "Check whitespace in the staged diff before committing"
+run = "git diff --cached --check"
+
+[tasks."hooks:install"]
+description = "Install repository-local hooks without replacing existing hooks"
+run = "pwsh -NoProfile -File scripts/install-hooks.ps1"

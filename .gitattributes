@@ -1,0 +1,2 @@
+# Git must preserve the shebang of the portable pre-commit hook on Windows.
+.githooks/* text eol=lf
