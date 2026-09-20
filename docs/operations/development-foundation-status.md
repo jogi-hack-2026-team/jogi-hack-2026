@@ -1,5 +1,12 @@
 # 開発基盤の状態と引き継ぎ
 
+## 現行への反映と記録の範囲
+
+基盤整備の[PR #25](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/25)はmainへマージ済みです。文書整備時に取得した基準コミット・調査範囲は[変更対応表](../change-map.md#調査範囲と根拠)を参照してください。
+以下の設定表・実行結果は基盤整備時点の記録です。「今回」「このPC」「Mergeは未実施」は当時を指し、現在の外部設定・全メンバーの環境を保証しません。外部操作の承認待ちは、PRのマージによって承認・実施済みにはなりません。
+
+## 基盤整備時の記録
+
 確認日: 2026-09-20 JST。対象: `jogi-hack-2026-team/jogi-hack-2026`。
 開始時の作業ツリーはclean、ローカルmainは`4005208`。fetchした`origin/main`の`c41e334`を基準に整備した。
 作業Issue: [#24](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/24)、担当者: Kaito-Iwase。

@@ -17,7 +17,7 @@
 documentation-syncは既存ファイルと利用ルールを確認したうえで、今回の承認を正式採択の根拠とします。
 
 
-## リポジトリで確認できる導入状況
+## 利用前の確認
 
 - `gh`：利用前に各環境で導入・認証状況を確認する。未導入でも採択保留にはしない。
 - Playwright：この変更ではCLIやSkillの導入・設定、E2E整備を行わない。リポジトリ内にPlaywright専用Skill・設定はなく、各環境の導入状況は利用前に確認する。
@@ -47,7 +47,7 @@ documentation-syncは既存ファイルと利用ルールを確認したうえ�
 | --- | --- |
 | [issue-to-pr](.agents/skills/issue-to-pr/SKILL.md) | Issue確認からBranch、実装、検証、Pull Request作成まで |
 | [bug-investigation](.agents/skills/bug-investigation/SKILL.md) | 不具合の再現、原因検証、最小修正 |
-| [documentation-sync](.agents/skills/documentation-sync/SKILL.md) | 変更後の正本・実装・説明の整合確認 |
+| [documentation-sync](.agents/skills/documentation-sync/SKILL.md) | 機能仕様の執筆、変更前・変更時・完了前の正本・実装・説明の整合確認 |
 | [review-gate](.agents/skills/review-gate/SKILL.md) | Pull Request作成前のセルフレビュー |
 | [pr-review](.agents/skills/pr-review/SKILL.md) | 他メンバーのPull Requestレビュー |
 | [architecture-decision](.agents/skills/architecture-decision/SKILL.md) | 技術・設計の比較と判断材料の整理 |
