@@ -13,6 +13,7 @@ description: GitHub Issueをもとに、ブランチ作成、実装、検証、P
 4. [採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、基本は`gh` CLIで対象Issueを確認する。利用できない場合はGitHub Web UIで代替する。対応Issueがなければ、[チケット作成の着手条件](../../../CONTRIBUTING.md#チケット作成を着手条件にする)に従って作成し、実在する番号・URLを確認する。取得・作成できない場合や作成承認待ちの場合は、未確認と記録するだけで変更を先行せず、同条件に定めた読み取り調査・本文案の準備までに留める。
 5. Issueの目的・完了条件と、実際の作業担当者がAssigneeに設定されていることを確認する。設定方法は [CONTRIBUTINGのAssignee](../../../CONTRIBUTING.md#assignee) に従う。担当者が不明な場合は推測して割り当てない。
 6. 不明な仕様を勝手に補完しない。
+7. [documentation-syncの変更前確認](../documentation-sync/SKILL.md#変更前)に沿い、関連仕様・変更対応表とコードを照合して影響範囲を調べる。
 
 ## 実装
 

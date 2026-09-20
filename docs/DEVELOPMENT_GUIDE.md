@@ -14,6 +14,9 @@ Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況�
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 このガイドのGitHub Web UIの手順も、代替手段として利用できます。
 
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から対象の仕様文書へ進んでください。現在はアプリ未実装のため、まず[初回セットアップ](#13-初回セットアップ)で文書・設定を確認できます。
+本ガイドの検索機能やIssue番号・Branch名は操作を説明する例です。実装済み機能や実在する対応Issueを示すものではありません。
+
 ---
 
 # 1. 最初に覚える開発の流れ
@@ -378,6 +381,8 @@ README更新
 # 13. 初回セットアップ
 
 現時点のアプリRuntime・DB・Package Managerは未定です。以下は文書・設定の検証用セットアップです。
+Runtimeはアプリの実行環境、Package Managerは依存ライブラリの管理ツールです。現在利用するPowerShell 7は補助スクリプト用で、アプリの技術選定ではありません。
+GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
 
@@ -404,8 +409,8 @@ git status
 ```
 
 GitとPowerShell 7が必要です。miseは[公式の導入手順](https://mise.jdx.dev/getting-started.html)を利用してください。
-OS・グローバル設定の変更は本人が確認して行います。今回の検証版はmise `2026.9.11`です。
-このPCでは検証用バイナリを`.tools/mise/mise/bin/mise.exe`に配置しただけで、PATHには追加していません。
+miseは開発ツールの版と共通コマンドを管理するCLI（端末から使うツール）です。OS・グローバル設定の変更は本人が確認して行います。
+基盤整備時の検証版はmise `2026.9.11`です。当時のPCでは検証用バイナリを`.tools/mise/mise/bin/mise.exe`に配置し、PATHには追加していませんでした。Git管理外なので、他のcloneや作業コピーに同じファイルがあるとは限りません。
 miseの導入前でも、下記のPowerShell直接実行で検証できます。
 `mise.toml`と`scripts/`を読んでから、リポジトリを信頼する操作を行います。
 
@@ -419,6 +424,49 @@ mise run --skip-tools hooks:install
 miseがまだない場合、同じ検証を`pwsh -NoProfile -File scripts/check-foundation.ps1`で実行できます。
 Hookの導入はこのリポジトリの`core.hooksPath`のみを設定し、既存Hookがあれば上書きせず停止します。
 各メンバーのCloneで一度実行してください。pre-commitはステージ済み差分の空白検査、CIは文書・設定の全体検査を行います。
+
+| コマンド | 意味・成功時に確認すること |
+| --- | --- |
+| `git clone https://github.com/jogi-hack-2026-team/jogi-hack-2026.git` | リポジトリを取得する。`jogi-hack-2026`ディレクトリが作成される。すでにclone済みなら繰り返さない |
+| `cd jogi-hack-2026` | 作業ディレクトリをリポジトリのルートへ移す |
+| `git remote -v` | 取得・送信先を表示する。`origin`がこのチームのリポジトリか確認する |
+| `git status` | 現在のBranchと変更を表示する。既存変更があれば内容を確認し、破棄しない |
+| `mise trust` | 読んだ設定を信頼する操作。実行するタスクと設定を確認してから行う。ソフトウェアの安全性を検証するコマンドではない |
+| `mise run --skip-tools check` | ツールの自動インストールを省略して文書・設定検証を実行する。成功時は`PASS:`と検査範囲が表示される |
+| `pwsh -NoProfile -File scripts/check-foundation.ps1` | PowerShell 7で、個人のプロファイルを読み込まず同じ検証スクリプトを実行する。miseなしで使える |
+| `mise run --skip-tools hooks:install` | ローカルの`core.hooksPath`を`.githooks`に設定する。成功時は設定完了が表示される。既存Hookとの衝突時は停止する |
+
+上記はアプリコードの例ではなく、ルートで使う操作コマンドです。Windowsでは`pwsh`がPowerShell 7を指すことを確認します。Windows PowerShell 5.1を起動する`powershell`とは異なります。
+今回の文書整備ではWindows上のPowerShell 7による全体チェックを確認対象にします。過去のCIはUbuntu上で成功した記録がありますが、WSL・Docker内・全メンバー端末でのセットアップ成功を意味しません。結果と対象環境は[確認記録の入口](change-map.md#確認記録と残課題)を参照してください。
+
+## 文書チェックで起きること
+
+`mise.toml`の`check`は`pwsh -NoProfile -File scripts/check-foundation.ps1`を呼びます。直接実行も同じ処理です。
+
+1. スクリプト自身の位置からリポジトリのルートへ移動し、Gitの追跡ファイルと、無視されていない未追跡ファイルを列挙します。
+2. Markdown・YAML・TOML・PowerShellスクリプトと一部の設定ファイルについて、UTF-8として読めるか、競合マーカーや末尾改行の欠落がないかを検査します。ローカルの認証情報・Secretは読み取り対象にしません。
+3. Markdownの通常のインラインリンクについて、相対パスの参照先とMarkdown見出しを確認します。コードブロックの例や外部URLは対象外です。コード中の関数名、参照形式リンク、文書内容の意味までは検証しません。
+4. `.env.example`が説明と空の変数例だけであること、指定した7ケースのGit除外設定、未ステージ・ステージ済み差分の空白を確認します。
+5. 問題があれば`ERROR:`で対象を示し、失敗として終了します。問題がなければ`PASS:`でファイル数・内部リンク数等を表示します。アプリのbuild・lint・型検査・テストは実行しません。
+
+CI（変更時に自動で行う検証）は[foundation.yml](../.github/workflows/foundation.yml)が定義します。PR、mainへのpush、手動実行を入口として、Ubuntuのrunner（実行用マシン）で同じスクリプトを実行します。SecretやDBを必要とせず、実行結果は対象PRのChecksで別に確認します。
+Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git diff --cached --check`だけを実行します。Hookが成功しても全体の文書チェックを実行したことにはなりません。
+
+## 文書チェックで困ったとき
+
+| 表示・症状 | 原因と修正箇所 | 修正後の確認 |
+| --- | --- | --- |
+| `mise`が見つからない | 未導入またはPATH未設定。PowerShell 7が使えるなら上記の直接実行を利用する | 直接実行で`PASS:`と終了成功を確認する |
+| `pwsh`が見つからない | PowerShell 7未導入またはPATH未設定。端末の導入状況を確認する。5.1で代用しない | `pwsh --version`で7系を確認し、全体チェックを再実行する |
+| miseが設定の信頼確認で止まる | 新しいclone等で設定が未信頼。`mise.toml`と呼び出すスクリプトを読み、信頼できる場合にのみ`mise trust`を実行する | 同じ`check`を再実行する。信頼操作なしで確認する場合はスクリプトを読んで直接実行する |
+| `missing link target` / `missing heading` | 文書の移動・見出し変更に参照元が追従していない | 表示されたMarkdownのリンクと実ファイル・見出しを照合して直し、全体チェックを再実行する |
+| `invalid UTF-8` / `missing final newline` | 対象ファイルの文字コード・末尾改行が規約と違う | 対象だけをUTF-8・末尾改行ありで保存し、差分と全体チェックを確認する |
+| `merge conflict marker` | 未解決の競合がある | 正しい内容を関係者と確認して競合を解消し、差分と全体チェックを確認する。マーカーだけを消して済ませない |
+| 環境変数例・除外設定・差分空白で失敗 | 対象の例や設定・差分がチェック条件に反する | Secretをログへ出さず原因箇所を確認する。現在のIssue外の設定修正なら別作業として記録し、チェックを緩めない |
+| Hook導入が既存設定との衝突で止まる | 別の`core.hooksPath`または既存Hookがある | 上書きせず担当者と統合方法を確認する。解決までは全体チェック・ステージ差分確認を手動で行う |
+
+`pwsh --version`は利用するPowerShellの版を表示する確認コマンドです。これは想定されるエラーへの案内であり、この表の全エラーを今回再現済みという意味ではありません。
+CLIの仕様は[Gitのチュートリアル](https://git-scm.com/docs/gittutorial)と[mise run](https://mise.jdx.dev/cli/run.html)、[mise trust](https://mise.jdx.dev/cli/trust.html)を参照できます。設定・スクリプトが何をするかは、このリポジトリの実ファイルを優先して確認します。
 
 Doppler CLIを使う段階では`mise install`を実行し、固定版の導入後に[接続手順](operations/development-foundation-status.md#dopplerの引き継ぎ)へ進みます。
 DB・アプリ未確定の間は、Compose起動・migration・seed・アプリ起動を行う手順はありません。
@@ -532,6 +580,16 @@ git branch
 
 となっていれば、`docs/6-development-guide`で作業しています。
 
+## 仕様を調べて変更するには
+
+1. [対応表](change-map.md)から対象の機能・ページ・基盤を探し、仕様を読みます。どんな目的・操作・条件・状態を持つかを確認してから、関連コード・設定・テストを読みます。
+2. 呼び出し元・参照元も検索し、影響する範囲、実際に変更する範囲、確認だけの範囲を分けます。文書と実装が違えば、現在の動作を無条件に仕様へ転記せず、不一致として記録します。
+3. [文書の執筆・保守手順](../.agents/skills/documentation-sync/SKILL.md)に沿って、変更した仕様・説明・対応表・参照を同じ作業で更新します。初心者向けとAI向けに仕様を別々に複製しません。
+4. 対象の検証を行い、PRに文書への影響と更新内容、更新不要ならその理由を記載します。必要な文書更新が残っている間は完了にしません。
+
+AIへ依頼する場合は、Issue番号、変えたい挙動、関連仕様、完了条件、変更しない範囲を渡します。例えば「対象Issueの仕様を確認し、対応表とコードから影響を調べ、必要な仕様文書・関連参照も同じ作業で更新し、検証結果と未確認事項を報告してください」と依頼できます。
+AIは[AGENTS.md](../AGENTS.md)から共通ルールを確認します。人間も、必要な詳しい手順は上記Skillを参照できます。
+
 ---
 
 # 18. Commitとは
@@ -558,23 +616,39 @@ chore: Issueテンプレートを追加
 
 # 19. Commitする手順
 
+リポジトリのルート、対象Issueの作業Branchで実行します。以下はREADMEを変更した場合の操作例です。ファイル名・コミット文・Branch名は実際の作業に合わせます。
 まず変更を確認します。
 
 ```bash
 git status
+git diff
 ```
 
 変更内容をCommit対象へ追加します。
 
 ```bash
-git add .
+git add README.md
 ```
+
+`git status`は変更一覧、`git diff`は未ステージの差分を表示します。`git add README.md`は指定したファイルだけを次のコミット対象（ステージ）へ入れます。無関係な変更を混ぜないよう、対象ファイルを明示してください。
+ステージした後にファイルを編集した場合は、追加の差分を確認してから必要なものを再度ステージします。
+
+コミットされる内容と空白エラーを確認します。
+
+```bash
+git diff --staged
+git diff --cached --check
+```
+
+1行目はステージ済みの内容を表示します。2行目はその差分の空白エラーを検査し、成功時は何も表示せず終了します。`--staged`と`--cached`は同じ比較対象を指します。新しいファイルの内容も1行目で確認できます。
 
 Commitします。
 
 ```bash
 git commit -m "docs: 初心者向け開発運用ガイドを追加"
 ```
+
+これはステージした内容を説明付きで履歴へ保存します。成功時はコミットIDと変更概要が表示されます。Hookで失敗した場合は対象差分を直して確認し、Hookを無効化して通さないでください。
 
 GitHubへ送ります。
 
@@ -587,6 +661,8 @@ git push
 ```bash
 git push -u origin docs/6-development-guide
 ```
+
+`git push`はコミットを送信先へ送り、初回の`-u origin <Branch名>`は対応する送信先Branchも設定します。対象Branchと送信範囲を確認してください。送信に失敗した場合は[Gitで困ったとき](#35-gitで困ったとき)も参照し、force pushで解消しないでください。
 
 ---
 
