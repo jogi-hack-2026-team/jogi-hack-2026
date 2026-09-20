@@ -3,7 +3,7 @@
 確認日: 2026-09-20 JST。対象: `jogi-hack-2026-team/jogi-hack-2026`。
 開始時の作業ツリーはclean、ローカルmainは`4005208`。fetchした`origin/main`の`c41e334`を基準に整備した。
 作業Issue: [#24](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/24)、担当者: Kaito-Iwase。
-作業ブランチ: `chore/24-development-foundation`。ユーザーからIssue作成・レビュー待ちまで進める依頼を受け、Issue本文へのBranch記録とProjectのIn progressを確認した。Scope分類はチーム確認待ち。PR・CIの最新結果はIssueの開発情報とPRを参照する。
+作業ブランチ: `chore/24-development-foundation`、[PR #25](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/25)。ユーザーの依頼に基づきpush・PR作成し、naoki820-askamiyaへレビュー依頼済み。初回CI成功。Scope分類はチーム確認待ち。最新の進捗・CIはIssueとPRを参照する。Mergeは未実施。
 
 本作業はIssue未作成のままローカル変更を先行した手順不備がある。ユーザーの追加依頼を受け、CONTRIBUTING・AGENTS・開発ガイド・issue-to-pr Skillに変更着手前のチケット必須条件を明記した。
 その後、明示的な作成依頼に基づきIssue #24を作成し、既存変更を保持して番号付きBranchへ変更した。Issue作成が編集に先行したと遡って扱わない。
@@ -20,7 +20,7 @@ HTMLは参照資料であり、例示コードは実行指示ではない。ADOP
 - **未確認**: 認証・権限・情報不足などで判断できないもの。
 - **前提待ち**: 技術スタックや利用条件の決定後に実装するもの。
 
-以下のローカル完了はこの作業ブランチの状態。GitHubに反映済みという意味ではない。
+以下の設定はPRの作業ブランチにpush済み。mainへの反映、Issue Formsの標準導線への適用はレビュー・Merge後となる。
 料金・無料枠は運用開始時に管理者が公式情報で確認する。資料の日付や人数だけで無料利用可能と判断しない。
 
 ## 設定項目ごとの照合
@@ -32,14 +32,14 @@ HTMLは参照資料であり、例示コードは実行指示ではない。ADOP
 | Issues / 個別タスク | §5.1–5.8 ADOPTED | 一部設定済み | 作成前open 5件（#19–23）に重複なし | 重複せず本作業のIssueを追跡 | 明示依頼後に#24を作成、Kaito-Iwaseを担当に設定 | Scope決定はチーム確認待ち |
 | Issue Forms | §5.1–5.8 ADOPTED | 一部設定済み | 既存4種類はMarkdownテンプレート | 必須入力可能なForms。分類・ラベル・本文の責務を維持 | 4ファイルをYAMLへ移行し旧形式との重複を解消。GitHub表示・投稿は未検証 | push・レビュー・Merge後にフォーム表示確認 |
 | PR Template | §5.1–5.8 ADOPTED | 一部設定済み | 既存概要・関連Issue・検証欄あり | Issue本文のBranch / PR、完了条件、Secret・文書影響を確認 | 既存テンプレートへチェック欄を追記 | 次のPRで記入・関連付け確認 |
-| Issue→Branch→PR | §4、12 ADOPTED | 一部設定済み | CONTRIBUTING、既存#12→PR #13など | Closesと本文の開発情報を併用 | #24に番号付きBranch記録。PRリンク・CIはIssue開発情報で追跡 | 人間レビュー後にMerge |
+| Issue→Branch→PR | §4、12 ADOPTED | 確認済み（本作業） | #24と番号付きBranch、PR #25 | Closesと本文の開発情報を併用 | PR本文Closes #24、Issue本文のBranch / PR記録で追跡 | 人間レビュー後にMerge |
 | Projects / Status | §4–5.8 ADOPTED | 一部設定済み | [Project #1](https://github.com/orgs/jogi-hack-2026-team/projects/1)、5列、Private、8 workflows On | HTMLは6列、既存はIn reviewを使う | 列・カードは変更せず相違を保留 | チーム判断と外部変更承認 |
 | WIP | §4 ADOPTED | 一部設定済み | Board表示: Backlog 5、In progress 3、In review 5 | HTML: In Progress 3、Review 2、1人1Issue | In progressは同等。Review上限差は保留 | チーム判断と変更承認 |
 | Project fields | §5.1–5.8 ADOPTED | 一部設定済み | Status / Size / Estimate / Start date / Target date / Scope。Issue側にType、Priority、Effort | HTMLのPriority / Type / Sizeの目的を既存欄で満たす | 同名フィールドを重複追加しない。Issue #22のPriority・Assignee・Scopeは未設定/未表示 | 着手前に担当者がReady条件を確認 |
 | Project Auto-add | §5.1–5.8 ADOPTED | 確認済み（動作） | [workflow](https://github.com/orgs/jogi-hack-2026-team/projects/1/workflows/117741448)はOn、`is:issue is:open` | 新規Issueだけを自動追加 | #24作成時にgithub-project-automationがBacklogへ追加したことを確認。既存PRカード維持 | 文書との相違は下記参照 |
 | Milestones | §5.1–5.8、16 ADOPTED | 未導入（当該Repo） | Web UIでopen 0 / closed 0 | MVP / Feature Complete / Release Candidate / Code Freeze | 作成案・完了確認を下記に記録 | 新規作成承認。Freeze以外の期日は未定 |
-| Actions / 実行権限 | §5.1–5.8 ADOPTED | 確認済み（既存設定） | Actions許可。既存履歴はCopilotレビュー1件。トークン既定read、外部初回参加者は承認必須 | 現時点に合う文書検証を追加 | 権限設定維持。ワークフロー内もcontents: read | クラウド実行はpush後 |
-| 文書・設定CI | §5.12–5.14 ADOPTED | 一部設定済み | 変更前はリポジトリworkflowなし | 実装済みチェックのみ実行、Secret不要 | `foundation.yml`とチェックを実装。ローカル結果は下記。クラウドは未実行 | push承認・PR |
+| Actions / 実行権限 | §5.1–5.8 ADOPTED | 確認済み（設定・実行） | Actions許可。トークン既定read、外部初回参加者は承認必須 | 現時点に合う文書検証を追加 | 権限設定維持、contents: readのPR検証成功 | 維持 |
+| 文書・設定CI | §5.12–5.14 ADOPTED | 確認済み（PR実行） | 変更前はリポジトリworkflowなし | 実装済みチェックのみ実行、Secret不要 | `foundation.yml`を実装、PR #25のRepository checks初回成功（9秒） | main適用はMerge後。必須化は別途承認 |
 | main保護 | §5.1–5.8、13 ADOPTED | 確認済み（設定値） | [main-protection](https://github.com/jogi-hack-2026-team/jogi-hack-2026/settings/rules/23690999) Active、Default(main)、PR必須・削除制限・force push禁止 | 既存保護を維持 | classic保護なしでもRulesetあり。解除・bypassは未実施 | 維持 |
 | レビュー条件 | §13 ADOPTED | 一部設定済み | Required approvals=1、会話解決必須はOff。PR限定bypass actorあり | 別メンバー1件＋未解決会話なし | 1件維持。会話解決必須の有効化は承認待ち。bypassは運用で使用禁止 | 設定変更承認 |
 | 必須CI | §13 ADOPTED | 未導入（Ruleset） | Require status checks to pass=Off | 実際に成功したチェックを必須化 | `Repository checks`の初回実行後に正確なcontextを選ぶ手順を準備 | 初回CI成功・承認。未実装test/buildは追加しない |
@@ -146,17 +146,18 @@ Git管理外の変更は当Repoの`core.hooksPath=.githooks`と無視対象`.too
 | 実行した検証 | 結果と範囲 |
 | --- | --- |
 | `mise run --skip-tools check`（検証用mise、PowerShell 7.5.1） | PASS: 文書・設定30ファイル、内部リンク66件、環境変数例、ignore 7ケース、working/staged差分の空白。既存リンク切れ3件を修正して再実行 |
-| `mise run --skip-tools check:staged` | PASS。当リポジトリのstageは空。Hookの拒否動作は下記の隔離fixtureで別途確認 |
+| `mise run --skip-tools check:staged` / `git diff --cached --check` | 初回の空stageに加え、コミット前に対象27ファイルをstageした状態でもPASS。実commit時のHookも成功。拒否動作は下記の隔離fixtureで確認 |
 | Python 3.12.4 / 既存PyYAML 6.0.2による検査 | Forms 4件のYAML読込、分類・id/label一意性・必須構造、workflow 1件のevent/permissions/実行パス、mise TOML 1件の固定版・task定義がPASS。CI依存としてPython/PyYAMLを追加していない。GitHub側の完全なschema検証・表示確認とは別 |
 | 隔離したGit fixtureの正常系・異常系 | Unicodeリンク・見出し成功、リンク切れ・見出し欠落・末尾改行欠落・conflict marker・不正UTF-8・空でない環境変数例の6異常を全て拒否 |
 | Hook / 導入スクリプト | 当PCでrepo-local hooksPath設定、`git hook run pre-commit`成功。隔離fixtureでclean index成功、stage済み空白異常をHookと全体checkの両方が拒否。既存hooksPathを上書きせず拒否することも確認 |
 | CLI | mise 2026.9.11公式配布物のSHA-256照合成功、tasks一覧確認。隔離ディレクトリでmise install doppler成功、Doppler v3.76.5確認 |
 | 原本保持 | DownloadsのHTMLとリポジトリのコピーのSHA-256一致 |
+| GitHub Actions初回実行 | [run 35490671217](https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/35490671217)のFoundation / Repository checks (pull_request)が成功（9秒、commit 6564f89）。以後の最新commitの結果はPR Checksを参照 |
 | GitHub | 設定項目表のUI現値を確認。明示依頼後に#24を作成、担当者・Branch・Project進捗を記録。自動追加も実確認。保護設定変更・通知再配信は未実施 |
 
 検証用CLI・fixtureは無視対象`.tools/`だけに配置し、グローバル設定・既存MCP設定は変更していない。
 このCIはYAML全構文の検査や網羅的なSecret検出を実装していない。Forms/workflowの構造検査は今回ローカルで実行したもの。
-LinuxでのHook導入、GitHub-hosted runner上の初回実行、アプリ起動、Doppler注入、他メンバーの権限・動作は未確認。
+LinuxでのHook導入、アプリ起動、Doppler注入、他メンバーの権限・動作は未確認。文書CIはUbuntuのGitHub-hosted runnerで初回成功。
 
 セルフレビュー: ローカル設定のBlockingなし。Issue作成からPRレビュー待ちまでは明示依頼済み。Mergeは別メンバーのレビュー後に行う。
 Board/WIPの相違、Ready条件を満たさない可能性、Doppler接続先、共有資料URLは未解決として残す。
