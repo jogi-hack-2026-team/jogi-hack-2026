@@ -111,7 +111,9 @@ Issueは、
 
 です。
 
-原則として、作業を始める前にIssueを作ります。
+変更作業を始める前に、対応する既存Issueを確認し、なければIssueを作ります。
+小さな修正や文書更新も対象です。作成承認やログインを待っている間は、変更を先行せず読み取り調査とIssue本文案の準備までに留めます。
+詳細は[チケット作成の着手条件](../CONTRIBUTING.md#チケット作成を着手条件にする)を参照してください。
 
 例えば、
 
@@ -128,6 +130,9 @@ Issueは、
 # 5. Issueの種類
 
 このリポジトリでは、4種類のIssue Templateを使用します。
+
+実装は`.github/ISSUE_TEMPLATE/`のYAML Issue Formsです。背景・完了条件などの必須欄を入力します。
+既存のFeature / Bug / Task / Investigationの区分とラベルを維持しています。
 
 ## Feature
 
@@ -372,6 +377,8 @@ README更新
 
 # 13. 初回セットアップ
 
+現時点のアプリRuntime・DB・Package Managerは未定です。以下は文書・設定の検証用セットアップです。
+
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
 
 ```bash
@@ -395,6 +402,27 @@ git remote -v
 ```bash
 git status
 ```
+
+GitとPowerShell 7が必要です。miseは[公式の導入手順](https://mise.jdx.dev/getting-started.html)を利用してください。
+OS・グローバル設定の変更は本人が確認して行います。今回の検証版はmise `2026.9.11`です。
+このPCでは検証用バイナリを`.tools/mise/mise/bin/mise.exe`に配置しただけで、PATHには追加していません。
+miseの導入前でも、下記のPowerShell直接実行で検証できます。
+`mise.toml`と`scripts/`を読んでから、リポジトリを信頼する操作を行います。
+
+```sh
+mise trust
+mise run --skip-tools check
+mise run --skip-tools hooks:install
+```
+
+`--skip-tools`は文書検証のためにDopplerをインストールする必要がないことを明示します。
+miseがまだない場合、同じ検証を`pwsh -NoProfile -File scripts/check-foundation.ps1`で実行できます。
+Hookの導入はこのリポジトリの`core.hooksPath`のみを設定し、既存Hookがあれば上書きせず停止します。
+各メンバーのCloneで一度実行してください。pre-commitはステージ済み差分の空白検査、CIは文書・設定の全体検査を行います。
+
+Doppler CLIを使う段階では`mise install`を実行し、固定版の導入後に[接続手順](operations/development-foundation-status.md#dopplerの引き継ぎ)へ進みます。
+DB・アプリ未確定の間は、Compose起動・migration・seed・アプリ起動を行う手順はありません。
+技術決定後に各コマンドの実体を追加し、miseから呼ぶ入口とCIを揃えます。
 
 ---
 

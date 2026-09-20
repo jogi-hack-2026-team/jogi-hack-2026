@@ -7,3 +7,11 @@
 # OS-generated files.
 .DS_Store
 Thumbs.db
+
+# Repository-local CLI downloads and caches (not team configuration).
+.tools/
+.mise.local.toml
+mise.local.toml
+.doppler/
+.doppler.yaml
+.secrets*

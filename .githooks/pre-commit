@@ -1,0 +1,3 @@
+#!/bin/sh
+# Check only the staged diff. Full repository checks run locally and in CI.
+exec git diff --cached --check

@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JOGI HACK 2026 開発基盤・開発ルールガイド</title>
+<meta name="description" content="JOGI HACK 2026 の開発基盤、開発ルール、採択理由、導入手順、比較、運用方針をまとめたチーム向けガイド">
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--panel2:#151e29;--line:#263241;--text:#e8edf3;--muted:#9aa8b7;
+  --green:#38c172;--yellow:#f2c94c;--red:#ef6a6a;--blue:#63a4ff;--accent:#8ab4ff;--code:#0a0e13;
+  --shadow:0 18px 45px rgba(0,0,0,.25);--radius:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:linear-gradient(180deg,#091018 0%,var(--bg) 20%,#0a0f15 100%);color:var(--text);
+  font:15px/1.72 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
+a{color:#9fc3ff;text-decoration:none} a:hover{text-decoration:underline}
+button{font:inherit}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);padding:22px 18px;background:rgba(10,15,21,.96);backdrop-filter:blur(14px)}
+.brand{padding:8px 10px 18px;border-bottom:1px solid var(--line);margin-bottom:15px}
+.brand h1{font-size:16px;margin:0 0 6px}.brand p{color:var(--muted);font-size:12px;margin:0}
+.nav a{display:block;color:#aeb9c7;padding:7px 10px;border-radius:9px;font-size:13px;margin:1px 0}
+.nav a:hover,.nav a.active{color:#fff;background:#172333;text-decoration:none}
+.nav .sub{padding-left:18px;font-size:12px;color:#8594a5}
+.content{min-width:0}
+main{max-width:1240px;margin:auto;padding:44px 48px 110px}
+.hero{padding:34px;border:1px solid #2b3a4d;border-radius:24px;background:
+radial-gradient(circle at 92% 8%,rgba(99,164,255,.16),transparent 35%),
+linear-gradient(145deg,#121b26,#0f151d);box-shadow:var(--shadow)}
+.eyebrow{color:#9fc3ff;text-transform:uppercase;letter-spacing:.13em;font-weight:700;font-size:12px}
+.hero h1{font-size:38px;line-height:1.2;margin:10px 0 14px;letter-spacing:-.025em}
+.hero p{max-width:880px;color:#bdc8d5;font-size:16px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}.pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:#b8c5d2;background:#0d141d;font-size:12px}
+section{scroll-margin-top:24px;margin:64px 0}
+h2{font-size:28px;line-height:1.25;margin:0 0 18px;letter-spacing:-.02em}
+h3{font-size:20px;margin:28px 0 12px} h4{font-size:15px;margin:18px 0 7px;color:#dbe5ef}
+.lead{color:#b2bfcc;max-width:960px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-12{grid-column:span 12}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:var(--radius);padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.card h3,.card h4{margin-top:0}.stat strong{font-size:30px;display:block}.stat span{color:var(--muted);font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.055em;padding:5px 9px;border-radius:999px;border:1px solid}
+.adopted{color:#7be7a7;background:rgba(56,193,114,.09);border-color:rgba(56,193,114,.35)}
+.conditional{color:#ffe280;background:rgba(242,201,76,.09);border-color:rgba(242,201,76,.34)}
+.rejected{color:#ff9a9a;background:rgba(239,106,106,.08);border-color:rgba(239,106,106,.34)}
+.undecided{color:#a6c9ff;background:rgba(99,164,255,.09);border-color:rgba(99,164,255,.34)}
+.tool-card{margin:17px 0;padding:24px;border:1px solid var(--line);border-radius:20px;background:#101720}
+.tool-head{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.tool-head h3{margin:0;font-size:21px}.tool-meta{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.kv{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--line);padding:10px 0}.kv:first-of-type{border-top:0}
+.kv b{color:#d8e4ef}.kv div{color:#aebcca}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.callout{border-left:3px solid var(--blue);background:#111d2a;padding:15px 17px;border-radius:0 12px 12px 0;color:#c5d1dc;margin:16px 0}
+.callout.warn{border-color:var(--yellow);background:#211d11}.callout.good{border-color:var(--green);background:#102018}
+table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:#dce6ef;background:#111a24;font-size:12px;letter-spacing:.03em}td{color:#afbdca}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#101720}
+code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{overflow:auto;background:var(--code);border:1px solid #202c39;border-radius:13px;padding:16px;color:#c8d6e5;line-height:1.55}
+.inline-code{background:#131c27;border:1px solid #263343;padding:2px 6px;border-radius:6px;font-family:ui-monospace,monospace}
+.workflow{display:flex;align-items:center;gap:8px;overflow:auto;padding:16px 2px 4px}
+.node{flex:0 0 auto;padding:11px 14px;border:1px solid #304257;border-radius:12px;background:#121c27;font-weight:700;font-size:12px}
+.arrow{color:#64788e;font-size:20px}
+.tree{white-space:pre;overflow:auto;background:#0b1118;border:1px solid var(--line);padding:18px;border-radius:14px;color:#bdcad8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.55}
+.checklist{padding-left:0;list-style:none}.checklist li{margin:7px 0;padding-left:24px;position:relative}.checklist li:before{content:"□";position:absolute;left:0;color:#91a6bb}
+.tags{display:flex;gap:7px;flex-wrap:wrap}.tag{font-size:11px;color:#aab9c7;background:#111b25;border:1px solid var(--line);border-radius:999px;padding:5px 8px}
+.toolbar{position:sticky;top:0;z-index:15;display:flex;gap:7px;flex-wrap:wrap;padding:10px 0 14px;background:linear-gradient(180deg,var(--bg) 70%,transparent)}
+.filter{background:#111a24;color:#aebdcc;border:1px solid var(--line);border-radius:999px;padding:7px 10px;cursor:pointer}.filter.on{color:white;border-color:#618cc3;background:#172941}
+.small{font-size:12px;color:var(--muted)}.muted{color:var(--muted)}
+.refs li{margin:9px 0}.refs a{overflow-wrap:anywhere}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.mobile-menu{display:none;position:fixed;right:16px;bottom:16px;z-index:30;background:#18304a;color:#fff;border:1px solid #35516d;border-radius:999px;padding:12px 16px;box-shadow:var(--shadow)}
+@media(max-width:980px){.layout{display:block}.sidebar{position:fixed;z-index:25;left:-320px;width:300px;transition:.2s}.sidebar.open{left:0}.mobile-menu{display:block}main{padding:30px 20px 100px}.hero h1{font-size:30px}.col-3,.col-4,.col-6{grid-column:span 12}.two{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.tool-head{display:block}.tool-meta{justify-content:flex-start;margin-top:10px}}
+@media print{body{background:#fff;color:#111}.sidebar,.mobile-menu,.toolbar{display:none}.layout{display:block}main{max-width:none;padding:0}.hero,.card,.tool-card,.table-wrap,pre,.tree{box-shadow:none;background:#fff;color:#111;border-color:#bbb}.muted,.small,.lead,.kv div,td{color:#333}a{color:#111}.badge{border-color:#777;color:#111;background:#fff}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <h1>JOGI HACK 2026</h1>
+    <p>Development Foundation & Rules Guide<br>Last verified: 2026-09-19 JST</p>
+  </div>
+  <nav class="nav" id="nav">
+    <a href="#overview">1. Overview</a>
+    <a href="#principles">2. Design Principles</a>
+    <a href="#summary">3. Adoption Summary</a>
+    <a href="#workflow">4. Development Workflow</a>
+    <a href="#adopted">5. Adopted Tools & Practices</a>
+    <a class="sub" href="#github">5.1–5.8 GitHub / Workflow</a>
+    <a class="sub" href="#docker">5.9 Docker Compose</a>
+    <a class="sub" href="#mise">5.10 mise</a>
+    <a class="sub" href="#doppler">5.11 Doppler</a>
+    <a class="sub" href="#quality">5.12–5.14 Quality</a>
+    <a class="sub" href="#design-docs">5.15–5.20 Design / Docs / Release</a>
+    <a href="#conditional">6. Conditional Tools</a>
+    <a href="#rejected">7. Rejected Alternatives</a>
+    <a href="#docs-policy">8. Documentation Policy</a>
+    <a href="#repo">9. Repository Structure</a>
+    <a href="#environment">10. Environment</a>
+    <a href="#setup">11. Development Setup</a>
+    <a href="#daily">12. Daily Development Guide</a>
+    <a href="#ci-rules">13. CI / Review / Merge Rules</a>
+    <a href="#db-rules">14. Database Rules</a>
+    <a href="#api-rules">15. API Rules</a>
+    <a href="#release">16. Release Strategy</a>
+    <a href="#demo">17. Demo Strategy</a>
+    <a href="#decision">18. Decision Rules</a>
+    <a href="#next">19. Next Decisions</a>
+    <a href="#references">20. References</a>
+  </nav>
+</aside>
+
+<div class="content">
+<main>
+<section id="overview" class="hero">
+  <div class="eyebrow">JOGI HACK 2026 / Team Guide</div>
+  <h1>開発基盤・開発ルールガイド</h1>
+  <p>3人・約3週間のWebアプリ開発で、環境差・仕様の認識ズレ・レビュー待ち・Secret共有事故・コードフリーズ直前の混乱を減らすための意思決定と運用ルールをまとめる。技術を増やすことではなく、「なぜ必要か」をチーム自身が説明できる状態を目的とする。</p>
+  <div class="meta">
+    <span class="pill">開発期間 2026-09-19 → 2026-10-12</span>
+    <span class="pill">Team 3</span>
+    <span class="pill">Web Application</span>
+    <span class="pill">Code Freeze 2026-10-12</span>
+    <span class="pill">API / DB 利用可能性：高</span>
+  </div>
+</section>
+
+<section>
+  <h2>この資料の立場</h2>
+  <div class="grid">
+    <div class="card col-6"><h3>現時点で確定</h3><ul><li>3人チーム</li><li>Webアプリケーション</li><li>開発期間とCode Freeze</li><li>ソースコード・アーキテクチャも審査対象</li><li>API / DBを使う可能性は非常に高い</li></ul></div>
+    <div class="card col-6"><h3>現時点で未確定</h3><ul><li>解決する課題・ターゲットユーザー・機能</li><li>Frontend / Backend Framework</li><li>DB製品、ORM / Query Builder</li><li>AI、認証、Hosting、外部API</li><li>Redis / Queue / Worker / SSE / WebSocket</li><li>DDD / Clean Architecture等の設計手法</li></ul></div>
+  </div>
+</section>
+
+<section id="principles">
+<h2>2. Design Principles</h2>
+<p class="lead">技術スタックを先に固定しない。プロダクト固有の問題を起点に、必要な性質へ落とし込み、その後で実装技術を選ぶ。</p>
+<div class="grid">
+  <div class="card col-4"><h3>Problem First</h3><p>課題 → 必要機能 → 必要な技術的性質 → 技術選定、の順を崩さない。</p></div>
+  <div class="card col-4"><h3>Necessary Complexity</h3><p>必要な複雑性だけを持つ。MicroservicesやQueue等を「技術的に強そう」という理由では入れない。</p></div>
+  <div class="card col-4"><h3>Single Source of Truth</h3><p>同じ情報を複数箇所で管理しない。コード・仕様・進捗・Secretの正本を決める。</p></div>
+  <div class="card col-4"><h3>3-week ROI</h3><p>導入・学習・デバッグコストを含め、3週間で元が取れる仕組みだけ導入する。</p></div>
+  <div class="card col-4"><h3>Explainable Decision</h3><p>「なぜ？」に対して、比較候補・トレードオフ・採用理由を説明できる状態を維持する。</p></div>
+  <div class="card col-4"><h3>Finish First</h3><p>複数の難しい技術を浅く入れるより、Mustを最後まで完成させる。</p></div>
+</div>
+</section>
+
+<section id="summary">
+<h2>3. Adoption Summary</h2>
+<div class="grid">
+  <div class="card stat col-3"><strong>20</strong><span>ADOPTED TOOLS / PRACTICES</span></div>
+  <div class="card stat col-3"><strong>5</strong><span>CONDITIONAL TOOLS</span></div>
+  <div class="card stat col-3"><strong>7</strong><span>REJECTED FOR NOW</span></div>
+  <div class="card stat col-3"><strong>20+</strong><span>UNDECIDED PRODUCT CHOICES</span></div>
+</div>
+<div class="toolbar">
+  <button class="filter on" data-filter="all">All</button>
+  <button class="filter" data-filter="adopted">ADOPTED</button>
+  <button class="filter" data-filter="conditional">CONDITIONAL</button>
+  <button class="filter" data-filter="rejected">REJECTED</button>
+  <button class="filter" data-filter="undecided">UNDECIDED</button>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Area</th><th>Decision</th><th>Status</th><th>Timing</th><th>Main reason</th></tr></thead>
+<tbody>
+<tr class="status-row" data-status="adopted"><td>Planning</td><td>GitHub Issues / Projects / Issue Forms / Milestones</td><td><span class="badge adopted">ADOPTED</span></td><td>Day 1</td><td>コード、PR、タスク、進捗をGitHubへ集約</td></tr>
+<tr class="status-row" data-status="adopted"><td>Workflow</td><td>Kanban / WIP / GitHub Flow / PR / Squash Merge</td><td><span class="badge adopted">ADOPTED</span></td><td>Day 1</td><td>短期開発で流れを止めず、レビュー可能な変更単位にする</td></tr>
+<tr class="status-row" data-status="adopted"><td>Environment</td><td>Docker Compose + mise</td><td><span class="badge adopted">ADOPTED</span></td><td>Day 1〜DB決定時</td><td>依存サービスとRuntime差を分離して統一</td></tr>
+<tr class="status-row" data-status="adopted"><td>Secrets</td><td>Doppler</td><td><span class="badge adopted">ADOPTED</span></td><td>Day 1</td><td>3人のSecret共有をSingle Source of Truth化</td></tr>
+<tr class="status-row" data-status="adopted"><td>Quality</td><td>Actions / Formatter / Linter / Tests / pre-commit checks</td><td><span class="badge adopted">ADOPTED</span></td><td>Day 1〜MVP</td><td>mainへ入る前に機械で検出できる問題を落とす</td></tr>
+<tr class="status-row" data-status="conditional"><td>API</td><td>OpenAPI + Bruno</td><td><span class="badge conditional">CONDITIONAL</span></td><td>独立HTTP API採用時</td><td>Frontend / Backend間のAPI契約を固定</td></tr>
+<tr class="status-row" data-status="conditional"><td>Observability</td><td>Sentry等</td><td><span class="badge conditional">CONDITIONAL</span></td><td>MVP後</td><td>Production Debuggingの必要性が出た場合のみ</td></tr>
+<tr class="status-row" data-status="rejected"><td>Docs</td><td>Jira / Confluence / Notion</td><td><span class="badge rejected">REJECTED</span></td><td>—</td><td>GitHub + Google Docsと責務が重複し、管理場所が増える</td></tr>
+<tr class="status-row" data-status="undecided"><td>Stack</td><td>Framework / DB / ORM / Hosting / Auth / AI</td><td><span class="badge undecided">UNDECIDED</span></td><td>Product決定後</td><td>プロダクト要件から選定する</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section id="workflow">
+<h2>4. Development Workflow</h2>
+<p class="lead">Scrumを厳密に回すのではなく、Kanbanベースの軽量チケット駆動を採用する。作業中を増やすより、Doneを増やす。</p>
+<div class="workflow" aria-label="development workflow">
+  <div class="node">Issue</div><div class="arrow">→</div><div class="node">Ready</div><div class="arrow">→</div>
+  <div class="node">Branch</div><div class="arrow">→</div><div class="node">Implement</div><div class="arrow">→</div>
+  <div class="node">PR</div><div class="arrow">→</div><div class="node">CI</div><div class="arrow">→</div>
+  <div class="node">Review</div><div class="arrow">→</div><div class="node">Verify</div><div class="arrow">→</div><div class="node">Squash Merge</div>
+</div>
+<div class="grid" style="margin-top:18px">
+<div class="card col-6"><h3>Project Board</h3><div class="workflow"><div class="node">Backlog</div><div class="arrow">→</div><div class="node">Ready</div><div class="arrow">→</div><div class="node">In Progress</div><div class="arrow">→</div><div class="node">Review</div><div class="arrow">→</div><div class="node">Verify</div><div class="arrow">→</div><div class="node">Done</div></div></div>
+<div class="card col-6"><h3>WIP Limit</h3><ul><li>In Progress：最大3</li><li>Review：最大2</li><li>原則1人1Issue</li><li>Reviewが詰まったら新規IssueよりReviewを優先</li></ul></div>
+<div class="card col-6"><h3>Definition of Ready</h3><ul class="checklist"><li>Whyが書かれている</li><li>Acceptance Criteriaがある</li><li>Priorityが決まっている</li><li>大きすぎない</li><li>Blockerがない</li><li>前提Issueが完了している</li></ul></div>
+<div class="card col-6"><h3>Definition of Done</h3><ul class="checklist"><li>Acceptance Criteria達成</li><li>CI成功</li><li>Code Review済み</li><li>動作確認済み</li><li>必要なTest追加</li><li>必要ならDocs更新</li><li>mainへMerge済み</li></ul></div>
+</div>
+</section>
+
+<section id="adopted">
+<h2>5. Adopted Tools & Practices</h2>
+<p class="lead">各項目は「便利だから」ではなく、今回の問題・代替案・導入コスト・運用方法まで含めて判断する。</p>
+
+<div class="tool-card" id="github">
+<div class="tool-head"><h3>5.1–5.8 GitHub / Issues / Projects / Flow / PR / Actions</h3><div class="tool-meta"><span class="badge adopted">ADOPTED</span><span class="tag">Timing: Day 1</span><span class="tag">Confidence: High</span></div></div>
+<div class="kv"><b>Overview</b><div>Repository・Issue・Project・Pull Request・CIを同じ場所に寄せ、開発の主線をGitHub内で完結させる。</div></div>
+<div class="kv"><b>Problem</b><div>タスク、コード、レビュー、進捗が別サービスに分散すると、3週間では「どこを見れば正しいか」の確認コストが大きい。</div></div>
+<div class="kv"><b>Without It</b><div>チャット上の依頼、手作業の進捗更新、Jira↔GitHubの往復、レビュー漏れが起きやすい。</div></div>
+<div class="kv"><b>Requirements</b><div>IssueとPRのリンク、Board管理、Milestone、CI結果、レビュー履歴、短命Branch、main保護。</div></div>
+<div class="kv"><b>Alternatives</b><div>Jira、Notion、Confluence、GitFlow。</div></div>
+<div class="kv"><b>Decision / Why</b><div>GitHub Issues + Projects + GitHub Flow + PR + Actionsを採択。コードとの距離が最も短く、3人・3週間では管理箇所を増やさないメリットが大きい。</div></div>
+<div class="two">
+<div><h4>Benefits</h4><ul><li>Issue→Branch→PR→Mergeの追跡が容易</li><li>PR単位で議論とCI結果が残る</li><li>MilestoneでMVP / Freezeを可視化</li><li>Issue FormsでFeature/Bug/Spikeを定型化</li></ul></div>
+<div><h4>Drawbacks / Trade-offs</h4><ul><li>高度なJiraワークフローほど細かい管理はしない</li><li>GitHub Projectsの設定を増やしすぎると逆に重くなる</li><li>private repositoryの一部保護機能はプラン条件に依存</li></ul></div>
+</div>
+<h4>Setup</h4><ol><li>Project BoardをBacklog / Ready / In Progress / Review / Verify / Doneで作成</li><li>Priority、Type、Size等の必要最小限のFieldを追加</li><li>Issue FormsをFeature / Bug / Spikeの3種類作成</li><li>PR Templateを追加</li><li>main direct push禁止、PR経由をチームルール化</li><li>ActionsでCIを追加</li></ol>
+<h4>Usage / Team Rules</h4><ul><li>1 Issue = 半日〜1日程度を目安に小さくする</li><li>Branch例：<span class="inline-code">feat/42-user-search</span></li><li>PRは1つの意味のある変更に絞る</li><li>1人以上のReview、CI成功、Verify後にSquash Merge</li><li><span class="inline-code">Closes #42</span>等でIssueとPRを関連付ける</li></ul>
+<div class="callout good"><b>Integration:</b> GitHubを中心に、mise / Docker / Dopplerでローカル開発、Actionsで検証、/docsで確定仕様を同じRepositoryに置く。</div>
+<div class="small">Review Trigger: 3人で回らないほどIssue/Project管理が重くなった場合のみ簡略化する。</div>
+</div>
+
+<div class="tool-card" id="docker">
+<div class="tool-head"><h3>5.9 Docker Compose</h3><div class="tool-meta"><span class="badge adopted">ADOPTED</span><span class="tag">Timing: DB / 依存サービス決定時</span><span class="tag">Confidence: High</span></div></div>
+<div class="kv"><b>Overview</b><div>複数の依存サービスをYAMLで定義し、同じ構成をチームで再現する。今回の主対象はDBやRedis等であり、アプリ本体まで必ずContainer化するとは限らない。</div></div>
+<div class="kv"><b>Problem</b><div>DB Version、Port、初期設定、依存サービスの導入方法がメンバーごとにずれる。</div></div>
+<div class="kv"><b>Without It</b><div>「AのPCでは動く」が増え、DBの再作成やセットアップ手順が属人化する。</div></div>
+<div class="kv"><b>Alternatives</b><div>各自ローカルインストール、Dev Container、外部Managed DBのみ。</div></div>
+<div class="kv"><b>Decision / Why</b><div>API / DB利用可能性が高いため採択。Docker公式でもComposeはservices / networks / volumesを単一YAMLで管理し、開発・テスト・CI等で利用できる。</div></div>
+<div class="two"><div><h4>Benefits</h4><ul><li><span class="inline-code">docker compose up -d</span>で依存サービス起動</li><li>DBを簡単に破棄・再作成できる</li><li>チーム全員で同一Versionを共有</li></ul></div><div><h4>Drawbacks</h4><ul><li>Docker自体の学習・トラブルシュートが必要</li><li>Docker Desktopのリソース消費</li><li>単純構成では過剰になる可能性</li></ul></div></div>
+<h4>Setup</h4><pre><code># 例: 実際のDBはプロダクト決定後
+services:
+  db:
+    image: &lt;database-image&gt;
+    # ports / volumes / healthcheck を必要に応じて定義</code></pre>
+<h4>Team Rules</h4><ul><li>依存サービスのVersionはcompose.yamlで固定する</li><li>アプリ本体をContainer化するかは必要性で判断</li><li>DB reset / seedを共通Taskから実行できるようにする</li></ul>
+<div class="small">Review Trigger: Dockerが原因の開発停止時間が環境統一メリットを上回る場合。</div>
+</div>
+
+<div class="tool-card" id="mise">
+<div class="tool-head"><h3>5.10 mise</h3><div class="tool-meta"><span class="badge adopted">ADOPTED</span><span class="tag">Timing: Day 1</span><span class="tag">Confidence: High</span></div></div>
+<div class="kv"><b>Overview</b><div>Runtime / CLIのVersionと、チーム共通Taskを<span class="inline-code">mise.toml</span>へ記述して共有する。</div></div>
+<div class="kv"><b>Problem</b><div>Node等のVersion差、READMEに散らばるコマンド、OSごとのセットアップ差。</div></div>
+<div class="kv"><b>Alternatives</b><div>nvm / Volta / asdf / Nix / Dev Container / package scriptsのみ。</div></div>
+<div class="kv"><b>Decision / Why</b><div>ツールVersion管理とTask Runnerを1つで担えるため採択。公式では<span class="inline-code">mise install</span>、<span class="inline-code">mise run</span>、<span class="inline-code">mise.toml</span>の共有を前提にしている。</div></div>
+<div class="two"><div><h4>Benefits</h4><ul><li>Runtime差を減らす</li><li>build / test / db-up等のコマンドを統一</li><li>CIでも同じ設定を再利用しやすい</li></ul></div><div><h4>Drawbacks</h4><ul><li>メンバー全員がmise CLIを入れる必要</li><li>package scriptsとの責務を重複させない設計が必要</li></ul></div></div>
+<h4>Setup</h4><pre><code># 例
+[tools]
+node = "&lt;version&gt;"
+
+[tasks.dev]
+run = "&lt;package-manager&gt; run dev"
+
+[tasks.test]
+run = "&lt;package-manager&gt; test"</code></pre>
+<h4>Team Rules</h4><ul><li>Version要求はmise.tomlへ</li><li>複雑なTaskはpackage scriptsや専用Scriptに寄せ、miseは入口を揃える</li><li>READMEでは「何を打つか」より<span class="inline-code">mise run</span>の入口を案内</li></ul>
+<div class="small">Review Trigger: 技術スタックがmise非対応またはCI/メンバー環境で不安定な場合。</div>
+</div>
+
+<div class="tool-card" id="doppler">
+<div class="tool-head"><h3>5.11 Doppler</h3><div class="tool-meta"><span class="badge adopted">ADOPTED</span><span class="tag">Timing: Day 1</span><span class="tag">Confidence: High</span></div></div>
+<div class="kv"><b>Overview</b><div>API KeyやDATABASE_URL等のSecretを集中管理し、ローカルやCIへ注入する。SecretのSingle Source of Truth。</div></div>
+<div class="kv"><b>Problem</b><div>.envをチャットで送り合う、更新時に再配布する、誰の値が最新か分からない、誤commitする。</div></div>
+<div class="kv"><b>Alternatives</b><div>Infisical、dotenvx、Bitwarden Secrets Manager、手動.env共有。</div></div>
+<div class="kv"><b>Comparison</b><div>2026-09-19時点でDoppler Developerは3ユーザー無料。今回の3人チームに一致する。Infisicalも有力だが責務が重なるため併用しない。</div></div>
+<div class="kv"><b>Decision / Why</b><div>Dopplerを採択。今回必要なのはSelf-hostではなく、3人が同じSecretを安全に共有する単純な運用であるため。</div></div>
+<div class="two"><div><h4>Benefits</h4><ul><li>.env実値を配布しない</li><li>更新時にSecretの正本が1箇所</li><li>CLI、Service Token、Integrationを利用可能</li></ul></div><div><h4>Drawbacks</h4><ul><li>外部SaaS依存</li><li>権限設定とToken管理が必要</li><li>障害時にSecret取得方法を考える必要</li></ul></div></div>
+<h4>Setup</h4><ol><li>Project / Environmentを作成</li><li>各メンバーがCLI login / setup</li><li>Secretを登録</li><li>開発コマンドをDoppler経由で実行</li><li>CIはService Token等で連携</li></ol>
+<pre><code># 例
+doppler login
+doppler setup
+doppler run -- &lt;development-command&gt;</code></pre>
+<h4>Team Rules</h4><ul><li>Secretの実値をRepository、Issue、PR、チャットへ貼らない</li><li>.env.exampleにはキー名と説明だけ置く</li><li>Secret変更はDoppler側を正とする</li></ul>
+<div class="small">Review Trigger: 無料プラン条件、チーム人数、必要な権限制御が変わった場合。</div>
+</div>
+
+<div class="tool-card" id="quality">
+<div class="tool-head"><h3>5.12–5.14 Formatter / Linter / Git Hooks / Test Strategy</h3><div class="tool-meta"><span class="badge adopted">ADOPTED</span><span class="tag">Timing: Day 1 → MVP</span><span class="tag">Confidence: High</span></div></div>
+<div class="kv"><b>Overview</b><div>人間がレビューする前に機械で落とせる問題を自動化し、テストは重要度に合わせて層を分ける。</div></div>
+<div class="kv"><b>Problem</b><div>レビューがformat指摘で埋まる、型エラーやbuild failureがmainへ入る、デモ導線の回帰が直前に見つかる。</div></div>
+<div class="kv"><b>Decision</b><div>Formatter / Linter / Type Check（TS時）/ Unit / Integration / 主要Flow E2Eを採択。Husky + lint-staged等はcommit前の軽量チェックに利用する。</div></div>
+<div class="two"><div><h4>Test Responsibility</h4><ul><li>Unit：プロダクト固有ロジック</li><li>Integration：API + DB等</li><li>E2E：デモで絶対壊したくない主要User Flow</li></ul></div><div><h4>Trade-offs</h4><ul><li>カバレッジ率を目的にしない</li><li>UI細部へ過剰なUnit Testを書かない</li><li>E2E本数を増やしすぎてCIを重くしない</li></ul></div></div>
+<h4>Default CI candidate</h4><pre><code>Format Check
+  ↓
+Lint
+  ↓
+Type Check
+  ↓
+Unit Test
+  ↓
+Build
+  ↓
+(必要になったら Integration / E2E)</code></pre>
+<h4>Team Rules</h4><ul><li>CI失敗のままMergeしない</li><li>バグ修正時は再現テストを追加できるか検討する</li><li>主要デモFlowはMVP完成後にE2E化する</li></ul>
+</div>
+
+<div class="tool-card" id="design-docs">
+<div class="tool-head"><h3>5.15–5.20 Figma / Google Docs / ADR / Mermaid / Editor config / Releases</h3><div class="tool-meta"><span class="badge adopted">ADOPTED</span><span class="tag">Timing: 必要箇所から</span><span class="tag">Confidence: High</span></div></div>
+<div class="kv"><b>Overview</b><div>FigmaはUI / Flow、Google Docsは議論中の文章、GitHub /docsは確定仕様、ADRは重要な設計判断、MermaidはGit管理可能な図、Git Tag / Releasesは提出状態の固定に使う。</div></div>
+<div class="kv"><b>Problem</b><div>UI・議事録・確定仕様・技術判断・Release状態が同じ場所に混在すると、正本が不明になる。</div></div>
+<div class="kv"><b>Decision / Why</b><div>情報の種類ごとに正本を明確化しつつ、確定した技術文書はRepositoryへ寄せる。Figma Starterは無料で、FigJamも利用できる。学生はEducation対象となる可能性がある。</div></div>
+<div class="two"><div><h4>Role split</h4><ul><li>Figma / FigJam：User Flow / Wireframe / UI</li><li>Google Docs：議事録 / ブレスト / 発表原稿下書き</li><li>/docs：確定仕様 / Architecture / Data Model / Operations</li><li>ADR：重要な技術判断</li><li>Mermaid：構成図・Sequence等</li></ul></div><div><h4>Repository hygiene</h4><ul><li>.editorconfigで基本フォーマット差を削減</li><li>.vscodeは必要最小限の推薦設定のみ</li><li>Tag / ReleaseでMVP、RC、提出版を固定</li></ul></div></div>
+<div class="callout"><b>ADR基準:</b> 「別の選択をしたらシステム設計や重要なトレードオフが変わる」判断だけ記録する。小さなライブラリ追加ごとには書かない。</div>
+</div>
+</section>
+
+<section id="conditional">
+<h2>6. Conditional Tools</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Tool</th><th>Status</th><th>解決する問題</th><th>導入条件</th><th>今入れない理由</th><th>再確認</th></tr></thead>
+<tbody>
+<tr><td>OpenAPI</td><td><span class="badge conditional">CONDITIONAL</span></td><td>API Contractの認識ズレ</td><td>FrontendとBackendが独立HTTP APIで通信</td><td>Server Actions等なら価値が下がる</td><td>API構成決定時</td></tr>
+<tr><td>Bruno</td><td><span class="badge conditional">CONDITIONAL</span></td><td>UIを介さないAPI確認、Collection共有</td><td>独立HTTP APIを持つ</td><td>APIがなければ不要</td><td>最初のAPI実装時</td></tr>
+<tr><td>Sentry等</td><td><span class="badge conditional">CONDITIONAL</span></td><td>Productionで再現困難なError</td><td>外部API、非同期、Production Debuggingの価値が高い</td><td>MVP前は導入効果が不明</td><td>MVP完成後</td></tr>
+<tr><td>Testcontainers</td><td><span class="badge conditional">CONDITIONAL</span></td><td>Integration Testごとの独立実DB</td><td>DBテストの分離価値が高い</td><td>Compose + CI DBで十分な可能性</td><td>Integration Test設計時</td></tr>
+<tr><td>Redis</td><td><span class="badge conditional">CONDITIONAL</span></td><td>Cache / Queue / Session / PubSub</td><td>プロダクト固有要件が発生</td><td>先に入れる理由がない</td><td>Performance / Async要件発生時</td></tr>
+<tr><td>Dev Container</td><td><span class="badge rejected">REJECTED FOR NOW</span></td><td>IDE / OSレベルまで環境統一</td><td>mise + Dockerで環境差を吸収できない</td><td>現状は重複が多い</td><td>環境問題が実際に発生した時</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="rejected">
+<h2>7. Rejected Alternatives</h2>
+<div class="grid">
+<div class="card col-6"><h3>Jira <span class="badge rejected">REJECTED</span></h3><p><b>良い点：</b>高度なIssue Tracking、Workflow、Dashboard。</p><p><b>比較：</b>GitHub Issues + Projects。</p><p><b>今回見送る理由：</b>3人・3週間ではGitHubとの二重管理がコスト。コードと作業を同じ場所に置く。</p><p class="small">再検討：規模拡大、複数チーム、複雑な承認フローが必要になった場合。</p></div>
+<div class="card col-6"><h3>Confluence <span class="badge rejected">REJECTED</span></h3><p><b>良い点：</b>Wiki型の共同ドキュメント。</p><p><b>比較：</b>GitHub /docs + Google Docs。</p><p><b>今回見送る理由：</b>確定仕様をコードと同じPRで変更できる方が審査・保守の両面で説明しやすい。</p></div>
+<div class="card col-6"><h3>Notion <span class="badge rejected">REJECTED</span></h3><p><b>良い点：</b>柔軟な情報整理。</p><p><b>今回見送る理由：</b>Google Docs / GitHub Projects / /docsと責務が重なる。</p></div>
+<div class="card col-6"><h3>Infisical <span class="badge rejected">REJECTED</span></h3><p><b>良い点：</b>Secret管理、Integrations、Self-host選択肢。</p><p><b>比較：</b>Doppler。</p><p><b>今回見送る理由：</b>良い製品だが責務が完全に重複。3人のSecret共有という今回の問題にはDopplerを1つだけ採用する。</p></div>
+<div class="card col-6"><h3>dotenvx <span class="badge rejected">REJECTED</span></h3><p><b>良い点：</b>暗号化.envをGit管理可能。</p><p><b>今回見送る理由：</b>復号鍵の共有管理が別途必要。Secret集中管理という目的にはDopplerの方が単純。</p></div>
+<div class="card col-6"><h3>CODEOWNERS <span class="badge rejected">REJECTED</span></h3><p><b>良い点：</b>Pathごとにレビュー担当を自動指定。</p><p><b>今回見送る理由：</b>3人ならIssueごとのOwner / Reviewer指定で十分。特定領域の責任が固定されたら再検討。</p></div>
+<div class="card col-6"><h3>Dev Container <span class="badge rejected">REJECTED FOR NOW</span></h3><p><b>良い点：</b>IDE / runtime / packagesまで再現。</p><p><b>今回見送る理由：</b>mise + Docker Composeでまず十分。解決できない環境差が発生してから導入する。</p></div>
+</div>
+</section>
+
+<section id="docs-policy">
+<h2>8. Documentation Policy</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>情報</th><th>Single Source of Truth</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td>コード</td><td>GitHub Repository</td><td>実装</td></tr>
+<tr><td>作業</td><td>GitHub Issues</td><td>Feature / Bug / Spike</td></tr>
+<tr><td>進捗</td><td>GitHub Projects</td><td>Kanban / Priority / WIP</td></tr>
+<tr><td>確定仕様</td><td>GitHub /docs</td><td>Requirements / Architecture / Data Model</td></tr>
+<tr><td>設計判断</td><td>ADR</td><td>Context / Decision / Alternatives / Consequences</td></tr>
+<tr><td>UI</td><td>Figma</td><td>User Flow / Wireframe / Design</td></tr>
+<tr><td>議事録・ブレスト</td><td>Google Docs</td><td>未確定情報・共同編集</td></tr>
+<tr><td>Secret</td><td>Doppler</td><td>API Key / DB URL等</td></tr>
+<tr><td>API仕様</td><td>OpenAPI（条件付き）</td><td>独立HTTP APIのContract</td></tr>
+</tbody></table></div>
+<div class="callout good"><b>仕様変更ルール:</b> コードだけ更新してDocsを古いままにしない。確定仕様に影響する変更は、同じPRまたは関連PRで/docsを更新する。</div>
+<h3>ADR format</h3>
+<pre><code># ADR-00x: Decision title
+
+## Context
+何を決める必要があるか
+
+## Decision
+何を選択したか
+
+## Alternatives
+何と比較したか
+
+## Reason
+なぜ選んだか
+
+## Consequences
+メリット / デメリット / 制約</code></pre>
+</section>
+
+<section id="repo">
+<h2>9. Repository Structure</h2>
+<div class="tree">repository/
+├─ .github/
+│  ├─ ISSUE_TEMPLATE/
+│  ├─ workflows/
+│  └─ pull_request_template.md
+├─ .vscode/
+├─ docs/
+│  ├─ requirements.md
+│  ├─ user-flow.md
+│  ├─ glossary.md
+│  ├─ architecture.md
+│  ├─ data-model.md
+│  ├─ adr/
+│  │  ├─ 0001-xxxx.md
+│  │  └─ ...
+│  └─ operations/
+│     ├─ demo-runbook.md
+│     └─ release-checklist.md
+├─ api/                       # 独立HTTP API構成の場合のみ
+│  └─ openapi.yaml
+├─ compose.yaml
+├─ mise.toml
+├─ .editorconfig
+├─ .env.example
+├─ CONTRIBUTING.md
+└─ README.md</div>
+<p class="small">実際のアプリディレクトリ構成（apps/、src/、packages/等）は技術スタック決定後に決める。</p>
+</section>
+
+<section id="environment">
+<h2>10. Environment</h2>
+<div class="grid">
+<div class="card col-4"><h3>Local</h3><p>各開発者PC。miseでRuntime / CLI、Docker ComposeでDB等、DopplerでSecretを揃える。</p></div>
+<div class="card col-4"><h3>Preview</h3><p>PR単位で利用可能なHostingなら導入。レビュー担当がブラウザから確認できる状態を目指す。</p></div>
+<div class="card col-4"><h3>Production</h3><p>mainからのみDeployする方針を基本候補とする。ローカルからの直接Production Deployは避ける。</p></div>
+</div>
+<h3>Environment Variables</h3>
+<ul><li>Secret実値：Doppler</li><li>必要なKeyの一覧：.env.example</li><li>Application起動時：Env Validation</li><li>Clientへ露出してよい変数 / Server-only変数を明確に分離</li></ul>
+<div class="callout warn"><b>Production direct operation:</b> Production DBやSecretを手作業で変更する必要が出た場合は、理由と手順を記録し、通常フローにしない。</div>
+</section>
+
+<section id="setup">
+<h2>11. Development Setup</h2>
+<p class="lead">以下は目標形。package managerやMigration commandはまだ未確定なので、技術スタック決定後に具体化する。</p>
+<pre><code>1. git clone &lt;repository&gt;
+2. cd &lt;repository&gt;
+3. mise install
+4. doppler login
+5. doppler setup
+6. docker compose up -d
+7. &lt;dependency install&gt;
+8. &lt;migration&gt;
+9. &lt;seed&gt;
+10. &lt;development server&gt;</code></pre>
+<h3>正常起動確認</h3>
+<ul class="checklist"><li>miseで必要Runtime / CLIが取得できる</li><li>DopplerからSecretが読み込める</li><li>DB containerがhealthy</li><li>Migration成功</li><li>Seed成功</li><li>Development serverが起動</li><li>主要画面/APIへアクセス可能</li></ul>
+<h3>トラブル時の確認順</h3>
+<p>Runtime Version → Secret → Container → DB接続 → Migration → Application log → Network / External API の順で切り分ける。</p>
+</section>
+
+<section id="daily">
+<h2>12. Daily Development Guide</h2>
+<ol>
+<li>ReadyからIssueを選ぶ。</li><li>Ownerを設定する。</li><li>Acceptance Criteriaを再確認する。</li>
+<li>mainを更新しBranchを作る。</li><li>実装する。</li><li>Local Test / Formatter / Linterを実行する。</li>
+<li>意味のある単位でCommitする。</li><li>PRを作成しIssueをリンクする。</li><li>CIを通す。</li>
+<li>ReviewerがCode Reviewする。</li><li>VerifyでAcceptance Criteriaを確認する。</li><li>Squash Mergeする。</li>
+<li>IssueをClose / Doneにする。</li><li>次のReady Issueへ進む。</li>
+</ol>
+<div class="callout"><b>Daily sync:</b> 必要なら5〜10分で「昨日 / 今日 / Blocker」のみ共有。設計議論は別枠へ切り出す。</div>
+</section>
+
+<section id="ci-rules">
+<h2>13. CI / Review / Merge Rules</h2>
+<div class="grid">
+<div class="card col-6"><h3>Required checks candidate</h3><ul><li>Format Check</li><li>Lint</li><li>Type Check（TS時）</li><li>Unit Test</li><li>Build</li><li>必要になったらIntegration / E2E</li></ul></div>
+<div class="card col-6"><h3>Merge condition</h3><ul><li>mainへ直接pushしない</li><li>PR必須</li><li>CI成功</li><li>原則1人以上Review</li><li>Acceptance Criteria確認</li><li>Squash Merge</li></ul></div>
+</div>
+<h3>Reviewの優先順位</h3>
+<p>Correctness → Security / Data loss → Architecture / Responsibility → Test → Readability → Style の順。Styleは可能な限りFormatter / Linterへ任せる。</p>
+<h3>CI失敗時</h3>
+<p>失敗原因を修正してからMergeする。CI自体が誤検知の場合は「なぜ無視できるか」を明確にし、恒常的なSkipルールにしない。</p>
+</section>
+
+<section id="db-rules">
+<h2>14. Database Rules</h2>
+<div class="grid">
+<div class="card col-6"><h3>Adopted</h3><ul><li>Schema変更はMigration</li><li>Migration fileをGit管理</li><li>Development Seed</li><li>Demo Seed</li><li>必要ならTest Fixture</li><li>DB込みIntegration Test</li></ul></div>
+<div class="card col-6"><h3>Decide later</h3><ul><li>Database product</li><li>ORM / Query Builder</li><li>ID方式</li><li>Constraint</li><li>Index</li><li>Transaction境界</li><li>Backup / Restore要件</li></ul></div>
+</div>
+<div class="callout warn"><b>禁止したい通常運用:</b> Production DBをGUIで直接ALTERして終わり、という変更。Schema変更はPRレビュー可能なMigrationとして残す。</div>
+<h3>Seed separation</h3>
+<div class="workflow"><div class="node">Development Seed</div><div class="arrow">/</div><div class="node">Demo Seed</div><div class="arrow">/</div><div class="node">Test Fixture</div></div>
+<p>発表画面に「test / aaa / sample123」が出る事故を避けるため、Demo Dataは開発用データと分ける。</p>
+</section>
+
+<section id="api-rules">
+<h2>15. API Rules</h2>
+<div class="callout warn">この章は独立HTTP APIを採用した場合のみ適用する。Server Actions等を中心にする場合、OpenAPI / Brunoを無理に導入しない。</div>
+<div class="grid">
+<div class="card col-6"><h3>Contract</h3><ul><li>OpenAPIをSingle Source of Truth候補にする</li><li>Request Validation</li><li>Responseの型 / Schema</li><li>Status Code</li><li>Error Contract</li></ul></div>
+<div class="card col-6"><h3>Operational rules</h3><ul><li>Authentication / Authorization</li><li>Timeout</li><li>有限Retry</li><li>Rate Limit対応</li><li>Versioningは必要性が出た時のみ</li></ul></div>
+</div>
+<h3>Error Contract</h3>
+<p>Endpointごとに <span class="inline-code">{error:"error"}</span> 等の独自形式を乱立させない。RFC 9457 Problem Details等も参考に、統一されたError構造を設計する。</p>
+<h3>Bruno</h3>
+<p>独立API採用時は、CollectionをRepository付近へ置き、API変更と同じPRで更新できる形を候補とする。BrunoはGitを使ったCollection共同管理を公式にサポートする。</p>
+</section>
+
+<section id="release">
+<h2>16. Release Strategy</h2>
+<div class="workflow">
+<div class="node">MVP</div><div class="arrow">→</div><div class="node">Feature Complete</div><div class="arrow">→</div>
+<div class="node">Bug / UX / Test / Docs</div><div class="arrow">→</div><div class="node">Release Candidate</div><div class="arrow">→</div>
+<div class="node">Tag / Release</div><div class="arrow">→</div><div class="node">2026-10-12 Code Freeze</div>
+</div>
+<h3>Milestones</h3>
+<ul><li>MVP</li><li>Feature Complete</li><li>Release Candidate</li><li>Code Freeze</li></ul>
+<h3>Tag example</h3>
+<pre><code>v0.1.0  MVP
+v0.9.0  Release Candidate
+v1.0.0  JOGI HACK submission</code></pre>
+<h3>Rollback / Revert</h3>
+<p>Production障害で原因がすぐ分からない場合、無理にその場で直し続けるより、直前の正常Releaseへ戻す / 問題PRをRevertする選択肢を持つ。</p>
+</section>
+
+<section id="demo">
+<h2>17. Demo Strategy</h2>
+<div class="grid">
+<div class="card col-6"><h3>Demo Runbook</h3><ul><li>デモ前準備</li><li>Production確認</li><li>Demo Account</li><li>Demo Data</li><li>操作手順</li><li>使用URL</li><li>Backup Plan</li><li>外部API障害時の対応</li></ul></div>
+<div class="card col-6"><h3>直前Checklist</h3><ul class="checklist"><li>CI成功</li><li>Production Deploy成功</li><li>Migration確認</li><li>Demo Seed確認</li><li>Environment確認</li><li>主要Flow確認</li><li>Error表示確認</li><li>Responsive確認</li><li>README / Architecture更新</li><li>Secret混入確認</li></ul></div>
+</div>
+<p>デモ当日は「普段の開発DB」をそのまま見せるのではなく、きれいなDemo Seedから再現できる状態を目指す。</p>
+</section>
+
+<section id="decision">
+<h2>18. Decision Rules</h2>
+<p class="lead">新技術を提案するときは、以下へ答えられない限り「採用」へ進めない。</p>
+<ol>
+<li>何の問題を解決するのか。</li>
+<li>現状の方法ではなぜ不足するのか。</li>
+<li>代替手段は何か。</li>
+<li>既存ツールと責務が重複していないか。</li>
+<li>導入コストは何か。</li>
+<li>学習コストは何か。</li>
+<li>デバッグコストは何か。</li>
+<li>3週間で元が取れるか。</li>
+<li>審査員から「なぜ？」と聞かれてチーム自身が答えられるか。</li>
+<li>ADRとして残すほど重要な判断か。</li>
+</ol>
+<div class="callout good"><b>ADRを書く目安:</b> 別案を選ぶとArchitecture、データモデル、運用、重要なトレードオフが変わる決定。</div>
+</section>
+
+<section id="next">
+<h2>19. Next Decisions</h2>
+<div class="grid">
+<div class="card col-4"><h3>Product <span class="badge undecided">UNDECIDED</span></h3><ul><li>Problem</li><li>Target User</li><li>Core Value</li><li>MVP</li></ul></div>
+<div class="card col-4"><h3>Application <span class="badge undecided">UNDECIDED</span></h3><ul><li>Frontend Framework</li><li>Backend Framework</li><li>API方式</li><li>Architecture</li></ul></div>
+<div class="card col-4"><h3>Data <span class="badge undecided">UNDECIDED</span></h3><ul><li>Database</li><li>ORM / Query Builder</li><li>ID方式</li><li>Transaction</li><li>Constraint</li><li>Index</li></ul></div>
+<div class="card col-4"><h3>Infrastructure <span class="badge undecided">UNDECIDED</span></h3><ul><li>Hosting</li><li>File Storage</li><li>Authentication</li><li>Monitoring</li></ul></div>
+<div class="card col-4"><h3>Product-specific <span class="badge undecided">UNDECIDED</span></h3><ul><li>External API</li><li>AI</li><li>Cache</li><li>Redis</li><li>Queue</li><li>Worker</li><li>SSE / WebSocket</li><li>Search</li></ul></div>
+<div class="card col-4"><h3>Do not pre-adopt</h3><ul><li>Microservices</li><li>CQRS</li><li>Event Sourcing</li><li>Vector DB</li><li>Kubernetes</li><li>OpenTelemetry stack</li></ul></div>
+</div>
+</section>
+
+<section id="references">
+<h2>20. References</h2>
+<p class="lead">料金・機能・最新仕様のように変化しうる情報は、2026-09-19 JST時点で一次情報を優先して確認した。</p>
+<ul class="refs">
+<li><a href="https://docs.github.com/en/issues" target="_blank" rel="noreferrer">GitHub Issues documentation</a> — Issues / Projects / Milestones等</li>
+<li><a href="https://docs.github.com/en/issues/tracking-your-work-with-issues/learning-about-issues/planning-and-tracking-work-for-your-team-or-project" target="_blank" rel="noreferrer">GitHub: Planning and tracking work</a></li>
+<li><a href="https://docs.github.com/en/actions" target="_blank" rel="noreferrer">GitHub Actions documentation</a></li>
+<li><a href="https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases" target="_blank" rel="noreferrer">GitHub Releases documentation</a></li>
+<li><a href="https://docs.docker.com/compose" target="_blank" rel="noreferrer">Docker Compose documentation</a> — multi-container applications / environments</li>
+<li><a href="https://docs.docker.com/reference/compose-file/develop/" target="_blank" rel="noreferrer">Docker Compose Develop Specification</a></li>
+<li><a href="https://mise.jdx.dev/getting-started" target="_blank" rel="noreferrer">mise Getting Started</a> — tools / env / tasks / mise.toml</li>
+<li><a href="https://mise.jdx.dev/tasks/" target="_blank" rel="noreferrer">mise Tasks</a></li>
+<li><a href="https://www.doppler.com/pricing" target="_blank" rel="noreferrer">Doppler Pricing</a> — Developer: 3 users free（確認日 2026-09-19）</li>
+<li><a href="https://www.figma.com/pricing/" target="_blank" rel="noreferrer">Figma Pricing</a> — Starter free（確認日 2026-09-19）</li>
+<li><a href="https://www.figma.com/pricing-faq/" target="_blank" rel="noreferrer">Figma Pricing FAQ</a> — Starter / Education</li>
+<li><a href="https://spec.openapis.org/oas/" target="_blank" rel="noreferrer">OpenAPI Specification</a> — v3.2.1 published 2026-09-10</li>
+<li><a href="https://docs.usebruno.com/v2/git-integration/overview" target="_blank" rel="noreferrer">Bruno Collaboration / Git Integration</a></li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9457.html" target="_blank" rel="noreferrer">RFC 9457 — Problem Details for HTTP APIs</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Logging Cheat Sheet</a></li>
+</ul>
+<hr>
+<p class="small">この資料自体も固定ではない。プロダクト決定、技術的制約の発見、実際の開発摩擦に応じて更新する。重要なのは「最初の決定を守ること」ではなく、「なぜ変更したかを説明可能にすること」。</p>
+</section>
+
+</main>
+</div>
+</div>
+<button class="mobile-menu" id="menuBtn" type="button">目次</button>
+<script>
+const sidebar = document.getElementById('sidebar');
+document.getElementById('menuBtn').addEventListener('click',()=>sidebar.classList.toggle('open'));
+document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>sidebar.classList.remove('open')));
+
+const links=[...document.querySelectorAll('.nav a')];
+const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+const sections=[...document.querySelectorAll('section[id], .tool-card[id]')];
+const obs=new IntersectionObserver(entries=>{
+  const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+  if(!visible) return;
+  links.forEach(a=>a.classList.remove('active'));
+  const link=map.get(visible.target.id);
+  if(link) link.classList.add('active');
+},{rootMargin:'-20% 0px -65% 0px',threshold:[0,.2,.5]});
+sections.forEach(s=>obs.observe(s));
+
+const filters=[...document.querySelectorAll('.filter')];
+filters.forEach(btn=>btn.addEventListener('click',()=>{
+  filters.forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  const f=btn.dataset.filter;
+  document.querySelectorAll('.status-row').forEach(row=>{
+    row.style.display=(f==='all'||row.dataset.status===f)?'':'none';
+  });
+}));
+</script>
+</body>
+</html>

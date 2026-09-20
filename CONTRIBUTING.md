@@ -7,7 +7,7 @@
 
 基本的に以下の流れで開発します。
 
-1. Issueを作成する
+1. 対応する既存Issueを確認し、なければ変更着手前にIssueを作成する
 2. Issueの目的・内容・完了条件を確認する
 3. 担当者が自分をAssigneeに設定し、Scopeを設定する
 4. Issueを `Ready` にする
@@ -86,6 +86,20 @@
 ---
 
 ## Issue
+
+### チケット作成を着手条件にする
+
+実装・修正・設定変更・ドキュメント更新は、変更着手前にGitHub Issueへ紐付けます。
+小さな変更やローカルだけの作業でも、チケットを省略しません。
+
+1. 既存Issueを検索し、目的・範囲が一致する未完了Issueがあれば利用します。追加修正も同じ範囲なら同じIssueに記録し、重複作成しません。
+2. 対応するIssueがなければ、目的・範囲・完了条件を記載して作成します。投稿案をローカルに用意しただけでは作成完了ではありません。
+3. Issue番号・URL、Assignee、Scope、Definition of Readyを確認してから、番号付きBranchで変更を開始します。
+
+Issue作成に承認が必要な依頼では、投稿する内容を示し、**変更着手前に**承認を求めます。
+ログイン・権限不足や承認待ちの場合も、チケット未作成のまま実装・設定・文書編集を先行しません。
+その間に行えるのは、既存状態の読み取り調査とIssue本文案・判断材料の準備までです。
+すでにチケットなしで着手していた場合は、既存変更を消さずに状況を報告し、紐付けを整えてから対象作業を再開します。
 
 Issueは以下の4種類を使用します。
 
@@ -216,6 +230,11 @@ Issue作成者と作業担当者が異なる場合も、実際に作業する人
 
 ## Scope
 
+### StatusとScope
+
+Statusは作業の進捗、Scopeは完成の優先範囲です。両者を別々に設定します。
+Statusの値・更新方法は[GitHub Projects](#github-projects)を参照してください。
+
 GitHub Projectsの `Scope` を使用します。
 
 - `Must`: コードフリーズまでに必ず完成させる
@@ -227,6 +246,9 @@ Mustの完成度を犠牲にしてShouldやCouldを実装しないでくださ�
 ---
 
 ## GitHub Projects
+
+原則1人1Issueとし、レビューが滞っている場合は新規着手よりレビューを優先します。
+BoardのWIP上限と資料との差分は[開発基盤の状態](docs/operations/development-foundation-status.md#資料との相違点)を参照し、列や上限を無断で置換しません。
 
 Statusは以下を使用します。
 
@@ -406,7 +428,7 @@ Stageした内容はCommit前に必ず確認します。
 
 Pull Requestでは以下を守ります。
 
-- 原則としてIssueと紐付ける
+- 対応Issueと紐付ける
 - `main` へ直接pushしない
 - `main` を対象とするPRは、書き込み権限を持つ別メンバーのApproveが最低1件付くまでMergeしない
 - 保護ルールのbypassや、承認待ちのままのMergeを行わない
@@ -679,7 +701,8 @@ Force PushはGitの履歴を書き換えるため、他のメンバーの変更�
 - Webhook URL
 - `.env` の実値
 
-秘密情報は環境変数などで管理します。
+Secret実値の正本はDopplerです。接続先Project・Configは管理者の確認後に選びます。
+ローカル起動・CIへの受け渡しと未完了の設定は[開発基盤の状態と手順](docs/operations/development-foundation-status.md#dopplerの引き継ぎ)を参照してください。
 
 `.env` などは `.gitignore` でGitの管理対象から除外します。
 
@@ -702,6 +725,25 @@ Merge前に以下を確認してください。
 - [ ] Issueの完了条件を満たしている
 - [ ] 必要な動作確認が完了している
 - [ ] 関係のない変更が混ざっていない
+
+導入済みCIが失敗している場合は原因を修正してからMergeします。
+現在の`Foundation / Repository checks`は文書・設定の検証であり、アプリのテスト成功を意味しません。
+アプリ実装後は採用したFormatter・Linter・テスト・buildを実行し、未実装のコマンドはCIへ追加しません。
+
+## ドキュメントと技術判断
+
+| 情報 | 正本・扱い |
+| --- | --- |
+| 議事録、ブレスト、発表原稿の下書き | Google Docs。議論中の内容を確定事項として扱わない |
+| UI、Wireframe、操作の流れ | Figma / FigJam。共有URLと権限は管理者が確認してから案内する |
+| 確定仕様、Architecture、Data Model、運用 | GitHubの`docs/`。仕様変更と同じPRまたは関連PRで更新する |
+| 重要な設計・運用判断 | `docs/decisions/`。Context / Decision / Alternatives / Reason / Consequencesを記録する |
+| Git管理できる構成図・Sequence図 | 必要な仕様文書内のMermaid。実装前に架空の図を作らない |
+
+採用方針・導入条件の記録は[開発基盤ADR](docs/decisions/0001-development-foundation.md)、
+項目ごとの導入・検証結果、外部変更の承認待ちは[開発基盤の状態](docs/operations/development-foundation-status.md)を参照してください。
+過去のADRを黙って書き換えず、判断変更時は新しいADRから旧ADRを参照し、旧決定をSupersededとして扱います。
+リリース・提出前は[リリースとデモの手順](docs/operations/release-demo.md)を使います。
 
 ---
 

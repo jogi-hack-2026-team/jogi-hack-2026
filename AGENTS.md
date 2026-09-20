@@ -25,6 +25,10 @@ Codex、Claude Code、GitHub Copilotなど、利用するAIに関係なく、
 
 Single Source of Truthを維持する。
 
+開発基盤の採用方針・導入条件・個別設定の確認結果は[開発基盤の状態](docs/operations/development-foundation-status.md)を参照する。
+ADOPTEDを動作確認済みと扱わない。外部リソース作成・権限・保護設定変更は対象と差分の承認後に行う。
+Secret不要の検証へDopplerやProductionのSecretを渡さない。現段階の文書検証コマンドは[README](README.md#開発基盤のセットアップと確認)を参照する。
+
 ---
 
 ## 2. Project Context
@@ -559,7 +563,8 @@ GitHub MCPは使用しない。
 
 ## 16. Issue
 
-非自明な実装作業は、原則としてIssueに紐付ける。
+実装・修正・設定・文書の変更は、変更着手前にIssueへ紐付ける。チケット未作成のままローカル編集を先行しない。
+既存Issueの利用、新規作成、承認・権限待ちの扱いは[CONTRIBUTINGの着手条件](CONTRIBUTING.md#チケット作成を着手条件にする)に従う。
 
 Issueを確認するときは、
 
