@@ -551,13 +551,11 @@ CLI・対応Skillの導入、設定、E2E整備はUI実装時に行い、利用�
 
 ### GitHub
 
-GitHub操作は[採択済み方針](AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、基本は`gh` CLIを使用する。
-未導入・認証不可などで利用できない場合はGitHub Web UIで代替する。
-ローカルのブランチ・コミット操作は`git`を使用する。
+AIエージェントによるIssue・GitHub Projects・Pull Request操作は[採択済み方針](AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、GitHub MCPを基本手段とする。
+利用前に接続・認証・対象リポジトリの権限を確認し、利用できない場合はGitHub Web UIで代替する。Issueを確認・作成できない場合は変更を始めない。
+ローカルのBranch・Commit・Pushには`git`を使用する。
 
-GitHub MCPは使用しない。
-
-同じ操作を行うためだけに、複数のツール経路を増やさない。
+同じ操作を複数のツール経路で重複実行しない。
 
 ---
 
