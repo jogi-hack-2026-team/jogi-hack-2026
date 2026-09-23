@@ -41,20 +41,8 @@ description: 他メンバーが作成したGitHub Pull Requestをレビュワー
 
 # 2. Pull Requestの前提を確認する
 
-[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、基本はGitHub CLIで対象Pull Requestを確認する。
-未導入・認証不可などで利用できない場合はGitHub Web UIで代替する。
-
-例:
-
-```bash
-gh pr view <PR番号>
-```
-
-必要に応じて変更内容を確認する。
-
-```bash
-gh pr diff <PR番号>
-```
+[採択済み方針](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)に従い、GitHub MCPの`pull_request_read`で対象Pull Requestの詳細（`get`）と差分（`get_diff`）を確認する。
+接続・認証・権限を確認し、利用できない場合はGitHub Web UIで代替する。PRの対象Branch、変更ファイル、レビュー状態も必要に応じて確認する。
 
 以下を確認する。
 
@@ -65,11 +53,7 @@ gh pr diff <PR番号>
 - テスト方法
 - 補足事項
 
-関連Issueがある場合は必ずIssueも確認する。
-
-```bash
-gh issue view <Issue番号>
-```
+関連Issueがある場合はGitHub MCPの`issue_read`（`get`）で必ず確認する。
 
 IssueとPRの内容が一致していない場合は、その点をレビュー対象とする。
 

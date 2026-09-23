@@ -9,10 +9,10 @@ GitHub、Issue、Branch、Pull Requestなどを使った開発に慣れていな
 [CONTRIBUTING.md](../CONTRIBUTING.md)
 を参照してください。
 
-GitHub操作は基本的に`gh` CLIを使用し、利用できない場合はGitHub Web UIで代替します。
+AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基本とし、接続できない場合はこのガイドのGitHub Web UI手順を使います。
+人間が使う操作手段は強制しません。ローカルのBranch・Commit・Pushは`git`を使います。
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
-このガイドのGitHub Web UIの手順も、代替手段として利用できます。
 
 機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から対象の仕様文書へ進んでください。現在はアプリ未実装のため、まず[初回セットアップ](#13-初回セットアップ)で文書・設定を確認できます。
 本ガイドの検索機能やIssue番号・Branch名は操作を説明する例です。実装済み機能や実在する対応Issueを示すものではありません。
@@ -76,7 +76,7 @@ Merge
 | 用語            | 意味                                   |
 | --------------- | -------------------------------------- |
 | Issue           | やることを管理するチケット             |
-| GitHub Projects | IssueやPRの進捗を管理するKanban        |
+| GitHub Projects | Issueの進捗を管理するKanban            |
 | Branch          | mainに影響を与えず作業する場所         |
 | Commit          | 変更内容をGitの履歴として保存したもの  |
 | Push            | ローカルのCommitをGitHubへ送ること     |
