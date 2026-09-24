@@ -15,12 +15,13 @@
 
 ## アプリの仕様と実装
 
-2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で2文書の初版と隔離した比較PoCを追加。上記の初回棚卸しは過去の記録であり、以下が現在の導線です。この対応表は仕様を複製せず、正式設計SSOTはProduct SpecとArchitectureの2本です。
+2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で2文書の初版と隔離した比較PoCを追加。2026-09-25に人間Snapshot、Longlist・成長設計、追加PoCへ同期しました。上記の初回棚卸しは過去の記録であり、以下が現在の導線です。この対応表は仕様を複製せず、正式設計SSOTはProduct SpecとArchitectureの2本です。
 
 | 項目 | 現在の状態・説明先 | 実装・関連処理 | 確認方法・今後の更新先 |
 | --- | --- | --- | --- |
 | 対象ユーザー、課題、主要機能 | [Product Spec](product-spec.md)の要件・Baseline・OPEN・Scope案 | 本番未実装。PoCを採択済み仕様と扱わない | #20・#21とProduct Decision Logで人間の決定を確認 |
-| PoC `/`・`/explore` | Seed選択・探索・Summary。[UX](product-spec.md#user-experience)、正式レイアウトはOPEN | [共通画面](../experiments/stack-bakeoff/frontend/shared/Screens.tsx)、[Vite](../experiments/stack-bakeoff/frontend/vite/)、[Next](../experiments/stack-bakeoff/frontend/next/) | [共通E2E](../experiments/stack-bakeoff/tests/frontend.spec.ts)。実Playback・本番画面ではない |
+| PoC `/`・`/explore` | Seed選択・探索・Summary。[UX](product-spec.md#user-experience)、正式レイアウトはOPEN | [共通画面](../experiments/stack-bakeoff/frontend/shared/Screens.tsx)、[Vite](../experiments/stack-bakeoff/frontend/vite/)、[Next](../experiments/stack-bakeoff/frontend/next/)、[TanStack Router](../experiments/stack-bakeoff/frontend/tanstack/) | [共通E2E](../experiments/stack-bakeoff/tests/frontend.spec.ts)。実Playback・最新計数/Contextの本番実装ではない |
+| Scale・将来の交換境界 | [ScaleとEvolution](architecture.md#scaleとevolution)。実測と机上分析を区別 | [2process/100並列/履歴試験](../experiments/stack-bakeoff/scripts/scale.ts)、[結果](../experiments/stack-bakeoff/results/scale-metrics.json) | [再実行手順](../experiments/stack-bakeoff/README.md#testとmeasure)。Stage 2/3の容量保証ではない |
 | API・サーバー処理・DB | [A-03](architecture.md#a-03-sessionと整合性)、契約・transaction・revisionの候補 | [Service](../experiments/stack-bakeoff/backend/shared/service.ts)、[DB](../experiments/stack-bakeoff/backend/shared/database.ts)、[LinTS](../experiments/stack-bakeoff/backend/shared/lints.ts) | [HTTP/DB/数値試験](../experiments/stack-bakeoff/tests/backend.test.ts)。本番migrationはOPEN |
 | 認証・認可、外部連携、非同期処理 | [A-04](architecture.md#a-04-catalogとplayback)、[A-05](architecture.md#a-05-authenticationとguest) | localhost Guest所有権と外部障害Mockのみ。実API・Account・公開Cookie・Jobなし | 実再生/権利/認証は未検証。PoCの成立と公開Goを分ける |
 | 起動・build・typecheck・test | 比較PoC専用。[再実行手順](../experiments/stack-bakeoff/README.md) | [package](../experiments/stack-bakeoff/package.json)、[測定](../experiments/stack-bakeoff/results/) | [Architectureの検証](architecture.md#testingとcicd)。本番のスタック・コマンド・CI採択とは分ける |

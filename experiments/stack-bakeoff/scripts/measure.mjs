@@ -61,7 +61,10 @@ const result = {
   typecheckMs: run("typecheck"),
   frontend: {},
 };
-for (const candidate of ["vite", "next"]) {
+const reevaluate = process.argv.includes("--reevaluate");
+for (const candidate of reevaluate
+  ? ["vite", "next", "tanstack"]
+  : ["vite", "next"]) {
   run(`build:${candidate}`);
   const elapsed = Array.from({ length: 3 }, () => run(`build:${candidate}`));
   const sources = files(`frontend/${candidate}`).filter(
@@ -77,7 +80,7 @@ for (const candidate of ["vite", "next"]) {
       0,
     ),
     outputBytes: bytes(
-      `frontend/${candidate}/${candidate === "vite" ? "dist" : ".next"}`,
+      `frontend/${candidate}/${candidate === "next" ? ".next" : "dist"}`,
     ),
   };
 }
@@ -90,7 +93,9 @@ result.shared = {
   ),
 };
 writeFileSync(
-  "results/build-metrics.json",
+  reevaluate
+    ? "results/reevaluation-build-metrics.json"
+    : "results/build-metrics.json",
   JSON.stringify(result, null, 2) + "\n",
 );
 console.log(JSON.stringify(result, null, 2));

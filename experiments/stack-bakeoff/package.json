@@ -12,10 +12,15 @@
     "build:vite": "vite build frontend/vite",
     "build:next": "next build frontend/next",
     "e2e": "playwright test",
-    "measure": "node scripts/measure.mjs"
+    "measure": "node scripts/measure.mjs",
+    "dev:tanstack": "vite frontend/tanstack --host 127.0.0.1 --port 4175",
+    "build:tanstack": "vite build frontend/tanstack",
+    "api:integration": "tsx scripts/integration-server.ts",
+    "scale": "tsx scripts/scale.ts"
   },
   "dependencies": {
     "@hono/node-server": "2.1.1",
+    "@tanstack/react-router": "1.170.39",
     "fastify": "5.12.5",
     "hono": "4.13.9",
     "next": "16.3.6",

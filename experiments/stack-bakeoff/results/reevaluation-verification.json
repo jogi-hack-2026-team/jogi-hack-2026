@@ -1,0 +1,60 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "dateJst": "2026-09-25",
+  "issue": 34,
+  "scope": "Longlist reevaluation; preserve preliminary slice, add TanStack Router, integrate Vite/Fastify and exercise multi-process consistency. Not a production implementation of the new Decision Snapshot.",
+  "backend": {
+    "command": "npm.cmd test",
+    "passed": 29,
+    "failed": 0,
+    "note": "Node runner includes two parent tests: 13 scenarios per framework plus one shared numerical test."
+  },
+  "e2e": {
+    "command": "npm.cmd run e2e",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 2,
+    "projects": ["vite", "next", "tanstack"],
+    "commonTestsPerProject": 4,
+    "liveIntegration": "Vite React Router + Fastify + PostgreSQL",
+    "skipReason": "Next and TanStack live integration deliberately excluded; no full cross-product bake-off.",
+    "observedFailureAndFix": "Initial TanStack render-error recovery failed because the router caught the error before the outer shared Boundary. Added Boundary inside route component; targeted 4-pass/1-skip rerun, then full 13-pass/2-skip rerun succeeded."
+  },
+  "buildAndTypecheck": {
+    "command": "npm.cmd run measure -- --reevaluate",
+    "passed": true,
+    "artifact": "reevaluation-build-metrics.json",
+    "conditions": "Warm-up plus 3 sequential builds per frontend; E2E stopped first. Common strict typecheck and Next build typecheck succeeded."
+  },
+  "scale": {
+    "command": "npm.cmd run scale",
+    "passed": true,
+    "artifact": "scale-metrics.json",
+    "assertions": [
+      "100 duplicate requests across 2 OS processes apply evidence and preference version once",
+      "100 independent sessions save 100 canonical feedback rows",
+      "100, 1000, 10000 synthetic histories rebuild to the expected full posterior after rating revision",
+      "Per-process pool remains within 12 connections; sampled peak queue 38"
+    ]
+  },
+  "repositoryChecks": {
+    "prettier": "All PoC code/config matched files passed",
+    "foundation": "43 text files; 243 local links; environment examples; 7 ignore cases; working and staged whitespace passed",
+    "selfReview": "No remaining Blocking finding for the research scope. Fixed requirement R-15 wording to require both probe cap reached and no Relevant candidate; repaired A-07 links; separated legacy PoC behavior from the current Snapshot. Human review remains required."
+  },
+  "baselineCompatibility": {
+    "legacyContext": "Positive unnormalized distances followed by intercept; not the Snapshot negative normalized context",
+    "legacyProgress": "Five commits; not PLAYBACK_STARTED plus accepted Feedback",
+    "legacyProbe": "Distance partition; not feature-specific contrastive matching",
+    "interpretation": "Framework, numerical mechanism and DB consistency evidence only."
+  },
+  "notVerified": [
+    "Actual ISRC identity, ReccoBeats feature coverage and usage rights, YouTube playback and human-verified mappings",
+    "New Snapshot complete model, counting and shortage behavior",
+    "Persistent shared preference owner across multiple sessions",
+    "Sustained load, production network, 100k catalog lookup, Stage 2/3 capacity or SLO",
+    "Cloud Preview, app container, Guest cookie/CSRF/expiry, backup restore and provider cost",
+    "Recommendation quality, Hypothesis engine and real user value",
+    "Native loaders/SSR/server functions and Fastify schema/logging productivity advantage"
+  ]
+}

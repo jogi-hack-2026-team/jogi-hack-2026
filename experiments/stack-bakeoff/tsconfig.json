@@ -16,6 +16,8 @@
     "shared/**/*.ts",
     "frontend/shared/**/*.tsx",
     "frontend/vite/**/*.tsx",
+    "frontend/tanstack/**/*.tsx",
+    "scripts/**/*.ts",
     "tests/**/*.ts",
     "playwright.config.ts"
   ],

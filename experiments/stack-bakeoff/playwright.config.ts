@@ -13,6 +13,7 @@ export default defineConfig({
   projects: [
     { name: "vite", use: { baseURL: "http://127.0.0.1:4173" } },
     { name: "next", use: { baseURL: "http://127.0.0.1:4174" } },
+    { name: "tanstack", use: { baseURL: "http://127.0.0.1:4175" } },
   ],
   webServer: [
     {
@@ -29,8 +30,14 @@ export default defineConfig({
       env: { NEXT_TELEMETRY_DISABLED: "1" },
     },
     {
-      command: "npm.cmd run api:hono",
+      command: "npm.cmd run api:integration",
       url: "http://127.0.0.1:4310/tracks",
+      reuseExistingServer: false,
+      timeout: 60000,
+    },
+    {
+      command: "npm.cmd run dev:tanstack",
+      url: "http://127.0.0.1:4175",
       reuseExistingServer: false,
       timeout: 60000,
     },

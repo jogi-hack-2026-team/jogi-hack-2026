@@ -1,0 +1,593 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "at": "2026-09-24T15:15:14.034Z",
+  "repositories": [
+    {
+      "repo": "vitejs/vite",
+      "source": "https://api.github.com/repos/vitejs/vite",
+      "archived": false,
+      "pushedAt": "2026-09-24T12:23:55Z",
+      "releases": [
+        {
+          "tag": "v8.3.1",
+          "prerelease": false,
+          "published": "2026-09-24T12:23:55Z",
+          "url": "https://github.com/vitejs/vite/releases/tag/v8.3.1"
+        },
+        {
+          "tag": "v8.3.0",
+          "prerelease": false,
+          "published": "2026-09-10T11:25:16Z",
+          "url": "https://github.com/vitejs/vite/releases/tag/v8.3.0"
+        },
+        {
+          "tag": "create-vite@9.2.1",
+          "prerelease": false,
+          "published": "2026-09-10T11:41:17Z",
+          "url": "https://github.com/vitejs/vite/releases/tag/create-vite%409.2.1"
+        },
+        {
+          "tag": "v8.3.0-beta.1",
+          "prerelease": true,
+          "published": "2026-09-07T11:38:41Z",
+          "url": "https://github.com/vitejs/vite/releases/tag/v8.3.0-beta.1"
+        },
+        {
+          "tag": "v8.3.0-beta.0",
+          "prerelease": true,
+          "published": "2026-09-02T08:42:32Z",
+          "url": "https://github.com/vitejs/vite/releases/tag/v8.3.0-beta.0"
+        }
+      ]
+    },
+    {
+      "repo": "remix-run/react-router",
+      "source": "https://api.github.com/repos/remix-run/react-router",
+      "archived": false,
+      "pushedAt": "2026-09-23T14:21:58Z",
+      "releases": [
+        {
+          "tag": "react-router@8.4.0",
+          "prerelease": false,
+          "published": "2026-09-15T15:22:42Z",
+          "url": "https://github.com/remix-run/react-router/releases/tag/react-router%408.4.0"
+        },
+        {
+          "tag": "react-router@7.18.4",
+          "prerelease": false,
+          "published": "2026-09-15T15:05:10Z",
+          "url": "https://github.com/remix-run/react-router/releases/tag/react-router%407.18.4"
+        },
+        {
+          "tag": "react-router@8.3.1",
+          "prerelease": false,
+          "published": "2026-08-28T14:44:12Z",
+          "url": "https://github.com/remix-run/react-router/releases/tag/react-router%408.3.1"
+        },
+        {
+          "tag": "react-router@7.18.3",
+          "prerelease": false,
+          "published": "2026-08-28T14:29:26Z",
+          "url": "https://github.com/remix-run/react-router/releases/tag/react-router%407.18.3"
+        },
+        {
+          "tag": "react-router@6.30.6",
+          "prerelease": false,
+          "published": "2026-08-18T14:55:01Z",
+          "url": "https://github.com/remix-run/react-router/releases/tag/react-router%406.30.6"
+        }
+      ]
+    },
+    {
+      "repo": "TanStack/router",
+      "source": "https://api.github.com/repos/TanStack/router",
+      "archived": false,
+      "pushedAt": "2026-09-23T13:32:25Z",
+      "releases": [
+        {
+          "tag": "release-2026-09-23-1332",
+          "prerelease": false,
+          "published": "2026-09-23T13:32:27Z",
+          "url": "https://github.com/TanStack/router/releases/tag/release-2026-09-23-1332"
+        },
+        {
+          "tag": "@tanstack/react-start@1.168.58",
+          "prerelease": false,
+          "published": "2026-09-23T13:32:20Z",
+          "url": "https://github.com/TanStack/router/releases/tag/%40tanstack/react-start%401.168.58"
+        },
+        {
+          "tag": "@tanstack/react-start-server@1.167.44",
+          "prerelease": false,
+          "published": "2026-09-23T13:32:17Z",
+          "url": "https://github.com/TanStack/router/releases/tag/%40tanstack/react-start-server%401.167.44"
+        },
+        {
+          "tag": "@tanstack/react-start-rsc@0.1.57",
+          "prerelease": false,
+          "published": "2026-09-23T13:32:23Z",
+          "url": "https://github.com/TanStack/router/releases/tag/%40tanstack/react-start-rsc%400.1.57"
+        },
+        {
+          "tag": "@tanstack/react-start-client@1.168.37",
+          "prerelease": false,
+          "published": "2026-09-23T13:32:14Z",
+          "url": "https://github.com/TanStack/router/releases/tag/%40tanstack/react-start-client%401.168.37"
+        }
+      ]
+    },
+    {
+      "repo": "vercel/next.js",
+      "source": "https://api.github.com/repos/vercel/next.js",
+      "archived": false,
+      "pushedAt": "2026-09-24T15:14:58Z",
+      "releases": [
+        {
+          "tag": "v16.4.0-canary.43",
+          "prerelease": true,
+          "published": "2026-09-24T10:48:17Z",
+          "url": "https://github.com/vercel/next.js/releases/tag/v16.4.0-canary.43"
+        },
+        {
+          "tag": "v16.4.0-canary.42",
+          "prerelease": true,
+          "published": "2026-09-24T00:30:48Z",
+          "url": "https://github.com/vercel/next.js/releases/tag/v16.4.0-canary.42"
+        },
+        {
+          "tag": "v16.4.0-canary.41",
+          "prerelease": true,
+          "published": "2026-09-23T23:46:41Z",
+          "url": "https://github.com/vercel/next.js/releases/tag/v16.4.0-canary.41"
+        },
+        {
+          "tag": "v16.4.0-canary.40",
+          "prerelease": true,
+          "published": "2026-09-23T15:25:23Z",
+          "url": "https://github.com/vercel/next.js/releases/tag/v16.4.0-canary.40"
+        },
+        {
+          "tag": "v16.4.0-canary.39",
+          "prerelease": true,
+          "published": "2026-09-22T23:51:32Z",
+          "url": "https://github.com/vercel/next.js/releases/tag/v16.4.0-canary.39"
+        }
+      ]
+    },
+    {
+      "repo": "honojs/hono",
+      "source": "https://api.github.com/repos/honojs/hono",
+      "archived": false,
+      "pushedAt": "2026-09-24T08:14:42Z",
+      "releases": [
+        {
+          "tag": "v4.13.9",
+          "prerelease": false,
+          "published": "2026-09-24T01:32:14Z",
+          "url": "https://github.com/honojs/hono/releases/tag/v4.13.9"
+        },
+        {
+          "tag": "v4.13.8",
+          "prerelease": false,
+          "published": "2026-09-15T07:31:42Z",
+          "url": "https://github.com/honojs/hono/releases/tag/v4.13.8"
+        },
+        {
+          "tag": "v4.13.7",
+          "prerelease": false,
+          "published": "2026-09-04T19:18:14Z",
+          "url": "https://github.com/honojs/hono/releases/tag/v4.13.7"
+        },
+        {
+          "tag": "v4.13.6",
+          "prerelease": false,
+          "published": "2026-09-04T19:08:08Z",
+          "url": "https://github.com/honojs/hono/releases/tag/v4.13.6"
+        },
+        {
+          "tag": "v4.13.5",
+          "prerelease": false,
+          "published": "2026-08-26T02:00:33Z",
+          "url": "https://github.com/honojs/hono/releases/tag/v4.13.5"
+        }
+      ]
+    },
+    {
+      "repo": "fastify/fastify",
+      "source": "https://api.github.com/repos/fastify/fastify",
+      "archived": false,
+      "pushedAt": "2026-09-24T10:01:44Z",
+      "releases": [
+        {
+          "tag": "v6.0.0-alpha.4",
+          "prerelease": true,
+          "published": "2026-09-17T07:53:08Z",
+          "url": "https://github.com/fastify/fastify/releases/tag/v6.0.0-alpha.4"
+        },
+        {
+          "tag": "v5.12.5",
+          "prerelease": false,
+          "published": "2026-09-16T10:19:43Z",
+          "url": "https://github.com/fastify/fastify/releases/tag/v5.12.5"
+        },
+        {
+          "tag": "v5.12.4",
+          "prerelease": false,
+          "published": "2026-09-11T09:19:29Z",
+          "url": "https://github.com/fastify/fastify/releases/tag/v5.12.4"
+        },
+        {
+          "tag": "v6.0.0-alpha.3",
+          "prerelease": true,
+          "published": "2026-09-04T09:21:10Z",
+          "url": "https://github.com/fastify/fastify/releases/tag/v6.0.0-alpha.3"
+        },
+        {
+          "tag": "v5.12.2",
+          "prerelease": false,
+          "published": "2026-09-04T08:20:39Z",
+          "url": "https://github.com/fastify/fastify/releases/tag/v5.12.2"
+        }
+      ]
+    },
+    {
+      "repo": "nestjs/nest",
+      "source": "https://api.github.com/repos/nestjs/nest",
+      "archived": false,
+      "pushedAt": "2026-09-24T12:03:54Z",
+      "releases": [
+        {
+          "tag": "v12.1.0",
+          "prerelease": false,
+          "published": "2026-09-23T08:00:20Z",
+          "url": "https://github.com/nestjs/nest/releases/tag/v12.1.0"
+        },
+        {
+          "tag": "v11.2.6",
+          "prerelease": false,
+          "published": "2026-09-23T09:09:35Z",
+          "url": "https://github.com/nestjs/nest/releases/tag/v11.2.6"
+        },
+        {
+          "tag": "v12.0.4",
+          "prerelease": false,
+          "published": "2026-09-21T08:03:41Z",
+          "url": "https://github.com/nestjs/nest/releases/tag/v12.0.4"
+        },
+        {
+          "tag": "v12.0.3",
+          "prerelease": false,
+          "published": "2026-09-15T07:57:13Z",
+          "url": "https://github.com/nestjs/nest/releases/tag/v12.0.3"
+        },
+        {
+          "tag": "v11.2.5",
+          "prerelease": false,
+          "published": "2026-09-15T07:11:48Z",
+          "url": "https://github.com/nestjs/nest/releases/tag/v11.2.5"
+        }
+      ]
+    },
+    {
+      "repo": "go-chi/chi",
+      "source": "https://api.github.com/repos/go-chi/chi",
+      "archived": false,
+      "pushedAt": "2026-09-18T11:51:54Z",
+      "releases": [
+        {
+          "tag": "v5.3.2",
+          "prerelease": false,
+          "published": "2026-08-20T10:04:47Z",
+          "url": "https://github.com/go-chi/chi/releases/tag/v5.3.2"
+        },
+        {
+          "tag": "v5.3.1",
+          "prerelease": false,
+          "published": "2026-07-06T14:32:43Z",
+          "url": "https://github.com/go-chi/chi/releases/tag/v5.3.1"
+        },
+        {
+          "tag": "v5.3.0",
+          "prerelease": false,
+          "published": "2026-05-22T15:46:30Z",
+          "url": "https://github.com/go-chi/chi/releases/tag/v5.3.0"
+        },
+        {
+          "tag": "v5.2.5",
+          "prerelease": false,
+          "published": "2026-02-05T11:17:56Z",
+          "url": "https://github.com/go-chi/chi/releases/tag/v5.2.5"
+        },
+        {
+          "tag": "v5.2.4",
+          "prerelease": false,
+          "published": "2026-07-22T10:11:01Z",
+          "url": "https://github.com/go-chi/chi/releases/tag/v5.2.4"
+        }
+      ]
+    },
+    {
+      "repo": "labstack/echo",
+      "source": "https://api.github.com/repos/labstack/echo",
+      "archived": false,
+      "pushedAt": "2026-09-21T04:33:17Z",
+      "releases": [
+        {
+          "tag": "v5.3.1",
+          "prerelease": false,
+          "published": "2026-07-21T16:10:56Z",
+          "url": "https://github.com/labstack/echo/releases/tag/v5.3.1"
+        },
+        {
+          "tag": "v5.3.0",
+          "prerelease": false,
+          "published": "2026-07-12T19:58:40Z",
+          "url": "https://github.com/labstack/echo/releases/tag/v5.3.0"
+        },
+        {
+          "tag": "v5.2.1",
+          "prerelease": false,
+          "published": "2026-06-15T17:12:57Z",
+          "url": "https://github.com/labstack/echo/releases/tag/v5.2.1"
+        },
+        {
+          "tag": "v4.15.4",
+          "prerelease": false,
+          "published": "2026-06-15T18:28:20Z",
+          "url": "https://github.com/labstack/echo/releases/tag/v4.15.4"
+        },
+        {
+          "tag": "v5.2.0",
+          "prerelease": false,
+          "published": "2026-06-14T14:17:42Z",
+          "url": "https://github.com/labstack/echo/releases/tag/v5.2.0"
+        }
+      ]
+    },
+    {
+      "repo": "fastapi/fastapi",
+      "source": "https://api.github.com/repos/fastapi/fastapi",
+      "archived": false,
+      "pushedAt": "2026-09-18T21:24:37Z",
+      "releases": [
+        {
+          "tag": "0.141.1",
+          "prerelease": false,
+          "published": "2026-07-29T17:17:26Z",
+          "url": "https://github.com/fastapi/fastapi/releases/tag/0.141.1"
+        },
+        {
+          "tag": "0.141.0",
+          "prerelease": false,
+          "published": "2026-07-29T14:47:36Z",
+          "url": "https://github.com/fastapi/fastapi/releases/tag/0.141.0"
+        },
+        {
+          "tag": "0.140.13",
+          "prerelease": false,
+          "published": "2026-07-28T15:36:47Z",
+          "url": "https://github.com/fastapi/fastapi/releases/tag/0.140.13"
+        },
+        {
+          "tag": "0.140.12",
+          "prerelease": false,
+          "published": "2026-07-28T15:04:48Z",
+          "url": "https://github.com/fastapi/fastapi/releases/tag/0.140.12"
+        },
+        {
+          "tag": "0.140.11",
+          "prerelease": false,
+          "published": "2026-07-28T14:33:49Z",
+          "url": "https://github.com/fastapi/fastapi/releases/tag/0.140.11"
+        }
+      ]
+    },
+    {
+      "repo": "rails/rails",
+      "source": "https://api.github.com/repos/rails/rails",
+      "archived": false,
+      "pushedAt": "2026-09-24T14:19:24Z",
+      "releases": [
+        {
+          "tag": "v8.1.4",
+          "prerelease": false,
+          "published": "2026-09-24T14:19:52Z",
+          "url": "https://github.com/rails/rails/releases/tag/v8.1.4"
+        },
+        {
+          "tag": "v8.1.3.1",
+          "prerelease": false,
+          "published": "2026-07-29T14:59:54Z",
+          "url": "https://github.com/rails/rails/releases/tag/v8.1.3.1"
+        },
+        {
+          "tag": "v8.0.5.1",
+          "prerelease": false,
+          "published": "2026-07-29T15:08:22Z",
+          "url": "https://github.com/rails/rails/releases/tag/v8.0.5.1"
+        },
+        {
+          "tag": "v7.2.3.2",
+          "prerelease": false,
+          "published": "2026-07-29T15:05:22Z",
+          "url": "https://github.com/rails/rails/releases/tag/v7.2.3.2"
+        },
+        {
+          "tag": "v8.1.3",
+          "prerelease": false,
+          "published": "2026-03-24T20:26:02Z",
+          "url": "https://github.com/rails/rails/releases/tag/v8.1.3"
+        }
+      ]
+    },
+    {
+      "repo": "tokio-rs/axum",
+      "source": "https://api.github.com/repos/tokio-rs/axum",
+      "archived": false,
+      "pushedAt": "2026-09-23T20:04:03Z",
+      "releases": [
+        {
+          "tag": "axum-v0.8.9",
+          "prerelease": false,
+          "published": "2026-04-14T09:39:51Z",
+          "url": "https://github.com/tokio-rs/axum/releases/tag/axum-v0.8.9"
+        },
+        {
+          "tag": "axum-macros-v0.5.1",
+          "prerelease": false,
+          "published": "2026-04-14T09:38:41Z",
+          "url": "https://github.com/tokio-rs/axum/releases/tag/axum-macros-v0.5.1"
+        },
+        {
+          "tag": "axum-extra-v0.12.6",
+          "prerelease": false,
+          "published": "2026-04-14T09:38:05Z",
+          "url": "https://github.com/tokio-rs/axum/releases/tag/axum-extra-v0.12.6"
+        },
+        {
+          "tag": "axum-core-v0.5.6",
+          "prerelease": false,
+          "published": "2025-12-27T09:20:22Z",
+          "url": "https://github.com/tokio-rs/axum/releases/tag/axum-core-v0.5.6"
+        },
+        {
+          "tag": "axum-v0.8.8",
+          "prerelease": false,
+          "published": "2025-12-20T16:30:57Z",
+          "url": "https://github.com/tokio-rs/axum/releases/tag/axum-v0.8.8"
+        }
+      ]
+    },
+    {
+      "repo": "ktorio/ktor",
+      "source": "https://api.github.com/repos/ktorio/ktor",
+      "archived": false,
+      "pushedAt": "2026-09-24T14:16:36Z",
+      "releases": [
+        {
+          "tag": "3.6.0",
+          "prerelease": false,
+          "published": "2026-09-18T09:58:55Z",
+          "url": "https://github.com/ktorio/ktor/releases/tag/3.6.0"
+        },
+        {
+          "tag": "3.5.2",
+          "prerelease": false,
+          "published": "2026-08-04T12:08:07Z",
+          "url": "https://github.com/ktorio/ktor/releases/tag/3.5.2"
+        },
+        {
+          "tag": "3.5.1",
+          "prerelease": false,
+          "published": "2026-06-29T08:05:31Z",
+          "url": "https://github.com/ktorio/ktor/releases/tag/3.5.1"
+        },
+        {
+          "tag": "3.5.0",
+          "prerelease": false,
+          "published": "2026-05-18T06:57:48Z",
+          "url": "https://github.com/ktorio/ktor/releases/tag/3.5.0"
+        },
+        {
+          "tag": "3.4.3",
+          "prerelease": false,
+          "published": "2026-04-23T11:20:32Z",
+          "url": "https://github.com/ktorio/ktor/releases/tag/3.4.3"
+        }
+      ]
+    },
+    {
+      "repo": "spring-projects/spring-boot",
+      "source": "https://api.github.com/repos/spring-projects/spring-boot",
+      "archived": false,
+      "pushedAt": "2026-09-24T12:18:02Z",
+      "releases": [
+        {
+          "tag": "v4.2.0-M2",
+          "prerelease": true,
+          "published": "2026-09-24T10:38:37Z",
+          "url": "https://github.com/spring-projects/spring-boot/releases/tag/v4.2.0-M2"
+        },
+        {
+          "tag": "v4.2.0-M1",
+          "prerelease": true,
+          "published": "2026-08-20T20:09:59Z",
+          "url": "https://github.com/spring-projects/spring-boot/releases/tag/v4.2.0-M1"
+        },
+        {
+          "tag": "v4.1.1",
+          "prerelease": false,
+          "published": "2026-08-20T20:02:36Z",
+          "url": "https://github.com/spring-projects/spring-boot/releases/tag/v4.1.1"
+        },
+        {
+          "tag": "v4.0.8",
+          "prerelease": false,
+          "published": "2026-08-21T02:39:58Z",
+          "url": "https://github.com/spring-projects/spring-boot/releases/tag/v4.0.8"
+        },
+        {
+          "tag": "v3.5.16",
+          "prerelease": false,
+          "published": "2026-06-25T11:00:26Z",
+          "url": "https://github.com/spring-projects/spring-boot/releases/tag/v3.5.16"
+        }
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "name": "@tanstack/react-router",
+      "version": "1.170.39",
+      "engines": {
+        "node": ">=20.19"
+      },
+      "source": "https://registry.npmjs.org/%40tanstack%2Freact-router/latest"
+    },
+    {
+      "name": "@tanstack/react-start",
+      "version": "1.168.58",
+      "engines": {
+        "node": ">=22.12.0"
+      },
+      "source": "https://registry.npmjs.org/%40tanstack%2Freact-start/latest"
+    },
+    {
+      "name": "react-router-dom",
+      "version": "7.18.4",
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "source": "https://registry.npmjs.org/react-router-dom/latest"
+    },
+    {
+      "name": "next",
+      "version": "16.3.6",
+      "engines": {
+        "node": ">=20.9.0"
+      },
+      "source": "https://registry.npmjs.org/next/latest"
+    },
+    {
+      "name": "hono",
+      "version": "4.13.9",
+      "engines": {
+        "node": ">=16.9.0"
+      },
+      "source": "https://registry.npmjs.org/hono/latest"
+    },
+    {
+      "name": "fastify",
+      "version": "5.12.5",
+      "source": "https://registry.npmjs.org/fastify/latest"
+    },
+    {
+      "name": "@nestjs/core",
+      "version": "12.1.0",
+      "engines": {
+        "node": ">= 20"
+      },
+      "source": "https://registry.npmjs.org/%40nestjs%2Fcore/latest"
+    }
+  ]
+}
