@@ -1,0 +1,39 @@
+{
+  "name": "stack-bakeoff",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/backend.test.ts",
+    "api:hono": "tsx backend/hono/server.ts",
+    "api:fastify": "tsx backend/fastify/server.ts",
+    "dev:vite": "vite frontend/vite --host 127.0.0.1 --port 4173",
+    "dev:next": "next dev frontend/next --hostname 127.0.0.1 --port 4174",
+    "build:vite": "vite build frontend/vite",
+    "build:next": "next build frontend/next",
+    "e2e": "playwright test",
+    "measure": "node scripts/measure.mjs"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.1",
+    "fastify": "5.12.5",
+    "hono": "4.13.9",
+    "next": "16.3.6",
+    "pg": "8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router-dom": "7.18.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.1"
+  }
+}

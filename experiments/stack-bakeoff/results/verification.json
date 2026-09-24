@@ -1,0 +1,81 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "scope": "Issue #34 isolated synthetic PoC; not production acceptance or technology adoption",
+  "backend": {
+    "failed": 0,
+    "sharedNumericCases": 1,
+    "runDateUtc": "2026-09-24",
+    "skipped": 0,
+    "passedIncludingParentTests": 29,
+    "leafCasesPerBackend": 13,
+    "command": "npm.cmd test",
+    "rerunReason": "Distinguish invalid upstream JSON from timeout; verify both HTTP adapters"
+  },
+  "frontend": {
+    "integrationPair": "Vite + Hono + PostgreSQL",
+    "skipped": "Next live integration excluded by single-pair scope",
+    "viewport": "1100 x 850",
+    "initialFailure": "Next route announcer also has role=alert; fixed selector with accessible name and reran all cases",
+    "command": "npm.cmd run e2e",
+    "stats": {
+      "startTime": "2026-09-24T14:14:03.731Z",
+      "duration": 28143.895999999997,
+      "expected": 9,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "sharedCasesPerFrontend": 4,
+    "browser": "Installed Google Chrome, headless, isolated test context",
+    "artifact": "integration.png"
+  },
+  "buildAndTypecheck": {
+    "result": "build-metrics.json",
+    "resultStatus": "passed",
+    "command": "npm.cmd run measure"
+  },
+  "backendMeasurement": {
+    "result": "backend-metrics.json",
+    "resultStatus": "passed",
+    "command": "npx.cmd tsx scripts/measure-backend.ts"
+  },
+  "database": {
+    "dockerEngine": "29.6.1",
+    "observedDigest": "postgres@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722",
+    "server": "PostgreSQL 18.6",
+    "data": "Synthetic only, tmpfs, local trust authentication",
+    "bind": "127.0.0.1:55434",
+    "image": "postgres:18"
+  },
+  "notVerified": [
+    "Real YouTube playback / recording mapping / ReccoBeats features and usage rights",
+    "Catalog percentile transform and hypothesis engine",
+    "Algorithm preference quality and user evaluation",
+    "Public guest security, account migration, expiry and retention",
+    "Cloud preview, cost limits, application container",
+    "Mobile devices, screen reader and comprehensive accessibility",
+    "Production schema migration and backup restore"
+  ],
+  "documentation": {
+    "command": "pwsh -NoProfile -File scripts/check-foundation.ps1",
+    "status": "passed",
+    "note": "UTF-8, local Markdown targets/headings, ignore rules and diff whitespace; not application verification"
+  },
+  "format": {
+    "command": "npx.cmd prettier --check (patterns in README)",
+    "status": "passed",
+    "initialFailure": "Fastify app formatting; formatted and check passed"
+  },
+  "selfReview": {
+    "outstanding": [
+      "Human adoption and priorities",
+      "Public deployment and external data validation",
+      "Shared slice does not fully measure framework-specific features"
+    ],
+    "status": "No blocking finding within isolated PoC scope after fixes",
+    "fixes": [
+      "Malformed upstream JSON returns 502, not timeout 504, regression tested in both adapters",
+      "Document placement and requirement traceability synchronized"
+    ]
+  }
+}

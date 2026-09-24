@@ -167,9 +167,10 @@ AI向けツール、MCP、CLI、Skillsの採用方針の正本。
 
 特定作業を行うときの詳細なワークフロー。
 
-### `docs/decisions/`
+### `docs/product-spec.md` / `docs/architecture.md`
 
-重要な技術・設計判断の記録。
+正式なProduct・Architecture設計の正本はこの2本だけとする。要件・Scope・Product Decision Logは前者、実現方式・Technology Stack・DB・Deployment・Architecture Decision Logは後者に集約する。
+配置と補助資料・過去の基盤ADRの扱いは[CONTRIBUTING](CONTRIBUTING.md#仕様文書の配置)を参照する。
 
 ### GitHub Issue
 
@@ -337,7 +338,7 @@ Architectureを先に決めない。
 
 重要な技術判断では `.agents/skills/architecture-decision/` を利用する。
 
-採用が決定した重要事項は、必要に応じて `docs/decisions/` にADRとして記録する。
+採用が決定した重要事項は、正式な2文書の該当Decision Logに記録する。
 
 ---
 
@@ -370,7 +371,9 @@ Architectureを先に決めない。
 過去のDecisionを変更するときは、
 古いADRを黙って書き換えない。
 
-必要に応じて新しいADRを作成し、旧ADRをSupersededとして扱う。
+新しいProduct・Architecture判断は該当する正式文書内のDecision Logへ記録し、旧判断を参照して変更理由と影響を残す。新規の正式ADR群は作らず、既存の開発基盤ADRは過去の決定記録として保持する。
+
+Existing Decisions / Baselineを理由なく再議論しない。明確な欠陥・要件未達・重大リスク・コスト超過・単純化等の根拠がある場合だけ、[Product SpecのReconsideration Policy](docs/product-spec.md#reconsideration-policy)に従って提案する。提案 → 人間Decision → 正式反映の順を守る。
 
 ---
 
@@ -472,7 +475,7 @@ Alternatives比較
 ↓
 Team Decision
 ↓
-必要ならADR
+正式文書内のDecision Log
 
 ### Scope変更
 
@@ -965,9 +968,9 @@ Merge前に修正が必要。
 - `README.md`
 - `CONTRIBUTING.md`
 - `docs/DEVELOPMENT_GUIDE.md`
-- `docs/product/`
-- `docs/architecture/`
-- `docs/decisions/`
+- `docs/product-spec.md`
+- `docs/architecture.md`
+- `docs/decisions/`（既存基盤判断の履歴参照）
 
 以下が変更された場合はDocumentation更新を検討する。
 

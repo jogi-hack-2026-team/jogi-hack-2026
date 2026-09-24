@@ -42,7 +42,8 @@ description: Pull Request作成前、または実装内容をセルフレビュ�
 - セットアップ手順が変わっていないか。
 - 環境変数が変わっていないか。
 - アーキテクチャが変わっていないか。
-- 重要な技術判断をADRとして残す必要がないか。
+- 重要な判断がProduct SpecまたはArchitectureのDecision Logに残っているか。
+- すべてのMust Requirementが実現方法またはOPEN事項へ追跡でき、Architectureの複雑性にProduct/Engineering Requirementの根拠があるか。
 
 結果を以下に分類する。
 

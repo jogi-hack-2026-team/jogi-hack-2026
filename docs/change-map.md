@@ -15,13 +15,15 @@
 
 ## アプリの仕様と実装
 
+2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で2文書の初版と隔離した比較PoCを追加。上記の初回棚卸しは過去の記録であり、以下が現在の導線です。この対応表は仕様を複製せず、正式設計SSOTはProduct SpecとArchitectureの2本です。
+
 | 項目 | 現在の状態・説明先 | 実装・関連処理 | 確認方法・今後の更新先 |
 | --- | --- | --- | --- |
-| 対象ユーザー、課題、主要機能 | 未定。[現在の状態](../README.md#現在の状態)、#20・#21が判断の入口 | アプリ実装なし | 採択記録を確認後、[文書の配置ルール](../CONTRIBUTING.md#仕様文書の配置)に沿って `docs/product/` に仕様を記載 |
-| 全ページ・URL・画面操作 | 未実装のため対象なし。承認済み画面仕様も未確認 | ルート定義・画面・コンポーネントなし | 追加時にURLパターン単位で対応行を追加。機能の仕様、実装ファイル、画面遷移の確認先へリンク |
-| API・サーバー処理・DB | 未実装のため対象なし。APIは処理やデータをやり取りする窓口、DBはデータベース | API定義・スキーマ・移行処理・開発／テストDBなし | 採用・実装後に機能仕様から処理・保存先・入力制約を追えるよう更新 |
-| 認証・認可、外部連携、非同期処理 | 採用未定・未実装。認証は本人確認、認可は操作の許可 | 所有権確認、外部API・AI処理、リアルタイム通信、バックグラウンド処理なし | 実装後に利用条件、状態、失敗・再試行・同期、他ユーザーのデータに対する制約を記載 |
-| アプリ起動・build・lint・typecheck・test | 未実装。アプリテストは未整備 | パッケージ定義・テストコード・実行設定なし | アプリの手動確認手順も現時点では対象なし。コマンドは採用スタックと実装確定後に追加 |
+| 対象ユーザー、課題、主要機能 | [Product Spec](product-spec.md)の要件・Baseline・OPEN・Scope案 | 本番未実装。PoCを採択済み仕様と扱わない | #20・#21とProduct Decision Logで人間の決定を確認 |
+| PoC `/`・`/explore` | Seed選択・探索・Summary。[UX](product-spec.md#user-experience)、正式レイアウトはOPEN | [共通画面](../experiments/stack-bakeoff/frontend/shared/Screens.tsx)、[Vite](../experiments/stack-bakeoff/frontend/vite/)、[Next](../experiments/stack-bakeoff/frontend/next/) | [共通E2E](../experiments/stack-bakeoff/tests/frontend.spec.ts)。実Playback・本番画面ではない |
+| API・サーバー処理・DB | [A-03](architecture.md#a-03-sessionと整合性)、契約・transaction・revisionの候補 | [Service](../experiments/stack-bakeoff/backend/shared/service.ts)、[DB](../experiments/stack-bakeoff/backend/shared/database.ts)、[LinTS](../experiments/stack-bakeoff/backend/shared/lints.ts) | [HTTP/DB/数値試験](../experiments/stack-bakeoff/tests/backend.test.ts)。本番migrationはOPEN |
+| 認証・認可、外部連携、非同期処理 | [A-04](architecture.md#a-04-catalogとplayback)、[A-05](architecture.md#a-05-authenticationとguest) | localhost Guest所有権と外部障害Mockのみ。実API・Account・公開Cookie・Jobなし | 実再生/権利/認証は未検証。PoCの成立と公開Goを分ける |
+| 起動・build・typecheck・test | 比較PoC専用。[再実行手順](../experiments/stack-bakeoff/README.md) | [package](../experiments/stack-bakeoff/package.json)、[測定](../experiments/stack-bakeoff/results/) | [Architectureの検証](architecture.md#testingとcicd)。本番のスタック・コマンド・CI採択とは分ける |
 
 ## 開発基盤と作業手順
 
@@ -37,9 +39,9 @@
 | Projects・保護設定 | 文書と外部設定を区別。[状態表](operations/development-foundation-status.md#資料との相違点) | [Statusのルール](../CONTRIBUTING.md#github-projects)。ボード・保護設定自体はGit管理外 | 権限のある担当者が対象のGitHub画面で確認。文書整備を理由にカード削除・設定変更しない |
 | 文書保守・AIへの依頼 | [依頼方法](DEVELOPMENT_GUIDE.md#仕様を調べて変更するには)、[詳細な執筆・保守手順](../.agents/skills/documentation-sync/SKILL.md) | [issue-to-pr](../.agents/skills/issue-to-pr/SKILL.md)、[bug-investigation](../.agents/skills/bug-investigation/SKILL.md)、[review-gate](../.agents/skills/review-gate/SKILL.md)、[CLAUDE.md](../CLAUDE.md) → [AGENTS.md](../AGENTS.md) | 変更前・変更時・完了前の導線とPRの文書影響欄を確認。文書更新不要の場合も理由を記録 |
 | AIツール・Serena | [採択方針・導入状況](../AI_DEVELOPMENT_TOOLS.md)。アプリ用の言語サーバーは未設定 | [.serena/project.yml](../.serena/project.yml) の `language_servers: []`、[Skill一覧](../AI_DEVELOPMENT_TOOLS.md#リポジトリに配置されたskills) | ファイルの設定と実際の接続・シンボル探索を区別。利用時の確認はツールガイドに従う |
-| Secret・環境変数・Doppler | 採用方針と接続完了は別。[引き継ぎ](operations/development-foundation-status.md#dopplerの引き継ぎ) | [mise.toml](../mise.toml)、[.env.example](../.env.example)、[.gitignore](../.gitignore) | 文書チェックは空の環境変数例・除外設定のみ検証。接続先や注入は前提待ち。アプリAPI・DBなし、Secret不要のチェックへ実値を渡さない |
+| Secret・環境変数・Doppler | 採用方針と接続完了は別。[引き継ぎ](operations/development-foundation-status.md#dopplerの引き継ぎ) | [mise.toml](../mise.toml)、[.env.example](../.env.example)、[.gitignore](../.gitignore) | 文書チェックは空の環境変数例・除外設定のみ検証。本番接続先や注入は前提待ち。比較DBは合成データ専用でSecret不要 |
 | 文字コード・改行・除外 | 設定あり | [.editorconfig](../.editorconfig)、[.gitattributes](../.gitattributes)、[.gitignore](../.gitignore)、[check-foundation.ps1](../scripts/check-foundation.ps1) | 全体チェックと `git diff --check`。エディタで設定が適用されたことはファイル存在だけでは保証しない |
-| 設計判断・参考資料 | [ADR-0001](decisions/0001-development-foundation.md)（ADRは判断の理由と経緯の記録）、[提供HTML](references/jogi_hack_2026_dev_foundation_guide.html) | 判断と導入結果の対応は[基盤の状態](operations/development-foundation-status.md) | HTML内の例を採用済みと解釈しない。古い判断を変更する場合は新しいADRから参照 |
+| 設計判断・参考資料 | [Product Decision Log](product-spec.md#product-decision-log)、[Architecture Decision Log](architecture.md#architecture-decision-log) | 過去の[ADR-0001](decisions/0001-development-foundation.md)・[提供HTML](references/jogi_hack_2026_dev_foundation_guide.html)は基盤履歴 | HTML内の例を採用済みと解釈しない。変更は人間決定後に2文書内のLogへ記録 |
 | リリース・提出・デモ | 手順あり。アプリ・公開先・デモ操作は未定 | [release-demo.md](operations/release-demo.md)、[大会要件 #19](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/19) | 決定済みの提出条件・対象commit・検証結果を照合。公開・DB操作はこの文書整備では実施しない |
 
 ## 確認記録と残課題
@@ -52,7 +54,7 @@
 | --- | --- | --- |
 | 文書チェックの説明を直す | README → 開発ガイドの初回セットアップ → この表の文書チェック行 → `mise.toml` → `check-foundation.ps1` | 説明が実処理・成功／失敗表示と一致するか。説明変更ならガイドを更新し、入口・対応表は参照が変わる場合に更新。実行設定の変更が必要なら今回の対象外 |
 | 文書を移動する | この表 → 正本の文書 → リポジトリ内の旧パス・見出し参照を検索 → documentation-sync | README・対応表・Skills等の参照元を更新し、全体チェックとリンクの読み合わせを行う。対応表だけでは漏れがないと判断しない |
-| 初めて機能を追加する | #20・#21の承認内容 → 配置ルール → documentation-syncの仕様記載項目 → 対象実装・テスト → この表 | 機能単位の仕様を `docs/product/` に作り、操作・条件・状態・内部処理を説明。関連コード・テストと対応行を追加し、未実装部分を分ける。現時点では実装・テストへのリンクは作れない |
+| 初めて本番機能を追加する | #20・#21の承認内容 → Product Specの要件ID → Architectureの実現案/OPEN → 対象実装・テスト → この表 | 人間決定を確認して2文書を更新し、関連コード・テストと対応行を追加する。比較PoCを本番実装済みと扱わない |
 
 ### 未確認・対象外の扱い
 

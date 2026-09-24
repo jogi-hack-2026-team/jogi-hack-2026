@@ -30,8 +30,8 @@ description: 他メンバーが作成したGitHub Pull Requestをレビュワー
 1. `AGENTS.md`
 2. `CONTRIBUTING.md`
 3. 必要に応じて `docs/DEVELOPMENT_GUIDE.md`
-4. 必要に応じて `docs/architecture/`
-5. 必要に応じて `docs/decisions/`
+4. 必要に応じて `docs/product-spec.md`
+5. 必要に応じて `docs/architecture.md`（Decision Logを含む）
 
 リポジトリで既に決定されているルールを優先する。
 
@@ -305,9 +305,8 @@ UI変更がある場合は、コードだけでレビューを完了しない。
 - `README.md`
 - `CONTRIBUTING.md`
 - `docs/DEVELOPMENT_GUIDE.md`
-- `docs/product/`
-- `docs/architecture/`
-- `docs/decisions/`
+- `docs/product-spec.md`
+- `docs/architecture.md`
 
 以下に該当する場合はドキュメント更新を確認する。
 
@@ -320,7 +319,7 @@ UI変更がある場合は、コードだけでレビューを完了しない。
 - 開発フロー変更
 - 重要な技術判断
 
-重要な設計判断が追加された場合はADRが必要か確認する。
+重要な設計判断が追加された場合は、2文書内のDecision Logに根拠・状態・影響が記録されているか確認する。新しい正式ADRファイルは増やさない。
 
 ---
 

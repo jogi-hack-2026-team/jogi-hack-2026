@@ -734,27 +734,29 @@ Merge前に以下を確認してください。
 | --- | --- |
 | 議事録、ブレスト、発表原稿の下書き | Google Docs。議論中の内容を確定事項として扱わない |
 | UI、Wireframe、操作の流れ | Figma / FigJam。共有URLと権限は管理者が確認してから案内する |
-| 確定仕様、Architecture、Data Model、運用 | GitHubの`docs/`。仕様変更と同じPRまたは関連PRで更新する |
-| 重要な設計・運用判断 | `docs/decisions/`。Context / Decision / Alternatives / Reason / Consequencesを記録する |
+| 正式Product仕様・要件・Scope | [docs/product-spec.md](docs/product-spec.md)。何を作り、何を保証するか |
+| 正式Architecture・技術構成・DB・Deployment | [docs/architecture.md](docs/architecture.md)。Product要件をどう実現するか |
+| 新しいProduct・Architectureの重要判断 | 上記2文書内のDecision Log。Context / Candidates / Decision / Reason / Rejected Alternatives / Consequences / Evidenceを記録する |
 | Git管理できる構成図・Sequence図 | 必要な仕様文書内のMermaid。実装前に架空の図を作らない |
 
 採用方針・導入条件の記録は[開発基盤ADR](docs/decisions/0001-development-foundation.md)、
 項目ごとの導入・検証結果、外部変更の承認待ちは[開発基盤の状態](docs/operations/development-foundation-status.md)を参照してください。
-過去のADRを黙って書き換えず、判断変更時は新しいADRから旧ADRを参照し、旧決定をSupersededとして扱います。
+過去の基盤ADRは履歴として保持します。新しいProduct・Architecture判断のために正式ADRファイルを増やさず、2文書内のDecision Logから旧判断を参照し、変更理由と影響を記録します。Baselineの再検討は[Reconsideration Policy](docs/product-spec.md#reconsideration-policy)に従い、人間の決定前に正式反映しません。
 リリース・提出前は[リリースとデモの手順](docs/operations/release-demo.md)を使います。
 
 ### 仕様文書の配置
 
 仕様文書は「誰が、どの条件で操作すると、何が起こるか」を説明する正本です。コードの場所を並べるだけでは仕様の説明になりません。
-以下の追加先は必要な内容があるときに作成します。未定事項だけの空ファイルや、未実装の画面・APIの説明を先に量産しません。
+2026-09-24の依頼者決定により、正式なProduct・Architecture設計のSingle Source of Truthは以下の2本だけに集約します。RECOMMENDED / CONDITIONAL / OPENをDECIDEDと混同せず、未実装の画面を実装済みとして説明しません。
 
 | 内容 | 置き場所・分割単位 |
 | --- | --- |
-| 各機能・ページの仕様 | `docs/product/`。基本は機能単位。目的、利用者の操作、入力・表示・状態・権限、内部処理、関連コード・テストを一つの流れで読めるようにする |
-| 複数機能に共通する業務ルール | `docs/product/`内の適切な一つの文書。各機能の説明から参照し、同じ仕様を複製しない |
-| 横断する構成・データモデル・共通処理 | `docs/architecture/`。機能文書では説明が重複・肥大化する場合に分離し、各機能から参照する |
+| 機能・操作・共通業務ルール・要件・Scope・評価 | `docs/product-spec.md`。Requirement ID、条件・状態・失敗時の保証と検証を記載する |
+| 構成・責務・技術・DB・Deployment・Auth・Testing | `docs/architecture.md`。Product要件から実現方法またはOPENへ追跡できるようにする |
 | 開発基盤・運用・リリース手順 | 既存の`docs/operations/`。日常の具体的な操作は[開発ガイド](docs/DEVELOPMENT_GUIDE.md)に置く |
-| 決定の理由・経緯 | 既存の`docs/decisions/`。現行仕様の説明と判断の履歴を区別する |
+| Product / Architecture Decision | 2文書内のDecision Log。別の正式requirements・scope・technology-stack・deployment文書やADR群を増やさない |
+| 調査資料・PoC・測定CSV/JSON・experiment README | `Supporting Artifact / Not a Source of Truth`と明記。正式Decisionは2文書へ反映し、補助資料だけに残さない |
+| 過去の開発基盤の判断 | 既存の`docs/decisions/`を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
 | ページ・機能・基盤の棚卸しと、仕様・コード・確認方法の対応 | [docs/change-map.md](docs/change-map.md)。動的URLはルートのパターン単位で扱う |
 
 Figma / FigJamの図や画面表現から、条件・制約を説明するGit管理の仕様文書へ相互に参照できるようにします。外部資料の共有先が未確認ならURLを創作せず、同じ仕様の別正本を作りません。
