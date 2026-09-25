@@ -1,0 +1,7 @@
+{
+  "name": "bakeoff-next",
+  "private": true,
+  "scripts": {
+    "build": "next build"
+  }
+}

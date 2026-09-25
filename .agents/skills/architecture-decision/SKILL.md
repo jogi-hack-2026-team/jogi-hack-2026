@@ -51,8 +51,8 @@ description: 技術、ライブラリ、DB、外部API、インフラ、アー�
 
 メリット、デメリット、将来の制約。
 
-重要な判断は必要に応じて `docs/decisions/` に保存する。
+Productの判断は `docs/product-spec.md`、実現方式・技術の判断は `docs/architecture.md` 内のDecision Logへ保存する。正式ADRファイルを新設しない。既存ADRは過去の記録として保持する。
 
 重要な判断は、チームの決定前には候補として提示する。
-ADRの項目・保存先・過去の決定変更は [CONTRIBUTINGのドキュメント運用](../../../CONTRIBUTING.md#ドキュメントと技術判断) に従う。
+Decision Logの保存先は [CONTRIBUTINGのドキュメント運用](../../../CONTRIBUTING.md#ドキュメントと技術判断) に従う。Baselineの変更は [Reconsideration Policy](../../../docs/product-spec.md#reconsideration-policy) の形式で提案し、人間の採択後に正式反映する。
 情報の区分は [README](../../../README.md#現在の状態) を参照し、提案を確定事項として扱わない。

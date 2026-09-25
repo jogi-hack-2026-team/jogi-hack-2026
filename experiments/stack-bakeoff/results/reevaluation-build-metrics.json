@@ -1,0 +1,49 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "at": "2026-09-24T15:34:31.267Z",
+  "node": "v22.15.1",
+  "os": "10.0.26200",
+  "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+  "logicalCpu": 16,
+  "conditions": "Same Windows host, one warm-up then three sequential incremental builds each; cache retained; excludes npm install. Source counts include code/config only, not Markdown or generated declarations. Build output bytes are NOT network transfer bytes.",
+  "typecheckMs": 815.42,
+  "frontend": {
+    "vite": {
+      "buildMs": [
+        882.83,
+        921.47,
+        877.8
+      ],
+      "medianMs": 882.83,
+      "sourceFiles": 3,
+      "sourceLines": 33,
+      "outputBytes": 267500
+    },
+    "next": {
+      "buildMs": [
+        6362.68,
+        6794.91,
+        6479.21
+      ],
+      "medianMs": 6479.21,
+      "sourceFiles": 6,
+      "sourceLines": 69,
+      "outputBytes": 106962142
+    },
+    "tanstack": {
+      "buildMs": [
+        1265.07,
+        1278.21,
+        1265.86
+      ],
+      "medianMs": 1265.86,
+      "sourceFiles": 3,
+      "sourceLines": 72,
+      "outputBytes": 303350
+    }
+  },
+  "shared": {
+    "files": 3,
+    "lines": 520
+  }
+}

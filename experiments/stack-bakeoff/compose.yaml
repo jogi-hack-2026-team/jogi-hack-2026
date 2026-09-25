@@ -1,0 +1,17 @@
+name: jogi-stack-bakeoff-34
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: bakeoff
+      POSTGRES_USER: bakeoff
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "127.0.0.1:55434:5432"
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bakeoff -d bakeoff"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
