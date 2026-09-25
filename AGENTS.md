@@ -69,30 +69,17 @@ Code Freeze後は、原則としてソースコードおよび事前提出資料
 
 ## 3. 現在のプロジェクト状態
 
-現時点では、プロダクトは確定していない。
+正式な現在のProduct・Scopeは[Product Spec](docs/product-spec.md)、Architecture・技術採択・条件付き候補は[Architecture](docs/architecture.md)を確認する。採択済みでも本番実装・実User検証済みとは扱わない。過去の会話・PoC・古いIssueを現在の決定へ昇格させない。OPEN / RECOMMENDED / CONDITIONALを人間の判断なくDECIDEDへ変更しない。
 
-以下は、明示的に決定されるまでは未定として扱う。
+作業開始時は次の順に読む。
 
-- 解決する課題
-- Target User
-- Product Name
-- 機能
-- Technology Stack
-- Framework
-- Database
-- AI利用有無
-- External API
-- Authentication
-- Infrastructure
-- Deployment構成
-- Architecture
-- 非同期処理
-- Real-time通信
-- Search方式
-- Test Framework
+1. [Product Spec](docs/product-spec.md): 対象RequirementとScope。
+2. [Architecture](docs/architecture.md): 実現責務と正式Decision。
+3. 対象領域の[FE](docs/FE/README.md) / [BE](docs/BE/README.md) / [ML](docs/ML/README.md) README。
+4. 同領域のdecision-log、design-intent、implementation-guide。採用理由を検討する場合はevidence、推薦評価はML evaluationも確認する。
+5. [変更対応表](docs/change-map.md)から実在Code / Testsを調査する。
 
-過去の会話、過去の案、実験コード、古いIssueなどに登場した内容を、
-現在の採用案として扱ってはいけない。
+Supporting Docsは理由・証拠・実装手順を展開する補助資料であり、正式な仕様の追加正本ではない。
 
 ---
 
@@ -371,7 +358,7 @@ Architectureを先に決めない。
 過去のDecisionを変更するときは、
 古いADRを黙って書き換えない。
 
-新しいProduct・Architecture判断は該当する正式文書内のDecision Logへ記録し、旧判断を参照して変更理由と影響を残す。新規の正式ADR群は作らず、既存の開発基盤ADRは過去の決定記録として保持する。
+新しいProduct・Architecture判断は該当する正式文書内のDecision Logへ記録し、旧判断を参照して変更理由と影響を残す。正本には短い判断要約と詳細リンクを置き、比較理由は領域別decision-log、日常の作業経緯はIssue/PRへ記録する。記録対象・SUPERSEDED・履歴分離の規則は[CONTRIBUTING](CONTRIBUTING.md#decision-logを増やしすぎないためのルール)を参照する。新規の正式ADR群は作らず、既存の開発基盤ADRは過去の決定記録として保持する。
 
 Existing Decisions / Baselineを理由なく再議論しない。明確な欠陥・要件未達・重大リスク・コスト超過・単純化等の根拠がある場合だけ、[Product SpecのReconsideration Policy](docs/product-spec.md#reconsideration-policy)に従って提案する。提案 → 人間Decision → 正式反映の順を守る。
 
@@ -488,6 +475,13 @@ Must / Should / Couldの影響整理
 Team Decision
 
 AIが最終的なProduct Decisionを勝手に行わない。
+
+### Design Change Contract
+
+変更前にRequirement / Decision / Design Intent / Evidence / Testsへの影響を確認する。意図不明な設計を推測で変えず、関連する理由・代替案・不変条件を読んでから変更する。Framework都合でProduct要件を変えない。Supporting Artifactの成功だけで採択へ昇格しない。不変条件の破壊、新Library / Framework / Algorithm導入は対象要件とEvidenceで必要性を説明する。
+
+変更後は必要な仕様、Tests、Decision / Intent、Evidenceと対応表を同期する。新しい重要設計には「なぜ必要か、なぜその構造か、Alternatives、Trade-offs、Invariants、Non-goals、再検討条件、Evidence」をDesign Intentとして残す。private chain-of-thoughtではなく、人間がレビュー可能な設計理由へ要約する。項目・配置・Doneの正本は[CONTRIBUTING](CONTRIBUTING.md#変更に伴う文書更新)を参照する。
+
 
 ---
 

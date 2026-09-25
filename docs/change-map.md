@@ -15,16 +15,19 @@
 
 ## アプリの仕様と実装
 
-2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で2文書の初版と隔離した比較PoCを追加。2026-09-25に人間Snapshot、Longlist・成長設計、追加PoCへ同期しました。上記の初回棚卸しは過去の記録であり、以下が現在の導線です。この対応表は仕様を複製せず、正式設計SSOTはProduct SpecとArchitectureの2本です。
+2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で2文書の初版と隔離した比較PoCを追加。2026-09-25に人間Snapshot、Longlist・成長設計、追加PoCへ同期しました。[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)で人間のF25採択、領域別Supporting Docs、利用権の公式規約調査を反映しました。上記の初回棚卸しは過去の記録であり、以下が現在の導線です。この対応表は仕様を複製せず、正式設計SSOTはProduct SpecとArchitectureの2本です。
 
 | 項目 | 現在の状態・説明先 | 実装・関連処理 | 確認方法・今後の更新先 |
 | --- | --- | --- | --- |
-| 対象ユーザー、課題、主要機能 | [Product Spec](product-spec.md)の要件・Baseline・OPEN・Scope案 | 本番未実装。PoCを採択済み仕様と扱わない | #20・#21とProduct Decision Logで人間の決定を確認 |
+| 対象ユーザー、課題、主要機能 | [Product Spec](product-spec.md)の要件・F25採択・OPEN・Scope | 本番未実装。PoCを採択済み仕様と扱わない | #36とProduct Decision LogでF25決定を確認（#20・#21は背景履歴） |
+| FEの設計・操作境界 | [FE README](FE/README.md)→D-09 / DI-FE-01〜03 | [Code/Test Map](FE/implementation-guide.md#既存code--test-map) | [Evidence](FE/evidence.md)。Server State、Router、Player、未実装UXを区別 |
+| BEの設計・整合性・運用 | [BE README](BE/README.md)→D-08 / 10〜14、DI-BE-01〜04 | [Code Map](BE/implementation-guide.md#code-mapと差分) | [実測と測定計画](BE/evidence.md)、[保存/学習許諾](BE/evidence.md#保存学習用途の追加確認) |
+| 推薦・学習・仮説 | [ML README](ML/README.md)→D-13 / P-09、DI-ML-01〜04 | [Code Map](ML/implementation-guide.md#code--test-map) | [Evaluation](ML/evaluation.md)、[研究と限界](ML/evidence.md)。旧PoCとの差分あり |
 | PoC `/`・`/explore` | Seed選択・探索・Summary。[UX](product-spec.md#user-experience)、正式レイアウトはOPEN | [共通画面](../experiments/stack-bakeoff/frontend/shared/Screens.tsx)、[Vite](../experiments/stack-bakeoff/frontend/vite/)、[Next](../experiments/stack-bakeoff/frontend/next/)、[TanStack Router](../experiments/stack-bakeoff/frontend/tanstack/) | [共通E2E](../experiments/stack-bakeoff/tests/frontend.spec.ts)。実Playback・最新計数/Contextの本番実装ではない |
 | Scale・将来の交換境界 | [ScaleとEvolution](architecture.md#scaleとevolution)。実測と机上分析を区別 | [2process/100並列/履歴試験](../experiments/stack-bakeoff/scripts/scale.ts)、[結果](../experiments/stack-bakeoff/results/scale-metrics.json) | [再実行手順](../experiments/stack-bakeoff/README.md#testとmeasure)。Stage 2/3の容量保証ではない |
-| API・サーバー処理・DB | [A-03](architecture.md#a-03-sessionと整合性)、契約・transaction・revisionの候補 | [Service](../experiments/stack-bakeoff/backend/shared/service.ts)、[DB](../experiments/stack-bakeoff/backend/shared/database.ts)、[LinTS](../experiments/stack-bakeoff/backend/shared/lints.ts) | [HTTP/DB/数値試験](../experiments/stack-bakeoff/tests/backend.test.ts)。本番migrationはOPEN |
+| API・サーバー処理・DB | [A-03](architecture.md#a-03-sessionと整合性)、transaction要件とPoC API契約（本番APIは未確定） | [Service](../experiments/stack-bakeoff/backend/shared/service.ts)、[DB](../experiments/stack-bakeoff/backend/shared/database.ts)、[LinTS](../experiments/stack-bakeoff/backend/shared/lints.ts) | [HTTP/DB/数値試験](../experiments/stack-bakeoff/tests/backend.test.ts)。本番migrationはOPEN |
 | 認証・認可、外部連携、非同期処理 | [A-04](architecture.md#a-04-catalogとplayback)、[A-05](architecture.md#a-05-authenticationとguest) | localhost Guest所有権と外部障害Mockのみ。実API・Account・公開Cookie・Jobなし | 実再生/権利/認証は未検証。PoCの成立と公開Goを分ける |
-| 起動・build・typecheck・test | 比較PoC専用。[再実行手順](../experiments/stack-bakeoff/README.md) | [package](../experiments/stack-bakeoff/package.json)、[測定](../experiments/stack-bakeoff/results/) | [Architectureの検証](architecture.md#testingとcicd)。本番のスタック・コマンド・CI採択とは分ける |
+| 起動・build・typecheck・test | 比較PoC専用。[再実行手順](../experiments/stack-bakeoff/README.md) | [package](../experiments/stack-bakeoff/package.json)、[測定](../experiments/stack-bakeoff/results/) | [Architectureの検証](architecture.md#testingとcicd)。採択済みStackと本番コマンド・CI整備は分ける |
 
 ## 開発基盤と作業手順
 
@@ -55,11 +58,19 @@
 | --- | --- | --- |
 | 文書チェックの説明を直す | README → 開発ガイドの初回セットアップ → この表の文書チェック行 → `mise.toml` → `check-foundation.ps1` | 説明が実処理・成功／失敗表示と一致するか。説明変更ならガイドを更新し、入口・対応表は参照が変わる場合に更新。実行設定の変更が必要なら今回の対象外 |
 | 文書を移動する | この表 → 正本の文書 → リポジトリ内の旧パス・見出し参照を検索 → documentation-sync | README・対応表・Skills等の参照元を更新し、全体チェックとリンクの読み合わせを行う。対応表だけでは漏れがないと判断しない |
-| 初めて本番機能を追加する | #20・#21の承認内容 → Product Specの要件ID → Architectureの実現案/OPEN → 対象実装・テスト → この表 | 人間決定を確認して2文書を更新し、関連コード・テストと対応行を追加する。比較PoCを本番実装済みと扱わない |
+| 初めて本番機能を追加する | #36のF25採択 → Product Specの要件ID → Architecture → 対象領域README / Intent / Guide → 実装・テスト → この表 | 人間決定を確認して2文書を更新し、関連コード・テストと対応行を追加する。比較PoCを本番実装済みと扱わない |
+
+### Decision履歴の読み方
+
+現行仕様→正本の短いDecision索引→領域別decision-logの詳細→必要なIssue/PRの順に読む。通常の作業経緯はClosed Issueを含めMCPで確認する。置換済みDecisionはSUPERSEDEDと新IDをたどり、古いProposalを現行方針と混同しない。[記録・整理の規則](../CONTRIBUTING.md#decision-logを増やしすぎないためのルール)を参照。
+
+### F25文書確定の照合
+
+MUST R-01〜05 / R-07〜13 / R-15〜17 / R-19は[双方向整合表](architecture.md#要件との双方向整合)へ対応。D-08〜14、P-08 / P-09から各領域のDecision / Intent / Evidenceへ到達する。PoCのContext符号・切片位置・正規化・Anchor・Probe・5曲計数、localStorage Guest、TanStack実API未検証を差分として記録した。新しい本番機能や外部resourceは追加していない。今回の検証結果・残課題は#36へ記録する。
 
 ### 未確認・対象外の扱い
 
-- 大会公式資料、採択済みアプリ仕様、全メンバーの環境・外部サービスの接続は未確認。担当者が各判断Issueまたは基盤の状態記録へ根拠を追記します。
+- 大会公式資料、全メンバーの環境・外部サービスの接続は未確認。アプリ仕様の現在の採択は2正本を参照し、実装・実再生・User評価は未確認。担当者が各判断Issueまたは基盤の状態記録へ根拠を追記します。
 - 既存PRカードとIssueのみの自動追加、Board列・WIP等の相違は[既存の相違点記録](operations/development-foundation-status.md#資料との相違点)を維持します。新たな運用決定や外部設定変更はしません。
 - 文書チェックは内容の正しさ、すべてのコード参照、外部URLの到達性、サービスの安全性・法的妥当性を保証しません。対象実装・決定記録との照合、必要な外部確認を別に扱います。
 - この整備の実行コマンド・結果、未実施事項、レビュー・マージ状態は[Issue #26](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/26)の開発情報と関連PRに残します。過去の基盤検証結果を今回の実行結果として転記しません。

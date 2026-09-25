@@ -1,16 +1,30 @@
 # ArchitectureとTechnology Stack
 
-正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が保証する振る舞いを定め、本書が実現方法・技術候補・検証・Decision Logを定める。[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)、2026-09-25再評価。旧Vite / Hono推奨は**Preliminary / Node-focused Bake-off Result**として保存する。Longlist再評価後の推薦はModular Monolith、Vite＋React Router、Node＋Fastify、PostgreSQL。すべて**採用提案でありDECIDEDではない**。Honoからの推奨変更理由は末尾のProposalに記録する。
+正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が振る舞い、本書が責務・採択・制約を定める。2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ正式反映した。本番アプリは未実装。D-01〜07と比較表は判断の履歴であり、古い推奨を現行採択と混同しない。
+
+## 現在の採択と読む順番
+
+| 状態 | 対象 | 詳細・残る条件 |
+| --- | --- | --- |
+| DECIDED | Modular Monolith | D-08。推薦を含むDomainはHTTP層から独立 |
+| DECIDED | React / TypeScript / Vite / TanStack Router | D-09、[FE入口](FE/README.md)。製品UIは未実装 |
+| DECIDED | Node.js / TypeScript / Fastify | D-10 / D-11、[BE入口](BE/README.md)。API schema・log実装は残る |
+| DECIDED | PostgreSQL Engine | D-12。Provider採択とは別 |
+| DECIDED | Gaussian LinTS、Production TypeScript、Guest Core | D-13、[ML入口](ML/README.md)、A-05。数値校正と公開securityは未検証 |
+| RECOMMENDED / CONDITIONAL | Neon、Cloud Run | D-14。相互遅延、cold wake-up、schema容量、pool/transaction、費用、regionと実Deployがゲート |
+| OPEN | Account Auth | Neon Managed Better Auth / Firebase Authentication。Core完成後に判断可 |
+
+Product → 本書A-01〜07 → 対象領域README → decision-log → design-intent → implementation-guide → evidenceの順で読む。領域文書はSupporting Artifact / Not a Source of Truthで、独立の採択権限を持たない。PoCコードは設計例と検証対象であり、そのまま本番契約にはしない。
 
 ## GoalsとConstraints
 
-3人、開発期間2026-09-19〜10-12、Code Freeze 10-12。調査時点から約18日。既存研究を理由なくやり直さず、Baselineを自然に実現できる最小構成を選ぶ。無料優先、外部費用・公開・認証Provider・DB正式採用は人間判断。Product要件をFrameworkの都合で変更しない。
+3人、開発期間2026-09-19〜10-12、Code Freeze 10-12。調査時点から約18日。既存研究を理由なくやり直さず、Baselineを自然に実現できる最小構成を選ぶ。無料優先、外部費用・公開・認証Provider・DB Provider最終採用は人間判断。Product要件をFrameworkの都合で変更しない。
 
 Engineering Requirements: E-01＝3人が説明・debug・分担できる、E-02＝SecretをBrowser/ログへ出さず障害を追跡できる、E-03＝同一契約で再現試験できる、E-04＝低コストでデモまで維持できる、E-05＝1〜2年以上の継続開発で推薦方式・運用を段階的に変更できる、E-06＝負荷・履歴・Catalog増大時に整合性と費用を管理できる。数値性能だけでWinnerを決めない。**チーム習熟度は未確認であり、経験を採点・除外・推奨理由に使わない。** 学習・debug負担は必要な概念、契約生成、障害境界、観測手段から評価する。
 
 ## System Contextと責務
 
-以下は候補設計であり、全モジュールが実装済みという図ではない。PoCは合成Catalog・Playback Mock・部分的Preference Stateである。
+以下は採択した責務分割であり、全モジュールが実装済みという図ではない。PoCは合成Catalog・Playback Mock・部分的Preference Stateである。
 
 Browser（React UI）→ Application API → Session / Recommendation / Preference → Persistenceという同期経路を基本とする。Catalog AdapterとPlayback Resolverは外部API障害をDomainへそのまま漏らさず、Verified Catalogと明示的なエラーを返す。YouTube IFrameはBrowserで再生し、Feature取得はReccoBeats候補へ分離する。
 
@@ -22,7 +36,7 @@ Browser（React UI）→ Application API → Session / Recommendation / Preferen
 | Recommendation | θ sample、選択、判断Trace。Playbackから独立 | R-03、R-12 |
 | Candidate Generation | Relevant / Probe poolと不足状態。Verified/重複制約を守る | R-08、R-09、R-15 |
 | Preference | Seeds、canonical Rating、Posterior、履歴とEvidenceの整合 | R-01、R-03、R-05、R-06 |
-| Hypothesis | 共通Preference Stateから関連仮説を導く。独立MLモデルを持たない案 | R-13、R-14 |
+| Hypothesis | 共通Preference Stateから関連仮説を導く。独立MLモデルを持たない | R-13、R-14 |
 | Track Catalog | Recording Identity、Feature版、欠損、percentile参照集合 | R-01、R-02、R-09 |
 | ReccoBeats Adapter | Feature/Metadata入出力、timeout/429/500、schema/利用条件 | R-02、R-15 |
 | YouTube Resolver | Recording→Playback候補のMapping。動画を学習特徴にしない | R-08、R-09 |
@@ -31,11 +45,13 @@ Browser（React UI）→ Application API → Session / Recommendation / Preferen
 | Decision Trace | commit対象の判断と説明を同じsnapshotで保持 | R-07、R-12 |
 | Authentication / Guest | Sessionの所有者、失効、Account移行 | R-10、R-11 |
 | Persistence | Unique/FK/transaction/locking。SQL例外をAPI詳細へ漏らさない | R-05、R-07、R-11 |
-| Observability | request相関、障害分類、Trace参照、評価の集計 | R-12、R-15、E-02 |
+| Observability | request相関、障害分類、Trace参照、評価の集計 | R-12、R-15、R-19、E-02 |
 
 3人の分担案: UI/Guest操作、API/DB整合性、Catalog/推薦/Evaluation。契約を先に固定し、同じプロセスでも別モジュールで並行作業できる。Team Parallelismはこの責務・共有契約・migrationの衝突範囲で評価し、個人の経験を使わない。担当の最終決定はOPEN。
 
 ## A-01 Architecture候補
+
+F25 / D-08でAのModular Monolithを採択。表は比較履歴。最初から推薦serviceを作らず、推薦入力/出力を版付きの境界へ閉じる。静的FEの最終配信方法はDeployment検証で決める。
 
 | Candidate | Pros / Cons | Failure Boundary | Transaction Boundary | Deployment Units | Team / Complexity / 3-week Fit |
 | --- | --- | --- | --- | --- | --- |
@@ -47,7 +63,7 @@ PoCは比較を容易にするためB形状（localhostの別port）で接続し
 
 ## A-02 RecommendationとPreference
 
-最新Snapshotを反映する。Seedを個別に保存し、Feature変換版・Anchor・canonical Rating集合とPosteriorを対応させる。Hypothesisは同じStateを参照する。正式設計は `φ=[1,-δ1,…,-δ7]/sqrt(8)`、`B=I+Σφφᵀ`、`f=Σφr`、`μ=B⁻¹f`、`Σ=B⁻¹`、観測ノイズ1。Cholesky等の安定したsolveを使う。Feedbackは保存済みContextを参照し、AnchorやContextを作り直さない。ReccoBeats生Featureからpercentileを作る参照集合・同順位処理、Aspect/Evidence Ledgerの完全なスキーマはOPEN。
+最新Snapshotを反映する。Seedを個別に保存し、Feature変換版・Anchor・canonical Rating集合とPosteriorを対応させる。Hypothesisは同じStateを参照する。正式設計は `φ=[1,-δ1,…,-δ7]/sqrt(8)`、`B=I+Σφφᵀ`、`f=Σφr`、`μ=B⁻¹f`、`Σ=B⁻¹`、観測ノイズ1。Cholesky等の安定したsolveを使う。Feedbackは保存済みContextを参照し、AnchorやContextを作り直さない。Feature Referenceはunique recording＋7特徴有効、Playback VERIFIED不要。Seed / Recommendation Catalogとは別集合とし、変換版を固定する。同順位処理と移行規約、Aspect/Evidence Ledgerの完全なスキーマはOPEN。
 
 保存した旧PoCは7つの**合成percentile値の正の絶対距離＋末尾の切片、正規化なし**であり、上記SnapshotとContext表現が異なる。prior N(0,I)、観測ノイズ1、A=I+Σxxᵀ、b=Σrx、Choleskyのsolve/sample、rewardの扱いを検証した証拠として残す。LIKE +1 / NEUTRAL 0 / DISLIKE -1、UNSUREは観測から除く。**旧PoCを最新モデルの実装済み証拠にしない。** Context/transform/modelの版を保存し、表現変更時は異なる版のPosteriorを混ぜない。移行時の再構築・互換性確認は本実装の作業。
 
@@ -57,7 +73,7 @@ PoCは比較を容易にするためB形状（localhostの別port）で接続し
 
 ## A-03 Sessionと整合性
 
-RECOMMENDED: canonical Feedbackを一意に保存し、同じSessionの更新を直列化したtransaction内でPosteriorを再計算する。PoCはPostgreSQLのSession行を`FOR UPDATE`し、FeedbackのInteraction PKとrevisionを使う。Recommendationも同じ行をlockし、Preference版・Candidate score・θ・Anchor・ContextをTraceへ保存する。
+DECIDEDな整合性要件を満たす設計として、canonical Feedbackを一意に保存し、同じSessionの更新を直列化したtransaction内でPosteriorを再計算する。PoCはPostgreSQLのSession行を`FOR UPDATE`し、FeedbackのInteraction PKとrevisionを使う。Recommendationも同じ行をlockし、Preference版・Candidate score・θ・Anchor・ContextをTraceへ保存する。
 
 1. Guest所有権を確認してSessionをlockする。
 2. Recommendationの同一Interaction ID retryなら保存済み結果を返す。新規なら候補を選ぶ。
@@ -65,7 +81,7 @@ RECOMMENDED: canonical Feedbackを一意に保存し、同じSessionの更新を
 4. Feedbackは同じ値・同じrevision retryを再適用しない。競合revisionは409にする。
 5. Rating変更後のcanonical集合を読み直し、Posteriorを更新してcommitする。
 
-[node-postgres](https://node-postgres.com/features/transactions)の同一client要件と[PostgreSQL行lock](https://www.postgresql.org/docs/current/explicit-locking.html)に従う。外部API通信をlock区間へ入れない案とし、PoCもDB transaction中に外部通信しない。Session lockは異なるInteraction間のlost updateも防ぐが、同一Sessionの高頻度入力で待ち時間が増える。履歴が増えた後の再計算上限・retry backoff・deadlock対応は本実装時に計測する。
+[node-postgres](https://node-postgres.com/features/transactions)の同一client要件と[PostgreSQL行lock](https://www.postgresql.org/docs/current/explicit-locking.html)に従う。外部API通信をlock区間へ入れない設計とし、PoCもDB transaction中に外部通信しない。Session lockは異なるInteraction間のlost updateも防ぐが、同一Sessionの高頻度入力で待ち時間が増える。履歴が増えた後の再計算上限・retry backoff・deadlock対応は本実装時に計測する。
 
 最新設計ではPLAYBACK_STARTEDとaccepted FeedbackをInteraction単位で保存し、両方を満たす有効Interactionを一度だけCheckpointに数える。UNSUREは計数のみ、再送・Rating変更では曲数を増やさない。Playback failure、未再生離脱、FeedbackなしSkipは数えない。イベント順序逆転・遅延failureの扱いはProduct O-01で決め、単なるcommit数へ置き換えない。Probe上限2とHard条件を保ち、不足時の非連続guardrail緩和をTraceに記録する。
 
@@ -94,19 +110,19 @@ PoCは12件の合成Track ID・Feature・画像とPlayback Mockだけを使用�
 
 Timeout/429/500のHTTP変換は両候補で確認した。実Adapterはschema検証、有限のtimeout、上限付きretryとjitter、Retry-After、quota記録が必要。自動retry回数・キャッシュ可否・TTLはサービス条件の確認後に決める。PoCは自動retryを実装していない。Playback providerの障害はUI・Mapping・運用記録へ伝え、DISLIKEを作らない。
 
-YouTubeの[必須機能](https://developers.google.com/youtube/terms/required-minimum-functionality)でReferer、player表示、autoplay等の条件を確認した。これだけで全規約適合・ML利用権・対象地域の再生成功を保証しない。ReccoBeats公式Docs本文は今回の取得経路で読めず、詳細の再確認をOPENとして残す。
+YouTubeの[必須機能](https://developers.google.com/youtube/terms/required-minimum-functionality)でReferer、player表示、autoplay等の条件を確認した。これだけで全規約適合・ML利用権・対象地域の再生成功を保証しない。F25ではContext7経由でReccoBeatsのID/ISRC付きFeature仕様を確認できた。公式Terms（2026-05-25版）・Rate Limitingも確認し、一般利用と推薦結果cacheには裏付けがある。一方、永久Feature Reference・LinTS学習・派生State保持の許諾、Spotify由来metadataの条件はOPENで、[EV-BE-08](BE/evidence.md#ev-be-08)へ区別して記録する。
 
 ## A-05 AuthenticationとGuest
 
-GuestでCore Experience可能というR-10は維持する。RECOMMENDEDな公開構成候補は、推測不能なGuest識別子＋server側State＋Secure/HttpOnly/SameSite Cookie。CSRF、期限、削除、別端末、Cookie拒否時のUXはOPEN。Loginを先に要求する代替は採らない。
+GuestでCore Experience可能というR-10は維持する。F25でDECIDEDの基本設計は、推測不能なGuest識別子＋server側State＋Secure/HttpOnly/SameSite Cookie。CSRF、期限、削除、別端末、Cookie拒否時のUXはOPEN。Loginを先に要求する代替は採らない。
 
 PoCはlocalhost限定でUUID tokenを発行し、DBにはSHA-256 hashを保持、BrowserはlocalStorageへ保存する。reload復元・破損JSONからの初期化はE2E、他Guestの拒否はHTTP試験で確認した。保存失敗の表示はコード読み合わせのみ。XSS耐性・Cookie/CSRF・expiry・盗難token対策・公開認証の証明ではなく、**このPoCをそのまま公開しない**。
 
-永続AccountはCOULD候補。候補は外部OIDC Provider、DB提供Auth、AccountなしでMVP。具体Provider採用はOPENで、新しいSecretや有料契約は作っていない。Guest→Account移行では所有権を確認して同一transaction内でStateを引き継ぐ案。既存Accountとの履歴・録音重複・Posterior統合規則は人間決定後に実装する。
+永続AccountはCOULD候補。主要候補はNeon Managed Better AuthとFirebase Authentication。AccountはCOULDで、Guest Core完成後に最終判断してよい。具体Provider採用はOPENで、新しいSecretや有料契約は作っていない。Guest→Account移行では所有権を確認して同一transaction内でStateを引き継ぐ案。既存Accountとの履歴・録音重複・Posterior統合規則は人間決定後に実装する。
 
 ## A-06 HypothesisとObservability
 
-Baseline通り、Hypothesis Engineは共通Preference StateとEvidence Ledgerを読み、別のML Preference Modelを作らない。5状態、因果断定禁止、全Feature未確定も正常という要求は[Product Spec](product-spec.md#preference-hypothesis)が正本。分類Threshold、Evidenceの解釈、CONTESTED解消はOPEN。AspectをFeature Weightへ直接加算しない。Probe/Model Mismatch時の任意質問、1曲最大1問・初回最大2問・連続回避をSession側で管理する案。PoCは固定の根拠不足メッセージのみで、Engineを実証していない。
+Baseline通り、Hypothesis Engineは共通Preference StateとEvidence Ledgerを読み、別のML Preference Modelを作らない。5状態、因果断定禁止、全Feature未確定も正常という要求は[Product Spec](product-spec.md#preference-hypothesis)が正本。信用区間＋ROPEの分類方式を採用し、平均符号のみでは判断しない。ROPE値・区間水準、Evidenceの解釈、CONTESTED解消はOPEN。AspectをFeature Weightへ直接加算しない。Probe/Model Mismatch時の任意質問、1曲最大1問・初回最大2問・連続回避をSession側で管理する案。PoCは固定の根拠不足メッセージのみで、Engineを実証していない。
 
 Recommendation RationaleはTraceから生成する案。Observabilityはrequest ID、HTTP status、所要時間、エラー分類、非秘密のTrace参照を構造化する。Cookie/Authorization/token/body/DB接続情報や外部APIキーをログへ出さない。Error Tracking ProviderはOPENで、まず既存実行環境のログを使う候補。PoCでは安全なstatus/timingの測定とDB Traceを残し、Production向けログ基盤は未実装。
 
@@ -114,9 +130,11 @@ Algorithm Evaluationは更新の正当性と推薦品質を分離する。実ユ
 
 ## A-07 SaveとSession Intent
 
-R-17はBookmarkをRatingとは別の所有者・recordingKey・保存日時の集合として扱い、LinTS更新経路から分離する。Save率はProduct評価の候補でありrewardではない。R-18は永続Preference StateをSessionから参照し、一時IntentはSessionの条件としてCandidate Generationへ渡す。IntentをPosteriorへ書かず、長期/Sessionの二重LinTSは作らない。期限・履歴保持・Guest消失/Account移行・既出範囲はOPEN。これらはSHOULD/Future候補で、今回本番実装しない。
+R-17はBookmarkをRatingとは別の所有者・recordingKey・保存日時の集合として扱い、LinTS更新経路から分離する。Save率はProduct評価の候補でありrewardではない。R-18は永続Preference StateをSessionから参照し、一時IntentはSessionの条件としてCandidate Generationへ渡す。IntentをPosteriorへ書かず、長期/Sessionの二重LinTSは作らない。期限・履歴保持・Guest消失/Account移行・既出範囲はOPEN。Save / Continued ExplorationはMUST、Basic History・保存曲一覧の改善はR-20 SHOULD、Session IntentはCOULD / FUTURE。今回本番実装は行わない。
 
 ## Desk Screeningと評価方法
+
+> 以下はIssue #34の比較履歴。採択前の推奨・候補・検証結果を保存する。現行Decisionは冒頭とD-08〜14を参照。今回の文書作業で過去試験を再実行した意味ではない。
 
 2026-09-25 JSTに公式Docs、npm dist-tag、GitHub releaseと活動を確認した。[取得記録とURL](../experiments/stack-bakeoff/results/research-releases.json)を保存。全対象repositoryはarchived=falseだったが、commit頻度・人気・新しさを品質点にしない。releaseのstable/previewを区別し、包括的CVE監査・各クラウド実配置は未実施。以下のREJECT BEFORE POCは今回の要件への便益不足であり、Frameworkの一般的な劣位や恒久禁止ではない。
 
@@ -171,6 +189,8 @@ Backend PoCは2候補に絞る。Go/Python等をFINALISTに選んだのに未実
 
 ## Frontend Bake-off
 
+> 以下はIssue #34の比較履歴。採択前の推奨・候補・検証結果を保存する。現行Decisionは冒頭とD-08〜14を参照。今回の文書作業で過去試験を再実行した意味ではない。
+
 Required Characteristics: React/TypeScript、2画面遷移、非同期検索、Client/Server Stateの分離、Guest復元、Playback失敗表示、4種Feedback、Error Boundary、契約共有、E2E、短い変更確認サイクル。現要件には公開検索流入/SEOやserver-render必須の根拠がないため、SSR/RSC/Server Functionsは利用可能性だけで加点しない。
 
 | 候補 / 調査版 | 候補理由・公式根拠 | 比較結果 / Maintenance・リスク |
@@ -220,6 +240,8 @@ Required Characteristics: React/TypeScript、2画面遷移、非同期検索、C
 
 ## Backend Bake-off
 
+> 以下はIssue #34の比較履歴。採択前の推奨・候補・検証結果を保存する。現行Decisionは冒頭とD-08〜14を参照。今回の文書作業で過去試験を再実行した意味ではない。
+
 Required Characteristics: HTTP契約、入力検証、Guest所有権、同時Feedback、1transactionのInteraction/Trace、外部失敗の分類、8次元LinTS、型・統合テスト、Docker local DB、移植可能性。TypeScript自体を目的にしない。以下は**旧Node-focused sliceの比較Evidence**。広いStack選定は上のLonglist、現在の推奨はProposalを参照する。
 
 | 候補 / 調査版 | 候補理由・公式根拠 | 結果 / リスク |
@@ -249,6 +271,8 @@ Required Characteristics: HTTP契約、入力検証、Guest所有権、同時Fee
 [生データ](../experiments/stack-bakeoff/results/backend-metrics.json): PostgreSQL 18.6、localhost HTTP、warm-up各5session、候補ごと逐次30session、Hono→Fastifyの固定順。network/DB/順序効果を含み、統計的優位・負荷耐性・serverless cold startとは扱わない。今回の速さの差でWinnerを決めない。structured logging、実API backoff、background workflow、ORM/migration、edge runtimeでのDB接続は未実装。DockerはDBのみで、app container buildは未検証。
 
 ## ScoringとNo-Go
+
+> 以下はIssue #34の比較履歴。採択前の推奨・候補・検証結果を保存する。現行Decisionは冒頭とD-08〜14を参照。今回の文書作業で過去試験を再実行した意味ではない。
 
 以下の点数は**初回比較の履歴**であり、今回のLonglist再評価の総合採点ではない。習熟度・経験は使用しない。現在はDesk Screeningの12軸、追加試験、Stage 1/2/3の分析で判断し、未計測のStackを同じ数値表へ埋めない。
 
@@ -286,6 +310,8 @@ Required Characteristics: HTTP契約、入力検証、Guest所有権、同時Fee
 No-Go gate: 要件を自然に満たせない、冪等性/原子性が破れる、期間内に説明/実装できない、公開方法が成立しない、費用/規約/保守に重大問題がある場合。今回の最終候補にFramework固有の致命的No-Goは未発見。一方、**実Catalog/Playback、公開Guest security、Provider/Preview未検証のため製品公開Goは出せない**。
 
 ## 統合PoC
+
+> 以下はIssue #34の比較履歴。採択前の推奨・候補・検証結果を保存する。現行Decisionは冒頭とD-08〜14を参照。今回の文書作業で過去試験を再実行した意味ではない。
 
 初回はVite＋Honoを接続し、検索→3Seed→Session作成→推薦commit→表示→LIKE→次曲commit→reload復元を確認した（9成功・1skip）。今回の再評価では同じsliceを**Vite＋Fastify**へ接続し、CORSを含む実HTTP/DB統合を確認した。共通画面3候補×4件＋統合1件＝**13成功・2skip**。Next/TanStackとの実API統合は全組合せを避けるため明示skip。旧結果ファイルを上書きせず、再評価結果を別名で保存する。
 
@@ -351,13 +377,19 @@ Non-stationary Bandit、Collaborative Signal、Audio Embedding、Hybrid Recommen
 
 | Candidate | Transaction・制約・運用 | Cost / Provider | 状態 |
 | --- | --- | --- | --- |
-| PostgreSQL | row lock/unique/FKで今回の整合性を検証。schema migration・pool・backup/restoreが必要 | local Dockerは追加契約なし。Hosted Providerは別選定 | **RECOMMENDEDだが正式採用はOPEN**。PoCで使用しただけ |
-| SQLite | 一つの永続processで小規模運用する代替。[公式の適用範囲](https://www.sqlite.org/whentouse.html)に沿ってwrite直列化とhost storageを設計 | local file。永続volume/複数instanceからの共有方式が条件 | ALTERNATIVE。今回の2app・同一State競合と将来のworkerを同じDBへ集約する設計にはPostgreSQLを優先。SQLiteを性能不足と実測した意味ではない |
+| PostgreSQL | row lock/unique/FKで今回の整合性を検証。schema migration・pool・backup/restoreが必要 | local Dockerは追加契約なし。Hosted Providerは別選定 | **DECIDED / D-12**。本番migrationとProvider検証は未実施 |
+| SQLite / WAL | 一つの永続processで小規模運用する代替。[公式の適用範囲](https://www.sqlite.org/whentouse.html)に沿ってwrite直列化とhost storageを設計 | local file。永続volume/複数instanceからの共有方式が条件 | ALTERNATIVE。今回の2app・同一State競合と将来のworkerを同じDBへ集約する設計にはPostgreSQLを優先。SQLiteを性能不足と実測した意味ではない |
+| MySQL / InnoDB | transaction / row lock / FKで要件を実現できる代替。DB間比較試験は未実施 | managed選択肢あり、費用はProvider依存 | 不採用理由は機能不足でなく、PostgreSQL上の既存整合性Evidenceと追加移植・再検証工程 |
+| Distributed SQL | 分散transactionと地域冗長を求める場合に比較。分散障害・retry・費用が追加 | Provider依存 | 現在は地域分散・高可用の具体要件がなく先取りしない |
 | PostgreSQL互換managed | DB機能だけでなくpause/connection pooling/region/backupが選定条件 | Neon / Supabase等。具体planと予算はOPEN | CONDITIONAL。Supabase Auth等を自動採用しない |
 
 本番migration tool、index、Catalog import、Rating履歴、失効・削除、restore実証は未実装。PoC DBは一時データかつlocalhost専用trust認証であり、外部接続先として使用しない。
 
 ## Deploymentと費用
+
+F25 / D-14: **Cloud RunとNeonが第一候補（RECOMMENDED、最終採択はCONDITIONAL）**。Cloud Runは通常のNode/Fastify serverをcontainerで実行でき、concurrency / instance数をDB接続総数と一緒に管理できる。Cloudflare WorkersはWeb Standards / Honoに強い代替だが、現行Fastify adapterと通常serverの運用を優先する。一般的な性能優位を意味しない。
+
+実Deploy PoCではCloud Run↔Neonのwarm/cold往復遅延、cold wake-up、実Schemaとindex/Trace容量、transaction pool互換、並列負荷・timeout・復旧を測る。regionは結果と費用から決める。Free tier・scale-to-zero・branchingは候補理由であり、無料継続や当Projectの容量適合を保証しない。詳細は[BE Evidence](BE/evidence.md)と[実装順序](BE/implementation-guide.md#全体の実装順序)。
 
 | 対象 | 候補 / 判断 | 未決・Failure behavior |
 | --- | --- | --- |
@@ -368,7 +400,9 @@ Non-stationary Bandit、Collaborative Signal、Audio Embedding、Hybrid Recommen
 | Secrets | 既存Doppler方針を維持。server側だけへ渡す | 未確定のProduction環境変数名や値を追加しない |
 | Cost | 無料優先。無料枠を超える前の停止/通知を設計 | 有料契約・支払手段・勝手なplan変更なし。絶対無料と保証しない |
 
-### Provider比較（2026-09-25 JST確認）
+### Provider比較（Issue #34の2026-09-25 JST確認記録）
+
+以下の価格数値は過去比較時のsnapshotとして保持する。今回の契約・見積の承認ではなく、利用時に公式価格を再確認する。
 
 | Provider / 一次情報 | Stage 1 / 小規模 | Stage 2/3 / 継続運用と条件 |
 | --- | --- | --- |
@@ -377,7 +411,7 @@ Non-stationary Bandit、Collaborative Signal、Audio Embedding、Hybrid Recommen
 | [Render pricing](https://render.com/pricing)、[Free制限](https://render.com/docs/free) | app＋DBの同一provider候補。Free PostgreSQLは30日で期限、Free webには休止条件。デモ後も無料DBが存続すると見積らない | 継続時は有料DB/appとbackup/regionを見積る。サイズ・plan依存のため今回総額を確定しない。container/常駐APIを近接配置できるか実Previewで検証 |
 | [Railway pricing](https://railway.com/pricing)、[plans](https://docs.railway.com/pricing/plans) | Free trialは30日/$5 credit、その後Freeは$1/月credit。これは無料で常時API＋DBを賄える保証ではない | Hobbyは$5/月最低（usageに充当）、Proは$20/月最低。team権限・利用量・volume/backupを含む構成を見積る。追加費用を伴うplanを未承認で契約しない |
 
-Neon/SupabaseはDBを先に比較し、Node appの配置費用を別に加える。Render/RailwayはappとDBの配置・運用をまとめる候補。Node APIとDBを近いregionに置き、FEは同origin配信を第一案とする。静的配信を分ける場合はCookie/CORS/Preview契約を検証する。現時点でprovider winnerは**OPEN**。
+Neon/SupabaseはDBを先に比較し、Node appの配置費用を別に加える。Render/RailwayはappとDBの配置・運用をまとめる候補。Node APIとDBを近いregionに置き、FEは同origin配信を第一案とする。静的配信を分ける場合はCookie/CORS/Preview契約を検証する。F25でNeon / Cloud Runを第一候補へ更新したが、最終受入・regionは**OPEN**。
 
 現行Termsも確認した: [Neon](https://neon.com/platform-terms)（2026-08-05改定、親契約とplanの従量課金・更新条件を含む）、[Supabase](https://supabase.com/terms)、[Render](https://render.com/terms)、[Railway](https://railway.com/legal/terms)。価格表のFree表示から、チーム契約権限・用途・データ利用の適法性や無期限無料を推定しない。契約主体、選択plan、支払/停止条件、対象データの権利は公開前に人間が確認する。外部サービスの契約・支払情報・リソースは追加していない。
 
@@ -391,7 +425,7 @@ CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider
 
 ## TestingとCI/CD
 
-| 種類 | 今回実施 / 残ること |
+| 種類 | Issue #34で記録済み / 残ること |
 | --- | --- |
 | Unit / Numeric | 解析解、reward符号による順位変化、1000更新の有限性。安定性の一般証明ではない |
 | Algorithm Simulation | syntheticのみ。嗜好分布/尺度/長期regret/quality比較はOPEN |
@@ -408,69 +442,33 @@ CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider
 
 | Architecture判断 | Product / Engineering根拠 | 状態・検証限界 |
 | --- | --- | --- |
-| A-01 modular monolith、FE/API配置 | E-01、E-04、R-07 | 推奨。単一配信と公開hostはOPEN |
+| A-01 modular monolith、FE/API配置 | E-01、E-04、R-07 | 構造はDECIDED。単一配信と公開hostはOPEN |
 | A-02 多prototype/変換版/LinTS | R-01、R-02、R-03 | 合成値のみ。実変換/品質はOPEN |
 | A-03 lock/unique/transaction/trace | R-04、R-05、R-06、R-07、R-16 | 部分PoC成功。正式5曲のBehaviorは決定済み、実装検証と遅延イベント詳細は残る |
 | A-04 Catalog/Mapping/Adapter | R-08、R-09、R-15 | Mockだけ。実Recording/PlaybackはOPEN |
 | A-05 Guest/認可/Account移行 | R-10、R-11 | Guest部分のみ。公開security・期限・移行はOPEN |
-| A-06 共通Hypothesis/観測 | R-12、R-13、R-14、E-02 | Trace一致のみ。Hypothesis/Evidence/ログ運用はOPEN |
-| A-07 Save/Intentと長期State | R-17、R-18、R-05、E-05 | 直接rewardへ入れないBaseline。優先度・寿命・共通owner競合は未実装 |
+| A-06 共通Hypothesis/観測 | R-12、R-13、R-14、R-19、E-02 | Trace一致のみ。Hypothesis/Evidence/ログ運用はOPEN |
+| A-07 Save/Intentと長期State | R-17、R-18、R-20、R-05、E-05 | Save/継続MUST、履歴SHOULD、Intent COULD。寿命・共通owner競合は未実装 |
 | 共通契約/比較test/再実行 | E-03 | 同じsliceで検証。Framework固有強みの全面比較ではない |
 | Scale/worker移行/推薦交換 | E-05、E-06、R-03、R-05、R-07、R-15 | 同期moduleが第一案。将来要件のないQueue/Redis/serviceは未導入 |
 
-ProductのMUST候補R-01〜05、R-07〜13、R-15はすべて実現案またはOPENへ到達する。要件のない推薦別process/Redis/Queueは追加しない。Accountと継続探索は優先度承認前に実装を広げない。
+ProductのMUST R-01〜05、R-07〜13、R-15〜17、R-19は上表とProductのRelated Architectureから責務へ到達する。未実装/Validation待ちは各行で明示。AccountはCOULD、継続探索はMUST。要件のない推薦別process/Redis/Queueは追加しない。
 
 ## Architecture Decision Log
 
-| ID / 状態 | Context / Candidates | Decision / Reason | Rejected Alternatives / Consequences | Evidence |
-| --- | --- | --- | --- | --- |
-| D-01 RECOMMENDED | 3人・約18日、整合性境界。A/B/C | A modular monolithを第一候補、Bは配置代替 | 独立推薦serviceは必要性不足。Aの単一配信検証が残る | A-01、数値/DB PoC |
-| D-02 RECOMMENDED（再評価） | client探索、RR/TanStack Router/Next/Start | Vite＋React Routerを推奨、正式採用待ち | TanStack Routerは有力代替。SSR等の必要性がないためStartはPoC前除外 | 3 FE試験、公式Docs、Longlist |
-| D-03 PRELIMINARY（履歴） | 初回Node中心のHono/Fastify/FastAPI比較 | 2026-09-24はHono推奨、採用Decisionではない | 削除せず旧Evidenceを保存。現在の提案はD-06 | BE実測/同一試験、旧Scoring |
-| D-04 CONDITIONAL | canonical Feedbackと原子性 | PostgreSQL＋Session lockを推奨候補 | DB正式採用・Provider・migrationは別判断。PoC利用から昇格しない | 競合/rollback試験 |
-| D-05 OPEN | Hosting/Auth/Preview/実Playback | 無料条件・実機・契約確認後に人間が決定 | 未承認の外部リソース追加なし。製品公開の成立性は未確定 | 本書の未検証一覧 |
-| D-06 PROPOSED / RECOMMENDED | 全Stack Longlist、Stage 1〜3・1〜2年の契約/保守 | Node＋Fastifyを現在の推奨候補として提示 | Honoは代替。未測定の他言語を性能/経験で除外しない。採択前にschema/logging設計を確認 | 下記Proposal、公式LTS、追加scale・統合PoC |
-| D-07 CONDITIONAL | Growth時のCatalog/State/Trace増大 | modular境界・版管理・接続上限から段階的拡張 | Worker/queue/serviceを最初から導入しない。共通長期Stateはowner lockが必要 | E-05/E-06、ScaleとEvolution |
+D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、旧推奨を消さず参照する。各領域decision-logは下記IDの詳細解説であり別Decisionを作らない。
 
-## RECONSIDERATION PROPOSAL: Preliminary Hono推奨
+| ID | 記録日 | 状態・現在の参照先 | 判断要約 |
+| --- | --- | --- | --- |
+| D-01 | 2026-09-24〜25（#34比較時） | SUPERSEDED → D-08 | Modular Monolith推奨を正式採択へ |
+| D-02 | 2026-09-25（S25） | SUPERSEDED → D-09 | React Router推奨からTanStack Router採択へ |
+| D-03 | 2026-09-24 | SUPERSEDED → D-06 → D-11 | Hono初期推奨を再評価 |
+| D-04 | 2026-09-24〜25（#34比較時） | 一部SUPERSEDED → D-12 / D-14 | PostgreSQL Engine採択、Providerは条件付き |
+| D-05 | 2026-09-24〜25（#34比較時） | 一部SUPERSEDED → D-14、AuthはOPEN | Hosting候補を具体化 |
+| D-06 | 2026-09-25（S25） | SUPERSEDED → D-10 / D-11 | Node / Fastify提案を採択 |
+| D-07 | 2026-09-25（S25） | CONDITIONAL | 負荷を測って段階拡張、先取りの分散基盤は導入しない |
 
-### Current Decision
-
-初回Node-focused比較では薄いHTTP境界と配置選択からHonoを推奨した。チームの正式採用Decisionにはなっていない。
-
-### Proposed Alternative
-
-NodeのFramework第一候補をFastifyへ変更する提案。Product/AlgorithmのBaseline、Modular Monolith、PostgreSQLの整合性境界は維持する。
-
-### Why Reconsider
-
-評価対象が3週間だけでなく1〜2年のAPI契約・保守・運用へ広がった。今回はedge/multi-runtime要件がなく、Honoの配置選択の便益より、Fastifyの入力/応答schema、logger、plugin境界を一つの方針に揃える便益を重視できる。
-
-### Evidence
-
-- [Fastify Validation / Serialization](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/)と[LTS policy](https://fastify.dev/docs/latest/Reference/LTS/)。Context7でもschema/type providerの方式を確認。
-- 共通HTTP/DB試験、追加2process・100並列・10k履歴試験で、両候補の原子性・冪等性が成立。Vite/Fastifyの実HTTP統合も成功。
-- schema/loggingの長期工数削減は設計上の期待であり、今回の共通validator比較で効果量を測定したものではない。小さい速度差を変更理由にしない。
-
-### Advantages over Current Decision
-
-HTTP schemaとresponse serialization、logging、plugin lifecycleの標準化をFramework内で設計できる。API追加時の共通規則と保守方針を明示しやすい。
-
-### Disadvantages / New Risks
-
-schema compiler/hook/pluginの理解と更新が必要。Nodeへの依存が強く、HonoのWeb API形と複数runtime選択を失う。型共有だけでruntime検証が完結するわけではなく、schema/typeの二重管理を避ける設計が必要。
-
-### Impact
-
-Backend HTTP adapter、入力/応答contract、safe logging、関連testと運用に影響する。Product、Reward、DB transaction、FrontendのCore Flowを変更する提案ではない。
-
-### Migration Cost
-
-本番appは未実装。PoCは既存Fastify adapterで動作し統合pairの変更は小さい。本実装でschema生成/validationとredaction・request IDを整える工程は別途必要で、工数短縮は未実測。旧Hono PoCは比較Evidenceとして保持する。
-
-### Recommendation
-
-**CONSIDER ALTERNATIVE**。現在の推奨候補はFastifyだが、人間採択後にのみ正式Architecture DecisionをDECIDEDにする。Product Baselineを変える新Proposalは今回ない。
+日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。現行の正式採択は下記D-08〜14。旧IDは再利用しない。
 
 ## 既存内容の同期判定と残る人間Decision
 
@@ -479,18 +477,53 @@ Backend HTTP adapter、入力/応答contract、safe logging、関連testと運�
 | KEEP | 旧PoC数値・失敗注入・責務境界・A/R ID・未検証事項を保持 |
 | UPDATE | SnapshotのContext/計数/Identity/Anchor、Longlist、費用、成長設計、双方向Trace |
 | REMOVE | 習熟度を候補除外・採点理由にする扱い、既決Behaviorを未決とする記述。証拠自体は削除しない |
-| RECLASSIFY | 旧Vite/Hono推奨とスコアをPreliminaryへ。Fastifyは採用待ちProposal |
+| RECLASSIFY | 旧Vite/Hono推奨とスコアをPreliminaryへ。F25でFastify採択（D-11）。旧Proposalは履歴 |
 | RESEARCH NEEDED | 実Catalog/Playback・利用権、最新Baseline実装、共通長期State競合、持続負荷、公開security/Preview/restore |
 
-人間Decisionは次の8群へ集約する（詳細なValidation taskをすべて採用判断に混ぜない）。
+残る人間Decision / Validationは、Neon・Hosting最終受入とregion/予算、Account Auth、Guest保持/削除・公開security、percentile同順位/版移行・校正、遅延Playback/既出範囲/継続時Probe、Catalog利用権と実Coverage、最終UX/評価閾値・性能/復旧目標。Framework・DB Engine・Save/継続の優先度・max Anchorを再び未定へ戻さない。
 
-1. Modular Monolith、Vite＋React Router、Fastify、PostgreSQLの採択とProposal判断。
-2. Provider/配置region/予算上限・無料枠停止時の運用。
-3. Rating Revision、Aspect Question、Save、Intent、継続探索のMVP優先度。
-4. percentile参照集合・Anchor選択・Relevant/Probe閾値、Hypothesis分類基準。
-5. 遅延Playbackイベント・失敗、既出範囲、Probe上限の失敗試行への適用詳細。
-6. Guest期限/履歴保持/削除、Account移行の範囲と公開security条件。
-7. 対象Catalog/地域とFeature利用権・Mapping確認の受入条件。
-8. 実ユーザー価値/推薦品質の評価計画と、公開時の性能・復旧の受入目標。
+## F25の正式Decision
 
-チーム採択後は本書のDecisionへ日付・根拠・制約を残す。正式SSOTを増やさず、Supporting Artifactの成功だけで採用へ昇格しない。
+各Entryは2026-09-25の依頼者決定（F25、Issue #36）による。Supporting Docsの詳細は同じIDを参照する。
+
+### D-08
+
+2026-09-25 / **DECIDED** / Modular Monolith。Session / Feedback / Preference / Recommendation / Candidate Generation / Catalog / Playback Mapping / Hypothesis / ObservabilityをModule分割する。
+
+[判断理由・代替案・Evidence](BE/decision-log.md#d-08-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+### D-09
+
+2026-09-25 / **DECIDED** / React / TypeScript / Vite / TanStack Router。Vite＋TanStack Routerを採用する。
+
+[判断理由・代替案・Evidence](FE/decision-log.md#d-09-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+### D-10
+
+2026-09-25 / **DECIDED** / Node.js / TypeScript。BackendとProduction推薦をTypeScriptで実装する。
+
+[判断理由・代替案・Evidence](BE/decision-log.md#d-10-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+### D-11
+
+2026-09-25 / **DECIDED** / Fastify HTTP Adapter。FastifyをHTTP Adapterに採用する。
+
+[判断理由・代替案・Evidence](BE/decision-log.md#d-11-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+### D-12
+
+2026-09-25 / **DECIDED** / PostgreSQL Engine。PostgreSQLを採用、Providerとmigration toolは別判断。
+
+[判断理由・代替案・Evidence](BE/decision-log.md#d-12-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+### D-13
+
+2026-09-25 / **DECIDED** / 推薦とGuestの独立したCore境界。Productionは8次元LinTSをTypeScriptで実行。Guestはserver Identity＋Secure/HttpOnly/SameSite Cookie。
+
+[判断理由・代替案・Evidence](ML/decision-log.md#d-13-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+### D-14
+
+2026-09-25 / **RECOMMENDED / CONDITIONAL** / Cloud RunとNeon。Cloud Run / Neonを第一候補とし、実Deploy PoC後に最終受入とregionを決める。
+
+[判断理由・代替案・Evidence](BE/decision-log.md#d-14-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
