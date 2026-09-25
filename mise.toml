@@ -1,4 +1,4 @@
-# Application runtimes and package managers remain undecided.
+# Application runtime version pins and package manager remain undecided; see docs/architecture.md.
 # Official Doppler CLI release, verified 2026-09-20.
 [tools]
 doppler = "3.76.5"

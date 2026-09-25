@@ -736,7 +736,7 @@ Merge前に以下を確認してください。
 | UI、Wireframe、操作の流れ | Figma / FigJam。共有URLと権限は管理者が確認してから案内する |
 | 正式Product仕様・要件・Scope | [docs/product-spec.md](docs/product-spec.md)。何を作り、何を保証するか |
 | 正式Architecture・技術構成・DB・Deployment | [docs/architecture.md](docs/architecture.md)。Product要件をどう実現するか |
-| 新しいProduct・Architectureの重要判断 | 上記2文書内のDecision Log。Context / Candidates / Decision / Reason / Rejected Alternatives / Consequences / Evidenceを記録する |
+| 新しいProduct・Architectureの重要判断 | 上記2文書内のDecision Log。ID・日付・状態・判断要約・詳細/Issueリンクを記録する。詳しい理由は領域別decision-logへ置く |
 | Git管理できる構成図・Sequence図 | 必要な仕様文書内のMermaid。実装前に架空の図を作らない |
 
 採用方針・導入条件の記録は[開発基盤ADR](docs/decisions/0001-development-foundation.md)、
@@ -755,6 +755,7 @@ Merge前に以下を確認してください。
 | 構成・責務・技術・DB・Deployment・Auth・Testing | `docs/architecture.md`。Product要件から実現方法またはOPENへ追跡できるようにする |
 | 開発基盤・運用・リリース手順 | 既存の`docs/operations/`。日常の具体的な操作は[開発ガイド](docs/DEVELOPMENT_GUIDE.md)に置く |
 | Product / Architecture Decision | 2文書内のDecision Log。別の正式requirements・scope・technology-stack・deployment文書やADR群を増やさない |
+| FE / BE / 推薦の理由・実装支援 | `docs/FE/`、`docs/BE/`、`docs/ML/`。README、decision-log、design-intent、evidence、implementation-guide、ML evaluation。Supporting Artifactであり正式Decisionは2正本へリンクする |
 | 調査資料・PoC・測定CSV/JSON・experiment README | `Supporting Artifact / Not a Source of Truth`と明記。正式Decisionは2文書へ反映し、補助資料だけに残さない |
 | 過去の開発基盤の判断 | 既存の`docs/decisions/`を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
 | ページ・機能・基盤の棚卸しと、仕様・コード・確認方法の対応 | [docs/change-map.md](docs/change-map.md)。動的URLはルートのパターン単位で扱う |
@@ -769,6 +770,20 @@ Figma / FigJamの図や画面表現から、条件・制約を説明するGit管
 文書中の説明・参照に影響がなければ、不要な文書変更を加えず、PRの検証欄に更新不要の理由を残します。
 承認済み仕様と実装が違う場合は不一致として記録し、現在の動作を理由に仕様を無断で変更しません。
 
+### Decision Logを増やしすぎないためのルール
+
+仕様本文は現在有効な内容へ更新し、経緯を追記し続けません。正本のDecision LogはID・日付・状態・判断要約・詳細/Issueリンクの索引にします。記録対象はProductの振る舞い・Scope・重要技術・責務・不変条件など、将来「なぜ選んだか」の説明が必要な判断です。文言修正、通常の実装、決定済み設計に沿う修正のたびにDecisionを追加しません。
+
+比較理由・代替案・影響は対象領域のdecision-log.mdに一度だけ記載します。詳細にはContext、Requirements、Candidates、Evaluation Criteria、Why / Why Not Alternatives、Trade-offs / Consequences、Known Risks、Reconsider When、Evidence、Related Design Intentsを残し、正式な状態・結論は2正本を参照します。複数領域に関係する場合も主担当の文書へまとめ、他領域からリンクします。
+
+判断を置換したら旧IDをSUPERSEDEDとして新IDへリンクします。一部だけ置換した場合は範囲を明記し、有効な部分まで失効扱いにしません。旧IDは再利用せず、過去の判断理由やEvidenceを削除しません。過去記録が読みづらくなった段階でSupporting Artifactの履歴資料へ移し、索引と参照元を更新します。変更のたびに履歴ファイルを増やしません。
+
+作業経緯・細かな変更・実行結果はIssue/PRへ記録します。Closed Issueも権限と接続があればGitHub MCPで本文・コメントを参照できます。本文はissue_readのget、コメントはget_commentsで読み、一覧が分割される場合は全ページを確認します。現在の仕様や必須の不変条件をIssueだけに残さず、初見の人間/AIが2正本から理解できる状態を保ちます。外部参照できない場合は未確認を明示し、経緯を推測しません。
+
+重要変更ではRequirement → Decision → Design Intent → Evidence → Code / Testsをたどり、影響するIDとリンクを更新します。
+
+Design IntentにはContext、Intent、Design、Why、Invariants、Non-goals、Alternatives、Trade-offs、Failure Modes、Change Guidance / 再検討条件、Related Requirements / Decisions / Evidence、Code Map、Testsを残します。AIのprivate chain-of-thoughtではなくレビュー可能な設計理由を書きます。EvidenceはRESEARCH / PRODUCTION_RESEARCH / SPEC / LOCAL_POC / ENGINEERING / HYPOTHESISを区別し、出典・著者/組織・日付・参照箇所・実験条件、支持する主張/しない主張、限界、適用Decisionを記録します。研究の結論だけで採択を正当化せず、対象集団と実験条件を確認します。
+
 ---
 
 ## Definition of Done
@@ -777,6 +792,7 @@ Figma / FigJamの図や画面表現から、条件・制約を説明するGit管
 
 - [ ] Issueの完了条件を満たしている
 - [ ] 必要な動作確認が完了している
+- [ ] 重要変更のCode / Tests / Product Requirement / Architecture / Decision / Design Intent / Evidenceへの影響を確認した（対象外なら理由を記録）
 - [ ] 関連仕様・実装・テスト・文書の整合を確認し、必要な文書・対応表・参照の更新を完了した（不要なら理由をPRに記載した）
 - [ ] 実施した検証と未確認事項・不一致・残課題を区別して記録した
 - [ ] Pull Requestが作成されている

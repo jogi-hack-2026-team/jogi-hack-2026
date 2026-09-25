@@ -28,6 +28,16 @@
 - [ ] 必要な仕様・変更対応表・目次・リンク・コード参照を更新し、実装・設定・テストとの整合を確認した（更新不要の場合は上欄に理由を記載）
 
 
+## 設計・文書への影響
+
+<!-- 対象IDと更新先、または影響なしの理由を記載 -->
+
+- Product behavior / Requirement:
+- Architecture / FE・BE・ML design:
+- Decision / Design Intent / Invariant:
+- Evidence / Tests（支持範囲・未検証）:
+- Documentation updated?（2正本・Supporting Docs・変更対応表）:
+
 ## レビューしてほしい点
 
 - 
