@@ -1,15 +1,16 @@
 # ArchitectureとTechnology Stack
 
-正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が振る舞い、本書が責務・採択・制約を定める。2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ正式反映した。本番アプリは未実装。D-01〜07と比較表は判断の履歴であり、古い推奨を現行採択と混同しない。
+正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が振る舞い、本書が責務・採択・制約を定める。2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ正式反映した。FE / BEの最小起動構成はあるが、Product機能は未実装。D-01〜07と比較表は判断の履歴であり、古い推奨を現行採択と混同しない。
 
 ## 現在の採択と読む順番
 
 | 状態 | 対象 | 詳細・残る条件 |
 | --- | --- | --- |
 | DECIDED | Modular Monolith | D-08。推薦を含むDomainはHTTP層から独立 |
-| DECIDED | React / TypeScript / Vite / TanStack Router | D-09、[FE入口](FE/README.md)。製品UIは未実装 |
-| DECIDED | Node.js / TypeScript / Fastify | D-10 / D-11、[BE入口](BE/README.md)。API schema・log実装は残る |
+| DECIDED | React / TypeScript / Vite / TanStack Router | D-09、[FE入口](FE/README.md)。最小起動画面あり、製品UIは未実装 |
+| DECIDED | Node.js / TypeScript / Fastify | D-10 / D-11、[BE入口](BE/README.md)。health以外のAPI schema・log実装は残る |
 | DECIDED | PostgreSQL Engine | D-12。Provider採択とは別 |
+| DECIDED | 開発Toolchain: Node 24 LTS / npm | D-15。miseでNode 24.21.0を固定。#51でFE / BE最小起動構成と単一lockfileを追加 |
 | DECIDED | Gaussian LinTS、Production TypeScript、Guest Core | D-13、[ML入口](ML/README.md)、A-05。数値校正と公開securityは未検証 |
 | RECOMMENDED / CONDITIONAL | Neon、Cloud Run | D-14。相互遅延、cold wake-up、schema容量、pool/transaction、費用、regionと実Deployがゲート |
 | OPEN | Account Auth | Neon Managed Better Auth / Firebase Authentication。Core完成後に判断可 |
@@ -423,6 +424,14 @@ Redis / Queue / 常駐Worker / Cronは現時点で**NOT ADOPTED**。現要件の
 
 CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider規約が許す範囲で導入する。最初はprocess内またはDBで足りるか測定し、複数instance間の共有cacheが必要になってからRedis等を比較する。Posteriorや確定Traceの正本をcacheへ移さない。具体TTL・cache権利・worker基盤はOPEN。
 
+## 開発環境と版管理
+
+2026-09-27の依頼者判断（D-15）により、本番アプリの開発ToolchainはNode 24 LTSとnpmに固定する。[mise.toml](../mise.toml)はNode 24.21.0を指定し、その公式配布物に同梱されるnpmは11.19.0。文書チェックはNode不要なので`--skip-tools`を維持する。D-15時点で未作成だったpackage/lockfileとdev/build/typecheckタスクは[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)で追加した。比較PoCのpackage/lockfileは本番の依存関係の正本ではない。
+
+#51の起動構成は[ルートnpm workspaces](../package.json)で[FE](../apps/web/)と[BE](../apps/api/)を分け、単一の[package-lock.json](../package-lock.json)で依存版を揃える。FEはViteの開発proxy経由で、BEの`GET /api/health`を確認する。これはローカル起動確認であり、Product API、Guest認証、DB schema / migration、推薦や保存の実装を示さない。[Application CI](../.github/workflows/application.yml)はSecretとDBなしでinstall・typecheck・buildを確認する。アプリのテスト、ブラウザE2E、公開配置は後続Issueで扱う。
+
+D-12のPostgreSQLを各PCで検証する入口として、ルートの[Compose](../compose.yaml)はローカルDBだけを起動する。開発用imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持、公開portは`127.0.0.1:55432`に限定する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。#51のhealthはこのDBへ接続しない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](DEVELOPMENT_GUIDE.md#ローカルpostgresqlを使うとき)を正本とする。
+
 ## TestingとCI/CD
 
 | 種類 | Issue #34で記録済み / 残ること |
@@ -434,7 +443,7 @@ CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider
 | Scale | 2 process/100並列/10k履歴の合成試験。持続負荷・100k Catalog lookup・Stage 2/3全体は未実測 |
 | External Contract / Mock | timeout/429/500。実API schema/権利/quota/変更追随は未検証 |
 | Failure | Trace INSERT失敗、入力不正、Guest破損JSON、render error、Playback Mock失敗 |
-| CI/CD | 既存GitHub ActionsのFoundationを維持。文書・設定チェックでありPoC app CIとは別。PoC CIは未追加、cloud deploy/secret/required checksを変更していない |
+| CI/CD | Foundationは文書・設定を検査。#51のApplicationは本番アプリのlockfile install・型検査・buildを検査。PoC CI、Product E2E、cloud deploy/secret/required checksは未追加・未変更 |
 
 再実行手順と各PoCの証明範囲は[実験README](../experiments/stack-bakeoff/README.md)へ。これはSupporting Artifact / Not a Source of Truthであり、本書のDecisionの代わりにはしない。
 
@@ -456,7 +465,7 @@ ProductのMUST R-01〜05、R-07〜13、R-15〜17、R-19は上表とProductのRel
 
 ## Architecture Decision Log
 
-D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、旧推奨を消さず参照する。各領域decision-logは下記IDの詳細解説であり別Decisionを作らない。
+D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15の開発Toolchainを追加した。旧推奨を消さず参照する。各領域decision-logは下記IDの詳細解説であり別Decisionを作らない。
 
 | ID | 記録日 | 状態・現在の参照先 | 判断要約 |
 | --- | --- | --- | --- |
@@ -468,7 +477,7 @@ D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、旧推奨を消�
 | D-06 | 2026-09-25（S25） | SUPERSEDED → D-10 / D-11 | Node / Fastify提案を採択 |
 | D-07 | 2026-09-25（S25） | CONDITIONAL | 負荷を測って段階拡張、先取りの分散基盤は導入しない |
 
-日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。現行の正式採択は下記D-08〜14。旧IDは再利用しない。
+日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。現行の正式採択は下記D-08〜15。旧IDは再利用しない。
 
 ## 既存内容の同期判定と残る人間Decision
 
@@ -527,3 +536,11 @@ D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、旧推奨を消�
 2026-09-25 / **RECOMMENDED / CONDITIONAL** / Cloud RunとNeon。Cloud Run / Neonを第一候補とし、実Deploy PoC後に最終受入とregionを決める。
 
 [判断理由・代替案・Evidence](BE/decision-log.md#d-14-detailed-rationale) / [承認・作業記録 #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)。
+
+## 2026-09-27の開発環境Decision
+
+### D-15
+
+2026-09-27 / **DECIDED** / Node 24 LTSとnpmを本番アプリの開発Toolchainに採用する。各PCはmiseのNode 24.21.0を使用する。ローカルPostgreSQL用ComposeはD-12の実装入口であり、Hosted Providerの採択ではない。
+
+[判断理由・代替案・影響](BE/decision-log.md#d-15-detailed-rationale) / [依頼者判断・作業Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)。

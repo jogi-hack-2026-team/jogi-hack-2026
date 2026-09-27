@@ -75,7 +75,7 @@ try {
         throw "$($failures.Count) foundation check(s) failed."
     }
     Write-Host "PASS: $count text files; $linkCount local links; environment examples; 7 ignore cases; working and staged diff whitespace."
-    Write-Host 'Application build, lint, typecheck and tests are not implemented or executed by this check.'
+    Write-Host 'Application build and typecheck are separate checks; lint and tests are not configured. This foundation check runs none of them.'
 } finally {
     Pop-Location
 }

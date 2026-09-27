@@ -19,3 +19,9 @@ mise.local.toml
 # Local ML agent runs and isolated issue checkouts.
 .codex/ml-agent/
 .worktrees/
+
+# Application install and build outputs.
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
