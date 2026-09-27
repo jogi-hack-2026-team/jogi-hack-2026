@@ -1,8 +1,14 @@
 # 開発基盤の状態と引き継ぎ
 
+## 2026-09-27のCompose一括起動（Issue #54）
+
+[Issue #54](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/54)では、#51で追加したFE / BEと#49の開発用DBを[ルートCompose](../../compose.yaml)から一括起動できるようにした。Web / APIは[Dockerfile](../../Dockerfile)でNode 24.21.0・npm 11.19.0・単一lockfileを使用する。セットアップ、DBパスワード、起動・停止・再buildは[開発ガイド](../DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を正本とする。Composeはローカル開発用であり、公開配置の検証ではない。
+
+このPCではDocker Engine 29.6.1 / Compose v5.2.0で、独立した検証用ProjectからWeb・API image buildと3サービスのhealthyを確認した。ホストからWeb、API単体、Web proxy経由のAPIがそれぞれHTTP 200を返した。コンテナ内のNode / npmはv24.21.0 / 11.19.0、DBへのパスワード付きTCP `select 1`も確認した。検証用Projectは停止し、この検証で作成した空のvolumeだけ削除した。ホスト上のmise起動でもAPI単体・Web proxyのhealthがHTTP 200。DB schema / migration、Product機能、他メンバーPC、公開環境は未検証。CIのCompose image build結果は対象PRのChecksで確認する。
+
 ## 2026-09-27のアプリ最小起動構成（Issue #51）
 
-[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)は依頼者がMustを判断した。採択済みFE / BEの[単一npm lockfile](../../package-lock.json)、[Web](../../apps/web/)、[API](../../apps/api/)と[Application CI](../../.github/workflows/application.yml)を追加した。Product機能の完成とは区別する。セットアップと起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#アプリの最小起動構成)を正本とする。
+[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)は依頼者がMustを判断した。採択済みFE / BEの[単一npm lockfile](../../package-lock.json)、[Web](../../apps/web/)、[API](../../apps/api/)と[Application CI](../../.github/workflows/application.yml)を追加した。Product機能の完成とは区別する。ホスト上のセットアップと起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#ホスト上でアプリを起動する)を正本とする。
 
 このPCでは固定Node / npmで`npm ci`、両workspaceのtypecheck / build、API `GET /api/health`とWeb経由proxyのHTTP 200を確認した。既存PoCのPlaywright CLIとインストール済みEdgeでWeb画面の「API: 接続できています」も確認した。最初のChromium headless実行は専用browser未導入で失敗し、Edgeを指定して再実行した。他メンバーPC、Productの探索・推薦・保存、DB接続・migration、外部Catalog、実Deployは未確認。Foundation CIとApplication CIのPR実行結果は対象PRのChecksで別に記録する。
 
