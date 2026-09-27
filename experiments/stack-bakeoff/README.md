@@ -44,6 +44,7 @@ npm.cmd test
 npm.cmd run e2e
 npm.cmd run measure -- --reevaluate
 npm.cmd run scale
+npm.cmd run ml:simulate
 npx.cmd tsx scripts/measure-backend.ts
 ```
 
@@ -52,6 +53,8 @@ E2Eは自分でFE3候補とFastify 4310を起動/終了する。手動起動し�
 `measure -- --reevaluate`はwarm-up後各3build、OS/CPU/Node、source file/line数、output bytesを`results/reevaluation-build-metrics.json`へ保存する。flagなしは旧2候補用の`results/build-metrics.json`を上書きするため、初回Evidenceを保持したい場合は使わない。`measure-backend`はwarm-up5回＋30sessionの旧HTTP測定を再実行して上書きする。Next出力はcache/serverも含むためViteのnetwork bundleと直接比較しない。測定順・DB温度・OS負荷の影響があり、ベンチマークで勝敗を断定しない。
 
 `scale`は各Frameworkを2つのOS processで起動し、各pool上限12、同一Feedback100並列、独立Session100並列、100/1k/10k履歴からのRating revisionを検証する。履歴はSQLで合成投入し、旧5commit controllerの制限を試験のために迂回する。結果は`results/scale-metrics.json`、processは終了時に停止する。短いburstと各1回の履歴試験であり、本番throughput/SLO・最新Product全体を証明しない。
+
+`ml:simulate`はIssue #40用の合成ユーザー評価を実行し、Nearest Seed / Greedy Bayesian Linear / Gaussian LinTSを同じ合成Catalog・Seed・Playback条件で比較する。結果は`results/ml-synthetic-evaluation.json`と`results/ml-synthetic-evaluation.md`。校正候補・乱数seed・モデル式・制約違反検出・限界を記録するが、正式な閾値採択、実User需要、実録音品質、ReccoBeats / YouTube権利・再生coverage、Production readinessの証明ではない。
 
 旧`verification.json`/`build-metrics.json`/`backend-metrics.json`はPreliminary Evidence、再評価は`reevaluation-verification.json`/`reevaluation-build-metrics.json`/`scale-metrics.json`。`node scripts/research-releases.mjs`は公式GitHub API/npmの公開metadataを取得し、`research-releases.json`へ保存する（network使用、認証値不要）。
 
@@ -65,10 +68,11 @@ E2Eは自分でFE3候補とFastify 4310を起動/終了する。手動起動し�
 - 同時Feedback再送、Rating競合、別Interaction同時更新、canonical再計算、Trace INSERT失敗時rollbackを実際に試験した。
 - 8次元Gaussian線形更新がJavaScriptで実行でき、解析例と有限性を確認した。
 - 共通画面・型・E2Eと1組の実HTTP/DB統合が成立する。
+- Issue #40の合成評価で、現行Context式の下で3推薦Policyを同条件比較し、5有効Interaction・報酬観測・Probe上限・BLOCKED_CATALOG・False Certaintyを再現可能に集計できる。
 
 ## What this does NOT prove
 
-実録音の同定、ReccoBeats coverage/規約、YouTube再生、VERIFIED Mapping、推薦品質、Hypothesis分類、Aspect Feedback、Evidence Ledger全体、正式5曲計数、継続探索、公開Guest security、Account移行、Production migration、App container、クラウドPreview/費用/Cold Start。合成percentileを使い、実Catalog変換は未実装。Structured Logging運用と自動外部retryも未実装。
+実録音の同定、ReccoBeats coverage/規約、YouTube再生、VERIFIED Mapping、実User需要、実録音の推薦品質、Aspect Feedback、Evidence Ledger全体、継続探索、公開Guest security、Account移行、Production migration、App container、クラウドPreview/費用/Cold Start。合成percentileを使い、実Catalog変換は未実装。Issue #40のHypothesis分類は合成Truthに対する数値検査であり、実ユーザー心理や正式な閾値採択を意味しない。Structured Logging運用と自動外部retryも未実装。
 
 旧数値sliceは正距離＋末尾切片・正規化なしのContext、距離で二分したProbe、5commit進行を保持する。最新Snapshotの負距離/sqrt(8) Context、対象Feature以外を近づけるProbe、再生開始＋accepted Feedback計数の実装ではない。再評価の追加試験もこの限定slice上でFramework・整合性を比較しており、正式Productの受入完了にしない。
 
