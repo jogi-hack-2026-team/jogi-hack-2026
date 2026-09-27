@@ -286,7 +286,14 @@ async function verify(worktree) {
     results.push({ command: 'git log origin/main..HEAD', ok: false, detail: 'Japanese commit description missing' });
   }
   const changed = (await git(['diff', '--name-only', 'origin/main...HEAD'], worktree)).split(/\r?\n/).filter(Boolean);
-  const checks = [['pwsh', ['-NoProfile', '-File', 'scripts/check-foundation.ps1'], worktree]];
+  const checks = [
+    ['pwsh', ['-NoProfile', '-File', 'scripts/check-foundation.ps1'], worktree],
+    ['node', ['--test', 'scripts/ml-agent-core.test.mjs'], worktree],
+  ];
+  if (changed.some((file) => file === 'scripts/run-ml-agent.mjs' ||
+      file === 'scripts/ml-agent-core.mjs')) {
+    checks.push(['node', ['--check', 'scripts/run-ml-agent.mjs'], worktree]);
+  }
   const packages = new Set();
   for (const file of changed) {
     if (file.startsWith('experiments/stack-bakeoff/')) packages.add('experiments/stack-bakeoff');
