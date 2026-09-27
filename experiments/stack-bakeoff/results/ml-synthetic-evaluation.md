@@ -2,7 +2,7 @@
 
 **Supporting Artifact / Not a Source of Truth**. This report records synthetic calibration evidence only.
 
-- Code commit: `fde103b6ab47ba57aa5c273443e19a027976762f`
+- Code commit: `6cb28fa1bab299c75d1563f746de1583912a31c0`
 - Command: `npm.cmd --prefix experiments/stack-bakeoff run ml:simulate`
 - Catalog / context / model / policy versions: `synthetic-catalog-v1.issue-40`, `percentile-7d-synthetic-v1`, `formal-negative-distance-v1`, `gaussian-lints-b0-i-f0-0-noise1-v1`, `issue-40-policy-comparison-v1`, `issue-40-six-scenarios-v1`
 - Calibration seeds: 41001, 41002, 41003, 41004, 41005, 41006, 41007, 41008, 41009, 41010
@@ -12,32 +12,32 @@
 
 | Scenario | Policy | Completed 5-valid | Reward obs median | Discovery mean | Multi-prototype coverage | BLOCKED_CATALOG | False certainty | Classification | Constraint violations |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| model_matched_linear | nearest-seed | 1.00 | 4 | 0.17 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| model_matched_linear | greedy-bayesian-linear | 1.00 | 4 | 0.44 | 0.11 | 0.00 | 0.00 | 0.00 | {} |
-| model_matched_linear | gaussian-lints | 1.00 | 5 | 0.36 | 0.06 | 0.00 | 0.00 | 0.00 | {} |
-| noisy_ordinal | nearest-seed | 1.00 | 3 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| noisy_ordinal | greedy-bayesian-linear | 1.00 | 3 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| noisy_ordinal | gaussian-lints | 1.00 | 4 | 0.08 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| multi_modal | nearest-seed | 1.00 | 5 | 2.31 | 0.64 | 0.00 | 0.00 | 0.00 | {} |
-| multi_modal | greedy-bayesian-linear | 1.00 | 5 | 2.47 | 0.61 | 0.00 | 0.00 | 0.00 | {} |
-| multi_modal | gaussian-lints | 1.00 | 5 | 2.50 | 0.56 | 0.00 | 0.00 | 0.00 | {} |
-| hidden_feature | nearest-seed | 1.00 | 4 | 0.83 | 0.11 | 0.00 | 0.00 | 0.00 | {} |
-| hidden_feature | greedy-bayesian-linear | 1.00 | 4 | 0.69 | 0.11 | 0.00 | 0.00 | 0.00 | {} |
-| hidden_feature | gaussian-lints | 1.00 | 4 | 0.92 | 0.19 | 0.00 | 0.00 | 0.00 | {} |
-| outlier_seed | nearest-seed | 1.00 | 4 | 0.14 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| outlier_seed | greedy-bayesian-linear | 1.00 | 4 | 0.11 | 0.03 | 0.00 | 0.00 | 0.00 | {} |
-| outlier_seed | gaussian-lints | 1.00 | 5 | 0.31 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| unsure_heavy | nearest-seed | 1.00 | 2 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| unsure_heavy | greedy-bayesian-linear | 1.00 | 2 | 0.06 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
-| unsure_heavy | gaussian-lints | 1.00 | 2 | 0.06 | 0.00 | 0.00 | 0.00 | 0.00 | {} |
+| model_matched_linear | nearest-seed | 1.00 | 4 | 0.17 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| model_matched_linear | greedy-bayesian-linear | 1.00 | 4 | 0.44 | 0.11 | 0.00 | N/A | 0.00 | {} |
+| model_matched_linear | gaussian-lints | 1.00 | 5 | 0.36 | 0.06 | 0.00 | N/A | 0.00 | {} |
+| noisy_ordinal | nearest-seed | 1.00 | 3 | 0.00 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| noisy_ordinal | greedy-bayesian-linear | 1.00 | 3 | 0.00 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| noisy_ordinal | gaussian-lints | 1.00 | 4 | 0.08 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| multi_modal | nearest-seed | 1.00 | 5 | 2.31 | 0.64 | 0.00 | N/A | 0.00 | {} |
+| multi_modal | greedy-bayesian-linear | 1.00 | 5 | 2.47 | 0.61 | 0.00 | N/A | 0.00 | {} |
+| multi_modal | gaussian-lints | 1.00 | 5 | 2.50 | 0.56 | 0.00 | N/A | 0.00 | {} |
+| hidden_feature | nearest-seed | 1.00 | 4 | 0.83 | 0.11 | 0.00 | N/A | 0.00 | {} |
+| hidden_feature | greedy-bayesian-linear | 1.00 | 4 | 0.69 | 0.11 | 0.00 | N/A | 0.00 | {} |
+| hidden_feature | gaussian-lints | 1.00 | 4 | 0.92 | 0.19 | 0.00 | N/A | 0.00 | {} |
+| outlier_seed | nearest-seed | 1.00 | 4 | 0.14 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| outlier_seed | greedy-bayesian-linear | 1.00 | 4 | 0.11 | 0.03 | 0.00 | N/A | 0.00 | {} |
+| outlier_seed | gaussian-lints | 1.00 | 5 | 0.31 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| unsure_heavy | nearest-seed | 1.00 | 2 | 0.00 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| unsure_heavy | greedy-bayesian-linear | 1.00 | 2 | 0.06 | 0.00 | 0.00 | N/A | 0.00 | {} |
+| unsure_heavy | gaussian-lints | 1.00 | 2 | 0.06 | 0.00 | 0.00 | N/A | 0.00 | {} |
 
 ## Calibration Sensitivity
 
 | Candidate | BLOCKED_CATALOG | Completed 5-valid | Reward obs median | Discovery mean | Regret median | Candidate pool mean | False certainty | Classification |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| strict-candidate | 0.00 | 1.00 | 4 | 0.68 | 1.58 | 17.39 | 0.00 | 0.00 |
-| balanced-candidate | 0.00 | 1.00 | 4 | 0.70 | 1.63 | 25.29 | 0.00 | 0.00 |
-| loose-candidate | 0.00 | 1.00 | 4 | 0.69 | 1.67 | 37.77 | 0.00 | 0.00 |
+| strict-candidate | 0.00 | 1.00 | 4 | 0.68 | 1.58 | 17.39 | N/A | 0.00 |
+| balanced-candidate | 0.00 | 1.00 | 4 | 0.70 | 1.63 | 25.29 | N/A | 0.00 |
+| loose-candidate | 0.00 | 1.00 | 4 | 0.69 | 1.67 | 37.77 | N/A | 0.00 |
 
 ## Representative Examples
 

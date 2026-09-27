@@ -1,8 +1,8 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "issue": "#40",
-  "generatedAt": "2026-09-27T10:14:40.945Z",
-  "commit": "fde103b6ab47ba57aa5c273443e19a027976762f",
+  "generatedAt": "2026-09-27T10:17:26.211Z",
+  "commit": "6cb28fa1bab299c75d1563f746de1583912a31c0",
   "command": "npm.cmd --prefix experiments/stack-bakeoff run ml:simulate",
   "scope": "Synthetic fixtures only. Does not change Product/Architecture decisions, production algorithm, API/DB contracts, acceptance thresholds, real catalog, real playback, or user-demand claims.",
   "versions": {
@@ -145,7 +145,7 @@
         "regretMedian": 1.576309694867061,
         "multiplePrototypeCoverageRate": 0.15555555555555556,
         "classificationRate": 0,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "meanCandidatePool": 17.394285714285715,
         "hardConstraintViolationCounts": {}
       },
@@ -170,7 +170,7 @@
         "regretMedian": 1.6316171678514626,
         "multiplePrototypeCoverageRate": 0.15,
         "classificationRate": 0,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "meanCandidatePool": 25.28835978835978,
         "hardConstraintViolationCounts": {}
       },
@@ -195,7 +195,7 @@
         "regretMedian": 1.6687535990237836,
         "multiplePrototypeCoverageRate": 0.13333333333333333,
         "classificationRate": 0,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "meanCandidatePool": 37.773439153439156,
         "hardConstraintViolationCounts": {}
       }
@@ -304,7 +304,7 @@
       "falseCertaintyCount": 0,
       "determinateCount": 0,
       "evaluableCount": 4536,
-      "falseCertaintyRate": 0,
+      "falseCertaintyRate": null,
       "classificationRate": 0,
       "hypothesisClassificationsExample": {
         "danceability": "UNDETERMINED",
@@ -535,7 +535,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -764,7 +764,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -994,7 +994,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -1224,7 +1224,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -1454,7 +1454,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -1684,7 +1684,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -1914,7 +1914,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -2143,7 +2143,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -2372,7 +2372,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -2602,7 +2602,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -2832,7 +2832,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -3062,7 +3062,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -3291,7 +3291,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -3520,7 +3520,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -3749,7 +3749,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -3979,7 +3979,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -4204,7 +4204,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
@@ -4435,7 +4435,7 @@
         "falseCertaintyCount": 0,
         "determinateCount": 0,
         "evaluableCount": 252,
-        "falseCertaintyRate": 0,
+        "falseCertaintyRate": null,
         "classificationRate": 0,
         "hypothesisClassificationsExample": {
           "danceability": "UNDETERMINED",
