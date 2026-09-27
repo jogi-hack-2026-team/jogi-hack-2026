@@ -124,7 +124,7 @@ async function listAllIssues(repo) {
 async function snapshot(repo, state) {
   const issues = await listAllIssues(repo);
   const projectResult = await ghJson(['project', 'item-list', String(projectNumber), '--owner', repo.owner,
-    '--format', 'json', '--limit', '1000', '--field', 'Status', '--field', 'Scope']);
+    '--format', 'json', '--limit', '1000']);
   if ((projectResult.items ?? []).length >= 1000) throw new Error('Project item list may be truncated');
   const projectItems = (projectResult.items ?? []).filter((item) => {
     const kind = String(item.content?.type ?? item.content_type ?? item.type ?? '').toLowerCase();

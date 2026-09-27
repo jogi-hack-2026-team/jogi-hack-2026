@@ -30,13 +30,17 @@ StatusがReady、Scopeが設定済み、現在のGitHub利用者がAssignee、�
 
 Node.js標準機能の[runner](../../scripts/run-ml-agent.mjs)と[選択規則](../../scripts/ml-agent-core.mjs)、[ML Skill](../../.agents/skills/ml-issue-execution/SKILL.md)を使用する。Codex SDK、独自サーバー、常駐サービス、新しいProduct dependencyは使わない。通常のAI操作ではGitHub MCP優先とし、このHarnessのバッチ処理ではユーザー指定の `gh` を使う。
 
-前提はNode.js、認証済みGitHub CLI（Issue・Project・PRの読み書き権限）、認証済みCodex CLI、Git、PowerShell、対象packageの既存依存をインストール済みであること。SecretをHarnessへ渡さない。通常実行はmainのcheckoutから行い、Code Freeze開始後は自動編集を拒否する。このWindows環境ではCodex CLIとNodeは確認したが、`gh` は未導入であり、実GitHubキューの端から端までの実行は未検証。
+前提はNode.js、認証済みGitHub CLI（Issue・Project・PRの読み書き権限）、認証済みCodex CLI、Git、PowerShell、対象packageの既存依存をインストール済みであること。SecretをHarnessへ渡さない。通常実行はmainのcheckoutから行い、Code Freeze開始後は自動編集を拒否する。`mise run ml-agent` はこのTask専用に固定したGitHub CLIをPATHへ追加する。初回は以下のコマンドでTask専用ツールを導入し、GitHub CLIを認証する。GitHub Projectの読み書きには`project` scopeが必要。このWindows環境では2026-09-27に`gh` 2.101.0とCodex CLI、Nodeを確認し、実GitHubキューの`--dry-run`を実行した。ReadyなML Issueは0件であり、Issue実装からPR作成までの通し実行は未検証。
 
 Codex CLIはこの環境で実行できた`gpt-5.5`を既定で指定する。利用可能なモデルが異なる場合は実行前に`ML_AGENT_CODEX_MODEL`環境変数で上書きする。
 
 ```powershell
-node scripts/run-ml-agent.mjs --dry-run
-node scripts/run-ml-agent.mjs
+mise install --include-task-tools
+mise exec gh@2.101.0 -- gh auth login --hostname github.com --git-protocol https --web --scopes project
+mise exec gh@2.101.0 -- gh auth status
+
+mise run ml-agent --dry-run
+mise run ml-agent
 ```
 
 `--dry-run` は候補と除外理由を表示する。通常実行はReady Issueのキューを連続処理する。`--once` は1件で停止する。初期同時実行数は1。Issueごとに `.worktrees/ml-<number>` と番号付き `feat/` または `chore/` Branchを分離し、後から2並列のスケジューラへ拡張できる。現時点で2並列は有効化しない。
