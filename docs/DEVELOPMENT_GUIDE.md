@@ -380,8 +380,7 @@ README更新
 
 # 13. 初回セットアップ
 
-現時点のアプリRuntime・DB・Package Managerは未定です。以下は文書・設定の検証用セットアップです。
-Runtimeはアプリの実行環境、Package Managerは依存ライブラリの管理ツールです。現在利用するPowerShell 7は補助スクリプト用で、アプリの技術選定ではありません。
+アプリのRuntimeはNode.js、DB EngineはPostgreSQL、Package Managerはnpmに決定しています。[Architecture](architecture.md#現在の採択と読む順番)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。アプリ本体のpackage/lockfile、migration、起動コマンドはまだありません。PowerShell 7は補助スクリプト用です。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -418,9 +417,12 @@ miseの導入前でも、下記のPowerShell直接実行で検証できます。
 mise trust
 mise run --skip-tools check
 mise run --skip-tools hooks:install
+mise install
+mise exec -- node --version
+mise exec -- npm --version
 ```
 
-`--skip-tools`は文書検証のためにDopplerをインストールする必要がないことを明示します。
+`--skip-tools`は文書検証やHook導入のためにNodeやDopplerをインストールする必要がないことを明示します。`mise install`は[mise.toml](../mise.toml)に固定したNode 24.21.0とDoppler 3.76.5を取得します。版確認の期待値はNode `v24.21.0`、同梱npm `11.19.0`です。システムに別のNodeがあっても、以降は`mise exec --`またはmiseのタスク経由で固定版を使います。
 miseがまだない場合、同じ検証を`pwsh -NoProfile -File scripts/check-foundation.ps1`で実行できます。
 Hookの導入はこのリポジトリの`core.hooksPath`のみを設定し、既存Hookがあれば上書きせず停止します。
 各メンバーのCloneで一度実行してください。pre-commitはステージ済み差分の空白検査、CIは文書・設定の全体検査を行います。
@@ -435,9 +437,27 @@ Hookの導入はこのリポジトリの`core.hooksPath`のみを設定し、既
 | `mise run --skip-tools check` | ツールの自動インストールを省略して文書・設定検証を実行する。成功時は`PASS:`と検査範囲が表示される |
 | `pwsh -NoProfile -File scripts/check-foundation.ps1` | PowerShell 7で、個人のプロファイルを読み込まず同じ検証スクリプトを実行する。miseなしで使える |
 | `mise run --skip-tools hooks:install` | ローカルの`core.hooksPath`を`.githooks`に設定する。成功時は設定完了が表示される。既存Hookとの衝突時は停止する |
+| `mise install` | 固定したNodeとDopplerのCLIを各自の環境に取得する。DopplerへのログインやSecret取得は行わない |
+| `mise exec -- node --version` / `mise exec -- npm --version` | 固定版のNodeと同梱npmを確認する。期待値は`v24.21.0` / `11.19.0` |
 
-上記はアプリコードの例ではなく、ルートで使う操作コマンドです。Windowsでは`pwsh`がPowerShell 7を指すことを確認します。Windows PowerShell 5.1を起動する`powershell`とは異なります。
-今回の文書整備ではWindows上のPowerShell 7による全体チェックを確認対象にします。過去のCIはUbuntu上で成功した記録がありますが、WSL・Docker内・全メンバー端末でのセットアップ成功を意味しません。結果と対象環境は[確認記録の入口](change-map.md#確認記録と残課題)を参照してください。
+### ローカルPostgreSQLを使うとき
+
+DBを使う作業ではDocker Engineと`docker compose`を各PCに導入し、起動してからリポジトリのルートで次を実行します。Dockerの導入は[公式手順](https://docs.docker.com/get-docker/)を参照してください。DBが不要な文書チェックにはDockerもDBパスワードも不要です。
+
+```powershell
+$env:JOGI_LOCAL_DB_PASSWORD = Read-Host 'このPC専用のローカルDBパスワード' -MaskInput
+docker compose config --quiet
+docker compose up -d --wait db
+docker compose ps
+docker compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -U jogi -d jogi -Atqc "select 1"'
+```
+
+最後のコマンドが`1`を返せば、コンテナ内からパスワード付きTCP接続ができています。ホストからの接続先は`127.0.0.1:55432`、DB名とUserは`jogi`です。パスワードは各自のローカル開発DB専用として保管し、同じvolumeを再起動するときは同じ値を入力します。`docker compose config`を`--quiet`なしで実行すると環境変数の値を表示し得るため、Secretを含む状態では使いません。実ユーザーデータやProductionの接続情報をこのDBへ入れません。
+
+作業終了時は`docker compose down`で停止します。名前付きvolumeは残るため、次回もデータを使用できます。`down --volumes`はデータを消すので通常の停止手順には含めません。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。アプリ本体はまだないため、migration・seed・アプリ起動コマンドは本Issueでは用意しません。
+
+上記はリポジトリのルートで使う操作コマンドです。Windowsでは`pwsh`がPowerShell 7を指すことを確認します。Windows PowerShell 5.1を起動する`powershell`とは異なります。
+基盤整備時にはWindows上のPowerShell 7で全体チェックを実行し、Ubuntu上のCIも成功しました。今回のローカルDBとmiseの確認範囲、他メンバー端末の未確認事項は[現行状態](operations/development-foundation-status.md#2026-09-27の現行開発環境issue-49)を参照してください。
 
 ## 文書チェックで起きること
 
@@ -459,6 +479,10 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 | `mise`が見つからない | 未導入またはPATH未設定。PowerShell 7が使えるなら上記の直接実行を利用する | 直接実行で`PASS:`と終了成功を確認する |
 | `pwsh`が見つからない | PowerShell 7未導入またはPATH未設定。端末の導入状況を確認する。5.1で代用しない | `pwsh --version`で7系を確認し、全体チェックを再実行する |
 | miseが設定の信頼確認で止まる | 新しいclone等で設定が未信頼。`mise.toml`と呼び出すスクリプトを読み、信頼できる場合にのみ`mise trust`を実行する | 同じ`check`を再実行する。信頼操作なしで確認する場合はスクリプトを読んで直接実行する |
+| `mise exec`でNode/npmの版が違う | `mise install`未実行、設定未信頼、別のNode/npmが先に見つかる可能性 | `mise.toml`の版、`mise ls --current`、`mise exec -- node --version`と`mise exec -- npm --version`を確認する |
+| Docker Engineに接続できない | Docker未起動、権限不足、端末の接続先違い | `docker info`でEngine接続を確認し、起動後に`docker compose config --quiet`から再実行する |
+| `55432`が使用中 | 別のローカルDB等とportが衝突している | 利用中のprocessを確認する。既存DBを停止できない場合はIssueでport変更を検討し、手順と設定を同時に更新する |
+| DB認証に失敗する | 初回作成時と異なるパスワードを入力した、または既存volumeがある | 既存のローカルDBパスワードを確認する。`POSTGRES_PASSWORD`の変更だけでは既存DBのパスワードは変わらない。volumeを削除して解決しない |
 | `missing link target` / `missing heading` | 文書の移動・見出し変更に参照元が追従していない | 表示されたMarkdownのリンクと実ファイル・見出しを照合して直し、全体チェックを再実行する |
 | `invalid UTF-8` / `missing final newline` | 対象ファイルの文字コード・末尾改行が規約と違う | 対象だけをUTF-8・末尾改行ありで保存し、差分と全体チェックを確認する |
 | `merge conflict marker` | 未解決の競合がある | 正しい内容を関係者と確認して競合を解消し、差分と全体チェックを確認する。マーカーだけを消して済ませない |
@@ -468,9 +492,8 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 `pwsh --version`は利用するPowerShellの版を表示する確認コマンドです。これは想定されるエラーへの案内であり、この表の全エラーを今回再現済みという意味ではありません。
 CLIの仕様は[Gitのチュートリアル](https://git-scm.com/docs/gittutorial)と[mise run](https://mise.jdx.dev/cli/run.html)、[mise trust](https://mise.jdx.dev/cli/trust.html)を参照できます。設定・スクリプトが何をするかは、このリポジトリの実ファイルを優先して確認します。
 
-Doppler CLIを使う段階では`mise install`を実行し、固定版の導入後に[接続手順](operations/development-foundation-status.md#dopplerの引き継ぎ)へ進みます。
-DB・アプリ未確定の間は、Compose起動・migration・seed・アプリ起動を行う手順はありません。
-技術決定後に各コマンドの実体を追加し、miseから呼ぶ入口とCIを揃えます。
+Doppler CLIの固定版を取得した後、実際にSecretが必要なアプリ作業では[接続手順](operations/development-foundation-status.md#dopplerの引き継ぎ)へ進みます。文書・設定検証とローカルDBの起動に、DopplerのProduction Secretを渡しません。
+ローカルDB以外のmigration・seed・アプリ起動は、本番アプリの実装Issueで実体を追加し、miseから呼ぶ入口とCIを揃えます。
 
 ---
 

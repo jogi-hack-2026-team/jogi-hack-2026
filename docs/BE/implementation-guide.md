@@ -4,7 +4,7 @@
 
 ## 最初に読むもの
 
-[Decision](decision-log.md)→[Intent](design-intent.md)→[Evidence](evidence.md)を読み、対象R-IDをIssueに固定する。package manager、Node版、ORM/migration tool、本番ディレクトリは未決。PoCのpackage.jsonや起動コマンドを本番の正本へコピーしない。
+[Decision](decision-log.md)→[Intent](design-intent.md)→[Evidence](evidence.md)を読み、対象R-IDをIssueに固定する。開発ToolchainはNode 24 LTS / npmに決定し、[mise](../../mise.toml)で固定している。ORM/migration tool、本番ディレクトリとpackage/lockfileは未決・未作成。PoCのpackage.jsonや起動コマンドを本番の正本へコピーしない。
 
 ## 全体の実装順序
 
