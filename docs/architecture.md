@@ -428,9 +428,11 @@ CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider
 
 2026-09-27の依頼者判断（D-15）により、本番アプリの開発ToolchainはNode 24 LTSとnpmに固定する。[mise.toml](../mise.toml)はNode 24.21.0を指定し、その公式配布物に同梱されるnpmは11.19.0。文書チェックはNode不要なので`--skip-tools`を維持する。D-15時点で未作成だったpackage/lockfileとdev/build/typecheckタスクは[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)で追加した。比較PoCのpackage/lockfileは本番の依存関係の正本ではない。
 
-#51の起動構成は[ルートnpm workspaces](../package.json)で[FE](../apps/web/)と[BE](../apps/api/)を分け、単一の[package-lock.json](../package-lock.json)で依存版を揃える。FEはViteの開発proxy経由で、BEの`GET /api/health`を確認する。これはローカル起動確認であり、Product API、Guest認証、DB schema / migration、推薦や保存の実装を示さない。[Application CI](../.github/workflows/application.yml)はSecretとDBなしでinstall・typecheck・buildを確認する。アプリのテスト、ブラウザE2E、公開配置は後続Issueで扱う。
+#51の起動構成は[ルートnpm workspaces](../package.json)で[FE](../apps/web/)と[BE](../apps/api/)を分け、単一の[package-lock.json](../package-lock.json)で依存版を揃える。FEはViteの開発proxy経由で、BEの`GET /api/health`を確認する。これはローカル起動確認であり、Product API、Guest認証、DB schema / migration、推薦や保存の実装を示さない。[Application CI](../.github/workflows/application.yml)はSecretとDBなしでinstall・typecheck・build・開発用image buildを確認する。アプリのテスト、ブラウザE2E、公開配置は後続Issueで扱う。
 
-D-12のPostgreSQLを各PCで検証する入口として、ルートの[Compose](../compose.yaml)はローカルDBだけを起動する。開発用imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持、公開portは`127.0.0.1:55432`に限定する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。#51のhealthはこのDBへ接続しない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](DEVELOPMENT_GUIDE.md#ローカルpostgresqlを使うとき)を正本とする。
+[Issue #54](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/54)で、ルートの[Compose](../compose.yaml)からWeb・API・PostgreSQLを一括起動できるようにした。Web/APIの[Dockerfile](../Dockerfile)はNode 24.21.0と単一lockfileを使い、コンテナ内のVite proxyは`api:3000`へ接続する。ホストでの開発起動はlocalhostへ接続する。公開portはホストの`127.0.0.1`に限定し、Web/APIのhealthとDBのhealthを分ける。ソースはbind mountせず、変更時は再buildする。Composeはローカル開発用であり、Production image / 配置方式の採択ではない。
+
+D-12の開発用DB imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。#51のhealthはこのDBへ接続しない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を正本とする。
 
 ## TestingとCI/CD
 
@@ -443,7 +445,7 @@ D-12のPostgreSQLを各PCで検証する入口として、ルートの[Compose](
 | Scale | 2 process/100並列/10k履歴の合成試験。持続負荷・100k Catalog lookup・Stage 2/3全体は未実測 |
 | External Contract / Mock | timeout/429/500。実API schema/権利/quota/変更追随は未検証 |
 | Failure | Trace INSERT失敗、入力不正、Guest破損JSON、render error、Playback Mock失敗 |
-| CI/CD | Foundationは文書・設定を検査。#51のApplicationは本番アプリのlockfile install・型検査・buildを検査。PoC CI、Product E2E、cloud deploy/secret/required checksは未追加・未変更 |
+| CI/CD | Foundationは文書・設定を検査。Applicationはアプリのlockfile install・型検査・buildと開発用Composeの設定・Web/API image buildを検査。PoC CI、Product E2E、cloud deploy/secret/required checksは未追加・未変更 |
 
 再実行手順と各PoCの証明範囲は[実験README](../experiments/stack-bakeoff/README.md)へ。これはSupporting Artifact / Not a Source of Truthであり、本書のDecisionの代わりにはしない。
 

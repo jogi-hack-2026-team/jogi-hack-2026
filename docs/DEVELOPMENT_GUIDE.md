@@ -407,7 +407,7 @@ git remote -v
 git status
 ```
 
-GitとPowerShell 7が必要です。miseは[公式の導入手順](https://mise.jdx.dev/getting-started.html)を利用してください。
+GitとPowerShell 7が必要です。ComposeだけでWeb・API・DBを起動する場合は、以下のmise導入を飛ばして[Compose手順](#composeでwebapipostgresqlを起動する)へ進めます。ホスト上で開発・型検査・ビルドを行う場合、miseは[公式の導入手順](https://mise.jdx.dev/getting-started.html)を利用してください。
 miseは開発ツールの版と共通コマンドを管理するCLI（端末から使うツール）です。OS・グローバル設定の変更は本人が確認して行います。
 基盤整備時の検証版はmise `2026.9.11`です。当時のPCでは検証用バイナリを`.tools/mise/mise/bin/mise.exe`に配置し、PATHには追加していませんでした。Git管理外なので、他のcloneや作業コピーに同じファイルがあるとは限りません。
 miseの導入前でも、下記のPowerShell直接実行で検証できます。
@@ -440,25 +440,39 @@ Hookの導入はこのリポジトリの`core.hooksPath`のみを設定し、既
 | `mise install` | 固定したNodeとDopplerのCLIを各自の環境に取得する。DopplerへのログインやSecret取得は行わない |
 | `mise exec -- node --version` / `mise exec -- npm --version` | 固定版のNodeと同梱npmを確認する。期待値は`v24.21.0` / `11.19.0` |
 
-### ローカルPostgreSQLを使うとき
+### ComposeでWeb・API・PostgreSQLを起動する
 
-DBを使う作業ではDocker Engineと`docker compose`を各PCに導入し、起動してからリポジトリのルートで次を実行します。Dockerの導入は[公式手順](https://docs.docker.com/get-docker/)を参照してください。DBが不要な文書チェックにはDockerもDBパスワードも不要です。
+Docker Engineと`docker compose`を各PCに導入し、Engineを起動してからリポジトリのルートで実行します。Dockerの導入は[公式手順](https://docs.docker.com/get-docker/)を参照してください。Compose内でNode 24.21.0とルートの`package-lock.json`を使うため、Compose起動だけならホストのNode・mise・`npm ci`は不要です。文書チェックにはDockerもDBパスワードも不要です。
 
 ```powershell
 $env:JOGI_LOCAL_DB_PASSWORD = Read-Host 'このPC専用のローカルDBパスワード' -MaskInput
 docker compose config --quiet
-docker compose up -d --wait db
+docker compose up --build -d --wait
 docker compose ps
+```
+
+`docker compose up`はWeb・API・DBの3サービスを起動します。上記の`--build`はソースや依存関係の変更をimageへ反映し、`-d --wait`は3サービスが起動・healthyになるまで待って端末を戻します。初回のimage取得・buildには時間がかかります。ブラウザで`http://127.0.0.1:5173/`を開き、「API: 接続できています」を確認します。API単体は`http://127.0.0.1:3000/api/health`で`{"status":"ok"}`を返します。Webの`/api`はCompose内の`api:3000`へ転送します。公開portはすべてホストの`127.0.0.1`に限定しています。healthはDB接続やProduct機能の完成を示しません。
+
+Composeはソースをコンテナへbind mountしません。ソース・manifest・lockfile変更後は再度`docker compose up --build -d --wait`を実行してください。ホスト上で即時反映しながら開発する場合は、下記の[ホスト起動](#ホスト上でアプリを起動する)を使います。同じportを使うので、切り替える前にComposeを停止してください。
+
+終了時は`docker compose down`を実行します。名前付きDB volumeは残り、次回起動時もデータを使用できます。`down --volumes`はDBデータを消すため通常の停止手順に含めません。
+
+### PostgreSQLだけを起動する
+
+ホスト上のWeb・API開発でローカルDBだけが必要な場合は、同じパスワードを設定した端末で次を実行します。現行のhealth確認はDBへ接続しないため、DBを使わない作業では起動不要です。
+
+```powershell
+docker compose up -d --wait db
 docker compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -U jogi -d jogi -Atqc "select 1"'
 ```
 
 最後のコマンドが`1`を返せば、コンテナ内からパスワード付きTCP接続ができています。ホストからの接続先は`127.0.0.1:55432`、DB名とUserは`jogi`です。パスワードは各自のローカル開発DB専用として保管し、同じvolumeを再起動するときは同じ値を入力します。`docker compose config`を`--quiet`なしで実行すると環境変数の値を表示し得るため、Secretを含む状態では使いません。実ユーザーデータやProductionの接続情報をこのDBへ入れません。
 
-作業終了時は`docker compose down`で停止します。名前付きvolumeは残るため、次回もデータを使用できます。`down --volumes`はデータを消すので通常の停止手順には含めません。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。現行のFE / BE起動確認はDBに接続せず、migration・seedは後続Issueで追加します。
+作業終了時は`docker compose down`で停止します。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。現行のFE / BE起動確認はDBに接続せず、migration・seedは後続Issueで追加します。
 
-### アプリの最小起動構成
+### ホスト上でアプリを起動する
 
-Nodeとnpmの版確認後、ルートの[単一lockfile](../package-lock.json)から依存を導入します。別々の端末でAPIとWebを起動してください。各コマンドはリポジトリのルートで実行します。
+Composeを使わない場合は、Nodeとnpmの版確認後、ルートの[単一lockfile](../package-lock.json)から依存を導入します。別々の端末でAPIとWebを起動してください。各コマンドはリポジトリのルートで実行します。Composeを起動中なら先に停止してportの競合を避けます。
 
 ```sh
 mise exec -- npm ci
@@ -480,7 +494,7 @@ mise exec -- npm run dev:web
 
 ブラウザで`http://127.0.0.1:5173/`を開き、「API: 接続できています」を確認します。API単体は`http://127.0.0.1:3000/api/health`で`{"status":"ok"}`を返します。Webの`/api`は開発時だけViteがローカルAPIへ転送します。停止は各端末で`Ctrl+C`です。port `5173`または`3000`が使用中なら競合processを確認してください。現行healthはDBの稼働やProduct APIの完成を示しません。
 
-`npm ci`は`package-lock.json`を変更せずに固定版を導入し、既存`node_modules`があれば再作成します。依存更新を行うIssueでは`npm install`でmanifestとlockfileを同時に更新します。両アプリは[ルートのnpm workspaces](../package.json)に属し、PoCのpackage/lockfileとは分離しています。CIの[Application workflow](../.github/workflows/application.yml)は同じinstall・型検査・ビルドをSecret不要で実行します。DB接続、実User Flow、ブラウザE2Eは別の実装・検証です。
+`npm ci`は`package-lock.json`を変更せずに固定版を導入し、既存`node_modules`があれば再作成します。依存更新を行うIssueでは`npm install`でmanifestとlockfileを同時に更新します。両アプリは[ルートのnpm workspaces](../package.json)に属し、PoCのpackage/lockfileとは分離しています。CIの[Application workflow](../.github/workflows/application.yml)は同じinstall・型検査・ビルドに加えて、ローカル用の非Secret仮値でCompose設定とWeb / API image buildを検証します。CIはコンテナ起動、DB接続、実User Flow、ブラウザE2Eを実行しません。
 
 上記はリポジトリのルートで使う操作コマンドです。Windowsでは`pwsh`がPowerShell 7を指すことを確認します。Windows PowerShell 5.1を起動する`powershell`とは異なります。
 基盤整備時にはWindows上のPowerShell 7で全体チェックを実行し、Ubuntu上のCIも成功しました。今回のローカルDBとmiseの確認範囲、他メンバー端末の未確認事項は[現行状態](operations/development-foundation-status.md#2026-09-27の現行開発環境issue-49)を参照してください。
@@ -507,7 +521,7 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 | miseが設定の信頼確認で止まる | 新しいclone等で設定が未信頼。`mise.toml`と呼び出すスクリプトを読み、信頼できる場合にのみ`mise trust`を実行する | 同じ`check`を再実行する。信頼操作なしで確認する場合はスクリプトを読んで直接実行する |
 | `mise exec`でNode/npmの版が違う | `mise install`未実行、設定未信頼、別のNode/npmが先に見つかる可能性 | `mise.toml`の版、`mise ls --current`、`mise exec -- node --version`と`mise exec -- npm --version`を確認する |
 | Docker Engineに接続できない | Docker未起動、権限不足、端末の接続先違い | `docker info`でEngine接続を確認し、起動後に`docker compose config --quiet`から再実行する |
-| `55432`が使用中 | 別のローカルDB等とportが衝突している | 利用中のprocessを確認する。既存DBを停止できない場合はIssueでport変更を検討し、手順と設定を同時に更新する |
+| `5173`・`3000`・`55432`が使用中 | ホスト上の開発processや別のローカルDB等とportが衝突している | 利用中のprocessを確認する。既存サービスを停止できない場合はIssueでport変更を検討し、手順と設定を同時に更新する |
 | DB認証に失敗する | 初回作成時と異なるパスワードを入力した、または既存volumeがある | 既存のローカルDBパスワードを確認する。`POSTGRES_PASSWORD`の変更だけでは既存DBのパスワードは変わらない。volumeを削除して解決しない |
 | `missing link target` / `missing heading` | 文書の移動・見出し変更に参照元が追従していない | 表示されたMarkdownのリンクと実ファイル・見出しを照合して直し、全体チェックを再実行する |
 | `invalid UTF-8` / `missing final newline` | 対象ファイルの文字コード・末尾改行が規約と違う | 対象だけをUTF-8・末尾改行ありで保存し、差分と全体チェックを確認する |

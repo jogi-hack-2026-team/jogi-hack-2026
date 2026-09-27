@@ -6,7 +6,7 @@
 
 [Decision](decision-log.md)→[Intent](design-intent.md)→[Evidence](evidence.md)を読み、対象R-IDをIssueに固定する。開発ToolchainはNode 24 LTS / npmに決定し、[mise](../../mise.toml)で固定している。[apps/api](../../apps/api/)とルートのlockfileにはFastifyの最小起動構成のみを追加した。ORM/migration tool、DB接続、正式API契約は未決・未実装。PoCのpackage.jsonや起動コマンドを本番の正本へコピーしない。
 
-`GET /api/health`はprocessの応答だけを確認する。DB、外部API、Guest認証の可用性を示さない。起動とbuildは[開発ガイド](../DEVELOPMENT_GUIDE.md#アプリの最小起動構成)を参照。
+`GET /api/health`はprocessの応答だけを確認する。DB、外部API、Guest認証の可用性を示さない。起動とbuildは[開発ガイド](../DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照。
 
 ## 全体の実装順序
 
