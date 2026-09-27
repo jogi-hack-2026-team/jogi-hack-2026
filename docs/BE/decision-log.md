@@ -127,6 +127,24 @@ Evidence IDs: [EV-BE-01〜09](evidence.md)。Design Intents: [DI-BE-01〜04](des
 - Evidence IDs: EV-BE-06 / EV-BE-07（[根拠台帳](../BE/evidence.md)）。
 - Related Requirements: E-04 / E-06 / R-05 / R-07 / R-10。Related Design Intents: DI-BE-02 / DI-BE-03（[設計意図](../BE/design-intent.md)）。
 
+## D-15 Detailed Rationale
+
+正式な状態・判断要約は[正本](../architecture.md#d-15)を参照。2026-09-27の依頼者判断と[Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)に基づく開発環境の記録。
+
+**Node 24 LTS / npmとローカルPostgreSQL**
+
+- ID / Status / Date: D-15 / DECIDED / 2026-09-27。
+- Context: 3人が異なるPCでも同じRuntimeとpackage managerを使い、採択済みNode / PostgreSQLの実装を始められるようにする。本番アプリとlockfileはまだない。
+- Requirements: E-01 / E-03 / E-04。Related Decisions: D-10 / D-12。
+- Candidates: Node 24 LTSまたは26 Current、npmまたはpnpm / Yarn、ホスト上のNode＋DockerのローカルDBまたはアプリを含むCompose。
+- Decision: Node 24 LTSとnpmを採用し、miseでNode 24.21.0を固定する。PostgreSQL専用ComposeをD-12のローカル検証入口として用意する。Hosted Providerとアプリcontainerは別判断。
+- Why: [Node 24の公式配布](https://nodejs.org/en/download/archive/v24.21.0)はLTSでnpm 11.19.0を同梱する。追加のpackage manager導入を要さず、PoCにもnpmのlockfileがある。DBをホスト別の手順で直接導入せず、同じimage版と接続先で検証できる。
+- Why Not Alternatives: Node 26は2026-09-27時点でCurrentであり、Code FreezeまでのLTS移行を前提にしない。pnpm / Yarnの便益は本番依存関係がまだない段階で未実証。アプリcontainerは本番アプリの起動・配置契約が未実装のため先取りしない。
+- Trade-offs / Consequences: Nodeとnpmの更新はmise設定と後続lockfileを合わせて検証する。ローカルDBのvolume、パスワード、portを各PCで扱う。PoCのtmpfs / trust認証DBや将来のHosted DBと混同しない。
+- Known Risks / Reconsider When: Node 24のsecurity更新、package managerに必要な明確な機能差、実Deploy環境との版不整合、DB major互換が確認された場合に再検討する。現時点のCompose成功はProductionのbackup / migration / pool互換を証明しない。
+- Evidence: [Node 24 LTSの配布と同梱npm](https://nodejs.org/en/download/archive/v24.21.0)、[Node release schedule](https://nodejs.org/en/about/previous-releases)、[PostgreSQL公式imageの18以降のvolume配置](https://hub.docker.com/_/postgres)、[PoC Compose](../../experiments/stack-bakeoff/compose.yaml)。PoCのpackage利用は実行例であり本番の採択理由の全てではない。
+- Related Requirements: E-01 / E-03 / E-04。Related Design Intents: D-10 / D-12の既存境界を維持。新たなProduct動作やDomain不変条件は追加しない。
+
 ## D-01〜07と採択前Proposalの履歴
 
 過去の文面を保存したSupporting Artifact。以下の状態表記は当時のもの。現在の状態・置換先は[正本の索引](../architecture.md#architecture-decision-log)を参照。

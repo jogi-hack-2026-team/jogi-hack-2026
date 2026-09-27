@@ -1,5 +1,13 @@
 # 開発基盤の状態と引き継ぎ
 
+## 2026-09-27の現行開発環境（Issue #49）
+
+依頼者がNode 24 LTS / npmと本IssueのMustを判断した。[Architecture D-15](../architecture.md#d-15)を現行の採択、下記2026-09-20の表を基盤整備時の履歴として読む。Framework・DB Engineの現在の採択も[Architecture](../architecture.md#現在の採択と読む順番)が正本であり、下記履歴の「未定」を現行へ持ち越さない。
+
+ルートの[mise設定](../../mise.toml)はNode 24.21.0とDoppler 3.76.5を固定し、npmはNode同梱の11.19.0を使う。ローカルDBの[Compose](../../compose.yaml)はPostgreSQL 18.6のみで、PoC用の一時DBと別。各自のセットアップ・版確認・DB起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照する。アプリ本体、package/lockfile、migration、アプリ用CI、Doppler接続先・権限、Hosted DBとDeploymentの受入はまだ完了していない。
+
+このPCでは2026-09-27にrepo-local mise 2026.9.11で`mise install`を実行し、Node 24.21.0、npm 11.19.0、Doppler 3.76.5の導入と`mise exec`での版表示を確認した。Docker Engine 29.6.1とCompose v5.2.0で`docker compose config --quiet`、DBの`up -d --wait`、healthy、パスワード付きTCP接続の`select 1`、`down`を確認。疎通検証で新規作成した空のvolumeは対象と未使用を確認して削除した。実際のアプリ接続・他メンバーPC・Doppler認証・公開Providerは未検証。共有設定、ProductionのSecretとデータは使用していない。
+
 ## 現行への反映と記録の範囲
 
 基盤整備の[PR #25](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/25)はmainへマージ済みです。文書整備時に取得した基準コミット・調査範囲は[変更対応表](../change-map.md#調査範囲と根拠)を参照してください。

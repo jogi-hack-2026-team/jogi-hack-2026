@@ -11,8 +11,9 @@
 | 確定 | 開発期間：2026-09-19 ～ 2026-10-12 / コードフリーズ：2026-10-12 |
 | DECIDED | ライト〜ミドル層のリスナーが、3〜5曲の好みを起点に仮説を次曲で確かめ、未知曲を発見・保存して探索を続ける。需要は未検証。[Product Spec](docs/product-spec.md) |
 | DECIDED | Modular Monolith、React / TypeScript / Vite / TanStack Router、Node / TypeScript / Fastify、PostgreSQL Engine、TypeScript Gaussian LinTS、Guest Core。[Architecture](docs/architecture.md) |
+| DECIDED | 開発用ToolchainはNode 24 LTS / npm。miseでNode 24.21.0を固定し、ローカルDBはPostgreSQL 18.6のComposeを使用。[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ) |
 | RECOMMENDED / CONDITIONAL | Cloud Run / Neon。region、pooler、cold/warm、容量・費用の受入は残る |
-| OPEN | 製品名・最終UX、Account Auth、数値校正、実Catalog/再生coverage、保存/学習用途の許諾、本番package/検証基盤等 |
+| OPEN | 製品名・最終UX、Account Auth、数値校正、実Catalog/再生coverage、保存/学習用途の許諾、本番アプリのpackage/lockfile・検証基盤等 |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
 過去の案・会話・実験コードは採用済みの仕様ではありません。
@@ -24,21 +25,21 @@
 - **仮説**：検証が必要な推測。
 - **未定**：まだ議論・決定されていない事項。
 
-現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、文書・設定検証用のGitHub Actionsがあります。
+現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
 本番アプリは未実装です。[比較PoC](experiments/stack-bakeoff/README.md)に隔離したパッケージ・起動・build・型検査・テストがありますが、正式採用や本番完成を意味しません。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
 
 ## 開発基盤のセットアップと確認
 
-Git、PowerShell 7、miseを使います。CLIの導入と基盤整備時の検証用配置は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。
+Git、PowerShell 7、miseを使います。ローカルDBを使う作業にはDocker EngineとComposeも必要です。各CLIの導入、版確認、DBの起動・停止は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。
 
 導入済みの環境では、リポジトリのルートで `mise run --skip-tools check` を実行します。文書・設定を検査し、成功時は `PASS:` が表示されます。
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
 
 `check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。
-本番用Formatter・Linter・テストの具体構成は実装Issueで決定します。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
+本番アプリのpackage/lockfile・migration・起動コマンド、Formatter・Linter・テストの具体構成は実装Issueで決定します。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
 
 ## 最初に読む順番
 
