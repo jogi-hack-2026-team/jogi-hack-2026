@@ -11,6 +11,7 @@ const stateFile = join(stateDir, 'state.json');
 const lockFile = join(stateDir, 'lock');
 const projectNumber = 1;
 const maxRepairs = 3;
+const codexModel = process.env.ML_AGENT_CODEX_MODEL || 'gpt-5.5';
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has('--dry-run');
 const once = args.has('--once');
@@ -78,6 +79,7 @@ const workSchema = {
   status: { type: 'string', enum: ['DONE', 'NEEDS_HUMAN'] },
   summary: string, changes: strings, designDecisions: strings,
   mlEvaluationResults: strings, risks: strings, followups: strings,
+  notVerified: strings, documentationImpact: strings, reviewFocus: strings,
   problem: string, evidence: strings, options: strings,
   recommendation: string, tradeoffs: strings, requiredDecision: string,
 };
@@ -90,7 +92,8 @@ const reviewSchema = {
 async function codex(role, prompt, worktree, properties, issueNumber = 'audit') {
   const output = join(stateDir, role + '-' + issueNumber + '.last.json');
   const argv = [
-    'exec', '--cd', worktree, '--sandbox', role === 'implementation' || role === 'repair' ? 'workspace-write' : 'read-only',
+    'exec', '--model', codexModel, '--cd', worktree,
+    '--sandbox', role === 'implementation' || role === 'repair' ? 'workspace-write' : 'read-only',
     '--output-schema', schema(role, properties), '--output-last-message', output, '-',
   ];
   await command('codex', argv, worktree, prompt);
@@ -219,6 +222,19 @@ async function ensureWorktree(entry) {
   return { branch, path };
 }
 
+async function syncMain(worktree, number) {
+  await git(['fetch', '--quiet', 'origin', 'main']);
+  const base = await git(['rev-parse', 'origin/main'], worktree);
+  const mergeBase = await git(['merge-base', 'origin/main', 'HEAD'], worktree);
+  if (mergeBase !== base) {
+    if (await git(['status', '--porcelain'], worktree)) {
+      throw new Error('Cannot merge updated main into a dirty worktree for #' + number);
+    }
+    await git(['merge', '-m', 'chore: #' + number + ' 最新mainを作業Branchへ反映', 'origin/main'], worktree);
+  }
+  return base;
+}
+
 function promptBase(entry, repo) {
   return [
     'You are working on ' + repo.full + ' issue #' + entry.issue.number + '.',
@@ -254,6 +270,7 @@ async function runImplementation(entry, worktree, repo, plan, repairNotes = '') 
     'Inspect git status and staged diff before committing. Commit only Issue files with a Japanese explanatory message.',
     'If a human decision is needed, stop and return NEEDS_HUMAN with the decision fields.',
     'Return actual ML evaluation results with conditions, metrics, and limits; do not claim unrun checks passed.',
+    'Record unverified items and reasons, documentation/spec impact, and points needing human review.',
     'Return all schema keys; use empty strings/arrays when not applicable.',
   ].join('\n'), worktree, workSchema, entry.issue.number);
 }
@@ -313,6 +330,16 @@ async function review(entry, worktree, repo, plan, implementation, verification)
   ].join('\n'), worktree, reviewSchema, entry.issue.number);
 }
 
+async function syncPrDevelopmentInfo(repo, number, url) {
+  const file = join(stateDir, 'issue-' + number + '.pr.md');
+  if (!existsSync(file)) throw new Error('PR body for #' + number + ' is missing: ' + file);
+  const body = readFileSync(file, 'utf8').replace(
+    '- [ ] Issue本文の開発情報にBranchとPRを記録した',
+    '- [x] Issue本文の開発情報にBranchとPRを記録した');
+  writeFileSync(file, body);
+  await gh(['pr', 'edit', url, '--repo', repo.full, '--body-file', file]);
+}
+
 async function createPr(repo, entry, worktree, record, state) {
   const number = entry.issue.number;
   if (await git(['status', '--porcelain'], worktree.path)) throw new Error('Worktree is dirty before PR');
@@ -323,12 +350,35 @@ async function createPr(repo, entry, worktree, record, state) {
     '#' + number + ' ' + entry.issue.title.replace(/^(?:\[[^\]]+\])+/, '').trim();
   const checks = record.verification.results.map((item) =>
     '- ' + (item.ok ? 'PASS' : 'FAIL') + ': ' + item.command).join('\n');
+  const bullets = (items, fallback) => items?.length ? items.map((x) => '- ' + x) : ['- ' + fallback];
   const body = [
     '## 概要', record.implementation.summary,
     '## 関連Issue', 'Closes #' + number,
     '## 変更内容', ...record.implementation.changes.map((x) => '- ' + x),
+    '## 検証',
+    '### 実施内容・結果', checks,
+    '### 未検証の内容・理由', ...bullets(record.implementation.notVerified,
+      'Runnerが実行した検証以外は未確認。実Catalog・実Playback・実Userでの動作は未検証。'),
+    '### 既存機能・関連仕様・ドキュメントへの影響',
+    ...bullets(record.implementation.documentationImpact, '影響の記録なし。人間レビューで確認する。'),
+    '- [ ] Issue本文の開発情報にBranchとPRを記録した',
+    '- [ ] 完了条件の動作確認結果と未確認事項を記録した',
+    '- [ ] Secret実値を含めていない',
+    '- [ ] 必要な仕様・変更対応表・目次・リンク・コード参照を更新し、実装・設定・テストとの整合を確認した',
+    '## 設計・文書への影響',
+    '- Product behavior / Requirement:', ...bullets(record.implementation.documentationImpact,
+      '影響の記録なし。人間レビューで確認する。'),
+    '- Architecture / FE・BE・ML design:', ...bullets(record.implementation.designDecisions,
+      '新しい設計判断の記録なし。'),
+    '- Decision / Design Intent / Invariant:', ...bullets(record.implementation.designDecisions,
+      '新しい設計判断の記録なし。'),
+    '- Evidence / Tests（支持範囲・未検証）:', ...bullets(record.implementation.notVerified,
+      '上記の検証結果を参照。'),
+    '- Documentation updated?（2正本・Supporting Docs・変更対応表）:',
+    ...bullets(record.implementation.documentationImpact, '人間レビューで確認する。'),
+    '## レビューしてほしい点', ...bullets(record.implementation.reviewFocus,
+      '完了条件、ML評価の適用範囲、文書との整合。'),
     '## 設計判断', ...record.implementation.designDecisions.map((x) => '- ' + x),
-    '## 検証', checks,
     '## ML評価結果', ...record.implementation.mlEvaluationResults.map((x) => '- ' + x),
     '## リスク', ...record.implementation.risks.map((x) => '- ' + x),
     '## Follow-up Issue候補', ...record.implementation.followups.map((x) => '- ' + x),
@@ -347,6 +397,7 @@ async function createPr(repo, entry, worktree, record, state) {
     'Pull Request': url,
   });
   await projectStatus(repo, number, 'In review');
+  await syncPrDevelopmentInfo(repo, number, url);
   record.synced = true;
   save(state);
   return url;
@@ -397,8 +448,8 @@ async function processIssue(repo, entry, state) {
     save(state);
   }
   while (record.phase === 'implemented') {
+    record.baseSha = await syncMain(worktree.path, number);
     record.verification = await verify(worktree.path);
-    record.baseSha = await git(['rev-parse', 'origin/main'], worktree.path);
     if (record.verification.ok && record.implementation.mlEvaluationResults.length > 0) {
       record.review = await review(entry, worktree.path, repo, record.plan,
         record.implementation, record.verification);
@@ -444,7 +495,7 @@ async function processIssue(repo, entry, state) {
     save(state);
   }
   if (record.phase === 'reviewed' &&
-      record.baseSha !== await git(['rev-parse', 'origin/main'], worktree.path)) {
+      record.baseSha !== await syncMain(worktree.path, number)) {
     record.phase = 'implemented';
     save(state);
     return processIssue(repo, entry, state);
@@ -463,6 +514,7 @@ async function reconcilePrs(repo, state) {
       'Pull Request': record.pr,
     });
     await projectStatus(repo, Number(number), 'In review');
+    await syncPrDevelopmentInfo(repo, Number(number), record.pr);
     record.synced = true;
     save(state);
   }
