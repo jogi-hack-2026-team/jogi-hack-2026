@@ -1722,7 +1722,7 @@ function markdownReport(result: ReturnType<typeof runSyntheticEvaluation>) {
       "`.",
     "",
   );
-  return `${lines.join("\n")}\n`;
+  return `${lines.join("\n").trimEnd()}\n`;
 }
 
 function currentCommit() {
