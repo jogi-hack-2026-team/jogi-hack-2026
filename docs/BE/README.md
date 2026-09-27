@@ -1,6 +1,6 @@
 # Backend
 
-**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書は2026-09-25、Issue #36の判断理由・実装支援を記録する。本番実装済みを意味しない。
+**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書は2026-09-25、Issue #36の判断理由・実装支援を記録する。#51の最小起動構成はProduct機能の実装済みを意味しない。
 
 ## この領域の責務
 
@@ -22,4 +22,4 @@ InteractionとTraceは一括commit。retryで二重更新しない。共通Prefe
 
 ## 隣接する領域
 
-[FE](../FE/README.md)が操作と表示、[BE](../BE/README.md)が認可とcommit、[ML](../ML/README.md)が選択と数値の責任を持つ。[変更対応表](../change-map.md)から既存PoCに進める。本番コード・正式公開API・migration・製品E2Eは未整備。
+[FE](../FE/README.md)が操作と表示、[BE](../BE/README.md)が認可とcommit、[ML](../ML/README.md)が選択と数値の責任を持つ。[変更対応表](../change-map.md)から起動構成と既存PoCへ進める。Productの正式公開API・migration・製品E2Eは未整備。

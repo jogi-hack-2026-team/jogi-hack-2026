@@ -1,10 +1,16 @@
 # 開発基盤の状態と引き継ぎ
 
+## 2026-09-27のアプリ最小起動構成（Issue #51）
+
+[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)は依頼者がMustを判断した。採択済みFE / BEの[単一npm lockfile](../../package-lock.json)、[Web](../../apps/web/)、[API](../../apps/api/)と[Application CI](../../.github/workflows/application.yml)を追加した。Product機能の完成とは区別する。セットアップと起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#アプリの最小起動構成)を正本とする。
+
+このPCでは固定Node / npmで`npm ci`、両workspaceのtypecheck / build、API `GET /api/health`とWeb経由proxyのHTTP 200を確認した。既存PoCのPlaywright CLIとインストール済みEdgeでWeb画面の「API: 接続できています」も確認した。最初のChromium headless実行は専用browser未導入で失敗し、Edgeを指定して再実行した。他メンバーPC、Productの探索・推薦・保存、DB接続・migration、外部Catalog、実Deployは未確認。Foundation CIとApplication CIのPR実行結果は対象PRのChecksで別に記録する。
+
 ## 2026-09-27の現行開発環境（Issue #49）
 
 依頼者がNode 24 LTS / npmと本IssueのMustを判断した。[Architecture D-15](../architecture.md#d-15)を現行の採択、下記2026-09-20の表を基盤整備時の履歴として読む。Framework・DB Engineの現在の採択も[Architecture](../architecture.md#現在の採択と読む順番)が正本であり、下記履歴の「未定」を現行へ持ち越さない。
 
-ルートの[mise設定](../../mise.toml)はNode 24.21.0とDoppler 3.76.5を固定し、npmはNode同梱の11.19.0を使う。ローカルDBの[Compose](../../compose.yaml)はPostgreSQL 18.6のみで、PoC用の一時DBと別。各自のセットアップ・版確認・DB起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照する。アプリ本体、package/lockfile、migration、アプリ用CI、Doppler接続先・権限、Hosted DBとDeploymentの受入はまだ完了していない。
+ルートの[mise設定](../../mise.toml)はNode 24.21.0とDoppler 3.76.5を固定し、npmはNode同梱の11.19.0を使う。ローカルDBの[Compose](../../compose.yaml)はPostgreSQL 18.6のみで、PoC用の一時DBと別。各自のセットアップ・版確認・DB起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照する。以下は#49時点の記録で、当時はアプリpackage/lockfileとアプリ用CIがなかった。#51で最小起動構成を追加したが、migration、Doppler接続先・権限、Hosted DBとDeploymentの受入はまだ完了していない。
 
 このPCでは2026-09-27にrepo-local mise 2026.9.11で`mise install`を実行し、Node 24.21.0、npm 11.19.0、Doppler 3.76.5の導入と`mise exec`での版表示を確認した。Docker Engine 29.6.1とCompose v5.2.0で`docker compose config --quiet`、DBの`up -d --wait`、healthy、パスワード付きTCP接続の`select 1`、`down`を確認。疎通検証で新規作成した空のvolumeは対象と未使用を確認して削除した。実際のアプリ接続・他メンバーPC・Doppler認証・公開Providerは未検証。共有設定、ProductionのSecretとデータは使用していない。
 

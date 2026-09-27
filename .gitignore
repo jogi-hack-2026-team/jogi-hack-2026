@@ -15,3 +15,9 @@ mise.local.toml
 .doppler/
 .doppler.yaml
 .secrets*
+
+# Application install and build outputs.
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/

@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。本番アプリは未実装で、比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)は文書・設定の確認です。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。FE / BEは最小起動構成のみでProduct機能は未実装です。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能やIssue番号・Branch名は操作を説明する例です。実装済み機能や実在する対応Issueを示すものではありません。
 
 ---
@@ -380,7 +380,7 @@ README更新
 
 # 13. 初回セットアップ
 
-アプリのRuntimeはNode.js、DB EngineはPostgreSQL、Package Managerはnpmに決定しています。[Architecture](architecture.md#現在の採択と読む順番)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。アプリ本体のpackage/lockfile、migration、起動コマンドはまだありません。PowerShell 7は補助スクリプト用です。
+アプリのRuntimeはNode.js、DB EngineはPostgreSQL、Package Managerはnpmに決定しています。[Architecture](architecture.md#現在の採択と読む順番)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。FE / BEの最小起動構成とlockfileはありますが、Product機能、DB migration、正式APIはまだありません。PowerShell 7は補助スクリプト用です。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -454,7 +454,33 @@ docker compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0
 
 最後のコマンドが`1`を返せば、コンテナ内からパスワード付きTCP接続ができています。ホストからの接続先は`127.0.0.1:55432`、DB名とUserは`jogi`です。パスワードは各自のローカル開発DB専用として保管し、同じvolumeを再起動するときは同じ値を入力します。`docker compose config`を`--quiet`なしで実行すると環境変数の値を表示し得るため、Secretを含む状態では使いません。実ユーザーデータやProductionの接続情報をこのDBへ入れません。
 
-作業終了時は`docker compose down`で停止します。名前付きvolumeは残るため、次回もデータを使用できます。`down --volumes`はデータを消すので通常の停止手順には含めません。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。アプリ本体はまだないため、migration・seed・アプリ起動コマンドは本Issueでは用意しません。
+作業終了時は`docker compose down`で停止します。名前付きvolumeは残るため、次回もデータを使用できます。`down --volumes`はデータを消すので通常の停止手順には含めません。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。現行のFE / BE起動確認はDBに接続せず、migration・seedは後続Issueで追加します。
+
+### アプリの最小起動構成
+
+Nodeとnpmの版確認後、ルートの[単一lockfile](../package-lock.json)から依存を導入します。別々の端末でAPIとWebを起動してください。各コマンドはリポジトリのルートで実行します。
+
+```sh
+mise exec -- npm ci
+mise exec -- npm run typecheck
+mise exec -- npm run build
+```
+
+API用の端末:
+
+```sh
+mise exec -- npm run dev:api
+```
+
+Web用の端末:
+
+```sh
+mise exec -- npm run dev:web
+```
+
+ブラウザで`http://127.0.0.1:5173/`を開き、「API: 接続できています」を確認します。API単体は`http://127.0.0.1:3000/api/health`で`{"status":"ok"}`を返します。Webの`/api`は開発時だけViteがローカルAPIへ転送します。停止は各端末で`Ctrl+C`です。port `5173`または`3000`が使用中なら競合processを確認してください。現行healthはDBの稼働やProduct APIの完成を示しません。
+
+`npm ci`は`package-lock.json`を変更せずに固定版を導入し、既存`node_modules`があれば再作成します。依存更新を行うIssueでは`npm install`でmanifestとlockfileを同時に更新します。両アプリは[ルートのnpm workspaces](../package.json)に属し、PoCのpackage/lockfileとは分離しています。CIの[Application workflow](../.github/workflows/application.yml)は同じinstall・型検査・ビルドをSecret不要で実行します。DB接続、実User Flow、ブラウザE2Eは別の実装・検証です。
 
 上記はリポジトリのルートで使う操作コマンドです。Windowsでは`pwsh`がPowerShell 7を指すことを確認します。Windows PowerShell 5.1を起動する`powershell`とは異なります。
 基盤整備時にはWindows上のPowerShell 7で全体チェックを実行し、Ubuntu上のCIも成功しました。今回のローカルDBとmiseの確認範囲、他メンバー端末の未確認事項は[現行状態](operations/development-foundation-status.md#2026-09-27の現行開発環境issue-49)を参照してください。
@@ -493,7 +519,7 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 CLIの仕様は[Gitのチュートリアル](https://git-scm.com/docs/gittutorial)と[mise run](https://mise.jdx.dev/cli/run.html)、[mise trust](https://mise.jdx.dev/cli/trust.html)を参照できます。設定・スクリプトが何をするかは、このリポジトリの実ファイルを優先して確認します。
 
 Doppler CLIの固定版を取得した後、実際にSecretが必要なアプリ作業では[接続手順](operations/development-foundation-status.md#dopplerの引き継ぎ)へ進みます。文書・設定検証とローカルDBの起動に、DopplerのProduction Secretを渡しません。
-ローカルDB以外のmigration・seed・アプリ起動は、本番アプリの実装Issueで実体を追加し、miseから呼ぶ入口とCIを揃えます。
+DB migration・seed・Product APIは後続Issueで追加し、起動手順・CIも実装に合わせて更新します。
 
 ---
 
