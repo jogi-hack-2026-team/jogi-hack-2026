@@ -1,6 +1,6 @@
 # 音楽探索プロダクト仕様
 
-正式なProduct仕様のSingle Source of Truth。実現方法の正本は[Architecture](architecture.md)。2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で初版を整理した。本番アプリは未実装であり、比較PoCの動作をそのまま正式仕様にはしない。
+正式なProduct仕様のSingle Source of Truth。実現方法の正本は[Architecture](architecture.md)。2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で初版を整理した。FE / BEの起動構成はあるがProduct機能は未実装であり、比較PoCの動作をそのまま正式仕様にはしない。
 
 ## 状態と根拠
 
@@ -13,7 +13,7 @@
 
 2026-09-25 JSTの依頼者「Product Spec / Architecture 全面同期・再評価」のConversation Decision Snapshot（S25）を現在の人間Baselineとして同期した。S25が定めるBehavior/Current Designは**DECIDED（現行Baseline）**へ戻す。Snapshot自身が「候補」「第一候補」「再評価」とする採択・Priorityはその区分を保つ。DECIDEDは実データ・実ユーザーでのValidation成功を意味しない。過去研究の全資料がRepositoryにないことを理由に、提示されたDecisionを再びOPENへ戻さない。
 
-2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）がS25の未決部分を更新した。以下のScopeと明示設計をDECIDEDとする。採択と動作確認は別で、本番アプリは未実装。正式決定は本書とArchitecture、詳細な理由・Evidence・実装手順は[FE](FE/README.md) / [BE](BE/README.md) / [ML](ML/README.md)のSupporting Docsに置く。
+2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）がS25の未決部分を更新した。以下のScopeと明示設計をDECIDEDとする。採択と動作確認は別で、Product機能は未実装。正式決定は本書とArchitecture、詳細な理由・Evidence・実装手順は[FE](FE/README.md) / [BE](BE/README.md) / [ML](ML/README.md)のSupporting Docsに置く。
 
 ## Product Overview
 

@@ -1,16 +1,16 @@
 # ArchitectureとTechnology Stack
 
-正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が振る舞い、本書が責務・採択・制約を定める。2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ正式反映した。本番アプリは未実装。D-01〜07と比較表は判断の履歴であり、古い推奨を現行採択と混同しない。
+正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が振る舞い、本書が責務・採択・制約を定める。2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ正式反映した。FE / BEの最小起動構成はあるが、Product機能は未実装。D-01〜07と比較表は判断の履歴であり、古い推奨を現行採択と混同しない。
 
 ## 現在の採択と読む順番
 
 | 状態 | 対象 | 詳細・残る条件 |
 | --- | --- | --- |
 | DECIDED | Modular Monolith | D-08。推薦を含むDomainはHTTP層から独立 |
-| DECIDED | React / TypeScript / Vite / TanStack Router | D-09、[FE入口](FE/README.md)。製品UIは未実装 |
-| DECIDED | Node.js / TypeScript / Fastify | D-10 / D-11、[BE入口](BE/README.md)。API schema・log実装は残る |
+| DECIDED | React / TypeScript / Vite / TanStack Router | D-09、[FE入口](FE/README.md)。最小起動画面あり、製品UIは未実装 |
+| DECIDED | Node.js / TypeScript / Fastify | D-10 / D-11、[BE入口](BE/README.md)。health以外のAPI schema・log実装は残る |
 | DECIDED | PostgreSQL Engine | D-12。Provider採択とは別 |
-| DECIDED | 開発Toolchain: Node 24 LTS / npm | D-15。miseでNode 24.21.0を固定。本番アプリのpackage/lockfileは未作成 |
+| DECIDED | 開発Toolchain: Node 24 LTS / npm | D-15。miseでNode 24.21.0を固定。#51でFE / BE最小起動構成と単一lockfileを追加 |
 | DECIDED | Gaussian LinTS、Production TypeScript、Guest Core | D-13、[ML入口](ML/README.md)、A-05。数値校正と公開securityは未検証 |
 | RECOMMENDED / CONDITIONAL | Neon、Cloud Run | D-14。相互遅延、cold wake-up、schema容量、pool/transaction、費用、regionと実Deployがゲート |
 | OPEN | Account Auth | Neon Managed Better Auth / Firebase Authentication。Core完成後に判断可 |
@@ -426,9 +426,11 @@ CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider
 
 ## 開発環境と版管理
 
-2026-09-27の依頼者判断（D-15）により、本番アプリの開発ToolchainはNode 24 LTSとnpmに固定する。[mise.toml](../mise.toml)はNode 24.21.0を指定し、その公式配布物に同梱されるnpmは11.19.0。実装済みの文書チェックはNode不要なので`--skip-tools`を維持する。アプリのpackage/lockfile、migration、実際のdev/build/testタスクとアプリCIは、本番アプリの実装Issueで追加する。比較PoCのpackage/lockfileは本番の依存関係の正本ではない。
+2026-09-27の依頼者判断（D-15）により、本番アプリの開発ToolchainはNode 24 LTSとnpmに固定する。[mise.toml](../mise.toml)はNode 24.21.0を指定し、その公式配布物に同梱されるnpmは11.19.0。文書チェックはNode不要なので`--skip-tools`を維持する。D-15時点で未作成だったpackage/lockfileとdev/build/typecheckタスクは[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)で追加した。比較PoCのpackage/lockfileは本番の依存関係の正本ではない。
 
-D-12のPostgreSQLを各PCで検証する入口として、ルートの[Compose](../compose.yaml)はローカルDBだけを起動する。開発用imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持、公開portは`127.0.0.1:55432`に限定する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](DEVELOPMENT_GUIDE.md#ローカルpostgresqlを使うとき)を正本とする。
+#51の起動構成は[ルートnpm workspaces](../package.json)で[FE](../apps/web/)と[BE](../apps/api/)を分け、単一の[package-lock.json](../package-lock.json)で依存版を揃える。FEはViteの開発proxy経由で、BEの`GET /api/health`を確認する。これはローカル起動確認であり、Product API、Guest認証、DB schema / migration、推薦や保存の実装を示さない。[Application CI](../.github/workflows/application.yml)はSecretとDBなしでinstall・typecheck・buildを確認する。アプリのテスト、ブラウザE2E、公開配置は後続Issueで扱う。
+
+D-12のPostgreSQLを各PCで検証する入口として、ルートの[Compose](../compose.yaml)はローカルDBだけを起動する。開発用imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持、公開portは`127.0.0.1:55432`に限定する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。#51のhealthはこのDBへ接続しない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](DEVELOPMENT_GUIDE.md#ローカルpostgresqlを使うとき)を正本とする。
 
 ## TestingとCI/CD
 
@@ -441,7 +443,7 @@ D-12のPostgreSQLを各PCで検証する入口として、ルートの[Compose](
 | Scale | 2 process/100並列/10k履歴の合成試験。持続負荷・100k Catalog lookup・Stage 2/3全体は未実測 |
 | External Contract / Mock | timeout/429/500。実API schema/権利/quota/変更追随は未検証 |
 | Failure | Trace INSERT失敗、入力不正、Guest破損JSON、render error、Playback Mock失敗 |
-| CI/CD | 既存GitHub ActionsのFoundationを維持。文書・設定チェックでありPoC app CIとは別。PoC CIは未追加、cloud deploy/secret/required checksを変更していない |
+| CI/CD | Foundationは文書・設定を検査。#51のApplicationは本番アプリのlockfile install・型検査・buildを検査。PoC CI、Product E2E、cloud deploy/secret/required checksは未追加・未変更 |
 
 再実行手順と各PoCの証明範囲は[実験README](../experiments/stack-bakeoff/README.md)へ。これはSupporting Artifact / Not a Source of Truthであり、本書のDecisionの代わりにはしない。
 

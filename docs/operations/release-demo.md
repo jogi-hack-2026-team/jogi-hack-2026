@@ -1,6 +1,6 @@
 # リリース・デモ・提出の手順
 
-HTML §16–17に基づく最小運用。Product・DB Engine等の採択は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)を参照。公開先の最終受入、担当者、URL、Account Authは未定。本番アプリは未実装。
+HTML §16–17に基づく最小運用。Product・DB Engine等の採択は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)を参照。公開先の最終受入、担当者、URL、Account Authは未定。FE / BEの起動構成はあるがProduct機能は未実装。
 存在しない起動・migration・seed・deployコマンドは掲載しない。決定後にこの文書を更新する。
 
 ## リリース担当者が行うこと

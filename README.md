@@ -13,7 +13,7 @@
 | DECIDED | Modular Monolith、React / TypeScript / Vite / TanStack Router、Node / TypeScript / Fastify、PostgreSQL Engine、TypeScript Gaussian LinTS、Guest Core。[Architecture](docs/architecture.md) |
 | DECIDED | 開発用ToolchainはNode 24 LTS / npm。miseでNode 24.21.0を固定し、ローカルDBはPostgreSQL 18.6のComposeを使用。[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ) |
 | RECOMMENDED / CONDITIONAL | Cloud Run / Neon。region、pooler、cold/warm、容量・費用の受入は残る |
-| OPEN | 製品名・最終UX、Account Auth、数値校正、実Catalog/再生coverage、保存/学習用途の許諾、本番アプリのpackage/lockfile・検証基盤等 |
+| OPEN | 製品名・最終UX、Account Auth、数値校正、実Catalog/再生coverage、保存/学習用途の許諾、DB migration・Product API・実User検証等 |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
 過去の案・会話・実験コードは採用済みの仕様ではありません。
@@ -26,7 +26,7 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
-本番アプリは未実装です。[比較PoC](experiments/stack-bakeoff/README.md)に隔離したパッケージ・起動・build・型検査・テストがありますが、正式採用や本番完成を意味しません。
+採択済み技術による[FE](apps/web/)と[BE](apps/api/)の最小起動構成を追加しました。Productの探索・推薦・保存機能は未実装です。[比較PoC](experiments/stack-bakeoff/README.md)は別の実験であり、本番アプリの依存関係の正本ではありません。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
 
@@ -39,7 +39,7 @@ miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-fo
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
 
 `check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。
-本番アプリのpackage/lockfile・migration・起動コマンド、Formatter・Linter・テストの具体構成は実装Issueで決定します。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
+アプリはルートの`package-lock.json`から`mise exec -- npm ci`で導入し、別々の端末で`mise exec -- npm run dev:api`と`mise exec -- npm run dev:web`を実行します。Webは`http://127.0.0.1:5173/`、API healthは`http://127.0.0.1:3000/api/health`です。[詳細手順](docs/DEVELOPMENT_GUIDE.md#アプリの最小起動構成)に確認・停止・DBとの関係を記載しています。型検査とビルドは`mise exec -- npm run typecheck`、`mise exec -- npm run build`です。Product機能、DB migration、Formatter・Linter・テストの具体構成は後続Issueで扱います。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
 
 ## 最初に読む順番
 
@@ -50,7 +50,7 @@ Hook（コミット前に走る処理）の導入はローカル設定を変更�
 5. [AI開発ツールガイド](AI_DEVELOPMENT_TOOLS.md)：MCPとSkillsの使い分け、利用状況。
 
 機能の仕様を知りたい・変更したい場合は、[対応表](docs/change-map.md#アプリの仕様と実装)から「目的・操作・入力や表示の条件・失敗時の動作」を説明する機能文書へ進み、内部処理、関連コード、確認方法をたどります。
-正式な設計文書は[Product Spec](docs/product-spec.md)と[Architecture](docs/architecture.md)の2本です。本番アプリは未実装で、比較結果と未検証範囲はArchitectureからたどれます。[開発基盤と作業手順](docs/change-map.md#開発基盤と作業手順)と[配置ルール](CONTRIBUTING.md#仕様文書の配置)も参照してください。
+正式な設計文書は[Product Spec](docs/product-spec.md)と[Architecture](docs/architecture.md)の2本です。アプリの起動構成とProduct機能の実装状況、比較結果と未検証範囲はArchitectureからたどれます。[開発基盤と作業手順](docs/change-map.md#開発基盤と作業手順)と[配置ルール](CONTRIBUTING.md#仕様文書の配置)も参照してください。
 
 領域別の入口は[FE](docs/FE/README.md)、[BE](docs/BE/README.md)、[推薦・オンライン学習](docs/ML/README.md)です。各領域でDecisionの理由、Design Intent、不変条件、Evidence、既存PoCとの差分、実装順をたどれます。Supporting Docsは正本を増やさず、正式決定を詳細化します。
 
