@@ -25,7 +25,7 @@
 - **仮説**：検証が必要な推測。
 - **未定**：まだ議論・決定されていない事項。
 
-現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
+現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、Web・API・開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
 採択済み技術による[FE](apps/web/)と[BE](apps/api/)の最小起動構成を追加しました。Productの探索・推薦・保存機能は未実装です。[比較PoC](experiments/stack-bakeoff/README.md)は別の実験であり、本番アプリの依存関係の正本ではありません。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
@@ -33,14 +33,14 @@ ML Issueを対象とする任意のCodex Harnessは[実行手順と制約](docs/
 
 ## 開発基盤のセットアップと確認
 
-Git、PowerShell 7、miseを使います。ローカルDBを使う作業にはDocker EngineとComposeも必要です。各CLIの導入、版確認、DBの起動・停止は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。
+GitとPowerShell 7を使います。ホスト上でアプリを動かす場合はmise、Web・API・DBをComposeから起動する場合はDocker EngineとComposeを用意します。各CLIの導入と起動・停止は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。
 
 導入済みの環境では、リポジトリのルートで `mise run --skip-tools check` を実行します。文書・設定を検査し、成功時は `PASS:` が表示されます。
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
 
 `check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。
-アプリはルートの`package-lock.json`から`mise exec -- npm ci`で導入し、別々の端末で`mise exec -- npm run dev:api`と`mise exec -- npm run dev:web`を実行します。Webは`http://127.0.0.1:5173/`、API healthは`http://127.0.0.1:3000/api/health`です。[詳細手順](docs/DEVELOPMENT_GUIDE.md#アプリの最小起動構成)に確認・停止・DBとの関係を記載しています。型検査とビルドは`mise exec -- npm run typecheck`、`mise exec -- npm run build`です。Product機能、DB migration、Formatter・Linter・テストの具体構成は後続Issueで扱います。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
+Dockerで一括起動する場合はローカルDB専用パスワードを設定し、リポジトリのルートで`docker compose up --build -d --wait`を実行します。Webは`http://127.0.0.1:5173/`、API healthは`http://127.0.0.1:3000/api/health`です。ホスト上で変更を即座に反映する開発には、`mise exec -- npm ci`後、別々の端末で`mise exec -- npm run dev:api`と`mise exec -- npm run dev:web`を使えます。[詳細手順](docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)にパスワード・確認・停止・再ビルドを記載しています。型検査とビルドは`mise exec -- npm run typecheck`、`mise exec -- npm run build`です。Product機能、DB migration、Formatter・Linter・テストの具体構成は後続Issueで扱います。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
 
 ## 最初に読む順番
 

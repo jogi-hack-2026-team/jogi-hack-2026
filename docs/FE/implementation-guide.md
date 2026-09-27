@@ -6,7 +6,7 @@
 
 [D-09の詳細](decision-log.md)、[DI-FE-01〜03](design-intent.md)、[全体P0〜P4](../BE/implementation-guide.md#全体の実装順序)を確認する。React / TypeScript / Vite / TanStack Routerとnpmは採択済み。[apps/web](../../apps/web/)に起動確認画面だけを実装した。Product UI、公開API、state/query library、UI library、フォーム方式は後続Issueで必要性から決める。
 
-起動とbuildは[開発ガイド](../DEVELOPMENT_GUIDE.md#アプリの最小起動構成)を参照。現行の`/`はAPI health表示のみで、Seed選択・探索・Player・保存を実装したものではない。
+起動とbuildは[開発ガイド](../DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照。現行の`/`はAPI health表示のみで、Seed選択・探索・Player・保存を実装したものではない。
 
 ## 画面と状態
 
