@@ -38,6 +38,9 @@ test("evaluation keeps valid interactions separate from reward observations", ()
   for (const row of result.final.byScenarioPolicy) {
     assert.equal(row.validInteractions.max <= 5, true);
     assert.equal(row.rewardObservations.max <= row.validInteractions.max, true);
+    if (row.determinateCount === 0) {
+      assert.equal(row.falseCertaintyRate, null);
+    }
   }
   const unsureRows = result.final.byScenarioPolicy.filter(
     (row) => row.scenarioId === "unsure_heavy",

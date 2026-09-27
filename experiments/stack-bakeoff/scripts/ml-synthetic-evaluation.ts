@@ -1434,7 +1434,7 @@ function summarizeTrials(trials: TrialResult[]) {
     determinateCount,
     evaluableCount,
     falseCertaintyRate:
-      determinateCount === 0 ? 0 : falseCertaintyCount / determinateCount,
+      determinateCount === 0 ? null : falseCertaintyCount / determinateCount,
     classificationRate:
       evaluableCount === 0 ? 0 : determinateCount / evaluableCount,
     hypothesisClassificationsExample:
@@ -1677,7 +1677,7 @@ function markdownReport(result: ReturnType<typeof runSyntheticEvaluation>) {
   ];
   for (const row of result.final.byScenarioPolicy) {
     lines.push(
-      `| ${row.scenarioId} | ${row.policyId} | ${row.completedFiveValidRate.toFixed(2)} | ${row.rewardObservations.median.toFixed(0)} | ${row.discoveries.mean.toFixed(2)} | ${row.multiplePrototypeCoverageRate.toFixed(2)} | ${row.blockedCatalogRate.toFixed(2)} | ${row.falseCertaintyRate.toFixed(2)} | ${row.classificationRate.toFixed(2)} | ${JSON.stringify(row.hardConstraintViolationCounts)} |`,
+      `| ${row.scenarioId} | ${row.policyId} | ${row.completedFiveValidRate.toFixed(2)} | ${row.rewardObservations.median.toFixed(0)} | ${row.discoveries.mean.toFixed(2)} | ${row.multiplePrototypeCoverageRate.toFixed(2)} | ${row.blockedCatalogRate.toFixed(2)} | ${row.falseCertaintyRate === null ? "N/A" : row.falseCertaintyRate.toFixed(2)} | ${row.classificationRate.toFixed(2)} | ${JSON.stringify(row.hardConstraintViolationCounts)} |`,
     );
   }
   lines.push(
@@ -1689,7 +1689,7 @@ function markdownReport(result: ReturnType<typeof runSyntheticEvaluation>) {
   );
   for (const row of result.calibration.sensitivity) {
     lines.push(
-      `| ${row.thresholdConfigId} | ${row.blockedCatalogRate.toFixed(2)} | ${row.completedFiveValidRate.toFixed(2)} | ${row.rewardObservationsMedian.toFixed(0)} | ${row.discoveryMean.toFixed(2)} | ${row.regretMedian.toFixed(2)} | ${row.meanCandidatePool.toFixed(2)} | ${row.falseCertaintyRate.toFixed(2)} | ${row.classificationRate.toFixed(2)} |`,
+      `| ${row.thresholdConfigId} | ${row.blockedCatalogRate.toFixed(2)} | ${row.completedFiveValidRate.toFixed(2)} | ${row.rewardObservationsMedian.toFixed(0)} | ${row.discoveryMean.toFixed(2)} | ${row.regretMedian.toFixed(2)} | ${row.meanCandidatePool.toFixed(2)} | ${row.falseCertaintyRate === null ? "N/A" : row.falseCertaintyRate.toFixed(2)} | ${row.classificationRate.toFixed(2)} |`,
     );
   }
   const examples = result.final.summary.examples;

@@ -58,4 +58,4 @@ commit、catalog/feature/context/model/policy版、seed、反応生成式、全p
 
 Issue #40の合成評価は[実行script](../../experiments/stack-bakeoff/scripts/ml-synthetic-evaluation.ts)と[結果JSON](../../experiments/stack-bakeoff/results/ml-synthetic-evaluation.json)、[要約Report](../../experiments/stack-bakeoff/results/ml-synthetic-evaluation.md)に記録する。これはCalibration候補とNo-Go検査のSupporting Artifactであり、ROPE・credible interval・Relevant/Probe閾値・合格値の正式Decisionではない。
 
-Simulationは不具合/仮定感度の検査で、需要や実User価値の証明ではない。研究の適用条件は[Evidence](evidence.md)を参照。PoCの既存29テストは現行モデルの推薦品質比較ではなく、上記評価は今後の実装Issueで実施する。
+Simulationは不具合/仮定感度の検査で、需要や実User価値の証明ではない。研究の適用条件は[Evidence](evidence.md)を参照。PoCの既存29テストは現行モデルの推薦品質比較ではない。Issue #40では合成評価を実施し、実Catalog・再生・User評価は今後のIssueで扱う。
