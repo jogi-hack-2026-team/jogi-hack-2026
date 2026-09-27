@@ -557,7 +557,7 @@ async function main() {
   console.log(JSON.stringify(first.entries.map((entry) => ({
     issue: entry.issue.number, title: entry.issue.title, scope: entry.scope,
     status: entry.status, dependencies: entry.dependencies, downstream: entry.downstream,
-    ready: entry.ready, reasons: entry.reasons,
+    autoEligible: entry.ready, reasons: entry.reasons,
   })), null, 2));
   if (dryRun) return;
   mkdirSync(stateDir, { recursive: true });
@@ -592,7 +592,7 @@ async function main() {
           continue;
         }
         if (queue.entries.length === 0) await integrationAudit(repo, state);
-        else console.log('No Ready ML issue. Blockers: ' + JSON.stringify(
+        else console.log('No auto-eligible ML issue. Blockers: ' + JSON.stringify(
           queue.entries.map((x) => ({ issue: x.issue.number, reasons: x.reasons }))));
         return;
       }

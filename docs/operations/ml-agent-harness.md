@@ -16,7 +16,7 @@ Issue #47起票前にGitHub MCPでopen Issue全14件、ProjectのStatus/Scope、
 | [#43](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/43) 候補選択 | Ready / Must | #41、#42、実録音受入#39、校正#40 | Blocked |
 | [#44](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/44) 仮説・理由 | Ready / Must | #40、#42、#43、ROPE等の校正判断 | Blocked |
 
-本文に「合成fixtureなら先行可能」とある場合も、Issue全体のPRをDoneへ進めるには未決の受入条件を解消する。部分的な作業の切り出しは人間がIssueを分ける。ProjectのReady表示だけでは着手しない。現時点でHarnessが自動選択すべきIssueは0件。
+本文に「合成fixtureなら先行可能」とある場合も、Issue全体のPRをDoneへ進めるには未決の受入条件を解消する。部分的な作業の切り出しは人間がIssueを分ける。ProjectでReadyのML Issueは5件あるが、前提・判断待ちを含めてHarnessが自動着手できるIssueは0件。ProjectのReady表示だけでは着手しない。
 
 ## 選択と停止の規則
 
@@ -30,7 +30,7 @@ StatusがReady、Scopeが設定済み、現在のGitHub利用者がAssignee、�
 
 Node.js標準機能の[runner](../../scripts/run-ml-agent.mjs)と[選択規則](../../scripts/ml-agent-core.mjs)、[ML Skill](../../.agents/skills/ml-issue-execution/SKILL.md)を使用する。Codex SDK、独自サーバー、常駐サービス、新しいProduct dependencyは使わない。通常のAI操作ではGitHub MCP優先とし、このHarnessのバッチ処理ではユーザー指定の `gh` を使う。
 
-前提はNode.js、認証済みGitHub CLI（Issue・Project・PRの読み書き権限）、認証済みCodex CLI、Git、PowerShell、対象packageの既存依存をインストール済みであること。SecretをHarnessへ渡さない。通常実行はmainのcheckoutから行い、Code Freeze開始後は自動編集を拒否する。`mise run ml-agent` はこのTask専用に固定したGitHub CLIをPATHへ追加する。初回は以下のコマンドでTask専用ツールを導入し、GitHub CLIを認証する。GitHub Projectの読み書きには`project` scopeが必要。このWindows環境では2026-09-27に`gh` 2.101.0とCodex CLI、Nodeを確認し、実GitHubキューの`--dry-run`を実行した。ReadyなML Issueは0件であり、Issue実装からPR作成までの通し実行は未検証。
+前提はNode.js、認証済みGitHub CLI（Issue・Project・PRの読み書き権限）、認証済みCodex CLI、Git、PowerShell、対象packageの既存依存をインストール済みであること。SecretをHarnessへ渡さない。通常実行はmainのcheckoutから行い、Code Freeze開始後は自動編集を拒否する。`mise run ml-agent` はこのTask専用に固定したGitHub CLIをPATHへ追加する。初回は以下のコマンドでTask専用ツールを導入し、GitHub CLIを認証する。GitHub Projectの読み書きには`project` scopeが必要。このWindows環境では2026-09-27に`gh` 2.101.0とCodex CLI、Nodeを確認し、実GitHubキューの`--dry-run`を実行した。ProjectでReadyのML Issueは5件、自動着手可能なIssueは0件であり、Issue実装からPR作成までの通し実行は未検証。
 
 Codex CLIはこの環境で実行できた`gpt-5.5`を既定で指定する。利用可能なモデルが異なる場合は実行前に`ML_AGENT_CODEX_MODEL`環境変数で上書きする。
 
@@ -43,7 +43,7 @@ mise run ml-agent --dry-run
 mise run ml-agent
 ```
 
-`--dry-run` は候補と除外理由を表示する。通常実行はReady Issueのキューを連続処理する。`--once` は1件で停止する。初期同時実行数は1。Issueごとに `.worktrees/ml-<number>` と番号付き `feat/` または `chore/` Branchを分離し、後から2並列のスケジューラへ拡張できる。現時点で2並列は有効化しない。
+`--dry-run` はProjectの`status`と、前提・担当・判断待ちを照合した`autoEligible`、除外理由を表示する。通常実行は自動着手可能なIssueのキューを連続処理する。`--once` は1件で停止する。初期同時実行数は1。Issueごとに `.worktrees/ml-<number>` と番号付き `feat/` または `chore/` Branchを分離し、後から2並列のスケジューラへ拡張できる。現時点で2並列は有効化しない。
 
 各Issueはread-only Goal contract → 実装 → Foundation・HarnessのNodeテスト・変更packageの既存test/lint/typecheck/build/eval → 別Codex実行のread-only構造化Review → 最大3回のRepair/再検証 → 日本語タイトルのPRを進める。Harness本体に変更があればrunnerの構文も検査する。検証前とPR作成前に最新の`origin/main`を取得し、更新があれば作業Branchへ取り込んで検証とReviewをやり直す。競合や未Commit変更があれば停止する。Issue固有のML評価はGoal contractと実装報告に記録し、Reviewerが妥当性を検査する。未実行の評価をPASSにしない。PR本文には実施結果、未検証項目、文書への影響、レビュー観点、リポジトリのチェックリストを記載する。CIはFoundationとFE/BEのbuild/typecheck workflowがPRで実行される。FE/BEは最小起動構成まででProduct機能と正式なML評価スクリプトは未整備であり、存在しないcommandを成功扱いにしない。
 
