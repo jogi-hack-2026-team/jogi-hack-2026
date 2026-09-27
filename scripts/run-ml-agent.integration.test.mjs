@@ -7,8 +7,7 @@ import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
-const repository = dirname(scripts);
-const issue = (number) => ({ number, title: '[Task][ML] ' + number,
+const issue = (number) => ({ number, title: '[Investigation][ML] ' + number,
   body: '## 完了条件\n- [ ] 確認', state: 'open', labels: [{ name: 'ml' }],
   assignees: [{ login: 'Kaito-Iwase' }] });
 const item = (number) => ({ content: { number }, status: 'Ready', scope: 'Must' });
@@ -39,16 +38,19 @@ test('runner skips a decision, creates one PR, then avoids replay and audits aft
     run('--dry-run');
     assert.equal(calls().filter((x) => /gh (issue|pr create|project item-edit)/.test(x)).length, 0);
 
-    run();
+    const firstOutput = run();
+    assert.match(firstOutput, /No auto-eligible ML issue\. Blockers:/);
     assert.equal(remote().items[0].status, 'Backlog');
     assert.equal(remote().items[1].status, 'In review');
     assert.equal(remote().prs.length, 1);
+    assert.equal(remote().prs[0].headRefName, 'chore/40-ml');
     assert.equal(remote().reviewCalls, 2);
     assert.match(remote().issues[0].comments[0].body, /権利確認待ち/);
     assert.match(remote().issues[1].body, /Pull Request: https:\/\/github.com\/example\/ml\/pull\/1/);
     const state = JSON.parse(readFileSync(join(root, '.codex', 'ml-agent', 'state.json'), 'utf8'));
     assert.equal(state.issues[38].phase, 'decision');
     assert.equal(state.issues[40].phase, 'pr_created');
+    assert.equal(state.issues[40].branch, 'chore/40-ml');
     assert.equal(state.issues[40].synced, true);
     assert.equal(state.issues[40].review.status, 'PASS');
     assert.equal(state.issues[40].repairs, 1);
