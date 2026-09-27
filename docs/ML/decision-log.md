@@ -1,6 +1,6 @@
 # 推薦Decisionの詳細
 
-**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書は2026-09-25、Issue #36の判断理由・実装支援を記録する。本番実装済みを意味しない。
+**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書は2026-09-25のIssue #36と2026-09-27のIssue #57の判断理由・実装支援を記録する。本番実装済みを意味しない。
 
 ## D-13とP-09
 
@@ -57,6 +57,21 @@ Related Requirements: R-01〜06 / R-12〜17。Related Design Intents: [DI-ML-01�
 - Known Risks / Reconsider When: モデル誤指定や計算負荷で要件未達、Guest保持/所有権の重大問題を確認した場合。
 - Evidence IDs: [EV-ML-01 / EV-ML-09](../ML/evidence.md)、[EV-BE-01](../BE/evidence.md#ev-be-01)。
 - Related Requirements: R-01〜05 / R-10〜13 / R-16 / R-17。Related Design Intents: [DI-ML-01 / DI-ML-02](../ML/design-intent.md)、[DI-FE-01](../FE/design-intent.md#di-fe-01)。
+
+
+## D-16 Detailed Rationale
+
+正式な状態・式は[Architecture D-16](../architecture.md#d-16)を参照。ここでは同順位の選定理由だけを記録する。
+
+- ID / Status / Date: D-16 / DECIDED / 2026-09-27。依頼者の選定は[#41の記録](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/41#issuecomment-5856399288)と[#57の後続指示](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/57)を参照。
+- Context / Requirements: R-02のpercentile空間で、SeedとCandidateの特徴ごとの距離をContextへ入れる。同じ特徴値を持つ録音が複数あると、順位の端を選ぶ規約で距離が変わり得る。
+- Candidates / Evaluation Criteria: `lower=L/N`、`mid=(L+E/2)/N`、`upper=(L+E)/N`。同値の一貫性、曲間距離の向きに対する対称性、実装・説明の単純さ、参照版更新時の変化を比較した。
+- Decision / Why: 参照集合内の値にはmidを使う。同順位群を順位幅の中央へ置く。特徴量の符号を反転し、参照集合も同じように反転すると `q_mid(-x)=1-q_mid(x)` なので、2曲の距離 `|q_mid(x)-q_mid(y)|` は不変。lowerとupperは反転時に入れ替わる。すべての参照値が異なれば3案の差は全点に加わる定数だけで、曲間距離は同じ。
+- Why Not Alternatives: lowerとupperはそれぞれ厳密未満の割合、以下の割合として妥当だが、異なる大きさの同順位群では距離が特徴量の向きに依存する。#57の版更新fixtureではlowerのContext変化が最小だったが、向きを反転するとlower/upperの関係も反転するため、一般的な安定性の優位とは扱わない。
+- Trade-offs / Consequences: 同順位を持つ実CatalogではContextと候補順位が方式に依存し得る。`mid` は通常の経験CDF `P(X≤x)` そのものではない。式とFeature Reference版を固定して再現可能にする。範囲外・欠損と旧Posteriorの移行方式は別途決定する。
+- Known Risks / Reconsider When: 実Catalogの同順位率・候補順位への感度・推薦品質は未測定。利用可能な実データでこれらを確認し、明確な要件未達や品質悪化があればD-16の変更を提案する。変更時は旧変換版のStateと混合しない。
+- Evidence: [EV-ML-10](evidence.md#ev-ml-10)の4〜5録音の合成比較と[EV-ML-11](evidence.md#ev-ml-11)のmid-distribution研究。後者はこの推薦の性能優位を証明しない。
+- Related Requirements / Design Intent: R-02 / R-12、[DI-ML-02](design-intent.md#di-ml-02)。本番実装は[#41](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/41)。
 
 
 ## P-01〜07の判断理由

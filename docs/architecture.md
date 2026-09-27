@@ -64,7 +64,7 @@ PoCは比較を容易にするためB形状（localhostの別port）で接続し
 
 ## A-02 RecommendationとPreference
 
-最新Snapshotを反映する。Seedを個別に保存し、Feature変換版・Anchor・canonical Rating集合とPosteriorを対応させる。Hypothesisは同じStateを参照する。正式設計は `φ=[1,-δ1,…,-δ7]/sqrt(8)`、`B=I+Σφφᵀ`、`f=Σφr`、`μ=B⁻¹f`、`Σ=B⁻¹`、観測ノイズ1。Cholesky等の安定したsolveを使う。Feedbackは保存済みContextを参照し、AnchorやContextを作り直さない。Feature Referenceはunique recording＋7特徴有効、Playback VERIFIED不要。Seed / Recommendation Catalogとは別集合とし、変換版を固定する。同順位処理と移行規約、Aspect/Evidence Ledgerの完全なスキーマはOPEN。
+最新Snapshotを反映する。Seedを個別に保存し、Feature変換版・Anchor・canonical Rating集合とPosteriorを対応させる。Hypothesisは同じStateを参照する。正式設計は `φ=[1,-δ1,…,-δ7]/sqrt(8)`、`B=I+Σφφᵀ`、`f=Σφr`、`μ=B⁻¹f`、`Σ=B⁻¹`、観測ノイズ1。Cholesky等の安定したsolveを使う。Feedbackは保存済みContextを参照し、AnchorやContextを作り直さない。Feature Referenceはunique recording＋7特徴有効、Playback VERIFIED不要。Seed / Recommendation Catalogとは別集合とし、変換版を固定する。参照集合内の値xの同順位は[D-16](#d-16)の `q_j(x)=(L_j(x)+E_j(x)/2)/N` で処理する。Nは参照録音数、Lは同じ特徴でxより小さい値の件数、Eはxと等しい値の件数。参照版移行、参照範囲外・欠損、Aspect/Evidence Ledgerの完全なスキーマはOPEN。
 
 保存した旧PoCは7つの**合成percentile値の正の絶対距離＋末尾の切片、正規化なし**であり、上記SnapshotとContext表現が異なる。prior N(0,I)、観測ノイズ1、A=I+Σxxᵀ、b=Σrx、Choleskyのsolve/sample、rewardの扱いを検証した証拠として残す。LIKE +1 / NEUTRAL 0 / DISLIKE -1、UNSUREは観測から除く。**旧PoCを最新モデルの実装済み証拠にしない。** Context/transform/modelの版を保存し、表現変更時は異なる版のPosteriorを混ぜない。移行時の再構築・互換性確認は本実装の作業。
 
@@ -467,7 +467,7 @@ ProductのMUST R-01〜05、R-07〜13、R-15〜17、R-19は上表とProductのRel
 
 ## Architecture Decision Log
 
-D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15の開発Toolchainを追加した。旧推奨を消さず参照する。各領域decision-logは下記IDの詳細解説であり別Decisionを作らない。
+D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15の開発ToolchainとD-16の同順位規約を追加した。旧推奨を消さず参照する。各領域decision-logは下記IDの詳細解説であり別Decisionを作らない。
 
 | ID | 記録日 | 状態・現在の参照先 | 判断要約 |
 | --- | --- | --- | --- |
@@ -479,7 +479,7 @@ D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15
 | D-06 | 2026-09-25（S25） | SUPERSEDED → D-10 / D-11 | Node / Fastify提案を採択 |
 | D-07 | 2026-09-25（S25） | CONDITIONAL | 負荷を測って段階拡張、先取りの分散基盤は導入しない |
 
-日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。現行の正式採択は下記D-08〜15。旧IDは再利用しない。
+日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。現行の判断は下記D-08〜16。旧IDは再利用しない。
 
 ## 既存内容の同期判定と残る人間Decision
 
@@ -491,7 +491,7 @@ D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15
 | RECLASSIFY | 旧Vite/Hono推奨とスコアをPreliminaryへ。F25でFastify採択（D-11）。旧Proposalは履歴 |
 | RESEARCH NEEDED | 実Catalog/Playback・利用権、最新Baseline実装、共通長期State競合、持続負荷、公開security/Preview/restore |
 
-残る人間Decision / Validationは、Neon・Hosting最終受入とregion/予算、Account Auth、Guest保持/削除・公開security、percentile同順位/版移行・校正、遅延Playback/既出範囲/継続時Probe、Catalog利用権と実Coverage、最終UX/評価閾値・性能/復旧目標。Framework・DB Engine・Save/継続の優先度・max Anchorを再び未定へ戻さない。
+残る人間Decision / Validationは、Neon・Hosting最終受入とregion/予算、Account Auth、Guest保持/削除・公開security、percentile参照版移行・範囲外・欠損・校正、遅延Playback/既出範囲/継続時Probe、Catalog利用権と実Coverage、最終UX/評価閾値・性能/復旧目標。Framework・DB Engine・Save/継続の優先度・max Anchor・同順位規約を再び未定へ戻さない。
 
 ## F25の正式Decision
 
@@ -546,3 +546,11 @@ D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15
 2026-09-27 / **DECIDED** / Node 24 LTSとnpmを本番アプリの開発Toolchainに採用する。各PCはmiseのNode 24.21.0を使用する。ローカルPostgreSQL用ComposeはD-12の実装入口であり、Hosted Providerの採択ではない。
 
 [判断理由・代替案・影響](BE/decision-log.md#d-15-detailed-rationale) / [依頼者判断・作業Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)。
+
+## 2026-09-27のFeature Reference Decision
+
+### D-16
+
+2026-09-27 / **DECIDED** / Feature Referenceのempirical percentileは、参照集合内で同値の特徴量を `mid=(L+E/2)/N` に置く。同順位を一方の端に寄せず、特徴量の大小の向きを反転しても曲間距離が変わらない規約とする。推薦品質の優位や実Catalogの同順位率は未検証。参照版移行、範囲外・欠損の規約はOPEN。
+
+[判断理由・代替案・Evidence](ML/decision-log.md#d-16-detailed-rationale) / [比較・依頼者判断 #57](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/57) / [実装Issue #41](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/41)。
