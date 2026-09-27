@@ -104,6 +104,16 @@ RESEARCHは研究条件での結果、PRODUCTION_RESEARCHは運営環境の事�
 - Does not support / Limitations: 正式な負距離/先頭切片/sqrt(8)、max-score Anchor、percentile reference、feature別Probe、ROPE、5有効Interaction、推薦品質は未検証。PoCは最寄りAnchorと距離二分Probe。
 - Applied to: D-13、DI-ML-01〜04、本番へコピー前に差分試験が必要。
 
+## EV-ML-10
+
+- Accessed Date: 2026-09-27
+- Type: SYNTHETIC_COMPARISON（Issue #57、正式規約の採択前）
+- Source / Author / Date: [同順位・版移行の再現スクリプト](../../experiments/stack-bakeoff/scripts/ml-percentile-options.mjs)と[条件・結果・選択肢](../../experiments/stack-bakeoff/results/ml-percentile-options.md)、2026-09-27。
+- Reviewed section / Conditions: 架空の録音A〜Eの7特徴、A→DのContext、v1=A〜D／v2=Eを追加、lower/mid/upperの3式。1件のLIKEによるB/fの版差。乱数・実録音・外部APIなし。
+- Supports: 同順位規約の違いと参照版更新で、同じ録音のpercentile・Context・1観測のB/fが変わること。版不一致を黙って混ぜない設計の必要性。
+- Does not support / Limitations: 実Catalogの値分布・同順位率、欠損率、推奨規約の推薦品質、実User価値、ReccoBeatsの保存/ML許諾。本番の同順位・範囲外・移行規約は未決。
+- Applied to: R-02 / A-02 / DI-ML-02、#41の人間判断材料。
+
 ## 利用権とEvidenceの境界
 
 Feature仕様が公開されていること、研究で音楽Dataが使われたことは、当サービスの保存・学習許諾ではない。[EV-BE-08の公式規約調査](../BE/evidence.md#保存学習用途の追加確認)を実Catalog導入のgateとする。研究用と公開用のデータ権利も分ける。
