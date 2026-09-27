@@ -2,7 +2,7 @@
 
 **Supporting Artifact / Not a Source of Truth**. This report records synthetic calibration evidence only.
 
-- Commit: `4e108f1dce9e1fa808f67426403019427b05e147`
+- Code commit: `fde103b6ab47ba57aa5c273443e19a027976762f`
 - Command: `npm.cmd --prefix experiments/stack-bakeoff run ml:simulate`
 - Catalog / context / model / policy versions: `synthetic-catalog-v1.issue-40`, `percentile-7d-synthetic-v1`, `formal-negative-distance-v1`, `gaussian-lints-b0-i-f0-0-noise1-v1`, `issue-40-policy-comparison-v1`, `issue-40-six-scenarios-v1`
 - Calibration seeds: 41001, 41002, 41003, 41004, 41005, 41006, 41007, 41008, 41009, 41010
@@ -35,16 +35,16 @@
 
 | Candidate | BLOCKED_CATALOG | Completed 5-valid | Reward obs median | Discovery mean | Regret median | Candidate pool mean | False certainty | Classification |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| strict-candidate | 0.00 | 1.00 | 4 | 0.68 | 1.64 | 17.38 | 0.00 | 0.00 |
-| balanced-candidate | 0.00 | 1.00 | 4 | 0.69 | 1.68 | 25.28 | 0.00 | 0.00 |
-| loose-candidate | 0.00 | 1.00 | 4 | 0.69 | 1.69 | 37.75 | 0.00 | 0.00 |
+| strict-candidate | 0.00 | 1.00 | 4 | 0.68 | 1.58 | 17.39 | 0.00 | 0.00 |
+| balanced-candidate | 0.00 | 1.00 | 4 | 0.70 | 1.63 | 25.29 | 0.00 | 0.00 |
+| loose-candidate | 0.00 | 1.00 | 4 | 0.69 | 1.67 | 37.77 | 0.00 | 0.00 |
 
 ## Representative Examples
 
 - BLOCKED_CATALOG: none in final policy runs; candidate shortage is still reported through pool-size distributions.
 - False certainty: none in final policy runs because the interval+ROPE classifier produced no determinate feature hypotheses at the 5-valid-interaction checkpoint.
-- Low discovery / regret example: `{"scenarioId":"hidden_feature","policyId":"greedy-bayesian-linear","trialSeed":91034,"discoveries":0,"regret":5.0623,"lastEvents":[{"attempt":3,"kind":"RECOMMENDATION","trackId":"hidden_feature-gamma-probe-2","anchorId":"seed-alpha","candidateType":"RELEVANT","rating":"DISLIKE","rewardObserved":true,"utility":-0.7284,"regret":1.2496,"candidateCounts":{"relevant":20,"probe":8,"allowed":20,"eligible":32}},{"attempt":4,"kind":"RECOMMENDATION","trackId":"hidden_feature-gamma-probe-6","anchorId":"seed-gamma","candidateType":"RELEVANT","rating":"DISLIKE","rewardObserved":true,"utility":-0.59,"regret":1.1112,"candidateCounts":{"relevant":20,"probe":8,"allowed":28,"eligible":33}},{"attempt":5,"kind":"RECOMMENDATION","trackId":"hidden_feature-gamma-near-8","anchorId":"seed-gamma","candidateType":"RELEVANT","rating":"DISLIKE","rewardObserved":true,"utility":-0.6446,"regret":1.1658,"candidateCounts":{"relevant":20,"probe":8,"allowed":28,"eligible":34}}]}`
-- Sparse reward observation example: `{"scenarioId":"unsure_heavy","policyId":"greedy-bayesian-linear","trialSeed":91005,"validInteractions":5,"rewardObservations":0,"lastEvents":[{"attempt":3,"kind":"RECOMMENDATION","trackId":"unsure_heavy-gamma-probe-6","anchorId":"seed-alpha","candidateType":"RELEVANT","rating":"UNSURE","rewardObserved":false,"utility":-0.4234,"regret":0.5134,"candidateCounts":{"relevant":20,"probe":8,"allowed":20,"eligible":35}},{"attempt":4,"kind":"RECOMMENDATION","trackId":"unsure_heavy-gamma-probe-0","anchorId":"seed-gamma","candidateType":"PROBE","probeFeature":"danceability","rating":"UNSURE","rewardObserved":false,"utility":-0.2322,"regret":0.2682,"candidateCounts":{"relevant":20,"probe":8,"allowed":28,"eligible":36}},{"attempt":5,"kind":"RECOMMENDATION","trackId":"unsure_heavy-beta-near-0","anchorId":"seed-alpha","candidateType":"RELEVANT","rating":"UNSURE","rewardObserved":false,"utility":-0.3786,"regret":0.4685,"candidateCounts":{"relevant":20,"probe":0,"allowed":20,"eligible":29}}]}`
+- Low discovery / regret example: `{"scenarioId":"hidden_feature","policyId":"greedy-bayesian-linear","trialSeed":91034,"discoveries":0,"regret":5.0059,"lastEvents":[{"attempt":3,"kind":"RECOMMENDATION","trackId":"hidden_feature-gamma-probe-2","anchorId":"seed-alpha","candidateType":"RELEVANT","rating":"DISLIKE","rewardObserved":true,"utility":-0.7284,"regret":1.2308,"candidateCounts":{"relevant":20,"probe":8,"allowed":20,"eligible":32}},{"attempt":4,"kind":"RECOMMENDATION","trackId":"hidden_feature-gamma-probe-6","anchorId":"seed-gamma","candidateType":"RELEVANT","rating":"DISLIKE","rewardObserved":true,"utility":-0.59,"regret":1.1112,"candidateCounts":{"relevant":20,"probe":8,"allowed":28,"eligible":33}},{"attempt":5,"kind":"RECOMMENDATION","trackId":"hidden_feature-gamma-near-8","anchorId":"seed-gamma","candidateType":"RELEVANT","rating":"DISLIKE","rewardObserved":true,"utility":-0.6446,"regret":1.1658,"candidateCounts":{"relevant":20,"probe":8,"allowed":28,"eligible":34}}]}`
+- Sparse reward observation example: `{"scenarioId":"unsure_heavy","policyId":"greedy-bayesian-linear","trialSeed":91005,"validInteractions":5,"rewardObservations":0,"lastEvents":[{"attempt":3,"kind":"RECOMMENDATION","trackId":"unsure_heavy-gamma-probe-6","anchorId":"seed-alpha","candidateType":"RELEVANT","rating":"UNSURE","rewardObserved":false,"utility":-0.4234,"regret":0.4593,"candidateCounts":{"relevant":20,"probe":8,"allowed":20,"eligible":35}},{"attempt":4,"kind":"RECOMMENDATION","trackId":"unsure_heavy-gamma-probe-0","anchorId":"seed-gamma","candidateType":"PROBE","probeFeature":"danceability","rating":"UNSURE","rewardObserved":false,"utility":-0.2322,"regret":0.3222,"candidateCounts":{"relevant":20,"probe":8,"allowed":28,"eligible":36}},{"attempt":5,"kind":"RECOMMENDATION","trackId":"unsure_heavy-beta-near-0","anchorId":"seed-alpha","candidateType":"RELEVANT","rating":"UNSURE","rewardObserved":false,"utility":-0.3786,"regret":0.4145,"candidateCounts":{"relevant":20,"probe":0,"allowed":20,"eligible":29}}]}`
 
 ## Boundary
 

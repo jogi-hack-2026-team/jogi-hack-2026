@@ -1,8 +1,8 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "issue": "#40",
-  "generatedAt": "2026-09-27T09:58:18.650Z",
-  "commit": "4e108f1dce9e1fa808f67426403019427b05e147",
+  "generatedAt": "2026-09-27T10:14:40.945Z",
+  "commit": "fde103b6ab47ba57aa5c273443e19a027976762f",
   "command": "npm.cmd --prefix experiments/stack-bakeoff run ml:simulate",
   "scope": "Synthetic fixtures only. Does not change Product/Architecture decisions, production algorithm, API/DB contracts, acceptance thresholds, real catalog, real playback, or user-demand claims.",
   "versions": {
@@ -142,11 +142,11 @@
         "completedFiveValidRate": 1,
         "rewardObservationsMedian": 4,
         "discoveryMean": 0.6833333333333333,
-        "regretMedian": 1.6393711746056925,
+        "regretMedian": 1.576309694867061,
         "multiplePrototypeCoverageRate": 0.15555555555555556,
         "classificationRate": 0,
         "falseCertaintyRate": 0,
-        "meanCandidatePool": 17.38145502645503,
+        "meanCandidatePool": 17.394285714285715,
         "hardConstraintViolationCounts": {}
       },
       {
@@ -166,12 +166,12 @@
         "blockedCatalogRate": 0,
         "completedFiveValidRate": 1,
         "rewardObservationsMedian": 4,
-        "discoveryMean": 0.6944444444444444,
-        "regretMedian": 1.677691213921836,
-        "multiplePrototypeCoverageRate": 0.14444444444444443,
+        "discoveryMean": 0.7,
+        "regretMedian": 1.6316171678514626,
+        "multiplePrototypeCoverageRate": 0.15,
         "classificationRate": 0,
         "falseCertaintyRate": 0,
-        "meanCandidatePool": 25.277513227513218,
+        "meanCandidatePool": 25.28835978835978,
         "hardConstraintViolationCounts": {}
       },
       {
@@ -192,11 +192,11 @@
         "completedFiveValidRate": 1,
         "rewardObservationsMedian": 4,
         "discoveryMean": 0.6944444444444444,
-        "regretMedian": 1.6939977020368115,
+        "regretMedian": 1.6687535990237836,
         "multiplePrototypeCoverageRate": 0.13333333333333333,
         "classificationRate": 0,
         "falseCertaintyRate": 0,
-        "meanCandidatePool": 37.74698412698413,
+        "meanCandidatePool": 37.773439153439156,
         "hardConstraintViolationCounts": {}
       }
     ]
@@ -231,7 +231,7 @@
         "median": 4,
         "p90": 5,
         "max": 5,
-        "mean": 3.808641975308642
+        "mean": 3.8055555555555554
       },
       "nonCountingEvents": {
         "n": 648,
@@ -254,11 +254,11 @@
       "regret": {
         "n": 648,
         "min": 0,
-        "p10": 0.695921664878745,
-        "median": 1.633670115067925,
-        "p90": 3.5337633178819803,
-        "max": 5.0623216022036726,
-        "mean": 1.9209372577921433
+        "p10": 0.6797389557938439,
+        "median": 1.578248674373998,
+        "p90": 3.4099961935672383,
+        "max": 5.005913161912141,
+        "mean": 1.8274399364236427
       },
       "discoveries": {
         "n": 648,
@@ -285,16 +285,16 @@
         "median": 0,
         "p90": 1,
         "max": 2,
-        "mean": 0.5030864197530864
+        "mean": 0.48919753086419754
       },
       "meanCandidatePool": {
         "n": 648,
-        "min": 21.6,
+        "min": 21.5,
         "p10": 23.2,
         "median": 24.8,
         "p90": 27.2,
         "max": 29.6,
-        "mean": 25.078343621399256
+        "mean": 25.08859494415058
       },
       "blockedCatalogCount": 0,
       "blockedCatalogRate": 0,
@@ -323,7 +323,7 @@
           "policyId": "greedy-bayesian-linear",
           "trialSeed": 91034,
           "discoveries": 0,
-          "regret": 5.0623,
+          "regret": 5.0059,
           "lastEvents": [
             {
               "attempt": 3,
@@ -334,7 +334,7 @@
               "rating": "DISLIKE",
               "rewardObserved": true,
               "utility": -0.7284,
-              "regret": 1.2496,
+              "regret": 1.2308,
               "candidateCounts": {
                 "relevant": 20,
                 "probe": 8,
@@ -394,7 +394,7 @@
               "rating": "UNSURE",
               "rewardObserved": false,
               "utility": -0.4234,
-              "regret": 0.5134,
+              "regret": 0.4593,
               "candidateCounts": {
                 "relevant": 20,
                 "probe": 8,
@@ -412,7 +412,7 @@
               "rating": "UNSURE",
               "rewardObserved": false,
               "utility": -0.2322,
-              "regret": 0.2682,
+              "regret": 0.3222,
               "candidateCounts": {
                 "relevant": 20,
                 "probe": 8,
@@ -429,7 +429,7 @@
               "rating": "UNSURE",
               "rewardObserved": false,
               "utility": -0.3786,
-              "regret": 0.4685,
+              "regret": 0.4145,
               "candidateCounts": {
                 "relevant": 20,
                 "probe": 0,
@@ -484,12 +484,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 0.7311909514945698,
+          "min": 0.7100593933348313,
           "p10": 0.8616282608494661,
           "median": 1.2295922849077496,
           "p90": 1.5560231110639107,
           "max": 1.798102857613911,
-          "mean": 1.2143437262660985
+          "mean": 1.2061172471531278
         },
         "discoveries": {
           "n": 36,
@@ -713,12 +713,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 1.2820142299432589,
-          "p10": 1.4635541251536814,
-          "median": 1.8169726240858983,
-          "p90": 2.1718445408493374,
-          "max": 2.48634574146976,
-          "mean": 1.8520591162492854
+          "min": 0.5884811651381596,
+          "p10": 1.0698940605691478,
+          "median": 1.7418455108198394,
+          "p90": 2.0606356455502777,
+          "max": 2.289320395576714,
+          "mean": 1.6844281063536433
         },
         "discoveries": {
           "n": 36,
@@ -783,7 +783,7 @@
             "policyId": "greedy-bayesian-linear",
             "trialSeed": 91022,
             "discoveries": 0,
-            "regret": 2.4863,
+            "regret": 2.2893,
             "lastEvents": [
               {
                 "attempt": 3,
@@ -943,12 +943,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 1.6099538606850337,
-          "p10": 2.3111257711701985,
-          "median": 3.3344206865360793,
-          "p90": 4.157396224368819,
-          "max": 4.454821236743867,
-          "mean": 3.345648424053621
+          "min": 1.3940913322825672,
+          "p10": 1.6962574537690345,
+          "median": 2.9948528995133534,
+          "p90": 3.960996335118275,
+          "max": 4.324624279652876,
+          "mean": 2.891228651169685
         },
         "discoveries": {
           "n": 36,
@@ -975,16 +975,16 @@
           "median": 1,
           "p90": 2,
           "max": 2,
-          "mean": 1.25
+          "mean": 1.1944444444444444
         },
         "meanCandidatePool": {
           "n": 36,
-          "min": 21.833333333333332,
-          "p10": 22.6,
+          "min": 22.5,
+          "p10": 22.8,
           "median": 24.2,
           "p90": 25.6,
           "max": 27.2,
-          "mean": 24.16018518518519
+          "mean": 24.225000000000005
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -1011,59 +1011,60 @@
           "lowDiscovery": {
             "scenarioId": "model_matched_linear",
             "policyId": "gaussian-lints",
-            "trialSeed": 91001,
+            "trialSeed": 91015,
             "discoveries": 0,
-            "regret": 4.4548,
+            "regret": 4.3246,
             "lastEvents": [
               {
                 "attempt": 3,
                 "kind": "RECOMMENDATION",
-                "trackId": "model_matched_linear-gamma-near-5",
+                "trackId": "model_matched_linear-gamma-near-4",
                 "anchorId": "seed-beta",
                 "candidateType": "RELEVANT",
                 "rating": "DISLIKE",
                 "rewardObserved": true,
-                "utility": -0.7402,
-                "regret": 1.0258,
+                "utility": -0.9181,
+                "regret": 1.2144,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 5,
-                  "allowed": 20,
-                  "eligible": 28
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
                 }
               },
               {
                 "attempt": 4,
                 "kind": "RECOMMENDATION",
-                "trackId": "model_matched_linear-alpha-probe-6",
-                "anchorId": "seed-gamma",
+                "trackId": "model_matched_linear-alpha-probe-2",
+                "anchorId": "seed-beta",
                 "candidateType": "RELEVANT",
                 "rating": "DISLIKE",
                 "rewardObserved": true,
-                "utility": -0.6903,
-                "regret": 0.9758,
+                "utility": -0.6295,
+                "regret": 0.9259,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 5,
-                  "allowed": 25,
-                  "eligible": 29
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 33
                 }
               },
               {
                 "attempt": 5,
                 "kind": "RECOMMENDATION",
-                "trackId": "model_matched_linear-alpha-near-2",
-                "anchorId": "seed-gamma",
-                "candidateType": "RELEVANT",
-                "rating": "NEUTRAL",
+                "trackId": "model_matched_linear-beta-probe-2",
+                "anchorId": "seed-beta",
+                "candidateType": "PROBE",
+                "probeFeature": "valence",
+                "rating": "DISLIKE",
                 "rewardObserved": true,
-                "utility": -0.9283,
-                "regret": 1.2138,
+                "utility": -0.0934,
+                "regret": 0.3898,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 4,
-                  "allowed": 24,
-                  "eligible": 29
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 33
                 }
               }
             ]
@@ -1084,7 +1085,7 @@
                 "rating": "DISLIKE",
                 "rewardObserved": true,
                 "utility": -0.7402,
-                "regret": 1.0258,
+                "regret": 0.5776,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 5,
@@ -1173,11 +1174,11 @@
         "regret": {
           "n": 36,
           "min": 0.24540893551234527,
-          "p10": 0.37129398982457296,
+          "p10": 0.3702791674381587,
           "median": 0.637273253581313,
           "p90": 0.8766274567884795,
           "max": 0.961908720017618,
-          "mean": 0.6147835410901621
+          "mean": 0.6135480098666405
         },
         "discoveries": {
           "n": 36,
@@ -1254,7 +1255,7 @@
                 "rating": "NEUTRAL",
                 "rewardObserved": true,
                 "utility": -0.1721,
-                "regret": 0.263,
+                "regret": 0.3553,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
@@ -1271,7 +1272,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.0887,
-                "regret": 0.2719,
+                "regret": 0.1797,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 7,
@@ -1402,12 +1403,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 0.3671016126984176,
-          "p10": 0.6766153406737159,
-          "median": 0.9920880714884048,
-          "p90": 1.4591661978397727,
-          "max": 2.1005088538259553,
-          "mean": 1.0581006362463148
+          "min": 0.35372894698915364,
+          "p10": 0.631801155686675,
+          "median": 0.9544740781047847,
+          "p90": 1.3828930496080214,
+          "max": 2.0789253126707696,
+          "mean": 1.0182598587967753
         },
         "discoveries": {
           "n": 36,
@@ -1434,7 +1435,7 @@
           "median": 1,
           "p90": 2,
           "max": 2,
-          "mean": 0.8333333333333334
+          "mean": 0.8055555555555556
         },
         "meanCandidatePool": {
           "n": 36,
@@ -1443,7 +1444,7 @@
           "median": 24.4,
           "p90": 25.6,
           "max": 28,
-          "mean": 24.440740740740736
+          "mean": 24.43611111111111
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -1472,7 +1473,7 @@
             "policyId": "greedy-bayesian-linear",
             "trialSeed": 91018,
             "discoveries": 0,
-            "regret": 2.1005,
+            "regret": 2.0789,
             "lastEvents": [
               {
                 "attempt": 3,
@@ -1632,12 +1633,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 0.8119894287290974,
-          "p10": 1.0018823040122602,
-          "median": 1.492886314540637,
-          "p90": 1.7936350436991466,
-          "max": 2.414073082452769,
-          "mean": 1.4709003582426359
+          "min": 0.663238926856953,
+          "p10": 0.8171305398126948,
+          "median": 1.28474918653472,
+          "p90": 1.7122941928567887,
+          "max": 2.313487775421092,
+          "mean": 1.3132091977441687
         },
         "discoveries": {
           "n": 36,
@@ -1664,16 +1665,16 @@
           "median": 1,
           "p90": 2,
           "max": 2,
-          "mean": 0.8611111111111112
+          "mean": 0.8333333333333334
         },
         "meanCandidatePool": {
           "n": 36,
           "min": 21.8,
           "p10": 22.4,
           "median": 24,
-          "p90": 25.6,
+          "p90": 26.2,
           "max": 27.4,
-          "mean": 24.21507936507937
+          "mean": 24.274603174603175
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -1700,59 +1701,59 @@
           "lowDiscovery": {
             "scenarioId": "noisy_ordinal",
             "policyId": "gaussian-lints",
-            "trialSeed": 91011,
+            "trialSeed": 91010,
             "discoveries": 0,
-            "regret": 2.4141,
+            "regret": 2.3135,
             "lastEvents": [
               {
                 "attempt": 3,
                 "kind": "RECOMMENDATION",
-                "trackId": "noisy_ordinal-alpha-probe-4",
-                "anchorId": "seed-gamma",
+                "trackId": "noisy_ordinal-alpha-probe-2",
+                "anchorId": "seed-beta",
                 "candidateType": "RELEVANT",
-                "rating": "UNSURE",
-                "rewardObserved": false,
-                "utility": -0.5594,
-                "regret": 0.6854,
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4687,
+                "regret": 0.6111,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 5,
-                  "allowed": 25,
+                  "probe": 6,
+                  "allowed": 26,
                   "eligible": 31
                 }
               },
               {
                 "attempt": 4,
                 "kind": "RECOMMENDATION",
-                "trackId": "noisy_ordinal-alpha-near-3",
+                "trackId": "noisy_ordinal-alpha-probe-0",
                 "anchorId": "seed-gamma",
                 "candidateType": "RELEVANT",
-                "rating": "DISLIKE",
+                "rating": "NEUTRAL",
                 "rewardObserved": true,
-                "utility": -0.4494,
-                "regret": 0.5755,
+                "utility": -0.5295,
+                "regret": 0.672,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 4,
-                  "allowed": 24,
-                  "eligible": 31
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
                 }
               },
               {
                 "attempt": 5,
                 "kind": "RECOMMENDATION",
-                "trackId": "noisy_ordinal-beta-probe-6",
-                "anchorId": "seed-gamma",
+                "trackId": "noisy_ordinal-beta-near-2",
+                "anchorId": "seed-alpha",
                 "candidateType": "RELEVANT",
                 "rating": "NEUTRAL",
                 "rewardObserved": true,
-                "utility": -0.2102,
-                "regret": 0.3362,
+                "utility": -0.3458,
+                "regret": 0.4882,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 4,
-                  "allowed": 24,
-                  "eligible": 32
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 33
                 }
               }
             ]
@@ -1774,7 +1775,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.0357,
-                "regret": 0.1292,
+                "regret": 0.1947,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
@@ -1791,7 +1792,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.0708,
-                "regret": 0.2298,
+                "regret": 0.1643,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 7,
@@ -2132,7 +2133,7 @@
           "median": 24.8,
           "p90": 26.4,
           "max": 28,
-          "mean": 24.961111111111116
+          "mean": 24.933333333333337
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -2352,7 +2353,7 @@
           "median": 1,
           "p90": 1,
           "max": 2,
-          "mean": 0.6944444444444444
+          "mean": 0.6666666666666666
         },
         "meanCandidatePool": {
           "n": 36,
@@ -2361,7 +2362,7 @@
           "median": 24.4,
           "p90": 26.4,
           "max": 28,
-          "mean": 24.60925925925926
+          "mean": 24.63703703703704
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -2552,10 +2553,10 @@
           "n": 36,
           "min": 0.9108244960785498,
           "p10": 2.1926249646119835,
-          "median": 3.239045640225181,
+          "median": 3.129667489265846,
           "p90": 4.13830764692389,
           "max": 4.614144076613493,
-          "mean": 3.2284808475435467
+          "mean": 3.200902263196569
         },
         "discoveries": {
           "n": 36,
@@ -2780,12 +2781,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 1.8340966320252483,
-          "p10": 2.3152180351524283,
-          "median": 3.36969712659383,
+          "min": 1.8059758649383846,
+          "p10": 2.2411644483409496,
+          "median": 3.3601803285336773,
           "p90": 4.599817403953895,
-          "max": 5.0623216022036726,
-          "mean": 3.426711561724156
+          "max": 5.005913161912141,
+          "mean": 3.3895044520302955
         },
         "discoveries": {
           "n": 36,
@@ -2850,7 +2851,7 @@
             "policyId": "greedy-bayesian-linear",
             "trialSeed": 91034,
             "discoveries": 0,
-            "regret": 5.0623,
+            "regret": 5.0059,
             "lastEvents": [
               {
                 "attempt": 3,
@@ -2861,7 +2862,7 @@
                 "rating": "DISLIKE",
                 "rewardObserved": true,
                 "utility": -0.7284,
-                "regret": 1.2496,
+                "regret": 1.2308,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
@@ -2939,7 +2940,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.1373,
-                "regret": 0.5167,
+                "regret": 0.7634,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 7,
@@ -2956,7 +2957,7 @@
                 "rating": "DISLIKE",
                 "rewardObserved": true,
                 "utility": -0.1937,
-                "regret": 0.8198,
+                "regret": 0.5731,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 6,
@@ -3011,11 +3012,11 @@
         "regret": {
           "n": 36,
           "min": 1.2822165496191467,
-          "p10": 2.4165484828208545,
-          "median": 3.0304518159034854,
-          "p90": 4.196339771376095,
-          "max": 4.732256872016771,
-          "mean": 3.271422577240543
+          "p10": 2.361944052638275,
+          "median": 2.9879071480602226,
+          "p90": 4.133882727406818,
+          "max": 4.395743442881642,
+          "mean": 3.1962029038095263
         },
         "discoveries": {
           "n": 36,
@@ -3042,16 +3043,16 @@
           "median": 1,
           "p90": 2,
           "max": 2,
-          "mean": 0.7777777777777778
+          "mean": 0.75
         },
         "meanCandidatePool": {
           "n": 36,
           "min": 21.8,
-          "p10": 22.666666666666668,
+          "p10": 23.166666666666668,
           "median": 25,
           "p90": 27.2,
           "max": 27.8,
-          "mean": 24.968518518518522
+          "mean": 25.033333333333335
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -3080,7 +3081,7 @@
             "policyId": "gaussian-lints",
             "trialSeed": 91026,
             "discoveries": 0,
-            "regret": 4.7323,
+            "regret": 4.3372,
             "lastEvents": [
               {
                 "attempt": 4,
@@ -3107,11 +3108,11 @@
                 "rating": "NEUTRAL",
                 "rewardObserved": true,
                 "utility": 0.0776,
-                "regret": 0.5715,
+                "regret": 0.4015,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 7,
-                  "allowed": 20,
+                  "allowed": 27,
                   "eligible": 40
                 }
               },
@@ -3168,7 +3169,7 @@
                 "rating": "NEUTRAL",
                 "rewardObserved": true,
                 "utility": -0.0409,
-                "regret": 0.5915,
+                "regret": 0.5588,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 9,
@@ -3185,7 +3186,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": 0.0389,
-                "regret": 0.5117,
+                "regret": 0.4706,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 9,
@@ -3244,7 +3245,7 @@
           "median": 1.6370972637252734,
           "p90": 2.131553573549664,
           "max": 2.8309962099245323,
-          "mean": 1.71559016131706
+          "mean": 1.710786372053378
         },
         "discoveries": {
           "n": 36,
@@ -3468,12 +3469,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 1.001692026240771,
-          "p10": 1.4457798026016508,
-          "median": 2.2652952462825438,
-          "p90": 2.8247759022090744,
-          "max": 3.386421800729921,
-          "mean": 2.2763041023414496
+          "min": 0.9154144459538573,
+          "p10": 1.4208868367599092,
+          "median": 2.229987801465887,
+          "p90": 2.772793233971994,
+          "max": 3.2628638299353905,
+          "mean": 2.2249379737728905
         },
         "discoveries": {
           "n": 36,
@@ -3538,7 +3539,7 @@
             "policyId": "greedy-bayesian-linear",
             "trialSeed": 91028,
             "discoveries": 0,
-            "regret": 3.3864,
+            "regret": 3.2629,
             "lastEvents": [
               {
                 "attempt": 3,
@@ -3697,12 +3698,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 0.9422909016891834,
-          "p10": 2.0375132971416643,
-          "median": 2.74312050782521,
-          "p90": 3.735994882603652,
-          "max": 4.842157349362997,
-          "mean": 2.8354435515767977
+          "min": 0.8305027557171621,
+          "p10": 1.8429655665892122,
+          "median": 2.3394461847721075,
+          "p90": 3.264889046623549,
+          "max": 4.7651495721333115,
+          "mean": 2.500911123479733
         },
         "discoveries": {
           "n": 36,
@@ -3729,16 +3730,16 @@
           "median": 1,
           "p90": 2,
           "max": 2,
-          "mean": 0.9444444444444444
+          "mean": 0.9166666666666666
         },
         "meanCandidatePool": {
           "n": 36,
-          "min": 22,
+          "min": 21.5,
           "p10": 22.5,
-          "median": 23.8,
+          "median": 23.6,
           "p90": 25,
           "max": 28.4,
-          "mean": 23.93148148148148
+          "mean": 23.875925925925927
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -3767,7 +3768,7 @@
             "policyId": "gaussian-lints",
             "trialSeed": 91003,
             "discoveries": 0,
-            "regret": 4.8422,
+            "regret": 4.7651,
             "lastEvents": [
               {
                 "attempt": 3,
@@ -3927,12 +3928,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 0.22929006865770807,
+          "min": 0.27348058581681167,
           "p10": 0.3366108778703813,
           "median": 0.5585380703208827,
           "p90": 0.6989106586600358,
           "max": 0.8488663216859123,
-          "mean": 0.5440995765400815
+          "mean": 0.5419600077949107
         },
         "discoveries": {
           "n": 36,
@@ -4128,9 +4129,9 @@
           "min": 0,
           "p10": 1,
           "median": 2,
-          "p90": 4,
+          "p90": 3,
           "max": 4,
-          "mean": 2.388888888888889
+          "mean": 2.3333333333333335
         },
         "nonCountingEvents": {
           "n": 36,
@@ -4152,12 +4153,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 0.5974822330902574,
-          "p10": 0.844151964962175,
-          "median": 1.110939703967329,
-          "p90": 1.567768228044225,
-          "max": 2.071125720744639,
-          "mean": 1.1802205753406059
+          "min": 0.5044656603481724,
+          "p10": 0.8246594001717337,
+          "median": 1.0858951467427245,
+          "p90": 1.4874925827129584,
+          "max": 1.8639359827475257,
+          "mean": 1.1036439304413443
         },
         "discoveries": {
           "n": 36,
@@ -4189,11 +4190,11 @@
         "meanCandidatePool": {
           "n": 36,
           "min": 22.2,
-          "p10": 22.833333333333332,
+          "p10": 23,
           "median": 24.6,
           "p90": 26.4,
           "max": 28,
-          "mean": 24.80952380952381
+          "mean": 24.837301587301585
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -4220,59 +4221,60 @@
           "lowDiscovery": {
             "scenarioId": "unsure_heavy",
             "policyId": "greedy-bayesian-linear",
-            "trialSeed": 91018,
+            "trialSeed": 91005,
             "discoveries": 0,
-            "regret": 2.0711,
+            "regret": 1.8639,
             "lastEvents": [
               {
                 "attempt": 3,
                 "kind": "RECOMMENDATION",
-                "trackId": "unsure_heavy-alpha-probe-6",
-                "anchorId": "seed-gamma",
+                "trackId": "unsure_heavy-gamma-probe-6",
+                "anchorId": "seed-alpha",
                 "candidateType": "RELEVANT",
                 "rating": "UNSURE",
                 "rewardObserved": false,
-                "utility": -0.3875,
-                "regret": 0.5155,
+                "utility": -0.4234,
+                "regret": 0.4593,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
                   "allowed": 20,
-                  "eligible": 33
+                  "eligible": 35
                 }
               },
               {
                 "attempt": 4,
                 "kind": "RECOMMENDATION",
-                "trackId": "unsure_heavy-beta-probe-6",
+                "trackId": "unsure_heavy-gamma-probe-0",
                 "anchorId": "seed-gamma",
-                "candidateType": "RELEVANT",
+                "candidateType": "PROBE",
+                "probeFeature": "danceability",
                 "rating": "UNSURE",
                 "rewardObserved": false,
-                "utility": -0.4442,
-                "regret": 0.5722,
+                "utility": -0.2322,
+                "regret": 0.3222,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 7,
-                  "allowed": 27,
-                  "eligible": 33
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 36
                 }
               },
               {
                 "attempt": 5,
                 "kind": "RECOMMENDATION",
-                "trackId": "unsure_heavy-gamma-near-4",
-                "anchorId": "seed-beta",
+                "trackId": "unsure_heavy-beta-near-0",
+                "anchorId": "seed-alpha",
                 "candidateType": "RELEVANT",
-                "rating": "DISLIKE",
-                "rewardObserved": true,
-                "utility": -0.3595,
-                "regret": 0.4875,
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.3786,
+                "regret": 0.4145,
                 "candidateCounts": {
                   "relevant": 20,
-                  "probe": 7,
-                  "allowed": 27,
-                  "eligible": 34
+                  "probe": 0,
+                  "allowed": 20,
+                  "eligible": 29
                 }
               }
             ]
@@ -4293,7 +4295,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.4234,
-                "regret": 0.5134,
+                "regret": 0.4593,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
@@ -4311,7 +4313,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.2322,
-                "regret": 0.2682,
+                "regret": 0.3222,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
@@ -4328,7 +4330,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.3786,
-                "regret": 0.4685,
+                "regret": 0.4145,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 0,
@@ -4382,12 +4384,12 @@
         },
         "regret": {
           "n": 36,
-          "min": 1.0056246917966902,
-          "p10": 1.143018983151797,
-          "median": 1.604417228969618,
-          "p90": 2.147726215945408,
-          "max": 2.546990211343347,
-          "mean": 1.6977151483756154
+          "min": 0.7650511189933321,
+          "p10": 0.8843929232259741,
+          "median": 1.4882269204708722,
+          "p90": 1.8501974682276519,
+          "max": 2.4233595528065326,
+          "mean": 1.45323202185227
         },
         "discoveries": {
           "n": 36,
@@ -4414,16 +4416,16 @@
           "median": 1,
           "p90": 2,
           "max": 2,
-          "mean": 1.0555555555555556
+          "mean": 1
         },
         "meanCandidatePool": {
           "n": 36,
-          "min": 22.166666666666668,
-          "p10": 23.142857142857142,
-          "median": 24.142857142857142,
+          "min": 22.142857142857142,
+          "p10": 23,
+          "median": 24.166666666666668,
           "p90": 25.285714285714285,
           "max": 26.4,
-          "mean": 24.224470899470894
+          "mean": 24.252248677248677
         },
         "blockedCatalogCount": 0,
         "blockedCatalogRate": 0,
@@ -4452,7 +4454,7 @@
             "policyId": "gaussian-lints",
             "trialSeed": 91020,
             "discoveries": 0,
-            "regret": 2.547,
+            "regret": 2.4234,
             "lastEvents": [
               {
                 "attempt": 4,
@@ -4500,7 +4502,7 @@
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 5,
-                  "allowed": 20,
+                  "allowed": 25,
                   "eligible": 32
                 }
               }
@@ -4522,7 +4524,7 @@
                 "rating": "UNSURE",
                 "rewardObserved": false,
                 "utility": -0.318,
-                "regret": 0.408,
+                "regret": 0.3252,
                 "candidateCounts": {
                   "relevant": 20,
                   "probe": 8,
