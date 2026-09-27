@@ -16,6 +16,10 @@ mise.local.toml
 .doppler.yaml
 .secrets*
 
+# Local ML agent runs and isolated issue checkouts.
+.codex/ml-agent/
+.worktrees/
+
 # Application install and build outputs.
 node_modules/
 dist/

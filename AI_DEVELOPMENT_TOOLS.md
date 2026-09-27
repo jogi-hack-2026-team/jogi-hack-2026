@@ -16,6 +16,8 @@
 GitHub MCPの採択は全メンバーの接続完了を意味しません。接続できない環境ではGitHub Web UIを使い、Issueを確認・作成できないまま変更を始めません。個人のMCP設定や認証情報をリポジトリに含めず、同じ操作を複数の経路で重複実行しません。PlaywrightのCLI・対応Skillの導入状況は利用前に確認し、未配置のSkillを存在するものとして扱わないでください。
 documentation-syncは既存ファイルと利用ルールを確認したうえで、今回の承認を正式採択の根拠とします。
 
+Issue #47の[ML Agent Harness](docs/operations/ml-agent-harness.md)は、番号指定なしのキュー処理のため、依頼されたGitHub CLIとCodex CLIを使用します。通常のAIによるGitHub操作のMCP優先方針は維持します。Harnessの存在を全環境でのCLI導入・認証完了とみなしません。
+
 
 ## 利用前の確認
 
@@ -53,5 +55,6 @@ documentation-syncは既存ファイルと利用ルールを確認したうえ�
 | [pr-review](.agents/skills/pr-review/SKILL.md) | 他メンバーのPull Requestレビュー |
 | [architecture-decision](.agents/skills/architecture-decision/SKILL.md) | 技術・設計の比較と判断材料の整理 |
 | [scope-guard](.agents/skills/scope-guard/SKILL.md) | 機能追加・削除・優先順位変更の影響整理 |
+| [ml-issue-execution](.agents/skills/ml-issue-execution/SKILL.md) | ML IssueのGoal contract、評価、人間判断境界 |
 
 Skillの存在は、各ワークフローが実行済みであることや、技術・プロダクトの採択を意味しません。

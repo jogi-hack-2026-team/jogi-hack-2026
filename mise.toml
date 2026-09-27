@@ -15,3 +15,9 @@ run = "git diff --cached --check"
 [tasks."hooks:install"]
 description = "Install repository-local hooks without replacing existing hooks"
 run = "pwsh -NoProfile -File scripts/install-hooks.ps1"
+
+[tasks."ml-agent"]
+description = "Run the ML Issue queue (use --dry-run to inspect candidates)"
+tools = { gh = "2.101.0" }
+raw_args = true
+run = "node scripts/run-ml-agent.mjs"
