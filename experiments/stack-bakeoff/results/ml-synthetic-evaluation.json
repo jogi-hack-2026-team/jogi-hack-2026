@@ -1,0 +1,4601 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "issue": "#40",
+  "generatedAt": "2026-09-27T10:17:26.211Z",
+  "commit": "6cb28fa1bab299c75d1563f746de1583912a31c0",
+  "command": "npm.cmd --prefix experiments/stack-bakeoff run ml:simulate",
+  "scope": "Synthetic fixtures only. Does not change Product/Architecture decisions, production algorithm, API/DB contracts, acceptance thresholds, real catalog, real playback, or user-demand claims.",
+  "versions": {
+    "catalogVersion": "synthetic-catalog-v1.issue-40",
+    "featureReferenceVersion": "percentile-7d-synthetic-v1",
+    "contextVersion": "formal-negative-distance-v1",
+    "modelVersion": "gaussian-lints-b0-i-f0-0-noise1-v1",
+    "policyVersion": "issue-40-policy-comparison-v1",
+    "syntheticUserModelVersion": "issue-40-six-scenarios-v1"
+  },
+  "formula": {
+    "context": "phi(c,s) = [1, -abs(q1(c)-q1(s)), ..., -abs(q7(c)-q7(s))] / sqrt(8)",
+    "prior": "B0 = I, f0 = 0",
+    "posterior": "B_t = B_(t-1) + phi_t phi_t^T, f_t = f_(t-1) + phi_t r_t, mu = solve(B,f), covariance = B^-1",
+    "noiseScale": 1,
+    "rewards": "LIKE=+1, NEUTRAL=0, DISLIKE=-1. UNSURE, playback failure and feedback-less skip are not reward observations."
+  },
+  "runPlan": {
+    "calibrationVsFinalSeedSplit": "Calibration sensitivity uses 41001+ seeds. Final descriptive evaluation uses 91001+ seeds.",
+    "calibrationSeeds": [
+      41001,
+      41002,
+      41003,
+      41004,
+      41005,
+      41006,
+      41007,
+      41008,
+      41009,
+      41010
+    ],
+    "finalSeeds": [
+      91001,
+      91002,
+      91003,
+      91004,
+      91005,
+      91006,
+      91007,
+      91008,
+      91009,
+      91010,
+      91011,
+      91012,
+      91013,
+      91014,
+      91015,
+      91016,
+      91017,
+      91018,
+      91019,
+      91020,
+      91021,
+      91022,
+      91023,
+      91024,
+      91025,
+      91026,
+      91027,
+      91028,
+      91029,
+      91030,
+      91031,
+      91032,
+      91033,
+      91034,
+      91035,
+      91036
+    ],
+    "calibrationTrialsPerScenario": 10,
+    "finalTrialsPerScenario": 36,
+    "policies": [
+      "nearest-seed",
+      "greedy-bayesian-linear",
+      "gaussian-lints"
+    ],
+    "scenarios": [
+      {
+        "id": "model_matched_linear",
+        "name": "Model-matched Linear",
+        "description": "Formal phi(c,s) with a fixed visible theta and small Gaussian noise."
+      },
+      {
+        "id": "noisy_ordinal",
+        "name": "Noisy / Ordinal",
+        "description": "Visible linear utility is converted to ordinal feedback with answer mistakes."
+      },
+      {
+        "id": "multi_modal",
+        "name": "Multi-modal",
+        "description": "Two seed prototypes are useful, while a single averaged taste would hide one mode."
+      },
+      {
+        "id": "hidden_feature",
+        "name": "Hidden feature",
+        "description": "Utility is dominated by a hidden vocal/context value unavailable to the policy."
+      },
+      {
+        "id": "outlier_seed",
+        "name": "Outlier Seed",
+        "description": "One seed is an exception; candidates around that prototype tend to be low utility."
+      },
+      {
+        "id": "unsure_heavy",
+        "name": "UNSURE-heavy",
+        "description": "Many accepted interactions are UNSURE, reducing reward observations before checkpoint."
+      }
+    ],
+    "exclusionAndStopCriteria": [
+      "Seeds are excluded from recommendation candidates.",
+      "Duplicate recording keys are deduped and previously attempted recordings are excluded.",
+      "Playback-ineligible and invalid-feature tracks are hard-filtered.",
+      "Track 1 requires a Relevant candidate.",
+      "Probe count is capped at two valid interactions per checkpoint.",
+      "Playback failure, pre-start exit and feedback-less skip are non-counting events.",
+      "A trial stops at five valid interactions, BLOCKED_CATALOG, or 12 attempts."
+    ]
+  },
+  "calibration": {
+    "note": "Sensitivity only. These values are candidates for human review and are not accepted thresholds.",
+    "sensitivity": [
+      {
+        "thresholdConfigId": "strict-candidate",
+        "thresholdConfig": {
+          "id": "strict-candidate",
+          "description": "Higher relevance/probe bars, wider ROPE, 95% interval. Intended to surface shortage and under-classification.",
+          "relevantKPerSeed": 6,
+          "relevantMaxDistance": 0.95,
+          "probeOtherMaxDistance": 0.42,
+          "probeMinContrast": 0.4,
+          "candidatePoolLimit": 14,
+          "rope": 0.16,
+          "credibleLevel": 0.95
+        },
+        "trials": 180,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "rewardObservationsMedian": 4,
+        "discoveryMean": 0.6833333333333333,
+        "regretMedian": 1.576309694867061,
+        "multiplePrototypeCoverageRate": 0.15555555555555556,
+        "classificationRate": 0,
+        "falseCertaintyRate": null,
+        "meanCandidatePool": 17.394285714285715,
+        "hardConstraintViolationCounts": {}
+      },
+      {
+        "thresholdConfigId": "balanced-candidate",
+        "thresholdConfig": {
+          "id": "balanced-candidate",
+          "description": "Issue #40 descriptive default. Calibration candidate only; not an accepted threshold.",
+          "relevantKPerSeed": 9,
+          "relevantMaxDistance": 1.2,
+          "probeOtherMaxDistance": 0.58,
+          "probeMinContrast": 0.32,
+          "candidatePoolLimit": 20,
+          "rope": 0.1,
+          "credibleLevel": 0.9
+        },
+        "trials": 180,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "rewardObservationsMedian": 4,
+        "discoveryMean": 0.7,
+        "regretMedian": 1.6316171678514626,
+        "multiplePrototypeCoverageRate": 0.15,
+        "classificationRate": 0,
+        "falseCertaintyRate": null,
+        "meanCandidatePool": 25.28835978835978,
+        "hardConstraintViolationCounts": {}
+      },
+      {
+        "thresholdConfigId": "loose-candidate",
+        "thresholdConfig": {
+          "id": "loose-candidate",
+          "description": "Larger pools and narrower ROPE. Intended to test false certainty sensitivity.",
+          "relevantKPerSeed": 12,
+          "relevantMaxDistance": 1.55,
+          "probeOtherMaxDistance": 0.78,
+          "probeMinContrast": 0.23,
+          "candidatePoolLimit": 28,
+          "rope": 0.05,
+          "credibleLevel": 0.8
+        },
+        "trials": 180,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "rewardObservationsMedian": 4,
+        "discoveryMean": 0.6944444444444444,
+        "regretMedian": 1.6687535990237836,
+        "multiplePrototypeCoverageRate": 0.13333333333333333,
+        "classificationRate": 0,
+        "falseCertaintyRate": null,
+        "meanCandidatePool": 37.773439153439156,
+        "hardConstraintViolationCounts": {}
+      }
+    ]
+  },
+  "final": {
+    "thresholdConfig": {
+      "id": "balanced-candidate",
+      "description": "Issue #40 descriptive default. Calibration candidate only; not an accepted threshold.",
+      "relevantKPerSeed": 9,
+      "relevantMaxDistance": 1.2,
+      "probeOtherMaxDistance": 0.58,
+      "probeMinContrast": 0.32,
+      "candidatePoolLimit": 20,
+      "rope": 0.1,
+      "credibleLevel": 0.9
+    },
+    "summary": {
+      "trials": 648,
+      "validInteractions": {
+        "n": 648,
+        "min": 5,
+        "p10": 5,
+        "median": 5,
+        "p90": 5,
+        "max": 5,
+        "mean": 5
+      },
+      "rewardObservations": {
+        "n": 648,
+        "min": 0,
+        "p10": 2,
+        "median": 4,
+        "p90": 5,
+        "max": 5,
+        "mean": 3.8055555555555554
+      },
+      "nonCountingEvents": {
+        "n": 648,
+        "min": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "max": 3,
+        "mean": 0.2175925925925926
+      },
+      "cumulativeReward": {
+        "n": 648,
+        "min": -5,
+        "p10": -3,
+        "median": 0,
+        "p90": 2,
+        "max": 4,
+        "mean": -0.6157407407407407
+      },
+      "regret": {
+        "n": 648,
+        "min": 0,
+        "p10": 0.6797389557938439,
+        "median": 1.578248674373998,
+        "p90": 3.4099961935672383,
+        "max": 5.005913161912141,
+        "mean": 1.8274399364236427
+      },
+      "discoveries": {
+        "n": 648,
+        "min": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "max": 4,
+        "mean": 0.6358024691358025
+      },
+      "prototypeCoverage": {
+        "n": 648,
+        "min": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 2,
+        "max": 2,
+        "mean": 0.4675925925925926
+      },
+      "probeCount": {
+        "n": 648,
+        "min": 0,
+        "p10": 0,
+        "median": 0,
+        "p90": 1,
+        "max": 2,
+        "mean": 0.48919753086419754
+      },
+      "meanCandidatePool": {
+        "n": 648,
+        "min": 21.5,
+        "p10": 23.2,
+        "median": 24.8,
+        "p90": 27.2,
+        "max": 29.6,
+        "mean": 25.08859494415058
+      },
+      "blockedCatalogCount": 0,
+      "blockedCatalogRate": 0,
+      "completedFiveValidRate": 1,
+      "multiplePrototypeCoverageRate": 0.13425925925925927,
+      "hardConstraintViolationCounts": {},
+      "falseCertaintyCount": 0,
+      "determinateCount": 0,
+      "evaluableCount": 4536,
+      "falseCertaintyRate": null,
+      "classificationRate": 0,
+      "hypothesisClassificationsExample": {
+        "danceability": "UNDETERMINED",
+        "energy": "UNDETERMINED",
+        "valence": "UNDETERMINED",
+        "tempo": "UNDETERMINED",
+        "acousticness": "UNDETERMINED",
+        "speechiness": "UNDETERMINED",
+        "instrumentalness": "UNDETERMINED"
+      },
+      "examples": {
+        "blockedCatalog": null,
+        "falseCertainty": null,
+        "lowDiscovery": {
+          "scenarioId": "hidden_feature",
+          "policyId": "greedy-bayesian-linear",
+          "trialSeed": 91034,
+          "discoveries": 0,
+          "regret": 5.0059,
+          "lastEvents": [
+            {
+              "attempt": 3,
+              "kind": "RECOMMENDATION",
+              "trackId": "hidden_feature-gamma-probe-2",
+              "anchorId": "seed-alpha",
+              "candidateType": "RELEVANT",
+              "rating": "DISLIKE",
+              "rewardObserved": true,
+              "utility": -0.7284,
+              "regret": 1.2308,
+              "candidateCounts": {
+                "relevant": 20,
+                "probe": 8,
+                "allowed": 20,
+                "eligible": 32
+              }
+            },
+            {
+              "attempt": 4,
+              "kind": "RECOMMENDATION",
+              "trackId": "hidden_feature-gamma-probe-6",
+              "anchorId": "seed-gamma",
+              "candidateType": "RELEVANT",
+              "rating": "DISLIKE",
+              "rewardObserved": true,
+              "utility": -0.59,
+              "regret": 1.1112,
+              "candidateCounts": {
+                "relevant": 20,
+                "probe": 8,
+                "allowed": 28,
+                "eligible": 33
+              }
+            },
+            {
+              "attempt": 5,
+              "kind": "RECOMMENDATION",
+              "trackId": "hidden_feature-gamma-near-8",
+              "anchorId": "seed-gamma",
+              "candidateType": "RELEVANT",
+              "rating": "DISLIKE",
+              "rewardObserved": true,
+              "utility": -0.6446,
+              "regret": 1.1658,
+              "candidateCounts": {
+                "relevant": 20,
+                "probe": 8,
+                "allowed": 28,
+                "eligible": 34
+              }
+            }
+          ]
+        },
+        "sparseReward": {
+          "scenarioId": "unsure_heavy",
+          "policyId": "greedy-bayesian-linear",
+          "trialSeed": 91005,
+          "validInteractions": 5,
+          "rewardObservations": 0,
+          "lastEvents": [
+            {
+              "attempt": 3,
+              "kind": "RECOMMENDATION",
+              "trackId": "unsure_heavy-gamma-probe-6",
+              "anchorId": "seed-alpha",
+              "candidateType": "RELEVANT",
+              "rating": "UNSURE",
+              "rewardObserved": false,
+              "utility": -0.4234,
+              "regret": 0.4593,
+              "candidateCounts": {
+                "relevant": 20,
+                "probe": 8,
+                "allowed": 20,
+                "eligible": 35
+              }
+            },
+            {
+              "attempt": 4,
+              "kind": "RECOMMENDATION",
+              "trackId": "unsure_heavy-gamma-probe-0",
+              "anchorId": "seed-gamma",
+              "candidateType": "PROBE",
+              "probeFeature": "danceability",
+              "rating": "UNSURE",
+              "rewardObserved": false,
+              "utility": -0.2322,
+              "regret": 0.3222,
+              "candidateCounts": {
+                "relevant": 20,
+                "probe": 8,
+                "allowed": 28,
+                "eligible": 36
+              }
+            },
+            {
+              "attempt": 5,
+              "kind": "RECOMMENDATION",
+              "trackId": "unsure_heavy-beta-near-0",
+              "anchorId": "seed-alpha",
+              "candidateType": "RELEVANT",
+              "rating": "UNSURE",
+              "rewardObserved": false,
+              "utility": -0.3786,
+              "regret": 0.4145,
+              "candidateCounts": {
+                "relevant": 20,
+                "probe": 0,
+                "allowed": 20,
+                "eligible": 29
+              }
+            }
+          ]
+        }
+      }
+    },
+    "byScenarioPolicy": [
+      {
+        "scenarioId": "model_matched_linear",
+        "policyId": "nearest-seed",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 2,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 3.5833333333333335
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.19444444444444445
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -1,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 4,
+          "mean": 1.2777777777777777
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.7100593933348313,
+          "p10": 0.8616282608494661,
+          "median": 1.2295922849077496,
+          "p90": 1.5560231110639107,
+          "max": 1.798102857613911,
+          "mean": 1.2061172471531278
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.16666666666666666
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.16666666666666666
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.027777777777777776
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 23.333333333333332,
+          "p10": 24.8,
+          "median": 25.833333333333332,
+          "p90": 27.2,
+          "max": 28,
+          "mean": 25.948015873015883
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "model_matched_linear",
+            "policyId": "nearest-seed",
+            "trialSeed": 91008,
+            "discoveries": 0,
+            "regret": 1.7981,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-alpha-near-4",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.0662,
+                "regret": 0.4227,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.017,
+                "regret": 0.3736,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-beta-probe-0",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.1619,
+                "regret": 0.5184,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 33
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "model_matched_linear",
+            "policyId": "nearest-seed",
+            "trialSeed": 91001,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "LIKE",
+                "rewardObserved": true,
+                "utility": 0.0592,
+                "regret": 0.2263,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 30
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-beta-near-2",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0739,
+                "regret": 0.3594,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 6,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-near-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0102,
+                "regret": 0.2957,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "model_matched_linear",
+        "policyId": "greedy-bayesian-linear",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 3.861111111111111
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.1388888888888889
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -3,
+          "p10": -1,
+          "median": 0,
+          "p90": 2,
+          "max": 3,
+          "mean": 0.2777777777777778
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.5884811651381596,
+          "p10": 1.0698940605691478,
+          "median": 1.7418455108198394,
+          "p90": 2.0606356455502777,
+          "max": 2.289320395576714,
+          "mean": 1.6844281063536433
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.4444444444444444
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.4166666666666667
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.3888888888888889
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 23.2,
+          "p10": 23.2,
+          "median": 25.6,
+          "p90": 27.2,
+          "max": 28,
+          "mean": 25.4675925925926
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.1111111111111111,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "model_matched_linear",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91022,
+            "discoveries": 0,
+            "regret": 2.2893,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "LIKE",
+                "rewardObserved": true,
+                "utility": -0.0194,
+                "regret": 0.3385,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-beta-near-7",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.0609,
+                "regret": 0.3801,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-alpha-probe-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "PROBE",
+                "probeFeature": "instrumentalness",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0115,
+                "regret": 0.3306,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "model_matched_linear",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91010,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-near-3",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0518,
+                "regret": 0.2281,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-beta-near-8",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0351,
+                "regret": 0.1411,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-beta-near-5",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0262,
+                "regret": 0.2025,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 35
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "model_matched_linear",
+        "policyId": "gaussian-lints",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 4,
+          "p10": 4,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.583333333333333
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.16666666666666666
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -5,
+          "p10": -4,
+          "median": -3,
+          "p90": 0,
+          "max": 1,
+          "mean": -2.6666666666666665
+        },
+        "regret": {
+          "n": 36,
+          "min": 1.3940913322825672,
+          "p10": 1.6962574537690345,
+          "median": 2.9948528995133534,
+          "p90": 3.960996335118275,
+          "max": 4.324624279652876,
+          "mean": 2.891228651169685
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.3611111111111111
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.3611111111111111
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 1.1944444444444444
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.5,
+          "p10": 22.8,
+          "median": 24.2,
+          "p90": 25.6,
+          "max": 27.2,
+          "mean": 24.225000000000005
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.05555555555555555,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "model_matched_linear",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91015,
+            "discoveries": 0,
+            "regret": 4.3246,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-near-4",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.9181,
+                "regret": 1.2144,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-alpha-probe-2",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.6295,
+                "regret": 0.9259,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-beta-probe-2",
+                "anchorId": "seed-beta",
+                "candidateType": "PROBE",
+                "probeFeature": "valence",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.0934,
+                "regret": 0.3898,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 33
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "model_matched_linear",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91001,
+            "validInteractions": 5,
+            "rewardObservations": 4,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-gamma-near-5",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.7402,
+                "regret": 0.5776,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 20,
+                  "eligible": 28
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-alpha-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.6903,
+                "regret": 0.9758,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 29
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "model_matched_linear-alpha-near-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.9283,
+                "regret": 1.2138,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 4,
+                  "allowed": 24,
+                  "eligible": 29
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "noisy_ordinal",
+        "policyId": "nearest-seed",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 2,
+          "median": 3,
+          "p90": 4,
+          "max": 5,
+          "mean": 3.4166666666666665
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 2,
+          "mean": 0.1388888888888889
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -2,
+          "p10": -1,
+          "median": 0,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.3888888888888889
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.24540893551234527,
+          "p10": 0.3702791674381587,
+          "median": 0.637273253581313,
+          "p90": 0.8766274567884795,
+          "max": 0.961908720017618,
+          "mean": 0.6135480098666405
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.08333333333333333
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.4,
+          "p10": 24,
+          "median": 25.6,
+          "p90": 27.2,
+          "max": 28.571428571428573,
+          "mean": 25.59920634920635
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "noisy_ordinal",
+            "policyId": "nearest-seed",
+            "trialSeed": 91022,
+            "discoveries": 0,
+            "regret": 0.9619,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-beta-probe-0",
+                "anchorId": "seed-beta",
+                "candidateType": "PROBE",
+                "probeFeature": "danceability",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.1721,
+                "regret": 0.3553,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-gamma-near-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0887,
+                "regret": 0.1797,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 20,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-gamma-near-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "LIKE",
+                "rewardObserved": true,
+                "utility": 0.0441,
+                "regret": 0.1391,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "noisy_ordinal",
+            "policyId": "nearest-seed",
+            "trialSeed": 91013,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-gamma-probe-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0178,
+                "regret": 0.1182,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-probe-4",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "LIKE",
+                "rewardObserved": true,
+                "utility": 0.0627,
+                "regret": 0.0733,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 37
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-near-8",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0626,
+                "regret": 0.1986,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 38
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "noisy_ordinal",
+        "policyId": "greedy-bayesian-linear",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 1,
+          "p10": 2,
+          "median": 3,
+          "p90": 4,
+          "max": 5,
+          "mean": 3.388888888888889
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.1111111111111111
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -3,
+          "p10": -2,
+          "median": -1,
+          "p90": 0,
+          "max": 1,
+          "mean": -0.7777777777777778
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.35372894698915364,
+          "p10": 0.631801155686675,
+          "median": 0.9544740781047847,
+          "p90": 1.3828930496080214,
+          "max": 2.0789253126707696,
+          "mean": 1.0182598587967753
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.8055555555555556
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.2,
+          "p10": 22.6,
+          "median": 24.4,
+          "p90": 25.6,
+          "max": 28,
+          "mean": 24.43611111111111
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "noisy_ordinal",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91018,
+            "discoveries": 0,
+            "regret": 2.0789,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-gamma-probe-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.4752,
+                "regret": 0.5537,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.5781,
+                "regret": 0.6565,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-probe-4",
+                "anchorId": "seed-alpha",
+                "candidateType": "PROBE",
+                "probeFeature": "acousticness",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0784,
+                "regret": 0,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "noisy_ordinal",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91006,
+            "validInteractions": 5,
+            "rewardObservations": 1,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-gamma-near-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0105,
+                "regret": 0.1533,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-beta-near-3",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0857,
+                "regret": 0.2494,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-near-5",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0182,
+                "regret": 0.1819,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 37
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "noisy_ordinal",
+        "policyId": "gaussian-lints",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 3.888888888888889
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 2,
+          "mean": 0.1111111111111111
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -5,
+          "p10": -4,
+          "median": -2,
+          "p90": 0,
+          "max": 0,
+          "mean": -1.6388888888888888
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.663238926856953,
+          "p10": 0.8171305398126948,
+          "median": 1.28474918653472,
+          "p90": 1.7122941928567887,
+          "max": 2.313487775421092,
+          "mean": 1.3132091977441687
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.08333333333333333
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.08333333333333333
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.8333333333333334
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 21.8,
+          "p10": 22.4,
+          "median": 24,
+          "p90": 26.2,
+          "max": 27.4,
+          "mean": 24.274603174603175
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "noisy_ordinal",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91010,
+            "discoveries": 0,
+            "regret": 2.3135,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-probe-2",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4687,
+                "regret": 0.6111,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.5295,
+                "regret": 0.672,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-beta-near-2",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.3458,
+                "regret": 0.4882,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 33
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "noisy_ordinal",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91001,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-gamma-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "PROBE",
+                "probeFeature": "instrumentalness",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0357,
+                "regret": 0.1947,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-alpha-probe-2",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0708,
+                "regret": 0.1643,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 20,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "noisy_ordinal-beta-near-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.1321,
+                "regret": 0.2911,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "multi_modal",
+        "policyId": "nearest-seed",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 3,
+          "p10": 4,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.75
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.1388888888888889
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -5,
+          "p10": -3,
+          "median": 0,
+          "p90": 3,
+          "max": 4,
+          "mean": 0.05555555555555555
+        },
+        "regret": {
+          "n": 36,
+          "min": 0,
+          "p10": 0.7204713489870612,
+          "median": 1.4559827462872565,
+          "p90": 2.832864222850329,
+          "max": 3.5337633178819803,
+          "mean": 1.768552782456611
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 2,
+          "p90": 4,
+          "max": 4,
+          "mean": 2.3055555555555554
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 2,
+          "p90": 2,
+          "max": 2,
+          "mean": 1.5277777777777777
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.027777777777777776
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.4,
+          "p10": 24,
+          "median": 25.6,
+          "p90": 26.666666666666668,
+          "max": 28,
+          "mean": 25.55740740740741
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.6388888888888888,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "multi_modal",
+            "policyId": "nearest-seed",
+            "trialSeed": 91018,
+            "discoveries": 0,
+            "regret": 3.5338,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.517,
+                "regret": 0.7233,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4805,
+                "regret": 0.6867,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-probe-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.5078,
+                "regret": 0.714,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "multi_modal",
+            "policyId": "nearest-seed",
+            "trialSeed": 91026,
+            "validInteractions": 5,
+            "rewardObservations": 3,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.4466,
+                "regret": 0.6648,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-alpha-near-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.2182,
+                "regret": 0,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-1",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.5007,
+                "regret": 0.7149,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 34
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "multi_modal",
+        "policyId": "greedy-bayesian-linear",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 3,
+          "p10": 4,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.583333333333333
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.1388888888888889
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -5,
+          "p10": -2,
+          "median": 1,
+          "p90": 3,
+          "max": 4,
+          "mean": 0.5833333333333334
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.7262634775899565,
+          "p10": 0.8097327719348487,
+          "median": 1.4790772317127745,
+          "p90": 2.1979948548499277,
+          "max": 3.5291574289193015,
+          "mean": 1.5631625223981729
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 1,
+          "median": 3,
+          "p90": 4,
+          "max": 4,
+          "mean": 2.4722222222222223
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 1,
+          "median": 2,
+          "p90": 2,
+          "max": 2,
+          "mean": 1.5555555555555556
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.3888888888888889
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.4,
+          "p10": 23,
+          "median": 24.8,
+          "p90": 26.4,
+          "max": 28,
+          "mean": 24.933333333333337
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.6111111111111112,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "multi_modal",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91005,
+            "discoveries": 0,
+            "regret": 3.5292,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-1",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4565,
+                "regret": 0.6611,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 30
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4871,
+                "regret": 0.6917,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-7",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.5341,
+                "regret": 0.7387,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "multi_modal",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91026,
+            "validInteractions": 5,
+            "rewardObservations": 3,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-beta-probe-2",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": 0.2078,
+                "regret": 0.0104,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 20,
+                  "eligible": 30
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-alpha-near-2",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.1881,
+                "regret": 0.0302,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-alpha-near-5",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "LIKE",
+                "rewardObserved": true,
+                "utility": 0.2141,
+                "regret": 0.0041,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 32
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "multi_modal",
+        "policyId": "gaussian-lints",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 4,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.555555555555555
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.1388888888888889
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -3,
+          "p10": -1,
+          "median": 0,
+          "p90": 3,
+          "max": 4,
+          "mean": 0.75
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.20778396591109372,
+          "p10": 0.813883175412841,
+          "median": 1.5387811951506856,
+          "p90": 2.22756205013911,
+          "max": 2.906354817754307,
+          "mean": 1.5133314312558181
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 1,
+          "median": 2,
+          "p90": 4,
+          "max": 4,
+          "mean": 2.5
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 1,
+          "median": 2,
+          "p90": 2,
+          "max": 2,
+          "mean": 1.5
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.6666666666666666
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 21.6,
+          "p10": 23.2,
+          "median": 24.4,
+          "p90": 26.4,
+          "max": 28,
+          "mean": 24.63703703703704
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.5555555555555556,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "multi_modal",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91018,
+            "discoveries": 0,
+            "regret": 2.1753,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-alpha-probe-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": 0.1782,
+                "regret": 0.028,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-5",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4957,
+                "regret": 0.7019,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-gamma-near-3",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.5201,
+                "regret": 0.7263,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "multi_modal",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91028,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-beta-near-1",
+                "anchorId": "seed-beta",
+                "candidateType": "PROBE",
+                "probeFeature": "energy",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.1569,
+                "regret": 0.0535,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-beta-probe-4",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.185,
+                "regret": 0.0254,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 20,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "multi_modal-alpha-near-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": 0.1748,
+                "regret": 0.0356,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "hidden_feature",
+        "policyId": "nearest-seed",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.166666666666667
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.16666666666666666
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -4,
+          "p10": -4,
+          "median": -1,
+          "p90": 1,
+          "max": 3,
+          "mean": -1.1666666666666667
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.9108244960785498,
+          "p10": 2.1926249646119835,
+          "median": 3.129667489265846,
+          "p90": 4.13830764692389,
+          "max": 4.614144076613493,
+          "mean": 3.200902263196569
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 3,
+          "mean": 0.8333333333333334
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.7222222222222222
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.1111111111111111
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 23.2,
+          "p10": 24,
+          "median": 26.4,
+          "p90": 28,
+          "max": 29.6,
+          "mean": 26.136111111111116
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.1111111111111111,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "hidden_feature",
+            "policyId": "nearest-seed",
+            "trialSeed": 91008,
+            "discoveries": 0,
+            "regret": 4.6141,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-beta-near-7",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.2903,
+                "regret": 0.8869,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-near-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.7969,
+                "regret": 1.3936,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-probe-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4341,
+                "regret": 1.0307,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 33
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "hidden_feature",
+            "policyId": "nearest-seed",
+            "trialSeed": 91004,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-beta-near-0",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0876,
+                "regret": 0.74,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 38
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-beta-probe-0",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.1019,
+                "regret": 0.7543,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 39
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-beta-probe-2",
+                "anchorId": "seed-beta",
+                "candidateType": "PROBE",
+                "probeFeature": "valence",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.5475,
+                "regret": 1.2,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 40
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "hidden_feature",
+        "policyId": "greedy-bayesian-linear",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 3,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.222222222222222
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.19444444444444445
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -4,
+          "p10": -4,
+          "median": -2,
+          "p90": 1,
+          "max": 3,
+          "mean": -1.4166666666666667
+        },
+        "regret": {
+          "n": 36,
+          "min": 1.8059758649383846,
+          "p10": 2.2411644483409496,
+          "median": 3.3601803285336773,
+          "p90": 4.599817403953895,
+          "max": 5.005913161912141,
+          "mean": 3.3895044520302955
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 2,
+          "max": 3,
+          "mean": 0.6944444444444444
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.6111111111111112
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.5
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.6,
+          "p10": 23.2,
+          "median": 25.6,
+          "p90": 27.5,
+          "max": 29.166666666666668,
+          "mean": 25.505555555555553
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.1111111111111111,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "hidden_feature",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91034,
+            "discoveries": 0,
+            "regret": 5.0059,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-probe-2",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.7284,
+                "regret": 1.2308,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 20,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.59,
+                "regret": 1.1112,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 33
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-near-8",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.6446,
+                "regret": 1.1658,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 34
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "hidden_feature",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91009,
+            "validInteractions": 5,
+            "rewardObservations": 3,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-near-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4327,
+                "regret": 1.0589,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-alpha-probe-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "PROBE",
+                "probeFeature": "instrumentalness",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.1373,
+                "regret": 0.7634,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-probe-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.1937,
+                "regret": 0.5731,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 20,
+                  "eligible": 36
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "hidden_feature",
+        "policyId": "gaussian-lints",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.194444444444445
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.19444444444444445
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -4,
+          "p10": -3,
+          "median": -1,
+          "p90": 1,
+          "max": 3,
+          "mean": -1.0833333333333333
+        },
+        "regret": {
+          "n": 36,
+          "min": 1.2822165496191467,
+          "p10": 2.361944052638275,
+          "median": 2.9879071480602226,
+          "p90": 4.133882727406818,
+          "max": 4.395743442881642,
+          "mean": 3.1962029038095263
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 3,
+          "mean": 0.9166666666666666
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.8055555555555556
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.75
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 21.8,
+          "p10": 23.166666666666668,
+          "median": 25,
+          "p90": 27.2,
+          "max": 27.8,
+          "mean": 25.033333333333335
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.19444444444444445,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "hidden_feature",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91026,
+            "discoveries": 0,
+            "regret": 4.3372,
+            "lastEvents": [
+              {
+                "attempt": 4,
+                "kind": "FEEDBACKLESS_SKIP",
+                "trackId": "hidden_feature-alpha-probe-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "PROBE",
+                "probeFeature": "danceability",
+                "utility": -0.2976,
+                "regret": 0.7767,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 40
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-beta-near-1",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": 0.0776,
+                "regret": 0.4015,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 40
+                }
+              },
+              {
+                "attempt": 6,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-beta-near-5",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.8016,
+                "regret": 1.4507,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 41
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "hidden_feature",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91004,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "PROBE",
+                "probeFeature": "danceability",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0981,
+                "regret": 0.6488,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 38
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-gamma-near-3",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.0409,
+                "regret": 0.5588,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 20,
+                  "eligible": 38
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "hidden_feature-alpha-near-1",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0389,
+                "regret": 0.4706,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 39
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "outlier_seed",
+        "policyId": "nearest-seed",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 3.9444444444444446
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.2222222222222222
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -3,
+          "p10": -2,
+          "median": 0,
+          "p90": 2,
+          "max": 3,
+          "mean": -0.2777777777777778
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.9508896607893587,
+          "p10": 1.2102347230385442,
+          "median": 1.6370972637252734,
+          "p90": 2.131553573549664,
+          "max": 2.8309962099245323,
+          "mean": 1.710786372053378
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.1388888888888889
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.1388888888888889
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.027777777777777776
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 23.8,
+          "p10": 24,
+          "median": 25.6,
+          "p90": 27.2,
+          "max": 28.8,
+          "mean": 25.610185185185188
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "outlier_seed",
+            "policyId": "nearest-seed",
+            "trialSeed": 91028,
+            "discoveries": 0,
+            "regret": 2.831,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.4011,
+                "regret": 0.6651,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-near-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4684,
+                "regret": 0.7324,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4606,
+                "regret": 0.7246,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 36
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "outlier_seed",
+            "policyId": "nearest-seed",
+            "trialSeed": 91006,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4213,
+                "regret": 0.609,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 29
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-beta-near-3",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0713,
+                "regret": 0.1164,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 30
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-near-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4271,
+                "regret": 0.6148,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 31
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "outlier_seed",
+        "policyId": "greedy-bayesian-linear",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 2,
+          "p10": 3,
+          "median": 4,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.166666666666667
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.2777777777777778
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -4,
+          "p10": -3,
+          "median": -1,
+          "p90": 1,
+          "max": 3,
+          "mean": -1.1388888888888888
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.9154144459538573,
+          "p10": 1.4208868367599092,
+          "median": 2.229987801465887,
+          "p90": 2.772793233971994,
+          "max": 3.2628638299353905,
+          "mean": 2.2249379737728905
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 2,
+          "mean": 0.1111111111111111
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 2,
+          "mean": 0.1111111111111111
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 2,
+          "mean": 0.2777777777777778
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.8,
+          "p10": 23.8,
+          "median": 24.833333333333332,
+          "p90": 27.2,
+          "max": 28.8,
+          "mean": 25.285185185185185
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0.027777777777777776,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "outlier_seed",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91028,
+            "discoveries": 0,
+            "regret": 3.2629,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.4606,
+                "regret": 0.7246,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-near-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4684,
+                "regret": 0.7324,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4011,
+                "regret": 0.6651,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 7,
+                  "allowed": 27,
+                  "eligible": 36
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "outlier_seed",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91019,
+            "validInteractions": 5,
+            "rewardObservations": 2,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-alpha-near-1",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0544,
+                "regret": 0.2089,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-alpha-near-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.018,
+                "regret": 0.2453,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-beta-near-0",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0406,
+                "regret": 0.2227,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 37
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "outlier_seed",
+        "policyId": "gaussian-lints",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 3,
+          "p10": 4,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 4.555555555555555
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.25
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -5,
+          "p10": -5,
+          "median": -3,
+          "p90": -1,
+          "max": 2,
+          "mean": -2.5
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.8305027557171621,
+          "p10": 1.8429655665892122,
+          "median": 2.3394461847721075,
+          "p90": 3.264889046623549,
+          "max": 4.7651495721333115,
+          "mean": 2.500911123479733
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.3055555555555556
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 1,
+          "mean": 0.3055555555555556
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.9166666666666666
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 21.5,
+          "p10": 22.5,
+          "median": 23.6,
+          "p90": 25,
+          "max": 28.4,
+          "mean": 23.875925925925927
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "outlier_seed",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91003,
+            "discoveries": 0,
+            "regret": 4.7651,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.9077,
+                "regret": 1.1581,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 11,
+                  "allowed": 31,
+                  "eligible": 37
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-alpha-near-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.3788,
+                "regret": 0.6292,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 37
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-beta-near-2",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.4798,
+                "regret": 0.7302,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 38
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "outlier_seed",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91008,
+            "validInteractions": 5,
+            "rewardObservations": 3,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-beta-probe-6",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.5647,
+                "regret": 0.7989,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-beta-probe-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.2085,
+                "regret": 0.4427,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "outlier_seed-gamma-probe-2",
+                "anchorId": "seed-gamma",
+                "candidateType": "PROBE",
+                "probeFeature": "valence",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.517,
+                "regret": 0.7512,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 36
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "unsure_heavy",
+        "policyId": "nearest-seed",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 2,
+          "p90": 3,
+          "max": 4,
+          "mean": 1.8055555555555556
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.4722222222222222
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -4,
+          "p10": -1,
+          "median": 0,
+          "p90": 2,
+          "max": 3,
+          "mean": 0.4166666666666667
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.27348058581681167,
+          "p10": 0.3366108778703813,
+          "median": 0.5585380703208827,
+          "p90": 0.6989106586600358,
+          "max": 0.8488663216859123,
+          "mean": 0.5419600077949107
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 0,
+          "mean": 0
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.05555555555555555
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 23.428571428571427,
+          "p10": 24.166666666666668,
+          "median": 26.4,
+          "p90": 27.2,
+          "max": 28.8,
+          "mean": 25.980555555555554
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "unsure_heavy",
+            "policyId": "nearest-seed",
+            "trialSeed": 91021,
+            "discoveries": 0,
+            "regret": 0.8489,
+            "lastEvents": [
+              {
+                "attempt": 5,
+                "kind": "PLAYBACK_FAILURE",
+                "trackId": "unsure_heavy-alpha-near-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "utility": 0.026,
+                "regret": 0.1018,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 34
+                }
+              },
+              {
+                "attempt": 6,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-probe-0",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.0923,
+                "regret": 0.2201,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 7,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-gamma-near-3",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.1236,
+                "regret": 0.2514,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 9,
+                  "allowed": 29,
+                  "eligible": 36
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "unsure_heavy",
+            "policyId": "nearest-seed",
+            "trialSeed": 91010,
+            "validInteractions": 5,
+            "rewardObservations": 0,
+            "lastEvents": [
+              {
+                "attempt": 5,
+                "kind": "FEEDBACKLESS_SKIP",
+                "trackId": "unsure_heavy-beta-near-4",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "utility": -0.0086,
+                "regret": 0.141,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 38
+                }
+              },
+              {
+                "attempt": 6,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-near-6",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0501,
+                "regret": 0.1825,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 39
+                }
+              },
+              {
+                "attempt": 7,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.0268,
+                "regret": 0.1592,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 10,
+                  "allowed": 30,
+                  "eligible": 40
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "unsure_heavy",
+        "policyId": "greedy-bayesian-linear",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 0,
+          "p10": 1,
+          "median": 2,
+          "p90": 3,
+          "max": 4,
+          "mean": 2.3333333333333335
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 1,
+          "max": 3,
+          "mean": 0.4166666666666667
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -3,
+          "p10": -2,
+          "median": 0,
+          "p90": 0,
+          "max": 2,
+          "mean": -0.4722222222222222
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.5044656603481724,
+          "p10": 0.8246594001717337,
+          "median": 1.0858951467427245,
+          "p90": 1.4874925827129584,
+          "max": 1.8639359827475257,
+          "mean": 1.1036439304413443
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.05555555555555555
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.05555555555555555
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.75
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.2,
+          "p10": 23,
+          "median": 24.6,
+          "p90": 26.4,
+          "max": 28,
+          "mean": 24.837301587301585
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "unsure_heavy",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91005,
+            "discoveries": 0,
+            "regret": 1.8639,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-gamma-probe-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.4234,
+                "regret": 0.4593,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 20,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "PROBE",
+                "probeFeature": "danceability",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.2322,
+                "regret": 0.3222,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-near-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.3786,
+                "regret": 0.4145,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 0,
+                  "allowed": 20,
+                  "eligible": 29
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "unsure_heavy",
+            "policyId": "greedy-bayesian-linear",
+            "trialSeed": 91005,
+            "validInteractions": 5,
+            "rewardObservations": 0,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-gamma-probe-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.4234,
+                "regret": 0.4593,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 20,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-gamma-probe-0",
+                "anchorId": "seed-gamma",
+                "candidateType": "PROBE",
+                "probeFeature": "danceability",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.2322,
+                "regret": 0.3222,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-near-0",
+                "anchorId": "seed-alpha",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.3786,
+                "regret": 0.4145,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 0,
+                  "allowed": 20,
+                  "eligible": 29
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "scenarioId": "unsure_heavy",
+        "policyId": "gaussian-lints",
+        "trials": 36,
+        "validInteractions": {
+          "n": 36,
+          "min": 5,
+          "p10": 5,
+          "median": 5,
+          "p90": 5,
+          "max": 5,
+          "mean": 5
+        },
+        "rewardObservations": {
+          "n": 36,
+          "min": 0,
+          "p10": 1,
+          "median": 2,
+          "p90": 4,
+          "max": 5,
+          "mean": 2.5
+        },
+        "nonCountingEvents": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 2,
+          "max": 2,
+          "mean": 0.4444444444444444
+        },
+        "cumulativeReward": {
+          "n": 36,
+          "min": -4,
+          "p10": -3,
+          "median": -2,
+          "p90": 0,
+          "max": 0,
+          "mean": -1.6944444444444444
+        },
+        "regret": {
+          "n": 36,
+          "min": 0.7650511189933321,
+          "p10": 0.8843929232259741,
+          "median": 1.4882269204708722,
+          "p90": 1.8501974682276519,
+          "max": 2.4233595528065326,
+          "mean": 1.45323202185227
+        },
+        "discoveries": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.05555555555555555
+        },
+        "prototypeCoverage": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 0,
+          "p90": 0,
+          "max": 1,
+          "mean": 0.05555555555555555
+        },
+        "probeCount": {
+          "n": 36,
+          "min": 0,
+          "p10": 0,
+          "median": 1,
+          "p90": 2,
+          "max": 2,
+          "mean": 1
+        },
+        "meanCandidatePool": {
+          "n": 36,
+          "min": 22.142857142857142,
+          "p10": 23,
+          "median": 24.166666666666668,
+          "p90": 25.285714285714285,
+          "max": 26.4,
+          "mean": 24.252248677248677
+        },
+        "blockedCatalogCount": 0,
+        "blockedCatalogRate": 0,
+        "completedFiveValidRate": 1,
+        "multiplePrototypeCoverageRate": 0,
+        "hardConstraintViolationCounts": {},
+        "falseCertaintyCount": 0,
+        "determinateCount": 0,
+        "evaluableCount": 252,
+        "falseCertaintyRate": null,
+        "classificationRate": 0,
+        "hypothesisClassificationsExample": {
+          "danceability": "UNDETERMINED",
+          "energy": "UNDETERMINED",
+          "valence": "UNDETERMINED",
+          "tempo": "UNDETERMINED",
+          "acousticness": "UNDETERMINED",
+          "speechiness": "UNDETERMINED",
+          "instrumentalness": "UNDETERMINED"
+        },
+        "examples": {
+          "blockedCatalog": null,
+          "falseCertainty": null,
+          "lowDiscovery": {
+            "scenarioId": "unsure_heavy",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91020,
+            "discoveries": 0,
+            "regret": 2.4234,
+            "lastEvents": [
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-near-7",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "DISLIKE",
+                "rewardObserved": true,
+                "utility": -0.3232,
+                "regret": 0.4006,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 31
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "FEEDBACKLESS_SKIP",
+                "trackId": "unsure_heavy-alpha-probe-6",
+                "anchorId": "seed-alpha",
+                "candidateType": "PROBE",
+                "probeFeature": "instrumentalness",
+                "utility": -0.0084,
+                "regret": 0.0858,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 6,
+                  "allowed": 26,
+                  "eligible": 32
+                }
+              },
+              {
+                "attempt": 6,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-alpha-probe-0",
+                "anchorId": "seed-beta",
+                "candidateType": "RELEVANT",
+                "rating": "NEUTRAL",
+                "rewardObserved": true,
+                "utility": -0.5064,
+                "regret": 0.5838,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 5,
+                  "allowed": 25,
+                  "eligible": 32
+                }
+              }
+            ]
+          },
+          "sparseReward": {
+            "scenarioId": "unsure_heavy",
+            "policyId": "gaussian-lints",
+            "trialSeed": 91005,
+            "validInteractions": 5,
+            "rewardObservations": 0,
+            "lastEvents": [
+              {
+                "attempt": 3,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-alpha-probe-4",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.318,
+                "regret": 0.3252,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 20,
+                  "eligible": 35
+                }
+              },
+              {
+                "attempt": 4,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-near-5",
+                "anchorId": "seed-gamma",
+                "candidateType": "RELEVANT",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": -0.3298,
+                "regret": 0.4198,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 36
+                }
+              },
+              {
+                "attempt": 5,
+                "kind": "RECOMMENDATION",
+                "trackId": "unsure_heavy-beta-probe-4",
+                "anchorId": "seed-beta",
+                "candidateType": "PROBE",
+                "probeFeature": "acousticness",
+                "rating": "UNSURE",
+                "rewardObserved": false,
+                "utility": 0.0899,
+                "regret": 0,
+                "candidateCounts": {
+                  "relevant": 20,
+                  "probe": 8,
+                  "allowed": 28,
+                  "eligible": 37
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "hardConstraintDetection": {
+    "finalPolicyRunViolationCounts": {},
+    "injectedFixtureDetectedTypes": [
+      "DUPLICATE_RECORDING",
+      "UNAVAILABLE_PLAYBACK",
+      "DUPLICATE_RECORDING",
+      "SAVED_CONTEXT_MISMATCH",
+      "ILLEGAL_FALLBACK_AFTER_BLOCKED_CATALOG",
+      "DUPLICATE_RECORDING"
+    ],
+    "note": "Injected fixture is a harness self-check, not part of the policy comparison."
+  },
+  "limits": [
+    "Synthetic utility does not prove real user demand, real discovery value, or target-user fit.",
+    "Synthetic recordings do not verify ReccoBeats coverage, YouTube playback, rights, regional availability, or human mapping review.",
+    "Thresholds, ROPE, credible interval level and pass/fail gates remain human decisions.",
+    "Hidden-feature and multi-modal truth are simplified stress tests, not a claim about actual listener psychology.",
+    "No production API, DB schema, UI, authentication, deployment or external service was exercised."
+  ],
+  "humanReviewNeeded": [
+    "Relevant/Probe threshold choice and candidate pool size.",
+    "ROPE width and credible interval level for hypothesis display.",
+    "Pass/fail gates for false certainty, BLOCKED_CATALOG and discovery metrics.",
+    "Whether additional final seeds or scenario parameters are needed before adopting calibration values."
+  ]
+}

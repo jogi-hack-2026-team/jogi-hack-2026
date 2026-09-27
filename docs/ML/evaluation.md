@@ -56,4 +56,6 @@ Target Userに近い人でSeed選択からSave/継続まで観察する。既知
 
 commit、catalog/feature/context/model/policy版、seed、反応生成式、全parameter、trial数、候補制約、失敗/除外、平均だけでなく分布・不確実性を残す。校正用と最終評価用のUser Model/乱数を分け、結果を見て閾値を合わせた場合は探索的結果と表示する。過去のraw evidenceを上書きしない。
 
-Simulationは不具合/仮定感度の検査で、需要や実User価値の証明ではない。研究の適用条件は[Evidence](evidence.md)を参照。PoCの既存29テストは現行モデルの推薦品質比較ではなく、上記評価は今後の実装Issueで実施する。
+Issue #40の合成評価は[実行script](../../experiments/stack-bakeoff/scripts/ml-synthetic-evaluation.ts)と[結果JSON](../../experiments/stack-bakeoff/results/ml-synthetic-evaluation.json)、[要約Report](../../experiments/stack-bakeoff/results/ml-synthetic-evaluation.md)に記録する。これはCalibration候補とNo-Go検査のSupporting Artifactであり、ROPE・credible interval・Relevant/Probe閾値・合格値の正式Decisionではない。
+
+Simulationは不具合/仮定感度の検査で、需要や実User価値の証明ではない。研究の適用条件は[Evidence](evidence.md)を参照。PoCの既存29テストは現行モデルの推薦品質比較ではない。Issue #40では合成評価を実施し、実Catalog・再生・User評価は今後のIssueで扱う。
