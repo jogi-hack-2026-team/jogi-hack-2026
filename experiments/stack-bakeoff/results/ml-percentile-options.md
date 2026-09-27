@@ -1,6 +1,6 @@
 # Issue #57: percentile同順位・参照版移行の合成比較
 
-**Supporting Artifact / Not a Source of Truth.** 本番の変換規約は未決。実録音、ReccoBeats、Playback、実Userの評価には使用していない。
+**Supporting Artifact / Not a Source of Truth.** 同順位の正式規約は比較後の依頼者判断により[Architecture D-16](../../../docs/architecture.md#d-16)へ記録した。参照版移行・範囲外・欠損は未決。実録音、ReccoBeats、Playback、実Userの評価には使用していない。
 
 ## 再実行
 
@@ -33,12 +33,12 @@ v1のdanceabilityはA/B/Cが0.2、Dが0.8のため、AのL=0、E=3である。�
 | 旧Posteriorを明示的に再構築 | 通常のFeedback更新とは別の移行として、元のAnchorを保持したcanonical評価と対象録音からv2用Contextを計算し、別版のState全体を作る。旧Contextと旧Stateは改変・混合しない | 学習履歴を引き継げる可能性 | 保存できる原特徴・Anchor・履歴・利用権と明示的な移行設計が必要。過去に提示したContextとv2用Contextは意味が異なるため、移行版と監査が必要 |
 | 旧版と新版を並行維持 | 既存状態はv1、新状態はv2に固定 | 既存Posteriorをそのまま保持できる | 旧参照集合・変換を利用可能に保ち、複数版を運用する費用と権利確認が必要 |
 
-**推奨候補（未採択）:** 同順位はmidを第一候補とし、基準を固定して版を明示する。版不一致は必ず拒否し、初期段階は新状態をpriorから開始する単純な移行を第一候補とする。再構築・並行維持は、保持可能な履歴と利用権が確認できた場合に再検討する。midの利点は同順位群を中央に置く対称性であり、この小さなfixtureだけで推薦品質が優れるとは言えない。
+**比較時の推奨と後続判断:** 本比較では同順位のmidを第一候補とした。2026-09-27の依頼者判断でmidだけを[D-16](../../../docs/architecture.md#d-16)として採択した。参照版不一致を黙って混ぜない制約は維持するが、新状態をpriorから開始する案、再構築、並行維持のどれを採るかは未決。midの利点は同順位群を中央に置き、特徴量の向きを反転しても曲間距離が変わらないこと。この小さなfixtureだけで推薦品質が優れるとは言えない。
 
-## #41で必要なチーム判断
+## #41で残るチーム判断
 
-1. 同順位をlower / mid / upperのどれで定義するか。対象値が参照集合内にない場合と参照範囲外、欠損・NaNの正式な扱いを併せて定める。
+1. 同順位はD-16のmidを使う。対象値が参照集合内にない場合と参照範囲外、欠損・NaNの正式な扱いを定める。
 2. Feature Referenceをいつ新しい版へ更新し、既存セッション・旧Posteriorを拒否／再構築／並行維持のどれで扱うか。context/transform/model版をどの単位で固定するかを定める。
 3. 実データの保存・ML利用条件を#38で確認するまで、合成結果を実Catalog成立の証拠にしない。
 
-判断後に[Product Spec](../../../docs/product-spec.md)と[Architecture](../../../docs/architecture.md)の該当Decision Logおよび#41へ反映する。本Issueでは本番コードと正式判断を変更しない。
+残る判断は[Product Spec](../../../docs/product-spec.md)と[Architecture](../../../docs/architecture.md)の該当箇所および#41へ反映する。本Issueでは本番コードを変更しない。

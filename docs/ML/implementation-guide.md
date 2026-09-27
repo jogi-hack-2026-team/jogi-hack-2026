@@ -9,7 +9,7 @@
 ## 入力から推薦まで
 
 1. Feature Referenceをunique recording＋有効7特徴で作り、データ出所・取得/変換版を記録する。Playback VERIFIED集合と混ぜない。利用権gateは[BE Evidence](../BE/evidence.md#保存学習用途の追加確認)。
-2. 各Featureを参照分布のempirical percentileへ変換する。同順位・範囲外・欠損・新曲追加時の規約を先に決める。新参照版を旧Posteriorへ混ぜない。
+2. 各Featureを参照分布のempirical percentileへ変換する。参照集合内の同順位は[D-16](../architecture.md#d-16)の `mid=(L+E/2)/N` を使う。範囲外・欠損・新曲追加時の規約と旧Stateの移行方式を実装前に決め、新参照版を旧Posteriorへ黙って混ぜない。
 3. 3〜5Seedを個別Prototypeとして保持。RelevantはSeed別kNNのunion、録音dedupe、経験分布によるrelevance guardを通す。kと閾値はcalibration対象。
 4. Probeは対象特徴kの差と、それ以外の特徴の近さを別々に検査する。Pareto優先は提案であり、最終tie-break/選択閾値は未決。生成時のAnchorを保持する。
 5. 正式Contextは `φ=[1,-abs(p1-p1_seed),…,-abs(p7-p7_seed)]/sqrt(8)`。1回のdecisionで同じθ_sampleを使い、Relevantの各Seed scoreのmaxとargmaxを選ぶ。Probeは生成Anchor固定。

@@ -32,17 +32,17 @@
 - ID / Title: DI-ML-02 / Feature versionを混ぜない
 - Context: 参照集合・正規化を変えると同じ録音の座標が変わる。
 - Intent: 各Posteriorの観測空間を固定する。
-- Design: unique recording＋有効7特徴のFeature Referenceをversion管理。Mapping VERIFIEDを参照母集団の条件にしない。Contextは負距離＋先頭切片をsqrt(8)で正規化。
+- Design: unique recording＋有効7特徴のFeature Referenceをversion管理。Mapping VERIFIEDを参照母集団の条件にしない。参照集合内の同順位は[D-16](../architecture.md#d-16)のmidで処理。Contextは負距離＋先頭切片をsqrt(8)で正規化。
 - Why: Playback整備の進捗は好みの学習尺度の変更理由にならない。
 - Invariants: 異なるtransform/context/model版の観測を黙って同じPosteriorへ集計しない。
 - Non-Goals: 生tempoを他の0〜1値へ無変換で混在。
 - Alternatives Considered: VERIFIED限定のpercentile、単一固定距離threshold。
-- Trade-offs: Catalog偏りとtie規約、移行再構築の手間。
+- Trade-offs: Catalog偏りと同順位による距離の変化、移行再構築の手間。
 - Failure / Risk: 旧PoCの正距離・末尾切片と新Contextを混ぜる。
-- Change Guidance: 同順位/欠損・版移行のOPENを決め、旧履歴の再構築かState分離を明記。library/solve参照値試験を実施。
+- Change Guidance: D-16の同順位規約を固定し、範囲外・欠損・版移行のOPENを決め、旧履歴の再構築かState分離を明記。library/solve参照値試験を実施。
 - Related Requirements: R-02 / R-03 / R-12
-- Related Decisions: P-09 / D-13
-- Evidence: [EV-ML-00](evidence.md#ev-ml-00) / [EV-ML-09](evidence.md#ev-ml-09)
+- Related Decisions: P-09 / D-13 / D-16
+- Evidence: [EV-ML-00](evidence.md#ev-ml-00) / [EV-ML-09](evidence.md#ev-ml-09) / [EV-ML-10](evidence.md#ev-ml-10) / [EV-ML-11](evidence.md#ev-ml-11)
 - Code Map: [lints.context](../../experiments/stack-bakeoff/backend/shared/lints.ts)、[contract](../../experiments/stack-bakeoff/shared/contract.ts)。実transformはなし。
 - Tests: 現行Context/版混在拒否/percentile単調性・ties・欠損は未整備。既存finite testは新モデル品質の証明ではない。
 

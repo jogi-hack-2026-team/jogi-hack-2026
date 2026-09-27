@@ -41,7 +41,7 @@ Guestはserver-side IdentityとSecure / HttpOnly / SameSite Cookieを基本設�
 | Product Behaviorとしての要求 | Current Design / Baseline | 状態・未決点 |
 | --- | --- | --- |
 | 複数の好みの起点を保つ | 3〜5のMulti-Prototype Seedsを保持。単一平均だけに集約しない | DECIDED / F25。Relevantは最大sample scoreのSeed、Probeは生成時Anchor |
-| 異なる尺度の特徴を比較可能にする | Catalog percentileとAnchor距離、下記8次元Context | DECIDED / F25。参照集合は下記。percentile同順位規約・版移行はOPEN |
+| 異なる尺度の特徴を比較可能にする | Catalog percentileとAnchor距離、下記8次元Context | DECIDED / F25。参照集合は下記。同順位規約は[D-16](architecture.md#d-16)でDECIDED。版移行はOPEN |
 | 好みに近い探索と仮説を確かめる探索を両立する | Relevant / 特徴k以外を近づけkに差を持つContrastive Probe | DECIDED / S25。距離閾値・Adaptiveの具体式はOPEN |
 | 評価を次の推薦へ反映する | Gaussian LinTSを採用、prior N(0,I)、noise scale 1 | 数式はDECIDED / S25のCurrent Design。実推薦品質は未検証 |
 | 初回に偏ったProbe体験を避ける | 初回Relevant、Probe最大2、不足時だけ連続禁止緩和 | DECIDED / S25。5曲計数はUser Experience参照 |
@@ -213,7 +213,7 @@ F25で決定。MUSTの受入条件は上のR-IDで追跡する。
 | ID | 人間が決める内容 | 関係する要件 |
 | --- | --- | --- |
 | O-01 | 再生開始と失敗の順序・遅延イベントの受付、失敗後の復旧/再Seed UI。計数と不足順序は決定済み | R-04、R-08、R-15 |
-| O-02 | percentile同順位規約・版移行、Relevant/Probe閾値・Adaptive選択・ROPE/credible threshold。参照集合、max/argmax Anchor、Context式とnoise 1は決定済み | R-02、R-03、R-13 |
+| O-02 | percentile参照版の移行、範囲外・欠損の扱い、Relevant/Probe閾値・Adaptive選択・ROPE/credible threshold。同順位はD-16、参照集合、max/argmax Anchor、Context式とnoise 1は決定済み | R-02、R-03、R-13 |
 | O-03 | ISRC正規化の詳細、不正値の処理、再推薦禁止範囲・VERIFIED再確認期限。recordingKey/fallbackは決定済み | R-01、R-08、R-09 |
 | O-04 | 継続探索、履歴保持、Guest失効/復旧、Rating変更期間、Aspect更新規則 | R-06、R-10、R-14、R-16 |
 | O-05 | 製品名、最終UX、評価合格基準・Target Userの需要検証。ScopeはF25で決定済み | 全体 |

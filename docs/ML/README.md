@@ -1,6 +1,6 @@
 # Recommendation / Online Learning
 
-**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書は2026-09-25、Issue #36の判断理由・実装支援を記録する。本番実装済みを意味しない。
+**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書はIssue #36の基本設計とIssue #57の同順位判断への入口であり、本番実装済みを意味しない。
 
 ## この領域の責務
 
@@ -11,7 +11,7 @@
 ## 読む順番
 
 1. [Productの要件](../product-spec.md#requirements)と[現行Architecture](../architecture.md#現在の採択と読む順番)。
-2. [Decision詳細](decision-log.md): D-13 / P-03 / P-09を比較理由・再検討条件から読む。
+2. [Decision詳細](decision-log.md): D-13 / D-16 / P-03 / P-09を比較理由・再検討条件から読む。
 3. [Design Intent](design-intent.md): 変更前に守る条件と失敗境界を確認する。
 4. [Implementation Guide](implementation-guide.md): 未実装の部分、着手順、Code/Test Mapへ進む。
 5. [Evidence](evidence.md): 根拠の出典、支持しない主張、未検証範囲を確認する。
