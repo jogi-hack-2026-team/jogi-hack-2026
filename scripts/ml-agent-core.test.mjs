@@ -74,7 +74,7 @@ test('only a recorded local run may resume In progress; closed not_planned does 
   assert.equal(select(issues, items, { activeNumbers: [41] }).selected.issue.number, 41);
 });
 
-test('the current seven-issue ML queue has no safe automatic starter', () => {
+test('Ready status still leaves dependent and decision-bound issues blocked', () => {
   const issues = [
     issue(38), issue(39, '前提: #38。人間が事前に合格率を設定する'),
     issue(40), issue(41, '前提: #38。着手前に決定を記録する'),
@@ -82,10 +82,11 @@ test('the current seven-issue ML queue has no safe automatic starter', () => {
     issue(43, '前提: #41、#42。受入は#39、校正は#40に依存。'),
     issue(44, '前提: #40、#42、#43。人間の校正判断前に確定させない'),
   ];
-  const items = [project(38, 'Must', 'In progress'), project(39),
-    project(40, 'Must', 'In progress'), project(41), project(42), project(43), project(44)];
+  const items = [38, 39, 40, 41, 42, 43, 44].map((number) => project(number));
   const result = select(issues, items);
   assert.equal(result.entries.length, 7);
-  assert.equal(result.selected, null);
+  assert.equal(result.selected.issue.number, 38);
+  assert.deepEqual(result.entries.filter((x) => x.ready).map((x) => x.issue.number), [38, 40]);
   assert.equal(result.entries.find((x) => x.issue.number === 38).downstream, 5);
+  assert.match(result.entries.find((x) => x.issue.number === 44).reasons.join(' '), /Human decision/);
 });

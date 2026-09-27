@@ -6,17 +6,17 @@
 
 Issue #47起票前にGitHub MCPでopen Issue全14件、ProjectのStatus/Scope、ラベル8種類を確認した。ML Issueはタイトルの `[ML]` で識別できる。既存の `investigation`、`blocked`、`needs-discussion` を使い、新ラベルは追加しない。ProjectにPriority列はなく、優先範囲はScope列のMust / Should / Couldを使う。親Issue #23は作業を束ねるもので、完了を全子Issueの着手条件とはしない。
 
-| Issue | Project Status / Scope | 明示された前提・判断 | 現時点の実行 |
+| Issue | Project Status / Scope | 明示された前提・判断 | 自動選択 |
 | --- | --- | --- | --- |
-| [#38](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/38) 利用条件 | In progress / Must | 権利・保存・ML用途の確認 | 既に作業中 |
+| [#38](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/38) 利用条件 | Ready / Must | 権利・保存・ML用途の確認 | 可。調査結果から人間のGo/No-Go判断が必要 |
 | [#39](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/39) 実Catalog | Ready / Must | #38、測定条件の人間設定 | Blocked |
-| [#40](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/40) 合成評価 | In progress / Must | 校正値の最終判断は人間 | 既に作業中 |
+| [#40](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/40) 合成評価 | Ready / Must | 校正値の最終判断は人間 | 可。合成fixtureの範囲から着手 |
 | [#41](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/41) Feature Reference | Ready / Must | #38、tie規約・版移行の着手前Decision | Blocked |
 | [#42](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/42) LinTS更新 | Ready / Must | #41 | Blocked |
 | [#43](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/43) 候補選択 | Ready / Must | #41、#42、実録音受入#39、校正#40 | Blocked |
 | [#44](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/44) 仮説・理由 | Ready / Must | #40、#42、#43、ROPE等の校正判断 | Blocked |
 
-本文に「合成fixtureなら先行可能」とある場合も、Issue全体のPRをDoneへ進めるには未決の受入条件を解消する。部分的な作業の切り出しは人間がIssueを分ける。ProjectでReadyのML Issueは5件あるが、前提・判断待ちを含めてHarnessが自動着手できるIssueは0件。ProjectのReady表示だけでは着手しない。
+上表は2026-09-27 17:45 JSTのProject変更後のsnapshot。ProjectでReadyのML Issueは7件で、選択規則を通るのは#38と#40の2件。#38は権利条件の調査であり、未確認の許諾を推定して実データを実装することはできない。#40の合成評価も、最終閾値を人間判断なしで確定できない。他の5件はReadyでも前提・判断待ちが残る。本文に「合成fixtureなら先行可能」とある場合も、Issue全体のPRをDoneへ進めるには未決の受入条件を解消する。部分的な作業の切り出しは人間がIssueを分ける。
 
 ## 選択と停止の規則
 
@@ -30,7 +30,7 @@ StatusがReady、Scopeが設定済み、現在のGitHub利用者がAssignee、�
 
 Node.js標準機能の[runner](../../scripts/run-ml-agent.mjs)と[選択規則](../../scripts/ml-agent-core.mjs)、[ML Skill](../../.agents/skills/ml-issue-execution/SKILL.md)を使用する。Codex SDK、独自サーバー、常駐サービス、新しいProduct dependencyは使わない。通常のAI操作ではGitHub MCP優先とし、このHarnessのバッチ処理ではユーザー指定の `gh` を使う。
 
-前提はNode.js、認証済みGitHub CLI（Issue・Project・PRの読み書き権限）、認証済みCodex CLI、Git、PowerShell、対象packageの既存依存をインストール済みであること。SecretをHarnessへ渡さない。通常実行はmainのcheckoutから行い、Code Freeze開始後は自動編集を拒否する。`mise run ml-agent` はこのTask専用に固定したGitHub CLIをPATHへ追加する。初回は以下のコマンドでTask専用ツールを導入し、GitHub CLIを認証する。GitHub Projectの読み書きには`project` scopeが必要。このWindows環境では2026-09-27に`gh` 2.101.0とCodex CLI、Nodeを確認し、実GitHubキューの`--dry-run`を実行した。ProjectでReadyのML Issueは5件、自動着手可能なIssueは0件であり、Issue実装からPR作成までの通し実行は未検証。
+前提はNode.js、認証済みGitHub CLI（Issue・Project・PRの読み書き権限）、認証済みCodex CLI、Git、PowerShell、対象packageの既存依存をインストール済みであること。SecretをHarnessへ渡さない。通常実行はmainのcheckoutから行い、Code Freeze開始後は自動編集を拒否する。`mise run ml-agent` はこのTask専用に固定したGitHub CLIをPATHへ追加する。初回は以下のコマンドでTask専用ツールを導入し、GitHub CLIを認証する。GitHub Projectの読み書きには`project` scopeが必要。このWindows環境では2026-09-27に`gh` 2.101.0とCodex CLI、Nodeを確認し、実GitHubキューの`--dry-run`を実行した。Ready 7件・自動選択可能2件（#38、#40）を確認した。模擬CLIを使うrunner統合テストで分岐とPR作成まで検証したが、実GitHubへのIssue実装からPR作成までの通し実行は未検証。
 
 Codex CLIはこの環境で実行できた`gpt-5.5`を既定で指定する。利用可能なモデルが異なる場合は実行前に`ML_AGENT_CODEX_MODEL`環境変数で上書きする。
 
@@ -46,6 +46,8 @@ mise run ml-agent
 `--dry-run` はProjectの`status`と、前提・担当・判断待ちを照合した`autoEligible`、除外理由を表示する。通常実行は自動着手可能なIssueのキューを連続処理する。`--once` は1件で停止する。初期同時実行数は1。Issueごとに `.worktrees/ml-<number>` と番号付き `feat/` または `chore/` Branchを分離し、後から2並列のスケジューラへ拡張できる。現時点で2並列は有効化しない。
 
 各Issueはread-only Goal contract → 実装 → Foundation・HarnessのNodeテスト・変更packageの既存test/lint/typecheck/build/eval → 別Codex実行のread-only構造化Review → 最大3回のRepair/再検証 → 日本語タイトルのPRを進める。Harness本体に変更があればrunnerの構文も検査する。検証前とPR作成前に最新の`origin/main`を取得し、更新があれば作業Branchへ取り込んで検証とReviewをやり直す。競合や未Commit変更があれば停止する。Issue固有のML評価はGoal contractと実装報告に記録し、Reviewerが妥当性を検査する。未実行の評価をPASSにしない。PR本文には実施結果、未検証項目、文書への影響、レビュー観点、リポジトリのチェックリストを記載する。CIはFoundationとFE/BEのbuild/typecheck workflowがPRで実行される。FE/BEは最小起動構成まででProduct機能と正式なML評価スクリプトは未整備であり、存在しないcommandを成功扱いにしない。
+
+Harnessの選択規則とrunner統合テストは`node --test scripts/ml-agent-core.test.mjs scripts/run-ml-agent.integration.test.mjs`で実行する。統合テストは一時リポジトリと模擬CLIを使用し、実GitHubを変更しない。Foundation CIでも同じテストを実行する。
 
 ## 実行状態と復旧
 

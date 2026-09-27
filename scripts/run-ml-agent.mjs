@@ -288,7 +288,8 @@ async function verify(worktree) {
   const changed = (await git(['diff', '--name-only', 'origin/main...HEAD'], worktree)).split(/\r?\n/).filter(Boolean);
   const checks = [
     ['pwsh', ['-NoProfile', '-File', 'scripts/check-foundation.ps1'], worktree],
-    ['node', ['--test', 'scripts/ml-agent-core.test.mjs'], worktree],
+    ['node', ['--test', 'scripts/ml-agent-core.test.mjs',
+      'scripts/run-ml-agent.integration.test.mjs'], worktree],
   ];
   if (changed.some((file) => file === 'scripts/run-ml-agent.mjs' ||
       file === 'scripts/ml-agent-core.mjs')) {
