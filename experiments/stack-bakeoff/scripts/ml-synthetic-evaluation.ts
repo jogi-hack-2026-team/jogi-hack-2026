@@ -887,6 +887,7 @@ function bestOracleUtility(
   fixture: Fixture,
   state: TrialState,
   config: ThresholdConfig,
+  theta?: number[],
 ) {
   const pools = buildPools(fixture, state, config);
   const allowed =
@@ -905,7 +906,7 @@ function bestOracleUtility(
     ...allowed.map((candidate) => {
       const anchor =
         candidate.candidateType === "RELEVANT"
-          ? chooseRelevantAnchor(candidate.track, fixture.seeds)
+          ? chooseRelevantAnchor(candidate.track, fixture.seeds, theta)
           : candidate.anchor!;
       return expectedUtility(fixture.scenario, candidate.track, anchor);
     }),
@@ -1096,7 +1097,7 @@ export function detectConstraintViolations(
       });
     }
     seenRecordings.add(track.recordingKey);
-    if (event.candidateType === "PROBE") {
+    if (event.kind === "RECOMMENDATION" && event.candidateType === "PROBE") {
       probeCount++;
       if (probeCount > 2) {
         violations.push({
@@ -1172,15 +1173,18 @@ function runTrial(
       });
       break;
     }
+    const oracleUtility = bestOracleUtility(
+      fixture,
+      state,
+      config,
+      decision.theta,
+    );
     state.attemptedRecordingKeys.add(decision.track.recordingKey);
-    state.previousCandidateType = decision.candidateType;
-    if (decision.candidateType === "PROBE") state.probeCount++;
     const utility = expectedUtility(
       fixture.scenario,
       decision.track,
       decision.anchor,
     );
-    const oracleUtility = bestOracleUtility(fixture, state, config);
     const regret =
       oracleUtility === undefined ? 0 : Math.max(0, oracleUtility - utility);
     const baseEvent: TrialEvent = {
@@ -1223,6 +1227,8 @@ function runTrial(
     );
     const rewardObserved = rating !== "UNSURE";
     state.validInteractions++;
+    state.previousCandidateType = decision.candidateType;
+    if (decision.candidateType === "PROBE") state.probeCount++;
     state.selectedRecordingKeys.add(decision.track.recordingKey);
     if (rewardObserved) {
       state.rewardObservations++;
@@ -1438,7 +1444,7 @@ function summarizeTrials(trials: TrialResult[]) {
   };
 }
 
-function runBatch(
+export function runBatch(
   config: ThresholdConfig,
   trialSeeds: number[],
   phase: "calibration" | "final",
@@ -1658,7 +1664,7 @@ function markdownReport(result: ReturnType<typeof runSyntheticEvaluation>) {
     "",
     "**Supporting Artifact / Not a Source of Truth**. This report records synthetic calibration evidence only.",
     "",
-    `- Commit: \`${result.commit}\``,
+    `- Code commit: \`${result.commit}\``,
     `- Command: \`${result.command}\``,
     `- Catalog / context / model / policy versions: \`${Object.values(result.versions).join("`, `")}\``,
     `- Calibration seeds: ${result.runPlan.calibrationSeeds.join(", ")}`,

@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   features,
   formalContext,
+  runBatch,
   runSyntheticEvaluation,
+  thresholdCandidates,
 } from "../scripts/ml-synthetic-evaluation.ts";
 
 const smallRun = () =>
@@ -46,6 +48,35 @@ test("evaluation keeps valid interactions separate from reward observations", ()
       (row) => row.rewardObservations.median < row.validInteractions.median,
     ),
   );
+});
+
+test("only valid Probe interactions consume the Probe budget", () => {
+  const trials = runBatch(
+    thresholdCandidates[1],
+    [91001, 91002, 91003, 91004, 91005, 91006, 91007, 91008, 91009, 91010],
+    "final",
+  ).trials;
+  let nonCountingProbeAttempts = 0;
+  for (const trial of trials) {
+    const validProbes = trial.events.filter(
+      (event) => event.kind === "RECOMMENDATION" && event.candidateType === "PROBE",
+    ).length;
+    nonCountingProbeAttempts += trial.events.filter(
+      (event) =>
+        (event.kind === "PLAYBACK_FAILURE" ||
+          event.kind === "FEEDBACKLESS_SKIP") &&
+        event.candidateType === "PROBE",
+    ).length;
+    assert.equal(trial.probeCount, validProbes);
+    assert.ok(validProbes <= 2);
+    assert.equal(
+      trial.constraintViolations.some(
+        (violation) => violation.type === "PROBE_LIMIT_BREACH",
+      ),
+      false,
+    );
+  }
+  assert.ok(nonCountingProbeAttempts > 0);
 });
 
 test("constraint detection reports injected hard-constraint examples", () => {
