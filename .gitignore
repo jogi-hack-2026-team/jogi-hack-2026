@@ -15,3 +15,7 @@ mise.local.toml
 .doppler/
 .doppler.yaml
 .secrets*
+
+# Local ML agent runs and isolated issue checkouts.
+.codex/ml-agent/
+.worktrees/

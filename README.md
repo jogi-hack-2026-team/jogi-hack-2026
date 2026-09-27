@@ -28,6 +28,7 @@
 本番アプリは未実装です。[比較PoC](experiments/stack-bakeoff/README.md)に隔離したパッケージ・起動・build・型検査・テストがありますが、正式採用や本番完成を意味しません。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
+ML Issueを対象とする任意のCodex Harnessは[実行手順と制約](docs/operations/ml-agent-harness.md)を参照してください。GitHub CLIが未導入の環境では実行できません。
 
 ## 開発基盤のセットアップと確認
 
