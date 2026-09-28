@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>音楽探索 画面・操作案の比較（Issue #45）</title>
+<!--
+  Supporting Artifact / Not a Source of Truth
+  Issue #45 の比較用ワイヤーフレーム。正式なUI・文言・画面分割ではない（Product Spec O-05 / 具体UIはOPEN）。
+  外部ファイル・通信なしで開ける。URLの#で表示状態を指定できる:
+    #plan=A&step=rate&fail=none&device=mobile   … 1画面
+    #view=flow&plan=A                           … 7ステップ一覧（画像書き出し用）
+    #view=fail&plan=A                           … 失敗状態一覧（画像書き出し用）
+-->
+<style>
+  :root {
+    --bg: #f4f4f2; --panel: #fff; --ink: #1f1f1f; --muted: #666; --line: #c9c9c4;
+    --soft: #ececea; --accent: #2f5d8a; --accent-soft: #e3ecf5; --warn: #8a5a00; --warn-soft: #fbf1dc;
+    --err: #9b2c2c; --err-soft: #f8e3e3; --ok: #2e6b3a; --ok-soft: #e2f1e5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.6 system-ui, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif; }
+  header.top { padding: 16px 20px 8px; }
+  header.top h1 { font-size: 18px; margin: 0 0 4px; }
+  .banner { background: var(--warn-soft); border: 1px solid #e5cf9c; color: var(--warn); padding: 6px 10px; border-radius: 6px; font-size: 12px; display: inline-block; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 8px 20px 12px; align-items: flex-start; }
+  .controls fieldset { border: 0; padding: 0; margin: 0; }
+  .controls legend { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 4px; }
+  .seg button { border: 1px solid var(--line); background: var(--panel); padding: 4px 10px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .seg button:focus-visible, .wf button:focus-visible { outline: 3px solid #7aa7d6; outline-offset: 2px; }
+  main.stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; padding: 0 20px 24px; }
+  @media (max-width: 900px) { main.stage { grid-template-columns: 1fr; } }
+  .device { background: var(--panel); border: 2px solid #999; border-radius: 10px; overflow: hidden; margin: 0 auto; width: 100%; max-width: 980px; }
+  .device.mobile { max-width: 375px; border-radius: 22px; }
+  .device .bar { background: var(--soft); border-bottom: 1px solid var(--line); padding: 4px 10px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+  .notes { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+  .notes h2 { font-size: 14px; margin: 0 0 6px; }
+  .notes h3 { font-size: 12px; margin: 10px 0 2px; color: var(--muted); }
+  .notes ul { margin: 0; padding-left: 18px; }
+  /* ワイヤーフレーム部品 */
+  .wf { padding: 14px; min-height: 420px; }
+  .wf h3 { margin: 0 0 8px; font-size: 16px; }
+  .wf .sub { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+  .wf .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .wf .col { display: flex; flex-direction: column; gap: 8px; }
+  .wf .box { border: 1px dashed var(--line); border-radius: 8px; padding: 10px; background: #fafaf8; }
+  .wf .card { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--panel); }
+  .wf .player { background: #d9d9d4; border-radius: 8px; height: 120px; display: flex; align-items: center; justify-content: center; color: #555; font-size: 12px; text-align: center; padding: 6px; }
+  .wf .player.small { height: 70px; }
+  .wf button { font: inherit; font-size: 13px; border: 1px solid #888; background: var(--panel); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+  .wf button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .wf button[disabled] { opacity: .45; cursor: not-allowed; }
+  .wf button.sel { outline: 2px solid var(--accent); background: var(--accent-soft); }
+  .wf .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .wf .rate button { padding: 8px 4px; }
+  .wf .chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--panel); font-size: 12px; }
+  .wf .chip.on { background: var(--accent-soft); border-color: var(--accent); }
+  .wf .tag { font-size: 11px; border-radius: 4px; padding: 0 6px; border: 1px solid var(--line); color: var(--muted); }
+  .wf .tag.probe { border-color: #9a7bb8; color: #6b4a8a; }
+  .wf .progress { display: flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
+  .wf .progress i { width: 18px; height: 8px; border-radius: 4px; background: var(--soft); border: 1px solid var(--line); display: inline-block; }
+  .wf .progress i.done { background: var(--accent); border-color: var(--accent); }
+  .wf .msg { border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .wf .msg.info { background: var(--accent-soft); }
+  .wf .msg.warn { background: var(--warn-soft); color: var(--warn); }
+  .wf .msg.err { background: var(--err-soft); color: var(--err); }
+  .wf .msg.ok { background: var(--ok-soft); color: var(--ok); }
+  .wf .msg strong { display: block; }
+  .wf .muted { color: var(--muted); font-size: 12px; }
+  .wf .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .wf .list li { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; display: flex; justify-content: space-between; gap: 8px; align-items: center; background: var(--panel); }
+  .wf .grid3 { display: grid; grid-template-columns: 200px minmax(0,1fr) 220px; gap: 10px; }
+  .wf .tabs { display: flex; border-bottom: 1px solid var(--line); margin: -14px -14px 10px; }
+  .wf .tabs span { flex: 1; text-align: center; padding: 8px 0; font-size: 12px; color: var(--muted); }
+  .wf .tabs span.on { color: var(--ink); border-bottom: 3px solid var(--accent); font-weight: 600; }
+  .wf .feed { display: flex; flex-direction: column; gap: 10px; }
+  .wf .bubble { border-radius: 12px; padding: 8px 12px; background: var(--soft); max-width: 92%; font-size: 13px; }
+  .wf .bubble.me { align-self: flex-end; background: var(--accent-soft); }
+  .wf.overlay { position: relative; min-height: 640px; }
+  .wf.overlay .sheet { position: absolute; inset: 20px 30px; background: var(--panel); border: 2px solid var(--accent); border-radius: 12px; padding: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.18); overflow: auto; }
+  .wf .dim { opacity: .35; pointer-events: none; }
+  .wf .sticky { position: sticky; top: 0; z-index: 1; background: var(--panel); padding-bottom: 6px; }
+  .mobile .wf .grid3 { grid-template-columns: 1fr; }
+  .mobile .wf.overlay { min-height: 720px; }
+  .mobile .wf.overlay .sheet { inset: 60px 8px 8px; }
+  /* 一覧表示（画像書き出し用） */
+  .sheetview { padding: 0 20px 24px; }
+  .sheetview h2 { font-size: 16px; margin: 8px 0; }
+  .sheetgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+  .sheetgrid figure { margin: 0; }
+  .sheetgrid figcaption { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .sheetgrid .device { max-width: 375px; border-radius: 16px; }
+  .sheetgrid .wf { min-height: 0; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>音楽探索 画面・操作案の比較 <span class="muted" style="font-size:13px;font-weight:400">Issue #45</span></h1>
+  <span class="banner">Supporting Artifact / Not a Source of Truth — 比較用ワイヤーフレーム。どの案も正式採択されていない。曲名・文言は仮（製品名・具体UI・文言は Product Spec O-05 で OPEN）。</span>
+</header>
+<div class="controls" id="controls"></div>
+<div id="root"></div>
+
+<script>
+// ---- 状態 ----------------------------------------------------------------
+const PLANS = {
+  A: { name: '案A ステップ分割', short: 'A' },
+  B: { name: '案B 1画面ボード', short: 'B' },
+  C: { name: '案C 仮説カードのフィード', short: 'C' },
+};
+const STEPS = [
+  ['seed', '1. Seed 3〜5曲'],
+  ['recommend', '2. 推薦（確定待ち→表示）'],
+  ['play', '3. 再生'],
+  ['rate', '4. 4値評価'],
+  ['checkpoint', '5. Checkpoint到達'],
+  ['summary', '6. Summary'],
+  ['save', '7. Save・継続'],
+];
+const FAILS = [
+  ['none', '正常'],
+  ['seed-short', 'Seed不足'],
+  ['play-fail', '再生失敗'],
+  ['save-fail', '評価の保存失敗'],
+  ['bookmark-fail', 'Saveの保存失敗'],
+  ['shortage', '候補不足'],
+  ['no-hyp', '仮説0件'],
+];
+// 失敗状態を見せるステップ
+const FAIL_STEP = { 'seed-short': 'seed', 'play-fail': 'play', 'save-fail': 'rate', 'bookmark-fail': 'save', 'shortage': 'recommend', 'no-hyp': 'summary' };
+
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  return {
+    view: p.get('view') || 'single',
+    plan: PLANS[p.get('plan')] ? p.get('plan') : 'A',
+    step: STEPS.some(s => s[0] === p.get('step')) ? p.get('step') : 'seed',
+    fail: FAILS.some(f => f[0] === p.get('fail')) ? p.get('fail') : 'none',
+    device: p.get('device') === 'mobile' ? 'mobile' : 'desktop',
+  };
+}
+let S = readHash();
+function go(patch) {
+  S = { ...S, ...patch };
+  if (patch.fail && patch.fail !== 'none') S.step = FAIL_STEP[patch.fail];
+  if (patch.step && S.fail !== 'none' && FAIL_STEP[S.fail] !== patch.step) S.fail = 'none';
+  const p = new URLSearchParams({ view: S.view, plan: S.plan, step: S.step, fail: S.fail, device: S.device });
+  history.replaceState(null, '', '#' + p);
+  render();
+}
+window.addEventListener('hashchange', () => { S = readHash(); render(); });
+
+// ---- 共通の仮データ（架空） ----------------------------------------------
+const SEEDS = ['Seed曲 1 / Artist P', 'Seed曲 2 / Artist Q', 'Seed曲 3 / Artist R', 'Seed曲 4 / Artist S'];
+const TRACK = { title: '候補曲 X', artist: 'Artist X', n: 3 };
+const WHY_REL = 'Seed曲 2 と、ノリ（danceability）や明るさ（valence）が近い曲です。';
+const WHY_PROBE = 'Seed曲 2 に近いけれど、テンポだけが違う曲です。テンポの違いをどう感じるか確かめます。';
+const RATES = ['好き', 'ふつう', '好きじゃない', 'わからない'];
+
+// ---- 小さな部品 ----------------------------------------------------------
+const h = String.raw;
+const progress = (done, total = 5) =>
+  `<div class="progress" aria-label="評価済み ${done}/${total}">${Array.from({ length: total }, (_, i) => `<i class="${i < done ? 'done' : ''}"></i>`).join('')}<span>${done}/${total}</span></div>`;
+const player = (label = 'YouTube埋め込みプレーヤー（実再生は未検証）', small) => `<div class="player ${small ? 'small' : ''}">${label}</div>`;
+const rateRow = (sel, disabled) => `<div class="rate" role="group" aria-label="評価">${RATES.map(r => `<button ${disabled ? 'disabled' : ''} class="${r === sel ? 'sel' : ''}" aria-pressed="${r === sel}">${r}</button>`).join('')}</div>`;
+const msg = (kind, title, body = '') => `<div class="msg ${kind}" role="${kind === 'err' ? 'alert' : 'status'}"><strong>${title}</strong>${body}</div>`;
+const seedChips = (n, extra = '') => `<div class="row">${SEEDS.slice(0, n).map(s => `<span class="chip on">${s} ✕</span>`).join('')}${extra}</div>`;
+const trackHead = (probe) => `<div class="row"><strong>${TRACK.title}</strong><span class="muted">${TRACK.artist}</span><span class="tag ${probe ? 'probe' : ''}">${probe ? '確かめる曲' : '近い曲'}</span></div>`;
+
+// 失敗状態の共通文言（文言は仮）
+const F = {
+  seedShort: msg('warn', 'あと1曲選ぶと始められます', '<div class="muted">好みを表す曲を3〜5曲選んでください（同じ録音は1回だけ）。</div>'),
+  seedDetail: `<ul class="list"><li><span>Seed曲 5 / Artist T</span><span class="tag">特徴データがないため選べません</span></li><li><span>Seed曲 1（別バージョン動画）</span><span class="tag">選択済みの曲と同じ録音です</span></li></ul>`,
+  playFail: msg('err', 'この曲を再生できませんでした', '<div class="muted">「好きじゃない」としては扱いません。評価数にも数えません。</div><div class="row" style="margin-top:6px"><button>もう一度再生</button><button>この曲は飛ばす（評価なし）</button></div>'),
+  saveFail: msg('err', '評価を保存できませんでした', '<div class="muted">まだ次の曲へは進みません。選んだ評価はそのままです。</div><div class="row" style="margin-top:6px"><button class="primary">再送する</button></div>'),
+  bookmarkFail: msg('err', '保存できませんでした', '<div class="muted">評価や好みの推定には影響しません。</div><div class="row" style="margin-top:6px"><button>もう一度保存</button></div>'),
+  shortageFirst: msg('warn', '今のSeedでは推薦できる曲が見つかりません', '<div class="muted">再生可能で特徴がそろった曲が足りません（Track 1 は近い曲がないと開始しません）。</div><div class="row" style="margin-top:6px"><button class="primary">Seedを選び直す</button></div>'),
+  shortageMid: msg('warn', '条件に合う曲がこれ以上ありません', '<div class="muted">3曲目で候補が尽きました（BLOCKED_CATALOG）。ここまでの評価は保存済みです。</div><div class="row" style="margin-top:6px"><button class="primary">ここまでの結果を見る</button><button>Seedを選び直す</button></div><div class="muted">※ 停止画面・再Seed操作の具体は OPEN</div>'),
+  noHyp: msg('info', 'まだ好みの傾向は判断できません', '<div class="muted">5曲では根拠が足りないのは普通のことです。聴いた曲の保存や、探索の続きはできます。</div>'),
+  pending: msg('info', '次の曲を選んでいます…', '<div class="muted">推薦と理由の保存が終わってから表示します。</div>'),
+};
+
+const summaryHyp = (zero) => zero ? F.noHyp : `<ul class="list">
+  <li><span>ノリ（danceability）が Seed に近い曲を好評価する傾向がある<b>かもしれません</b></span><span class="tag">SIMILARITY</span></li>
+  <li><span>テンポは、今のところ関係が弱そうです</span><span class="tag">LOW_RELEVANCE</span></li>
+  <li><span>明るさ（valence）はまだ判断できません</span><span class="tag">UNDETERMINED</span></li></ul>`;
+const discovered = (saveState) => `<ul class="list">
+  <li><span>候補曲 V — 好き</span><button class="${saveState === 'saved' ? 'sel' : ''}">${saveState === 'saved' ? '保存済み ✓' : '保存'}</button></li>
+  <li><span>候補曲 W — わからない</span><button>保存</button></li>
+  <li><span>候補曲 X — 好き</span><button>保存</button></li></ul>`;
+
+// ---- 案A: ステップ分割（画面遷移） -----------------------------------------
+function planA(step, fail, dev) {
+  const url = p => `<div class="muted">URL例: ${p}（Route名は未決）</div>`;
+  switch (step) {
+    case 'seed': {
+      const n = fail === 'seed-short' ? 2 : 3;
+      return h`<div class="wf">${url('/start')}<h3>あなたの好みを表す曲を3〜5曲</h3>
+        <p class="sub">「一番好きな曲」でなくて大丈夫です。選んだ曲はそれぞれ別の好みの起点として扱います。</p>
+        <div class="box col"><input aria-label="曲を検索" placeholder="曲名・アーティストで検索" style="padding:6px">
+        ${fail === 'seed-short' ? F.seedDetail : '<ul class="list"><li><span>Seed曲 4 / Artist S</span><button>追加</button></li></ul>'}</div>
+        <p class="muted">選択中 ${n}/5</p>${seedChips(n)}
+        ${fail === 'seed-short' ? F.seedShort : ''}
+        <div class="row" style="margin-top:10px"><button class="primary" ${n < 3 ? 'disabled' : ''}>探索を始める</button></div></div>`;
+    }
+    case 'recommend':
+      return h`<div class="wf">${url('/explore')}<div class="row" style="justify-content:space-between"><h3>探索 1曲目</h3>${progress(0)}</div>
+        ${fail === 'shortage' ? F.shortageFirst + '<p class="muted" style="margin-top:8px">途中（3曲目）で尽きた場合:</p>' + F.shortageMid : F.pending + '<div class="box dim" style="margin-top:8px">' + player() + '</div>'}</div>`;
+    case 'play':
+    case 'rate': {
+      const failPlay = fail === 'play-fail', failSave = fail === 'save-fail';
+      const sel = step === 'rate' ? '好き' : null;
+      return h`<div class="wf">${url('/explore')}<div class="row" style="justify-content:space-between"><h3>探索 ${TRACK.n}曲目</h3>${progress(2)}</div>
+        ${trackHead(true)}
+        <details ${dev === 'mobile' ? '' : 'open'} style="margin:6px 0"><summary class="muted">なぜこの曲？</summary><div class="msg info">${WHY_PROBE}</div></details>
+        ${failPlay ? player('再生エラー', true) + F.playFail : player()}
+        <p class="muted" style="margin:8px 0 4px">${step === 'play' && !failPlay ? '再生が始まると評価できます' : 'この曲はどうでしたか？'}</p>
+        ${rateRow(sel, failPlay || step === 'play')}
+        ${failSave ? '<div style="margin-top:8px">' + F.saveFail + '</div>' : ''}
+        <div class="row" style="margin-top:8px;justify-content:space-between"><button ${failSave || step === 'play' ? 'disabled' : ''} class="primary">${failSave ? '保存待ち…' : '次の曲へ'}</button><button>♡ 保存</button></div></div>`;
+    }
+    case 'checkpoint':
+      return h`<div class="wf">${url('/explore')}<div class="row" style="justify-content:space-between"><h3>探索 5曲目</h3>${progress(5)}</div>
+        ${msg('ok', '5曲評価しました', '<div class="muted">ここまでの結果をまとめました（学習が完了したという意味ではありません）。</div>')}
+        <div class="row" style="margin-top:10px"><button class="primary">結果を見る →</button></div></div>`;
+    case 'summary':
+      return h`<div class="wf">${url('/summary')}<h3>ここまでの探索</h3><p class="sub">5曲の評価から見えたこと（断定ではありません）</p>
+        ${summaryHyp(fail === 'no-hyp')}
+        <h3 style="margin-top:12px;font-size:14px">聴いた曲</h3>${discovered()}
+        <div class="row" style="margin-top:10px"><button class="primary">同じ好みで続ける</button><button>保存した曲を見る</button></div></div>`;
+    case 'save':
+      return h`<div class="wf">${url('/summary')}<h3>ここまでの探索</h3>${discovered('saved')}
+        ${fail === 'bookmark-fail' ? '<div style="margin-top:8px">' + F.bookmarkFail + '</div>' : ''}
+        ${msg('ok', '続きから探索します', '<div class="muted">好みの推定と聴いた曲の履歴を引き継ぎます。次の区切りは未決（O-04）。</div>')}
+        <div class="row" style="margin-top:10px"><button class="primary">6曲目へ</button></div></div>`;
+  }
+}
+
+// ---- 案B: 1画面ボード ---------------------------------------------------------
+function planB(step, fail, dev) {
+  const mobile = dev === 'mobile';
+  const done = { seed: 0, recommend: 0, play: 2, rate: 2, checkpoint: 5, summary: 5, save: 5 }[step];
+  const seedPane = h`<div class="box col"><strong>Seed</strong>${step === 'seed' ? `<input aria-label="曲を検索" placeholder="検索" style="padding:6px">` : ''}
+    ${SEEDS.slice(0, fail === 'seed-short' ? 2 : 3).map(s => `<span class="chip on">${s}</span>`).join('')}
+    ${fail === 'seed-short' ? F.seedDetail : ''}</div>`;
+  const historyPane = h`<div class="box col"><strong>評価の記録</strong>
+    ${done ? '<ul class="list"><li><span>候補曲 V</span><span class="tag">好き</span></li><li><span>候補曲 W</span><span class="tag">わからない</span></li></ul>' : '<span class="muted">まだありません</span>'}
+    <strong style="margin-top:6px">見えてきた傾向</strong><span class="muted">${done < 5 ? '5曲評価するとまとめます（途中は表示しない案）' : '→ 右上のまとめ'}</span></div>`;
+  let center;
+  if (step === 'seed') {
+    center = h`<div class="col">${player('Seedを3曲以上選ぶと、ここに1曲目が出ます')}${fail === 'seed-short' ? F.seedShort : ''}
+      <button class="primary" ${fail === 'seed-short' ? 'disabled' : ''}>探索を始める</button></div>`;
+  } else if (step === 'recommend') {
+    center = fail === 'shortage' ? F.shortageFirst + '<p class="muted">途中で尽きた場合:</p>' + F.shortageMid : F.pending + '<div class="dim">' + player() + '</div>';
+  } else {
+    const failPlay = fail === 'play-fail', failSave = fail === 'save-fail';
+    center = h`<div class="col">${trackHead(true)}<div class="msg info">${WHY_PROBE}</div>
+      ${failPlay ? player('再生エラー') + F.playFail : player()}
+      ${rateRow(step === 'rate' ? '好き' : null, failPlay || step === 'play')}
+      ${failSave ? F.saveFail : ''}
+      <div class="row" style="justify-content:space-between"><button class="primary" ${failSave || step === 'play' ? 'disabled' : ''}>次の曲へ</button><button>♡ 保存</button></div></div>`;
+  }
+  let body = h`<div class="row" style="justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">探索ボード</h3>${progress(done)}</div>`;
+  if (mobile) {
+    const tab = step === 'seed' ? 0 : 1;
+    body = h`<div class="tabs"><span class="${tab === 0 ? 'on' : ''}">Seed</span><span class="${tab === 1 ? 'on' : ''}">探索</span><span>記録</span></div>` + body + (tab === 0 ? seedPane + '<div style="margin-top:8px">' + center + '</div>' : center);
+  } else {
+    body += h`<div class="grid3">${seedPane}${center}${historyPane}</div>`;
+  }
+  if (['checkpoint', 'summary', 'save'].includes(step)) {
+    const sheet = step === 'checkpoint'
+      ? msg('ok', '5曲評価しました', '<div class="muted">ボードの上にまとめを重ねて表示します。</div>') + '<div class="row" style="margin-top:8px"><button class="primary">まとめを見る</button></div>'
+      : h`<h3>ここまでのまとめ</h3>${summaryHyp(fail === 'no-hyp')}<h3 style="margin-top:10px;font-size:14px">聴いた曲</h3>${discovered(step === 'save' ? 'saved' : '')}
+        ${fail === 'bookmark-fail' ? '<div style="margin-top:6px">' + F.bookmarkFail + '</div>' : ''}
+        <div class="row" style="margin-top:8px"><button class="primary">ボードに戻って続ける</button></div>`;
+    return `<div class="wf overlay"><div class="dim">${body}</div><div class="sheet" role="dialog" aria-label="まとめ">${sheet}</div></div>`;
+  }
+  return `<div class="wf">${body}</div>`;
+}
+
+// ---- 案C: 仮説カードのフィード -------------------------------------------------
+function planC(step, fail, dev) {
+  const idx = STEPS.findIndex(s => s[0] === step);
+  const parts = [];
+  parts.push(`<div class="bubble">好みを表す曲を3〜5曲教えてください。1曲ずつ「なぜその曲を選んだか」を確かめながら進みます。</div>`);
+  if (step === 'seed') {
+    const n = fail === 'seed-short' ? 2 : 3;
+    parts.push(h`<div class="card col"><input aria-label="曲を検索" placeholder="曲名・アーティストで検索" style="padding:6px">${fail === 'seed-short' ? F.seedDetail : ''}${seedChips(n)}
+      ${fail === 'seed-short' ? F.seedShort : ''}<button class="primary" ${n < 3 ? 'disabled' : ''}>この${n}曲で始める</button></div>`);
+  } else {
+    parts.push(`<div class="bubble me">${SEEDS.slice(0, 3).map(s => s.split(' / ')[0]).join('、')} で始める</div>`);
+  }
+  if (step === 'recommend') {
+    parts.push(fail === 'shortage' ? F.shortageFirst + F.shortageMid : F.pending);
+  }
+  if (idx >= 2) {
+    parts.push(`<div class="card muted">1曲目 候補曲 V — 好き　／　2曲目 候補曲 W — わからない</div>`);
+    const failPlay = fail === 'play-fail', failSave = fail === 'save-fail';
+    const cur = idx <= 3;
+    parts.push(h`<div class="card col"><div class="muted">3曲目 — 確かめたいこと</div>
+      <div class="msg info">${WHY_PROBE}</div>
+      ${trackHead(true)}
+      ${cur ? (failPlay ? player('再生エラー', true) + F.playFail : player('', true).replace('></div>', '>プレーヤー（画面上部に固定）</div>')) : ''}
+      ${rateRow(step === 'play' ? null : '好き', failPlay || step === 'play' || !cur)}
+      ${failSave ? F.saveFail : ''}
+      <div class="row" style="justify-content:flex-end"><button>♡ 保存</button></div></div>`);
+  }
+  if (idx >= 4) {
+    parts.push(msg('ok', '5曲評価しました — ひと区切り', '<div class="muted">学習の完了ではありません。下にまとめを表示します。</div>'));
+  }
+  if (idx >= 5) {
+    parts.push(h`<div class="card col"><strong>ここまでに確かめたこと</strong>${summaryHyp(fail === 'no-hyp')}<strong>聴いた曲</strong>${discovered(step === 'save' ? 'saved' : '')}
+      ${fail === 'bookmark-fail' ? F.bookmarkFail : ''}<button class="primary">同じ好みで続ける</button></div>`);
+  }
+  if (step === 'save') parts.push(`<div class="bubble">続きを始めます。次は「明るさ」を確かめる曲かもしれません。</div>`);
+  const top = idx >= 2 && idx <= 3 ? `<div class="sticky"><div class="row" style="justify-content:space-between">${progress(2)}<span class="muted">再生中: ${TRACK.title}</span></div></div>` : '';
+  return `<div class="wf">${top}<div class="feed">${parts.join('')}</div></div>`;
+}
+
+const RENDER = { A: planA, B: planB, C: planC };
+
+// ---- 案ごとのメモ（比較の観点） ---------------------------------------------
+const NOTES = {
+  A: {
+    idea: '1画面1目的。Seed選択→探索（1曲ずつ）→まとめ→保存・継続を別画面に分ける。',
+    explain: '最初に1文で趣旨を説明。曲ごとの理由は「なぜこの曲？」で開閉（PCは開、モバイルは閉）。まとめは専用画面。',
+    screens: '3画面（開始 / 探索 / まとめ）。Routeと状態の対応が素直。',
+    risk: '曲ごとの理由が畳まれると「仮説を確かめる」体験が伝わりにくい。画面遷移が多く見える。',
+  },
+  B: {
+    idea: 'Seed・現在の曲・評価の記録を1画面に並べ、まとめは同じ画面に重ねる。',
+    explain: '理由は常に表示。記録とまとめが横にあり、探索の流れを見渡せる。',
+    screens: '1画面＋まとめのシート。モバイルはタブで3分割。',
+    risk: '情報が多く、対象ユーザー（音楽理論に詳しくない）が迷いやすい。pending/error/conflictが同時に複数の領域に出るため状態管理が重い。モバイルで評価までのスクロール・タブ切替が増える。',
+  },
+  C: {
+    idea: '1曲ごとに「何を確かめる曲か」を先に示すカードを縦に積む。まとめ・継続もフィードの続き。',
+    explain: '聴く前に仮説（例: テンポだけ違う曲）を示し、評価後に次のカードへ。Core Value（仮説を次の曲で確かめる）が最も伝わる。',
+    screens: '1画面（フィード）＋上部固定のプレーヤー。',
+    risk: '文言が因果の断定に見えやすい（R-13）。Relevant中心の回は「確かめること」が薄い。フィードが長くなりキーボード移動・古いカードの評価訂正（R-06）の扱いが複雑。',
+  },
+};
+const STEP_NOTES = {
+  seed: '3曲未満は開始不可（R-01）。重複録音・特徴なしの曲は理由を示して選べない。',
+  recommend: 'Interaction＋Decision Traceの保存が終わるまで確定表示しない（R-07）。Track 1で近い曲が0件なら開始不可、途中で尽きたらBLOCKED_CATALOG（R-15）。',
+  play: 'onReadyではなく実際のPLAYINGで評価可能にする（DI-FE-03）。再生失敗は負評価・計数にしない。',
+  rate: '4値を同じ重さで並べる（UNSUREも数える／学習しない）。保存成功まで次へ進めない（R-07）。再送は同じInteractionとして扱う（R-05）。',
+  checkpoint: '再生開始＋受理済み評価が5件で区切り（R-04）。「学習完了」と表示しない。',
+  summary: '仮説0件・全UNDETERMINEDでも正常表示（R-13）。断定しない言い回し。',
+  save: 'SaveはRatingと別（R-17）。保存失敗が評価に影響しないことを示す。継続は同じ好みを引き継ぐ（R-16）。次の区切りはOPEN（O-04）。',
+};
+
+// ---- 描画 --------------------------------------------------------------------
+function seg(legend, items, cur, key) {
+  return `<fieldset><legend>${legend}</legend><div class="seg">${items.map(([v, l]) =>
+    `<button type="button" aria-pressed="${v === cur}" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div></fieldset>`;
+}
+function frame(plan, step, fail, dev) {
+  const label = `${PLANS[plan].name} — ${STEPS.find(s => s[0] === step)[1]}${fail !== 'none' ? ' — ' + FAILS.find(f => f[0] === fail)[1] : ''}`;
+  return `<div class="device ${dev}" aria-label="${label}"><div class="bar"><span>${PLANS[plan].name}</span><span>${dev === 'mobile' ? 'モバイル 375px' : 'PC'}</span></div>${RENDER[plan](step, fail, dev)}</div>`;
+}
+function render() {
+  document.getElementById('controls').innerHTML = S.view === 'single'
+    ? seg('案', Object.entries(PLANS).map(([k, v]) => [k, v.name]), S.plan, 'plan')
+      + seg('操作シナリオ', STEPS, S.step, 'step')
+      + seg('失敗状態', FAILS, S.fail, 'fail')
+      + seg('画面幅', [['desktop', 'PC'], ['mobile', 'モバイル']], S.device, 'device')
+      + seg('一覧（画像用）', [['flow', '7ステップ一覧'], ['fail', '失敗状態一覧']], '', 'view')
+    : seg('案', Object.entries(PLANS).map(([k, v]) => [k, v.name]), S.plan, 'plan') + seg('表示', [['single', '1画面に戻る'], ['flow', '7ステップ一覧'], ['fail', '失敗状態一覧']], S.view, 'view');
+  const root = document.getElementById('root');
+  if (S.view === 'single') {
+    const n = NOTES[S.plan];
+    root.innerHTML = `<main class="stage"><div>${frame(S.plan, S.step, S.fail, S.device)}</div>
+      <aside class="notes"><h2>${PLANS[S.plan].name}</h2><p>${n.idea}</p>
+      <h3>説明のタイミング</h3><p>${n.explain}</p><h3>画面数</h3><p>${n.screens}</p><h3>弱点</h3><p>${n.risk}</p>
+      <h3>このステップで守ること（全案共通）</h3><p>${STEP_NOTES[S.step]}</p></aside></main>`;
+  } else {
+    const items = S.view === 'flow'
+      ? STEPS.map(([k, l]) => [l, k, 'none'])
+      : FAILS.filter(f => f[0] !== 'none').map(([k, l]) => [l, FAIL_STEP[k], k]);
+    root.innerHTML = `<section class="sheetview"><h2>${PLANS[S.plan].name} — ${S.view === 'flow' ? '操作シナリオ（正常）' : '主要な失敗時'}（モバイル幅）</h2>
+      <div class="sheetgrid">${items.map(([l, st, fl]) => `<figure><figcaption>${l}</figcaption>${frame(S.plan, st, fl, 'mobile')}</figure>`).join('')}</div></section>`;
+  }
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => go({ [b.dataset.k]: b.dataset.v })));
+}
+render();
+</script>
+</body>
+</html>
