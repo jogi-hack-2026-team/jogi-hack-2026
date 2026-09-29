@@ -1,4 +1,9 @@
-# Current tasks only. The previous application toolchain is archived.
+# Node 24 LTS and npm were adopted for the application toolchain in Issue #49.
+# Node 24.21.0 bundles npm 11.19.0. Doppler remains a separate tool.
+[tools]
+node = "24.21.0"
+doppler = "3.76.5"
+
 [tasks.check]
 description = "Check repository documentation and configuration (no application tests)"
 run = "pwsh -NoProfile -File scripts/check-foundation.ps1"

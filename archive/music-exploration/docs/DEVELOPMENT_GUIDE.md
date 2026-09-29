@@ -1,18 +1,20 @@
 # 開発運用ガイド
 
+> 2026-09-30に旧アプリの起動手順を一時退避しました。以下のアプリ用コマンドは現行手順ではありません。[現在のセットアップ](../../../docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。
+
 このドキュメントでは、このリポジトリで開発するときの基本的な進め方を説明します。
 
 GitHub、Issue、Branch、Pull Requestなどを使った開発に慣れていない人でも、
 「今何をしていて、次に何をすればいいのか」が分かることを目的としています。
 
 詳細なルールだけ確認したい場合は、ルートにある
-[CONTRIBUTING.md](../CONTRIBUTING.md)
+[CONTRIBUTING.md](../../../CONTRIBUTING.md)
 を参照してください。
 
 AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基本とし、接続できない場合はこのガイドのGitHub Web UI手順を使います。
 人間が使う操作手段は強制しません。ローカルのBranch・Commit・Pushは`git`を使います。
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
-[AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
+[AI開発ツールガイド](../../../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
 機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。FE / BEは最小起動構成のみでProduct機能は未実装です。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能やIssue番号・Branch名は操作を説明する例です。実装済み機能や実在する対応Issueを示すものではありません。
@@ -116,7 +118,7 @@ Issueは、
 
 変更作業を始める前に、対応する既存Issueを確認し、なければIssueを作ります。
 小さな修正や文書更新も対象です。作成承認やログインを待っている間は、変更を先行せず読み取り調査とIssue本文案の準備までに留めます。
-詳細は[チケット作成の着手条件](../CONTRIBUTING.md#チケット作成を着手条件にする)を参照してください。
+詳細は[チケット作成の着手条件](../../../CONTRIBUTING.md#チケット作成を着手条件にする)を参照してください。
 
 例えば、
 
@@ -238,7 +240,7 @@ Assigneeは、
 3. 作成済みのIssueでは、右側の `Assignees` の編集、または `Assign yourself` で設定します。
 
 Issueを作った人ではなく、実際に作業する人を設定してください。担当が変わったらAssigneeも更新します。
-運用ルールの正本は [CONTRIBUTINGのAssignee](../CONTRIBUTING.md#assignee) を参照してください。
+運用ルールの正本は [CONTRIBUTINGのAssignee](../../../CONTRIBUTING.md#assignee) を参照してください。
 
 担当者が決まっていないIssueを誰かが勝手に実装し始めることは避けます。
 
@@ -380,7 +382,7 @@ README更新
 
 # 13. 初回セットアップ
 
-現行のアプリ用Toolchainと技術スタックは未定です。[Architectureの現行状態](architecture.md#現行状態2026-09-30)を参照してください。旧Web/API・開発用PostgreSQL・lockfileは[履歴](../archive/music-exploration/README.md)に保管しました。Product機能、DB migration、正式APIはまだありません。PowerShell 7は共通の文書・設定チェックに使用します。
+このリポジトリの開発ToolchainはNode 24 LTS / npmです。[Architectureの現行状態](architecture.md#現行状態2026-09-29)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。旧音楽案向けのFE / BE、開発用PostgreSQL、lockfileは残っていますが、次のProduct向けの技術採択は未定です。Product機能、DB migration、正式APIはまだありません。PowerShell 7は補助スクリプト用です。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -407,17 +409,97 @@ git remote -v
 git status
 ```
 
-GitとPowerShell 7が必要です。現行の文書・設定チェックにアプリRuntime、DB、Secretは不要です。miseを使う場合は[公式の導入手順](https://mise.jdx.dev/getting-started.html)を確認し、`mise.toml`と`scripts/`を読んでから信頼操作を行います。
+GitとPowerShell 7が必要です。ComposeだけでWeb・API・DBを起動する場合は、以下のmise導入を飛ばして[Compose手順](#composeでwebapipostgresqlを起動する)へ進めます。ホスト上で開発・型検査・ビルドを行う場合、miseは[公式の導入手順](https://mise.jdx.dev/getting-started.html)を利用してください。
+miseは開発ツールの版と共通コマンドを管理するCLI（端末から使うツール）です。OS・グローバル設定の変更は本人が確認して行います。
+基盤整備時の検証版はmise `2026.9.11`です。当時のPCでは検証用バイナリを`.tools/mise/mise/bin/mise.exe`に配置し、PATHには追加していませんでした。Git管理外なので、他のcloneや作業コピーに同じファイルがあるとは限りません。
+miseの導入前でも、下記のPowerShell直接実行で検証できます。
+`mise.toml`と`scripts/`を読んでから、リポジトリを信頼する操作を行います。
 
 ```sh
 mise trust
 mise run --skip-tools check
 mise run --skip-tools hooks:install
+mise install
+mise exec -- node --version
+mise exec -- npm --version
 ```
 
-miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File scripts/check-foundation.ps1`を実行します。Hook導入はローカルの`core.hooksPath`を変更するため、既存Hookを確認してから行います。
+`--skip-tools`は文書検証やHook導入のためにNodeやDopplerをインストールする必要がないことを明示します。`mise install`は[mise.toml](../mise.toml)に固定したNode 24.21.0とDoppler 3.76.5を取得します。版確認の期待値はNode `v24.21.0`、同梱npm `11.19.0`です。システムに別のNodeがあっても、以降は`mise exec --`またはmiseのタスク経由で固定版を使います。
+miseがまだない場合、同じ検証を`pwsh -NoProfile -File scripts/check-foundation.ps1`で実行できます。
+Hookの導入はこのリポジトリの`core.hooksPath`のみを設定し、既存Hookがあれば上書きせず停止します。
+各メンバーのCloneで一度実行してください。pre-commitはステージ済み差分の空白検査、CIは文書・設定の全体検査を行います。
 
-旧Web/API・Compose・Node/npmの起動手順は[履歴内の開発ガイド](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)に保管しています。次のProduct向けの起動コマンドと技術スタックは未定です。
+| コマンド | 意味・成功時に確認すること |
+| --- | --- |
+| `git clone https://github.com/jogi-hack-2026-team/jogi-hack-2026.git` | リポジトリを取得する。`jogi-hack-2026`ディレクトリが作成される。すでにclone済みなら繰り返さない |
+| `cd jogi-hack-2026` | 作業ディレクトリをリポジトリのルートへ移す |
+| `git remote -v` | 取得・送信先を表示する。`origin`がこのチームのリポジトリか確認する |
+| `git status` | 現在のBranchと変更を表示する。既存変更があれば内容を確認し、破棄しない |
+| `mise trust` | 読んだ設定を信頼する操作。実行するタスクと設定を確認してから行う。ソフトウェアの安全性を検証するコマンドではない |
+| `mise run --skip-tools check` | ツールの自動インストールを省略して文書・設定検証を実行する。成功時は`PASS:`と検査範囲が表示される |
+| `pwsh -NoProfile -File scripts/check-foundation.ps1` | PowerShell 7で、個人のプロファイルを読み込まず同じ検証スクリプトを実行する。miseなしで使える |
+| `mise run --skip-tools hooks:install` | ローカルの`core.hooksPath`を`.githooks`に設定する。成功時は設定完了が表示される。既存Hookとの衝突時は停止する |
+| `mise install` | 固定したNodeとDopplerのCLIを各自の環境に取得する。DopplerへのログインやSecret取得は行わない |
+| `mise exec -- node --version` / `mise exec -- npm --version` | 固定版のNodeと同梱npmを確認する。期待値は`v24.21.0` / `11.19.0` |
+
+### ComposeでWeb・API・PostgreSQLを起動する
+
+Docker Engineと`docker compose`を各PCに導入し、Engineを起動してからリポジトリのルートで実行します。Dockerの導入は[公式手順](https://docs.docker.com/get-docker/)を参照してください。Compose内でNode 24.21.0とルートの`package-lock.json`を使うため、Compose起動だけならホストのNode・mise・`npm ci`は不要です。文書チェックにはDockerもDBパスワードも不要です。
+
+```powershell
+$env:JOGI_LOCAL_DB_PASSWORD = Read-Host 'このPC専用のローカルDBパスワード' -MaskInput
+docker compose config --quiet
+docker compose up --build -d --wait
+docker compose ps
+```
+
+`docker compose up`はWeb・API・DBの3サービスを起動します。上記の`--build`はソースや依存関係の変更をimageへ反映し、`-d --wait`は3サービスが起動・healthyになるまで待って端末を戻します。初回のimage取得・buildには時間がかかります。ブラウザで`http://127.0.0.1:5173/`を開き、「API: 接続できています」を確認します。API単体は`http://127.0.0.1:3000/api/health`で`{"status":"ok"}`を返します。Webの`/api`はCompose内の`api:3000`へ転送します。公開portはすべてホストの`127.0.0.1`に限定しています。healthはDB接続やProduct機能の完成を示しません。
+
+Composeはソースをコンテナへbind mountしません。ソース・manifest・lockfile変更後は再度`docker compose up --build -d --wait`を実行してください。ホスト上で即時反映しながら開発する場合は、下記の[ホスト起動](#ホスト上でアプリを起動する)を使います。同じportを使うので、切り替える前にComposeを停止してください。
+
+終了時は`docker compose down`を実行します。名前付きDB volumeは残り、次回起動時もデータを使用できます。`down --volumes`はDBデータを消すため通常の停止手順に含めません。
+
+### PostgreSQLだけを起動する
+
+ホスト上のWeb・API開発でローカルDBだけが必要な場合は、同じパスワードを設定した端末で次を実行します。現行のhealth確認はDBへ接続しないため、DBを使わない作業では起動不要です。
+
+```powershell
+docker compose up -d --wait db
+docker compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -U jogi -d jogi -Atqc "select 1"'
+```
+
+最後のコマンドが`1`を返せば、コンテナ内からパスワード付きTCP接続ができています。ホストからの接続先は`127.0.0.1:55432`、DB名とUserは`jogi`です。パスワードは各自のローカル開発DB専用として保管し、同じvolumeを再起動するときは同じ値を入力します。`docker compose config`を`--quiet`なしで実行すると環境変数の値を表示し得るため、Secretを含む状態では使いません。実ユーザーデータやProductionの接続情報をこのDBへ入れません。
+
+作業終了時は`docker compose down`で停止します。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。現行のFE / BE起動確認はDBに接続せず、migration・seedは後続Issueで追加します。
+
+### ホスト上でアプリを起動する
+
+Composeを使わない場合は、Nodeとnpmの版確認後、ルートの[単一lockfile](../package-lock.json)から依存を導入します。別々の端末でAPIとWebを起動してください。各コマンドはリポジトリのルートで実行します。Composeを起動中なら先に停止してportの競合を避けます。
+
+```sh
+mise exec -- npm ci
+mise exec -- npm run typecheck
+mise exec -- npm run build
+```
+
+API用の端末:
+
+```sh
+mise exec -- npm run dev:api
+```
+
+Web用の端末:
+
+```sh
+mise exec -- npm run dev:web
+```
+
+ブラウザで`http://127.0.0.1:5173/`を開き、「API: 接続できています」を確認します。API単体は`http://127.0.0.1:3000/api/health`で`{"status":"ok"}`を返します。Webの`/api`は開発時だけViteがローカルAPIへ転送します。停止は各端末で`Ctrl+C`です。port `5173`または`3000`が使用中なら競合processを確認してください。現行healthはDBの稼働やProduct APIの完成を示しません。
+
+`npm ci`は`package-lock.json`を変更せずに固定版を導入し、既存`node_modules`があれば再作成します。依存更新を行うIssueでは`npm install`でmanifestとlockfileを同時に更新します。両アプリは[ルートのnpm workspaces](../package.json)に属し、PoCのpackage/lockfileとは分離しています。CIの[Application workflow](../.github/workflows/application.yml)は同じinstall・型検査・ビルドに加えて、ローカル用の非Secret仮値でCompose設定とWeb / API image buildを検証します。CIはコンテナ起動、DB接続、実User Flow、ブラウザE2Eを実行しません。
+
+上記はリポジトリのルートで使う操作コマンドです。Windowsでは`pwsh`がPowerShell 7を指すことを確認します。Windows PowerShell 5.1を起動する`powershell`とは異なります。
+基盤整備時にはWindows上のPowerShell 7で全体チェックを実行し、Ubuntu上のCIも成功しました。今回のローカルDBとmiseの確認範囲、他メンバー端末の未確認事項は[現行状態](operations/development-foundation-status.md#2026-09-27の現行開発環境issue-49)を参照してください。
 
 ## 文書チェックで起きること
 
@@ -426,23 +508,34 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 1. スクリプト自身の位置からリポジトリのルートへ移動し、Gitの追跡ファイルと、無視されていない未追跡ファイルを列挙します。
 2. Markdown・YAML・TOML・PowerShellスクリプトと一部の設定ファイルについて、UTF-8として読めるか、競合マーカーや末尾改行の欠落がないかを検査します。ローカルの認証情報・Secretは読み取り対象にしません。
 3. Markdownの通常のインラインリンクについて、相対パスの参照先とMarkdown見出しを確認します。コードブロックの例や外部URLは対象外です。コード中の関数名、参照形式リンク、文書内容の意味までは検証しません。
-4. 履歴に保管した`.env.example`の形式、指定した7ケースのGit除外設定、未ステージ・ステージ済み差分の空白を確認します。
+4. `.env.example`が説明と空の変数例だけであること、指定した7ケースのGit除外設定、未ステージ・ステージ済み差分の空白を確認します。
 5. 問題があれば`ERROR:`で対象を示し、失敗として終了します。問題がなければ`PASS:`でファイル数・内部リンク数等を表示します。アプリのbuild・lint・型検査・テストは実行しません。
 
-CI（変更時に自動で行う検証）は[foundation.yml](../.github/workflows/foundation.yml)が定義します。PR、mainへのpush、手動実行を入口として、Ubuntuのrunner（実行用マシン）で同じスクリプトを実行します。SecretやDBを必要とせず、実行結果は対象PRのChecksで別に確認します。
-Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git diff --cached --check`だけを実行します。Hookが成功しても全体の文書チェックを実行したことにはなりません。
+CI（変更時に自動で行う検証）は[foundation.yml](../../../.github/workflows/foundation.yml)が定義します。PR、mainへのpush、手動実行を入口として、Ubuntuのrunner（実行用マシン）で同じスクリプトを実行します。SecretやDBを必要とせず、実行結果は対象PRのChecksで別に確認します。
+Git Hookはコミット前に[pre-commit](../../../.githooks/pre-commit)から`git diff --cached --check`だけを実行します。Hookが成功しても全体の文書チェックを実行したことにはなりません。
 
 ## 文書チェックで困ったとき
 
-| 表示・症状 | 確認すること |
-| --- | --- |
-| `mise`が見つからない | PowerShell 7から`pwsh -NoProfile -File scripts/check-foundation.ps1`を直接実行する |
-| `pwsh`が見つからない | PowerShell 7の導入とPATHを確認する。Windows PowerShell 5.1で代用しない |
-| miseの信頼確認で止まる | `mise.toml`とスクリプトを確認し、信頼できる場合のみ`mise trust`を行う |
-| `missing link target` / `missing heading` | 表示されたMarkdownのリンクと実ファイル・見出しを照合して修正する |
-| 空白・文字コード・除外設定のエラー | 対象ファイルとチェック条件を確認し、全体チェックを再実行する |
+| 表示・症状 | 原因と修正箇所 | 修正後の確認 |
+| --- | --- | --- |
+| `mise`が見つからない | 未導入またはPATH未設定。PowerShell 7が使えるなら上記の直接実行を利用する | 直接実行で`PASS:`と終了成功を確認する |
+| `pwsh`が見つからない | PowerShell 7未導入またはPATH未設定。端末の導入状況を確認する。5.1で代用しない | `pwsh --version`で7系を確認し、全体チェックを再実行する |
+| miseが設定の信頼確認で止まる | 新しいclone等で設定が未信頼。`mise.toml`と呼び出すスクリプトを読み、信頼できる場合にのみ`mise trust`を実行する | 同じ`check`を再実行する。信頼操作なしで確認する場合はスクリプトを読んで直接実行する |
+| `mise exec`でNode/npmの版が違う | `mise install`未実行、設定未信頼、別のNode/npmが先に見つかる可能性 | `mise.toml`の版、`mise ls --current`、`mise exec -- node --version`と`mise exec -- npm --version`を確認する |
+| Docker Engineに接続できない | Docker未起動、権限不足、端末の接続先違い | `docker info`でEngine接続を確認し、起動後に`docker compose config --quiet`から再実行する |
+| `5173`・`3000`・`55432`が使用中 | ホスト上の開発processや別のローカルDB等とportが衝突している | 利用中のprocessを確認する。既存サービスを停止できない場合はIssueでport変更を検討し、手順と設定を同時に更新する |
+| DB認証に失敗する | 初回作成時と異なるパスワードを入力した、または既存volumeがある | 既存のローカルDBパスワードを確認する。`POSTGRES_PASSWORD`の変更だけでは既存DBのパスワードは変わらない。volumeを削除して解決しない |
+| `missing link target` / `missing heading` | 文書の移動・見出し変更に参照元が追従していない | 表示されたMarkdownのリンクと実ファイル・見出しを照合して直し、全体チェックを再実行する |
+| `invalid UTF-8` / `missing final newline` | 対象ファイルの文字コード・末尾改行が規約と違う | 対象だけをUTF-8・末尾改行ありで保存し、差分と全体チェックを確認する |
+| `merge conflict marker` | 未解決の競合がある | 正しい内容を関係者と確認して競合を解消し、差分と全体チェックを確認する。マーカーだけを消して済ませない |
+| 環境変数例・除外設定・差分空白で失敗 | 対象の例や設定・差分がチェック条件に反する | Secretをログへ出さず原因箇所を確認する。現在のIssue外の設定修正なら別作業として記録し、チェックを緩めない |
+| Hook導入が既存設定との衝突で止まる | 別の`core.hooksPath`または既存Hookがある | 上書きせず担当者と統合方法を確認する。解決までは全体チェック・ステージ差分確認を手動で行う |
 
-旧アプリ・DB・Dopplerのトラブルシュートは[履歴内の手順](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#文書チェックで困ったとき)に残しています。現行構成として起動する手順ではありません。
+`pwsh --version`は利用するPowerShellの版を表示する確認コマンドです。これは想定されるエラーへの案内であり、この表の全エラーを今回再現済みという意味ではありません。
+CLIの仕様は[Gitのチュートリアル](https://git-scm.com/docs/gittutorial)と[mise run](https://mise.jdx.dev/cli/run.html)、[mise trust](https://mise.jdx.dev/cli/trust.html)を参照できます。設定・スクリプトが何をするかは、このリポジトリの実ファイルを優先して確認します。
+
+Doppler CLIの固定版を取得した後、実際にSecretが必要なアプリ作業では[接続手順](operations/development-foundation-status.md#dopplerの引き継ぎ)へ進みます。文書・設定検証とローカルDBの起動に、DopplerのProduction Secretを渡しません。
+DB migration・seed・Product APIは後続Issueで追加し、起動手順・CIも実装に合わせて更新します。
 
 ---
 
@@ -450,7 +543,7 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 
 自分がIssueのAssigneeに設定されていることを確認します。
 Branch作成後はIssue本文の「開発情報」にBranch名を記載し、Push後にBranchのリンクを追記します。
-記載形式は [CONTRIBUTINGの紐付けルール](../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
+記載形式は [CONTRIBUTINGの紐付けルール](../../../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
 
 新しい作業を始める前に、mainを最新状態にします。
 
@@ -558,11 +651,11 @@ git branch
 
 1. [対応表](change-map.md)から対象の機能・ページ・基盤を探し、仕様を読みます。どんな目的・操作・条件・状態を持つかを確認してから、関連コード・設定・テストを読みます。
 2. 呼び出し元・参照元も検索し、影響する範囲、実際に変更する範囲、確認だけの範囲を分けます。文書と実装が違えば、現在の動作を無条件に仕様へ転記せず、不一致として記録します。
-3. [文書の執筆・保守手順](../.agents/skills/documentation-sync/SKILL.md)に沿って、変更した仕様・説明・対応表・参照を同じ作業で更新します。初心者向けとAI向けに仕様を別々に複製しません。
+3. [文書の執筆・保守手順](../../../.agents/skills/documentation-sync/SKILL.md)に沿って、変更した仕様・説明・対応表・参照を同じ作業で更新します。初心者向けとAI向けに仕様を別々に複製しません。
 4. 対象の検証を行い、PRに文書への影響と更新内容、更新不要ならその理由を記載します。必要な文書更新が残っている間は完了にしません。
 
 AIへ依頼する場合は、Issue番号、変えたい挙動、関連仕様、完了条件、変更しない範囲を渡します。例えば「対象Issueの仕様を確認し、対応表とコードから影響を調べ、必要な仕様文書・関連参照も同じ作業で更新し、検証結果と未確認事項を報告してください」と依頼できます。
-AIは[AGENTS.md](../AGENTS.md)から共通ルールを確認します。人間も、必要な詳しい手順は上記Skillを参照できます。
+AIは[AGENTS.md](../../../AGENTS.md)から共通ルールを確認します。人間も、必要な詳しい手順は上記Skillを参照できます。
 
 ---
 
@@ -691,7 +784,7 @@ In Review
 
 担当者はPR作成後、Issue本文の「開発情報」にPRのURLまたは `#<PR番号>` を追記します。
 Branch名・リンクも記載済みか確認してください。未作成の間は「未作成」としておきます。
-記載例は [CONTRIBUTINGの紐付けルール](../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
+記載例は [CONTRIBUTINGの紐付けルール](../../../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
 
 PRには、
 

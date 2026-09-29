@@ -25,9 +25,9 @@ Codex、Claude Code、GitHub Copilotなど、利用するAIに関係なく、
 
 Single Source of Truthを維持する。
 
-開発基盤の採用方針・導入条件・個別設定の確認結果は[開発基盤の状態](docs/operations/development-foundation-status.md)を参照する。
+開発基盤の現行状態と旧構成への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)を参照する。
 ADOPTEDを動作確認済みと扱わない。外部リソース作成・権限・保護設定変更は対象と差分の承認後に行う。
-Secret不要の検証へDopplerやProductionのSecretを渡さない。現段階の文書検証コマンドは[README](README.md#開発基盤のセットアップと確認)を参照する。
+Secret不要の検証へProductionのSecretを渡さない。現段階の文書検証コマンドは[README](README.md#開発基盤のセットアップと確認)を参照する。
 
 ---
 
@@ -75,9 +75,10 @@ Code Freeze後は、原則としてソースコードおよび事前提出資料
 
 1. [Product Spec](docs/product-spec.md): 対象RequirementとScope。
 2. [Architecture](docs/architecture.md): 実現責務と正式Decision。
-3. 対象領域の[FE](docs/FE/README.md) / [BE](docs/BE/README.md) / [ML](docs/ML/README.md) README。
-4. 同領域のdecision-log、design-intent、implementation-guide。採用理由を検討する場合はevidence、推薦評価はML evaluationも確認する。
-5. [変更対応表](docs/change-map.md)から実在Code / Testsを調査する。
+3. [変更対応表](docs/change-map.md)から実在Code / Testsを調査する。
+4. 新Productの領域文書が作成された場合は、そのREADMEからdecision-log、design-intent、implementation-guideと必要なevidenceを確認する。
+
+[旧音楽案の保管資料](archive/music-exploration/README.md)は当時の判断・検証を調べる場合だけ参照し、現在の実装手順へ持ち込まない。
 
 Supporting Docsは理由・証拠・実装手順を展開する補助資料であり、正式な仕様の追加正本ではない。
 

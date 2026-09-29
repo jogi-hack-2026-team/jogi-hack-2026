@@ -21,8 +21,3 @@ jobs:
       - name: Check documentation and configuration
         shell: pwsh
         run: ./scripts/check-foundation.ps1
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: '24.21.0'
-      - name: Test ML Agent Harness
-        run: node --test scripts/ml-agent-core.test.mjs scripts/run-ml-agent.integration.test.mjs
