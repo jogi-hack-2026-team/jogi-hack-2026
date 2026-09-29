@@ -1,6 +1,6 @@
 # Stack Bake-off
 
-**Supporting Artifact / Not a Source of Truth**。Issue #34の旧音楽案向け比較実験。2026-09-29に音楽探索案を廃止したため、次のProductの採択・実装根拠にはしない。[現行Product状態](../../docs/product-spec.md#現行状態2026-09-29)と[Architecture](../../docs/architecture.md)を参照。本番へ直接転用しない。
+**Supporting Artifact / Not a Source of Truth**。Issue #34の旧音楽案向け比較実験。2026-09-29に音楽探索案を廃止したため、次のProductの採択・実装根拠にはしない。[現行Product状態](../../../../docs/product-spec.md#現行状態2026-09-29)と[Architecture](../../../../docs/architecture.md)を参照。本番へ直接転用しない。以下は旧実験の再現手順で、結果ファイルを上書きするコマンドもあるため実行前に対象を確認する。
 
 ## Purpose
 
@@ -11,7 +11,7 @@
 検証環境: Windows PowerShell、Node 22.15.1、npm、Docker Desktop Engine 29.6.1、インストール済みGoogle Chrome。PoC専用package/lockfileなのでrepoルートに本番dependencyは追加しない。
 
 ```powershell
-cd experiments/stack-bakeoff
+cd archive/music-exploration/experiments/stack-bakeoff
 npm.cmd ci
 docker compose up -d --wait
 ```

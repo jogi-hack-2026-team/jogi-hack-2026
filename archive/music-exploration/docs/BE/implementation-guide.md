@@ -6,9 +6,9 @@
 
 ## 最初に読むもの
 
-[Decision](decision-log.md)→[Intent](design-intent.md)→[Evidence](evidence.md)を読み、対象R-IDをIssueに固定する。開発ToolchainはNode 24 LTS / npmに決定し、[mise](../../mise.toml)で固定している。[apps/api](../../apps/api/)とルートのlockfileにはFastifyの最小起動構成のみを追加した。ORM/migration tool、DB接続、正式API契約は未決・未実装。PoCのpackage.jsonや起動コマンドを本番の正本へコピーしない。
+[Decision](decision-log.md)→[Intent](design-intent.md)→[Evidence](evidence.md)を読み、対象R-IDをIssueに固定する。開発ToolchainはNode 24 LTS / npmに決定し、[mise](../../../../mise.toml)で固定している。[apps/api](../../../../apps/api/)とルートのlockfileにはFastifyの最小起動構成のみを追加した。ORM/migration tool、DB接続、正式API契約は未決・未実装。PoCのpackage.jsonや起動コマンドを本番の正本へコピーしない。
 
-`GET /api/health`はprocessの応答だけを確認する。DB、外部API、Guest認証の可用性を示さない。起動とbuildは[開発ガイド](../DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照。
+`GET /api/health`はprocessの応答だけを確認する。DB、外部API、Guest認証の可用性を示さない。起動とbuildは[開発ガイド](../../../../docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照。
 
 ## 全体の実装順序
 
@@ -52,7 +52,7 @@ API route名は[既存PoC契約](../architecture.md#a-03-sessionと整合性)を
 
 | 対象Code | 確認できること | 本番までの差分 |
 | --- | --- | --- |
-| [apps/api](../../apps/api/) | #51のFastify起動と`GET /api/health` | Product API、認可、DB接続・migration、safe logは未実装 |
+| [apps/api](../../../../apps/api/) | #51のFastify起動と`GET /api/health` | Product API、認可、DB接続・migration、safe logは未実装 |
 | [fastify/app.ts](../../experiments/stack-bakeoff/backend/fastify/app.ts) | HTTP adapter | schema、response serialization、logger/redaction、Cookie、TanStack origin等の配置契約 |
 | [shared/service.ts](../../experiments/stack-bakeoff/backend/shared/service.ts) | idempotency、canonical revision、推薦commit | owner共有State、正式Context/Anchor/Probe、再生計数、Save/継続。現ApiErrorのHTTP status依存も境界整理対象 |
 | [shared/database.ts](../../experiments/stack-bakeoff/backend/shared/database.ts) | PoolClientでBEGIN/COMMIT/ROLLBACK/release | Neon endpoint/poolerとmigration、index、retention、復旧、総接続予算 |

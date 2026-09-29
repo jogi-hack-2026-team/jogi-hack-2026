@@ -5,6 +5,10 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { selectQueue, isMlIssue } from './ml-agent-core.mjs';
 
+if (!process.env.ML_AGENT_FAKE_REMOTE_FILE) {
+  throw new Error('Archived ML agent is disabled. Run only the mocked tests documented in archive/music-exploration/docs/operations/ml-agent-harness.md.');
+}
+
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const stateDir = join(repoRoot, '.codex', 'ml-agent');
 const stateFile = join(stateDir, 'state.json');

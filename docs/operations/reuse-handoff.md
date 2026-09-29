@@ -8,8 +8,8 @@
 | [文書・設定チェック](../../scripts/check-foundation.ps1)と[Foundation CI](../../.github/workflows/foundation.yml) | リンク、形式、設定の検査を継続できる。Productの動作試験ではない | 文書変更時に実行し、追加した仕様・コード・確認方法を[対応表](../change-map.md)へつなぐ |
 | [Node/npmの開発Toolchain](../../mise.toml)、[Web/APIの最小起動構成](../../apps/)、[Application CI](../../.github/workflows/application.yml) | 版を固定した起動・型検査・ビルドの土台がある。WebとAPIはhealthの確認までで、Product機能はない | 新案の要件からFE/BE構成の必要性を再評価する。使う場合は新案の契約・テストを追加する。既存のbuild成功を機能完成と扱わない |
 | [ローカルCompose](../../compose.yaml)と[起動手順](../DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する) | Web/API/開発用DBをまとめて起動できた記録がある。DB接続やmigration、公開環境は別 | DBが必要か要件から判断する。採用する場合はschema、migration、接続試験を新案のIssueで決める |
-| [旧案のFE/BE/ML記録](../FE/README.md)、[比較PoC](../../experiments/stack-bakeoff/README.md)、[評価・調査記録](../ML/README.md) | 失敗例、検証方法、判断の根拠を後から参照できる。旧案の実装契約や採択ではない | 関連する課題が生じた場合だけ条件・データ・権利・結果を再確認し、必要な部分を新案の仕様へ明示的に取り込む |
-| [旧ML Issue向けHarness](ml-agent-harness.md)のコードとテスト | Issue選択・停止規則と模擬CLIテストを検証可能な履歴として残す | 通常のmiseタスクとCIからは外した。新案で自動化が必要になった場合は、対象Issue、権限、人間判断の境界を再設計し、別Issueで安全性と実行試験を確認する |
+| [旧案のFE/BE/ML記録](../../archive/music-exploration/docs/FE/README.md)、[比較PoC](../../archive/music-exploration/experiments/stack-bakeoff/README.md)、[評価・調査記録](../../archive/music-exploration/docs/ML/README.md) | 失敗例、検証方法、判断の根拠を後から参照できる。旧案の実装契約や採択ではない | 関連する課題が生じた場合だけ条件・データ・権利・結果を再確認し、必要な部分を新案の仕様へ明示的に取り込む |
+| [旧ML Issue向けHarness](../../archive/music-exploration/docs/operations/ml-agent-harness.md)のコードとテスト | Issue選択・停止規則と模擬CLIテストを検証可能な履歴として残す | 通常のmiseタスクとCIからは外した。新案で自動化が必要になった場合は、対象Issue、権限、人間判断の境界を再設計し、別Issueで安全性と実行試験を確認する |
 
 次の案の着手時は、まず課題・対象User・MVPとScopeを決め、正式2文書へ反映する。その後に上表の各資産を「そのまま利用・変更して利用・履歴のみ」のいずれで扱うか、理由と検証条件をIssueに記録する。技術の存在や過去の成功だけで再採択しない。現在のコードと確認方法の所在は[変更対応表](../change-map.md)を参照する。
 

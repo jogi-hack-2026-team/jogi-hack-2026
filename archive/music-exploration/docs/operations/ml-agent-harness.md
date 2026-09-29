@@ -1,6 +1,6 @@
 # ML Issue向けCodex Agent Harness
 
-> 2026-09-29に音楽探索案を廃止しました。このHarnessと下記のML Issue一覧は旧案の開発記録です。廃止したIssueへの自動着手に使用しません。2026-09-30に`mise run ml-agent`のタスクとFoundation CIのHarnessテストを外しました。コードとテストは[引き継ぎの棚卸し](reuse-handoff.md)に従って履歴として保持します。[現行Product状態](../product-spec.md#現行状態2026-09-29)を参照してください。
+> 2026-09-29に音楽探索案を廃止しました。このHarnessと下記のML Issue一覧は旧案の開発記録です。廃止したIssueへの自動着手に使用しません。2026-09-30に`mise run ml-agent`のタスクとFoundation CIのHarnessテストを外し、runner・テスト・Skillをこの保管場所へ移しました。コードとテストは[引き継ぎの棚卸し](../../../../docs/operations/reuse-handoff.md)に従って履歴として保持します。[現行Product状態](../../../../docs/product-spec.md#現行状態2026-09-29)を参照してください。
 
 **開発補助 / Product・Architectureの正本ではない。** [Issue #47](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/47)の範囲。Code Freezeは2026-10-12。Harnessの整備をMust実装より優先しない。
 
@@ -22,7 +22,7 @@ Issue #47起票前にGitHub MCPでopen Issue全14件、ProjectのStatus/Scope、
 
 ## 選択と停止の規則
 
-`node scripts/run-ml-agent.mjs` は毎回GitHubからIssue、Project、PR、Issue dependencies、sub-issuesを取得する。openかつ `[ML]` または `ml` ラベルのIssueに限り、PRを除外する。本文の「前提」「依存」、GitHubのblocked-by、未完了sub-issueを依存辺として合成する。親Issueは依存辺にしない。不明な参照先や取得失敗は通過させない。
+当時の`node scripts/run-ml-agent.mjs` は毎回GitHubからIssue、Project、PR、Issue dependencies、sub-issuesを取得した。openかつ `[ML]` または `ml` ラベルのIssueに限り、PRを除外する。本文の「前提」「依存」、GitHubのblocked-by、未完了sub-issueを依存辺として合成する。親Issueは依存辺にしない。不明な参照先や取得失敗は通過させない。
 
 StatusがReady、Scopeが設定済み、現在のGitHub利用者がAssignee、前提Issueが完了、既存PRがないことを要求する。`blocked` / `needs-discussion` と明確な着手前Decisionは除外する。Must → Should → Could、同Scope内は依存グラフ上の下流Issue数が多い順、最後はIssue番号の昇順で決める。番号順を主規則にしない。毎PR後と判断待ち停止後に再取得する。
 
@@ -42,7 +42,7 @@ Codex CLIはこの環境で実行できた`gpt-5.5`を既定で指定する。�
 
 各Issueはread-only Goal contract → 実装 → Foundation・HarnessのNodeテスト・変更packageの既存test/lint/typecheck/build/eval → 別Codex実行のread-only構造化Review → 最大3回のRepair/再検証 → 日本語タイトルのPRを進める。Harness本体に変更があればrunnerの構文も検査する。検証前とPR作成前に最新の`origin/main`を取得し、更新があれば作業Branchへ取り込んで検証とReviewをやり直す。競合や未Commit変更があれば停止する。Issue固有のML評価はGoal contractと実装報告に記録し、Reviewerが妥当性を検査する。未実行の評価をPASSにしない。PR本文には実施結果、未検証項目、文書への影響、レビュー観点、リポジトリのチェックリストを記載する。CIはFoundationとFE/BEのbuild/typecheck workflowがPRで実行される。FE/BEは最小起動構成まででProduct機能と正式なML評価スクリプトは未整備であり、存在しないcommandを成功扱いにしない。
 
-Harnessの選択規則とrunner統合テストは`node --test scripts/ml-agent-core.test.mjs scripts/run-ml-agent.integration.test.mjs`で手動検証できる。統合テストは一時リポジトリと模擬CLIを使用し、実GitHubを変更しない。2026-09-30以降はFoundation CIの対象外。
+Harnessの選択規則とrunner統合テストは、リポジトリのルートから`node --test archive/music-exploration/scripts/ml-agent-core.test.mjs archive/music-exploration/scripts/run-ml-agent.integration.test.mjs`で手動検証できる。統合テストは一時リポジトリと模擬CLIを使用し、実GitHubを変更しない。2026-09-30以降はFoundation CIの対象外。
 
 ## 当時の実行状態と復旧
 
@@ -50,4 +50,4 @@ Harnessの選択規則とrunner統合テストは`node --test scripts/ml-agent-c
 
 失敗時は原因を直して同じコマンドを再実行する。通信・権限・CLI欠落は変更を進めず停止する。Codexまたは検証の失敗時は保存段階から再開する。lockが残った場合、対象PIDのプロセス停止を確認してから `.codex/ml-agent/lock` だけを手動で取り除く。worktreeとBranchは自動削除しない。PR作成前にpush済みとなっても再実行時のPR照合で重複を避ける。判断待ちが解消されたIssueはラベルを外してReadyへ戻し、次回のGoal contractから再確認する。
 
-Project/Issue更新が失敗した場合は先へ進めない。レビューPASSは人間のPR承認や実Catalog・実Playback・実Userの検証を代替しない。詳細な設計判断は[AI開発ツールガイド](../../AI_DEVELOPMENT_TOOLS.md)と対象Issue/PRへ残す。
+Project/Issue更新が失敗した場合は先へ進めない。レビューPASSは人間のPR承認や実Catalog・実Playback・実Userの検証を代替しない。詳細な設計判断は[AI開発ツールガイド](../../../../AI_DEVELOPMENT_TOOLS.md)と対象Issue/PRへ残す。

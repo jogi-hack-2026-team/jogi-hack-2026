@@ -6,9 +6,9 @@
 
 ## 開発の入口
 
-[D-09の詳細](decision-log.md)、[DI-FE-01〜03](design-intent.md)、[全体P0〜P4](../BE/implementation-guide.md#全体の実装順序)を確認する。React / TypeScript / Vite / TanStack Routerとnpmは採択済み。[apps/web](../../apps/web/)に起動確認画面だけを実装した。Product UI、公開API、state/query library、UI library、フォーム方式は後続Issueで必要性から決める。
+[D-09の詳細](decision-log.md)、[DI-FE-01〜03](design-intent.md)、[全体P0〜P4](../BE/implementation-guide.md#全体の実装順序)を確認する。React / TypeScript / Vite / TanStack Routerとnpmは採択済み。[apps/web](../../../../apps/web/)に起動確認画面だけを実装した。Product UI、公開API、state/query library、UI library、フォーム方式は後続Issueで必要性から決める。
 
-起動とbuildは[開発ガイド](../DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照。現行の`/`はAPI health表示のみで、Seed選択・探索・Player・保存を実装したものではない。
+起動とbuildは[開発ガイド](../../../../docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照。現行の`/`はAPI health表示のみで、Seed選択・探索・Player・保存を実装したものではない。
 
 ## 画面と状態
 
@@ -26,7 +26,7 @@ YouTubeの準備完了と実際のPLAYINGを区別し、再生イベントをInt
 
 | 対象Code | 役割 | 実装時の差分 |
 | --- | --- | --- |
-| [apps/web](../../apps/web/) | #51のVite / Router起動とAPI health表示 | ProductのSeed / Explore / Player / Save画面と正式API接続は未実装 |
+| [apps/web](../../../../apps/web/) | #51のVite / Router起動とAPI health表示 | ProductのSeed / Explore / Player / Save画面と正式API接続は未実装 |
 | [tanstack/main.tsx](../../experiments/stack-bakeoff/frontend/tanstack/main.tsx) | route tree、search validation、画面内error境界 | deep link/back/forwardと本番API integration |
 | [shared/Screens.tsx](../../experiments/stack-bakeoff/frontend/shared/Screens.tsx) | 共通探索画面、error/retry表示 | 実Player、4値評価/正式計数、Summary、Save/継続のUI |
 | [shared/api.ts](../../experiments/stack-bakeoff/frontend/shared/api.ts) | Mock/Live Adapter、localStorage Guest | Cookie資格情報・期限/CSRF方針、再取得/応答順序、正しい本番origin |
@@ -39,4 +39,4 @@ YouTubeの準備完了と実際のPLAYINGを区別し、再生イベントをInt
 - PLAYING / onReady / autoplay blocked / error / 遅延event、UNSURE計数、SaveでState不変。
 - keyboard/focus、非色依存の評価・エラー表現、読み上げ可能なpending状態、mobile playerとSummary。最終端末/ブラウザmatrixはOPEN。
 
-実装時のPlaywright導入状態・コマンドは[AI tools](../../AI_DEVELOPMENT_TOOLS.md)と対象packageで確認する。今あるPoC E2Eを製品のE2Eとして報告しない。UI変更はR-ID / Intentと対応させて試験し、外部Playerなど未確認範囲を残す。
+実装時のPlaywright導入状態・コマンドは[AI tools](../../../../AI_DEVELOPMENT_TOOLS.md)と対象packageで確認する。今あるPoC E2Eを製品のE2Eとして報告しない。UI変更はR-ID / Intentと対応させて試験し、外部Playerなど未確認範囲を残す。

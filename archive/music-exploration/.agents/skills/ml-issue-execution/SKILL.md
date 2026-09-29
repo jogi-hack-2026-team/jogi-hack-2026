@@ -5,13 +5,13 @@ description: 旧音楽探索案のML Issue実行手順を参照するときに�
 
 # ML Issue実行
 
-> 音楽探索案は2026-09-29に廃止された。このSkill内のSeed・推薦・ML評価の条件は旧案の履歴であり、次のProductへ自動適用しない。[現行Product状態](../../../docs/product-spec.md#現行状態2026-09-29)と[引き継ぎの棚卸し](../../../docs/operations/reuse-handoff.md)を先に確認する。
+> 音楽探索案は2026-09-29に廃止された。このSkill内のSeed・推薦・ML評価の条件は旧案の履歴であり、次のProductへ自動適用しない。[現行Product状態](../../../../../docs/product-spec.md#現行状態2026-09-29)と[引き継ぎの棚卸し](../../../../../docs/operations/reuse-handoff.md)を先に確認する。
 
-このSkillはIssue単位のML作業に使用する。GitHub/Project操作とPR作成は[issue-to-pr](../issue-to-pr/SKILL.md)、文書同期は[documentation-sync](../documentation-sync/SKILL.md)、PR前のセルフレビューは[review-gate](../review-gate/SKILL.md)に従う。
+このSkillは旧案のIssue単位のML作業を調べるために残す。GitHub/Project操作とPR作成の現行ルールは[issue-to-pr](../../../../../.agents/skills/issue-to-pr/SKILL.md)、文書同期は[documentation-sync](../../../../../.agents/skills/documentation-sync/SKILL.md)、PR前のセルフレビューは[review-gate](../../../../../.agents/skills/review-gate/SKILL.md)を参照する。
 
 ## Goal contract
 
-実装前にIssueの目的・完了条件・Scope・Assignee・依存関係と、[Product Spec](../../../docs/product-spec.md)、[Architecture](../../../docs/architecture.md)、[ML Design Intent](../../../docs/ML/design-intent.md)、[Evaluation](../../../docs/ML/evaluation.md)を照合する。変更する責務、不変条件、境界値、失敗時、評価方法、変更しない領域を短く記録する。OPENやRECOMMENDEDを決定済みにしない。
+当時は実装前にIssueの目的・完了条件・Scope・Assignee・依存関係と、[旧Product Spec](../../../docs/product-spec.md)、[旧Architecture](../../../docs/architecture.md)、[ML Design Intent](../../../docs/ML/design-intent.md)、[Evaluation](../../../docs/ML/evaluation.md)を照合した。変更する責務、不変条件、境界値、失敗時、評価方法、変更しない領域を短く記録する。OPENやRECOMMENDEDを決定済みにしない。
 
 現行PoCと本番実装を区別する。Seed/Recording/Mapping、推薦時のAnchor/Context/版、Feedbackのcanonical観測、Hypothesis/Traceの整合を関連するIssueで確認する。データ権利・実Playback・Product価値は合成fixture成功から推定しない。
 

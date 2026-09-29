@@ -1,7 +1,7 @@
 # Contributing
 
 > GitHubやIssue、Branch、Pull Requestを使った開発に慣れていない場合は、
-> [初心者向け開発運用ガイド](./docs/DEVELOPMENT_GUIDE.md) を先に確認してください。
+> [初心者向け開発運用ガイド](docs/DEVELOPMENT_GUIDE.md) を先に確認してください。
 
 ## 開発フロー
 
@@ -755,7 +755,7 @@ Merge前に以下を確認してください。
 | 構成・責務・技術・DB・Deployment・Auth・Testing | `docs/architecture.md`。Product要件から実現方法またはOPENへ追跡できるようにする |
 | 開発基盤・運用・リリース手順 | 既存の`docs/operations/`。日常の具体的な操作は[開発ガイド](docs/DEVELOPMENT_GUIDE.md)に置く |
 | Product / Architecture Decision | 2文書内のDecision Log。別の正式requirements・scope・technology-stack・deployment文書やADR群を増やさない |
-| FE / BE / 推薦の理由・実装支援 | `docs/FE/`、`docs/BE/`、`docs/ML/`。README、decision-log、design-intent、evidence、implementation-guide、ML evaluation。Supporting Artifactであり正式Decisionは2正本へリンクする |
+| 領域別の理由・実装支援 | 新Productの要件と領域が決まってから、必要なSupporting Docsを`docs/`に置く。[旧音楽案のFE/BE/ML文書](archive/music-exploration/README.md)は履歴として保管し、現行仕様にはしない |
 | 調査資料・PoC・測定CSV/JSON・experiment README | `Supporting Artifact / Not a Source of Truth`と明記。正式Decisionは2文書へ反映し、補助資料だけに残さない |
 | 過去の開発基盤の判断 | 既存の`docs/decisions/`を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
 | ページ・機能・基盤の棚卸しと、仕様・コード・確認方法の対応 | [docs/change-map.md](docs/change-map.md)。動的URLはルートのパターン単位で扱う |

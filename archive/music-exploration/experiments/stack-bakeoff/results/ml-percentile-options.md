@@ -4,7 +4,7 @@
 
 ## 再実行
 
-リポジトリのルートで `node experiments/stack-bakeoff/scripts/ml-percentile-options.mjs` を実行する。Node.js標準機能のみを使い、乱数・DB・外部APIは使わない。[比較スクリプト](../scripts/ml-percentile-options.mjs)が全7特徴の入力、各percentileとContext、版差の数値、境界・不正入力の検査を出力する。小数表示は6桁へ丸め、percentile・Context・B/fの計算は丸め前の値で行う。
+リポジトリのルートで `node archive/music-exploration/experiments/stack-bakeoff/scripts/ml-percentile-options.mjs` を実行する。Node.js標準機能のみを使い、乱数・DB・外部APIは使わない。[比較スクリプト](../scripts/ml-percentile-options.mjs)が全7特徴の入力、各percentileとContext、版差の数値、境界・不正入力の検査を出力する。小数表示は6桁へ丸め、percentile・Context・B/fの計算は丸め前の値で行う。
 
 ## 条件と計算式
 

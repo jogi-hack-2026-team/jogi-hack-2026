@@ -380,7 +380,7 @@ README更新
 
 # 13. 初回セットアップ
 
-このリポジトリの開発ToolchainはNode 24 LTS / npmです。[Architectureの現行状態](architecture.md#現行状態2026-09-29)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。旧音楽案向けのFE / BE、開発用PostgreSQL、lockfileは残っていますが、次のProduct向けの技術採択は未定です。Product機能、DB migration、正式APIはまだありません。PowerShell 7は補助スクリプト用です。
+このリポジトリの開発ToolchainはNode 24 LTS / npmです。[Architectureの現行状態](architecture.md#現行状態2026-09-29)と[開発環境の境界](../archive/music-exploration/docs/architecture.md#開発環境と版管理)を参照してください。旧音楽案向けのFE / BE、開発用PostgreSQL、lockfileは残っていますが、次のProduct向けの技術採択は未定です。Product機能、DB migration、正式APIはまだありません。PowerShell 7は補助スクリプト用です。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -468,7 +468,7 @@ docker compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0
 
 最後のコマンドが`1`を返せば、コンテナ内からパスワード付きTCP接続ができています。ホストからの接続先は`127.0.0.1:55432`、DB名とUserは`jogi`です。パスワードは各自のローカル開発DB専用として保管し、同じvolumeを再起動するときは同じ値を入力します。`docker compose config`を`--quiet`なしで実行すると環境変数の値を表示し得るため、Secretを含む状態では使いません。実ユーザーデータやProductionの接続情報をこのDBへ入れません。
 
-作業終了時は`docker compose down`で停止します。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。現行のFE / BE起動確認はDBに接続せず、migration・seedは後続Issueで追加します。
+作業終了時は`docker compose down`で停止します。この値は各PCの使い捨て開発DB用であり、共有・Production Secretの正本であるDopplerとは別に扱います。PoCの[一時DB](../archive/music-exploration/experiments/stack-bakeoff/compose.yaml)は別のCompose・port・データ領域です。現行のFE / BE起動確認はDBに接続せず、migration・seedは後続Issueで追加します。
 
 ### ホスト上でアプリを起動する
 

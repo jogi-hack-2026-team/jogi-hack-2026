@@ -1589,7 +1589,7 @@ export function runSyntheticEvaluation(options: EvaluationOptions = {}) {
     issue: "#40",
     generatedAt: options.generatedAt ?? new Date().toISOString(),
     commit: options.commit ?? "UNKNOWN",
-    command: "npm.cmd --prefix experiments/stack-bakeoff run ml:simulate",
+    command: "npm.cmd --prefix archive/music-exploration/experiments/stack-bakeoff run ml:simulate",
     scope:
       "Synthetic fixtures only. Does not change Product/Architecture decisions, production algorithm, API/DB contracts, acceptance thresholds, real catalog, real playback, or user-demand claims.",
     versions,

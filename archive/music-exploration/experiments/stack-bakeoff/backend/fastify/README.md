@@ -2,7 +2,7 @@
 
 **Supporting Artifact / Not a Source of Truth**。正式な比較・推奨は[Architecture](../../../../docs/architecture.md#backend-bake-off)。
 
-`experiments/stack-bakeoff`で共通[Setup](../../README.md#setup)とDB起動後、`npm.cmd run api:fastify`で4311へ起動する。`npm.cmd test`はHonoと同じ実HTTP・DB・数値試験を実行する。
+`archive/music-exploration/experiments/stack-bakeoff`で共通[Setup](../../README.md#setup)とDB起動後、`npm.cmd run api:fastify`で4311へ起動する。`npm.cmd test`はHonoと同じ実HTTP・DB・数値試験を実行する。
 
 再評価の実browser統合は`npm.cmd run api:integration`で4310を使用する。Honoの4310とは同時起動しない。
 

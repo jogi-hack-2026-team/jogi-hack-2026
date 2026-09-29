@@ -12,7 +12,7 @@
 | DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
 | OPEN | 次のProduct、Target User、Core Value、MVP Scope、Product向けの技術採択。[Architecture D-17](docs/architecture.md#d-17-音楽案に依存したarchitectureの適用終了) |
 | DECIDED | 開発用ToolchainはNode 24 LTS / npm。miseでNode 24.21.0を固定し、ローカルDBはPostgreSQL 18.6のComposeを使用。[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ) |
-| 履歴 | 音楽案向けのModular Monolith、FE/BE、PostgreSQL、Gaussian LinTS、Cloud Run / Neonの判断・候補は新案に自動適用しない。[旧Architecture](docs/architecture.md#旧音楽案のarchitecture記録以下は新productの採択ではない) |
+| 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
 過去の案・会話・実験コードは採用済みの仕様ではありません。
@@ -25,11 +25,11 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、Web・API・開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
-旧音楽案で用意した[FE](apps/web/)と[BE](apps/api/)の最小起動構成は残しています。音楽案の探索・推薦・保存機能は未実装です。[比較PoC](experiments/stack-bakeoff/README.md)と未mergeの調査は履歴であり、新Productの実装や技術採択を示しません。
+WebとAPIの最小起動構成は残っています。音楽案の製品機能は未実装です。旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移し、新Productの実装や技術採択と区別しています。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
-旧音楽案のML Issue向けCodex Harnessは通常の実行タスクとCIから外し、[履歴と制約](docs/operations/ml-agent-harness.md)にコードと手動検証方法を残しています。
+旧音楽案のML Issue向けCodex Harnessは通常の実行タスクとCIから外しました。再利用前の確認事項は[引き継ぎ](docs/operations/reuse-handoff.md)を参照してください。
 
 ## 開発基盤のセットアップと確認
 
@@ -40,7 +40,7 @@ miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-fo
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
 
 `check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。
-Dockerで一括起動する場合はローカルDB専用パスワードを設定し、リポジトリのルートで`docker compose up --build -d --wait`を実行します。Webは`http://127.0.0.1:5173/`、API healthは`http://127.0.0.1:3000/api/health`です。ホスト上で変更を即座に反映する開発には、`mise exec -- npm ci`後、別々の端末で`mise exec -- npm run dev:api`と`mise exec -- npm run dev:web`を使えます。[詳細手順](docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)にパスワード・確認・停止・再ビルドを記載しています。型検査とビルドは`mise exec -- npm run typecheck`、`mise exec -- npm run build`です。Product機能、DB migration、Formatter・Linter・テストの具体構成は後続Issueで扱います。比較PoC専用の検証は[実験README](experiments/stack-bakeoff/README.md)を参照してください。
+Dockerで一括起動する場合はローカルDB専用パスワードを設定し、リポジトリのルートで`docker compose up --build -d --wait`を実行します。Webは`http://127.0.0.1:5173/`、API healthは`http://127.0.0.1:3000/api/health`です。ホスト上で変更を即座に反映する開発には、`mise exec -- npm ci`後、別々の端末で`mise exec -- npm run dev:api`と`mise exec -- npm run dev:web`を使えます。[詳細手順](docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)にパスワード・確認・停止・再ビルドを記載しています。型検査とビルドは`mise exec -- npm run typecheck`、`mise exec -- npm run build`です。Product機能、DB migration、Formatter・Linter・テストの具体構成は後続Issueで扱います。比較PoC専用の検証は[実験README](archive/music-exploration/experiments/stack-bakeoff/README.md)を参照してください。
 
 ## 最初に読む順番
 
@@ -53,7 +53,7 @@ Dockerで一括起動する場合はローカルDB専用パスワードを設定
 機能の仕様を知りたい・変更したい場合は、[対応表](docs/change-map.md#アプリの仕様と実装)から「目的・操作・入力や表示の条件・失敗時の動作」を説明する機能文書へ進み、内部処理、関連コード、確認方法をたどります。
 正式な設計文書は[Product Spec](docs/product-spec.md)と[Architecture](docs/architecture.md)の2本です。アプリの起動構成とProduct機能の実装状況、比較結果と未検証範囲はArchitectureからたどれます。[開発基盤と作業手順](docs/change-map.md#開発基盤と作業手順)と[配置ルール](CONTRIBUTING.md#仕様文書の配置)も参照してください。
 
-旧音楽案の領域別記録は[FE](docs/FE/README.md)、[BE](docs/BE/README.md)、[推薦・オンライン学習](docs/ML/README.md)からたどれます。これらは現在の実装指示ではなく、当時のDecision、Design Intent、Evidence、PoCとの差分を残すSupporting Docsです。
+旧音楽案の領域別記録は[保管場所](archive/music-exploration/README.md)からたどれます。現在の実装指示ではありません。
 
 AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してください。
 

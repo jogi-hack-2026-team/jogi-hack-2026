@@ -75,9 +75,10 @@ Code Freeze後は、原則としてソースコードおよび事前提出資料
 
 1. [Product Spec](docs/product-spec.md): 対象RequirementとScope。
 2. [Architecture](docs/architecture.md): 実現責務と正式Decision。
-3. 対象領域の[FE](docs/FE/README.md) / [BE](docs/BE/README.md) / [ML](docs/ML/README.md) README。
-4. 同領域のdecision-log、design-intent、implementation-guide。採用理由を検討する場合はevidence、推薦評価はML evaluationも確認する。
-5. [変更対応表](docs/change-map.md)から実在Code / Testsを調査する。
+3. [変更対応表](docs/change-map.md)から実在Code / Testsを調査する。
+4. 新Productの領域文書が作成された場合は、そのREADMEからdecision-log、design-intent、implementation-guideと必要なevidenceを確認する。
+
+[旧音楽案の保管資料](archive/music-exploration/README.md)は当時の判断・検証を調べる場合だけ参照し、現在の実装手順へ持ち込まない。
 
 Supporting Docsは理由・証拠・実装手順を展開する補助資料であり、正式な仕様の追加正本ではない。
 
