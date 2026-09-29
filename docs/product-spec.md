@@ -205,6 +205,7 @@ P-02〜P-09は旧音楽案で有効だった判断の索引。現行の廃止判
 | P-05 | 2026-09-25（S25） | DECIDED、P-09で詳細化 | 共通Stateの仮説とTrace由来の説明、因果断定しない |
 | P-06 | 2026-09-25（S25） | DECIDED | 再生開始＋明示評価で5曲、Probe最大2と不足時手順 |
 | P-07 | 2026-09-25（S25） | BehaviorはDECIDED、旧優先度はSUPERSEDED → P-08 | canonical更新、Save非reward、Intent/Aspectの分離 |
+| P-10 | 2026-09-29 | DECIDED（現行） | [音楽探索案を廃止](#p-10-音楽探索案の廃止)。P-02〜P-09は旧案の履歴 |
 
 [P-01〜07の理由・代替案](ML/decision-log.md#p-0107の判断理由) / [仕様整理 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。
 

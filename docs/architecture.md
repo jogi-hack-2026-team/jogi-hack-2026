@@ -492,8 +492,9 @@ D-01〜07はS25までの履歴。F25でD-08〜14へ更新し、2026-09-27にD-15
 | D-05 | 2026-09-24〜25（#34比較時） | 一部SUPERSEDED → D-14、AuthはOPEN | Hosting候補を具体化 |
 | D-06 | 2026-09-25（S25） | SUPERSEDED → D-10 / D-11 | Node / Fastify提案を採択 |
 | D-07 | 2026-09-25（S25） | CONDITIONAL | 負荷を測って段階拡張、先取りの分散基盤は導入しない |
+| D-17 | 2026-09-29 | DECIDED（現行） | [音楽案に依存したD-08〜D-14・D-16の新Productへの適用終了](#d-17-音楽案に依存したarchitectureの適用終了)。D-15の開発Toolchainは維持 |
 
-日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。現行の判断は下記D-08〜16。旧IDは再利用しない。
+日付は記録期間で、旧Entryに個別採択日がないものへ日時を補っていない。[旧判断の詳細とProposal](BE/decision-log.md#d-0107と採択前proposalの履歴) / [比較作業 #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)。D-08〜D-14・D-16は当時の判断であり、現行の適用範囲はD-17を参照。旧IDは再利用しない。
 
 ## 既存内容の同期判定と残る人間Decision
 
