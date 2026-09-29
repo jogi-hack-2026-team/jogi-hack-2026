@@ -1,9 +1,11 @@
 ---
 name: ml-issue-execution
-description: JOGI HACK 2026のML Issueを実装・検証・評価するときに、Goal contractと人間判断境界を確認する。
+description: 旧音楽探索案のML Issue実行手順を参照するときに、当時のGoal contractと人間判断境界を確認する。
 ---
 
 # ML Issue実行
+
+> 音楽探索案は2026-09-29に廃止された。このSkill内のSeed・推薦・ML評価の条件は旧案の履歴であり、次のProductへ自動適用しない。[現行Product状態](../../../docs/product-spec.md#現行状態2026-09-29)と[引き継ぎの棚卸し](../../../docs/operations/reuse-handoff.md)を先に確認する。
 
 このSkillはIssue単位のML作業に使用する。GitHub/Project操作とPR作成は[issue-to-pr](../issue-to-pr/SKILL.md)、文書同期は[documentation-sync](../documentation-sync/SKILL.md)、PR前のセルフレビューは[review-gate](../review-gate/SKILL.md)に従う。
 

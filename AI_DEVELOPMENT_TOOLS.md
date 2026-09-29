@@ -16,7 +16,7 @@
 GitHub MCPの採択は全メンバーの接続完了を意味しません。接続できない環境ではGitHub Web UIを使い、Issueを確認・作成できないまま変更を始めません。個人のMCP設定や認証情報をリポジトリに含めず、同じ操作を複数の経路で重複実行しません。PlaywrightのCLI・対応Skillの導入状況は利用前に確認し、未配置のSkillを存在するものとして扱わないでください。
 documentation-syncは既存ファイルと利用ルールを確認したうえで、今回の承認を正式採択の根拠とします。
 
-Issue #47の[ML Agent Harness](docs/operations/ml-agent-harness.md)は、番号指定なしのキュー処理のため、依頼されたGitHub CLIとCodex CLIを使用します。通常のAIによるGitHub操作のMCP優先方針は維持します。Harnessの存在を全環境でのCLI導入・認証完了とみなしません。
+Issue #47の[ML Agent Harness](docs/operations/ml-agent-harness.md)は旧音楽案の履歴です。2026-09-30に通常のmiseタスクとCIから外しました。当時の番号指定なしのキュー処理は、依頼されたGitHub CLIとCodex CLIを使用していました。通常のAIによるGitHub操作のMCP優先方針は維持します。Harnessの存在を次のProductの自動化採択や全環境でのCLI導入・認証完了とみなしません。
 
 
 ## 利用前の確認

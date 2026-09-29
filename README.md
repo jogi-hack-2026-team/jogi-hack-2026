@@ -27,8 +27,9 @@
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、Web・API・開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
 旧音楽案で用意した[FE](apps/web/)と[BE](apps/api/)の最小起動構成は残しています。音楽案の探索・推薦・保存機能は未実装です。[比較PoC](experiments/stack-bakeoff/README.md)と未mergeの調査は履歴であり、新Productの実装や技術採択を示しません。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
+次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
-旧音楽案のML Issue向けCodex Harnessは[履歴と制約](docs/operations/ml-agent-harness.md)を参照してください。廃止したIssueへの作業再開には使用しません。
+旧音楽案のML Issue向けCodex Harnessは通常の実行タスクとCIから外し、[履歴と制約](docs/operations/ml-agent-harness.md)にコードと手動検証方法を残しています。
 
 ## 開発基盤のセットアップと確認
 
