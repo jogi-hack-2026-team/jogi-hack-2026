@@ -25,9 +25,9 @@ Codex、Claude Code、GitHub Copilotなど、利用するAIに関係なく、
 
 Single Source of Truthを維持する。
 
-開発基盤の採用方針・導入条件・個別設定の確認結果は[開発基盤の状態](docs/operations/development-foundation-status.md)を参照する。
+開発基盤の現行状態と旧構成への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)を参照する。
 ADOPTEDを動作確認済みと扱わない。外部リソース作成・権限・保護設定変更は対象と差分の承認後に行う。
-Secret不要の検証へDopplerやProductionのSecretを渡さない。現段階の文書検証コマンドは[README](README.md#開発基盤のセットアップと確認)を参照する。
+Secret不要の検証へProductionのSecretを渡さない。現段階の文書検証コマンドは[README](README.md#開発基盤のセットアップと確認)を参照する。
 
 ---
 

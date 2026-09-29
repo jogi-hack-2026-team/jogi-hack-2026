@@ -1,6 +1,6 @@
 # 廃止した音楽探索案の記録
 
-2026-09-29に廃止したProduct案の文書・比較実験を、当時の根拠と検証範囲を確認できるよう保管する。**現行仕様、実装計画、次のProductの技術採択ではない。** 現在の判断は[Product Spec](docs/product-spec.md)と[Architecture](docs/architecture.md)を参照する。
+2026-09-29に廃止したProduct案の文書・比較実験と、2026-09-30に一時退避した旧開発スタックを、当時の根拠と検証範囲を確認できるよう保管する。**現行仕様、実装計画、次のProductの技術採択ではない。** 現在の判断は[Product Spec](../../docs/product-spec.md)と[Architecture](../../docs/architecture.md)を参照する。
 
 | 内容 | 記録 |
 | --- | --- |
@@ -9,6 +9,9 @@
 | 仕様・実装・検証の対応 | [旧変更対応表](docs/change-map.md) |
 | 領域別の判断理由と実装支援 | [FE](docs/FE/README.md)、[BE](docs/BE/README.md)、[ML](docs/ML/README.md) |
 | 比較PoC・測定結果・合成評価 | [stack-bakeoff](experiments/stack-bakeoff/README.md) |
+| 旧Web/API・npm workspace・Compose | [apps](apps/)、[package.json](package.json)、[compose.yaml](compose.yaml)、[Dockerfile](Dockerfile) |
+| 旧Toolchain・Application CI・起動手順 | [mise設定](mise.toml)、[CI設定](.github/workflows/application.yml)、[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ) |
+| 当時の基盤判断・設定・参考資料 | [基盤ADR](docs/decisions/0001-development-foundation.md)、[基盤状態](docs/operations/development-foundation-status.md)、[提供資料](docs/references/jogi_hack_2026_dev_foundation_guide.html) |
 | 旧ML Issue自動実行の設計・模擬テスト | [Harnessの記録](docs/operations/ml-agent-harness.md)。runnerの通常実行は停止 |
 
-この保管場所の数値・Provider条件・権利・実再生・Team環境は当時の条件付き記録。再利用する場合は新しいIssueで対象要件とEvidenceを確認する。[再利用資産の棚卸し](../../docs/operations/reuse-handoff.md)に現行の入口をまとめる。
+この保管場所の数値・Provider条件・権利・実再生・Team環境は当時の条件付き記録。旧アプリの起動やApplication CIの成功は次のProductの動作保証ではない。再利用する場合は新しいIssueで対象要件とEvidenceを確認する。[再利用資産の棚卸し](../../docs/operations/reuse-handoff.md)に現行の入口をまとめる。

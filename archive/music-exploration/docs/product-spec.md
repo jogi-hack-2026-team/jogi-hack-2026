@@ -1,5 +1,7 @@
 # Product仕様
 
+> 2026-09-29に廃止した音楽探索案の履歴です。[現在のProduct Spec](../../../docs/product-spec.md)を参照してください。
+
 ## 現行状態（2026-09-29）
 
 **音楽探索案は廃止した。次のProduct、Target User、Core Value、MVP要件、Must / Should / Couldは未決定。** 旧案の要件 R-01〜R-19、Scope、User Flow、P-02〜P-09は新しいProductの現行仕様ではない。過去の判断と検証経緯を確認できるよう、以下に履歴として残す。正式仕様をProductとArchitectureの2文書に置くP-01の運用は継続する。

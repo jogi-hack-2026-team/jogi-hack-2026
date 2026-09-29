@@ -248,7 +248,7 @@ Mustの完成度を犠牲にしてShouldやCouldを実装しないでくださ�
 ## GitHub Projects
 
 原則1人1Issueとし、レビューが滞っている場合は新規着手よりレビューを優先します。
-BoardのWIP上限と資料との差分は[開発基盤の状態](docs/operations/development-foundation-status.md#資料との相違点)を参照し、列や上限を無断で置換しません。
+BoardのWIP上限と資料との差分の旧記録は[履歴](archive/music-exploration/docs/operations/development-foundation-status.md#資料との相違点)を参照し、列や上限を無断で置換しません。
 
 Statusは以下を使用します。
 
@@ -262,7 +262,7 @@ Statusは以下を使用します。
     ↓
     Done
 
-Projectの自動追加対象はIssueです。PRはIssue本文の開発情報とDevelopment欄から追跡し、IssueカードのStatusを更新します。既存PRカードの扱いは[開発基盤の状態](docs/operations/development-foundation-status.md#資料との相違点)に記録しています。
+Projectの自動追加対象はIssueです。PRはIssue本文の開発情報とDevelopment欄から追跡し、IssueカードのStatusを更新します。既存PRカードの扱いは[旧基盤状態](archive/music-exploration/docs/operations/development-foundation-status.md#資料との相違点)に記録しています。
 
 | 対象 | タイミング | Status |
 | --- | --- | --- |
@@ -699,8 +699,7 @@ Force PushはGitの履歴を書き換えるため、他のメンバーの変更�
 - Webhook URL
 - `.env` の実値
 
-Secret実値の正本はDopplerです。接続先Project・Configは管理者の確認後に選びます。
-ローカル起動・CIへの受け渡しと未完了の設定は[開発基盤の状態と手順](docs/operations/development-foundation-status.md#dopplerの引き継ぎ)を参照してください。
+次のProductのSecret管理方式は未決定です。旧Doppler採択と当時の接続待ちは[履歴](archive/music-exploration/docs/operations/development-foundation-status.md#dopplerの引き継ぎ)に保管しています。Secretの実値は承認された安全な手段で管理し、リポジトリやIssue・PRへ載せません。
 
 `.env` などは `.gitignore` でGitの管理対象から除外します。
 
@@ -739,8 +738,7 @@ Merge前に以下を確認してください。
 | 新しいProduct・Architectureの重要判断 | 上記2文書内のDecision Log。ID・日付・状態・判断要約・詳細/Issueリンクを記録する。詳しい理由は領域別decision-logへ置く |
 | Git管理できる構成図・Sequence図 | 必要な仕様文書内のMermaid。実装前に架空の図を作らない |
 
-採用方針・導入条件の記録は[開発基盤ADR](docs/decisions/0001-development-foundation.md)、
-項目ごとの導入・検証結果、外部変更の承認待ちは[開発基盤の状態](docs/operations/development-foundation-status.md)を参照してください。
+当時の採用方針・導入条件は[旧開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)、項目ごとの導入・検証結果と外部変更の承認待ちは[旧基盤状態](archive/music-exploration/docs/operations/development-foundation-status.md)を参照してください。現在の未決定事項は[現行状態](docs/operations/development-foundation-status.md)に記録しています。
 過去の基盤ADRは履歴として保持します。新しいProduct・Architecture判断のために正式ADRファイルを増やさず、2文書内のDecision Logから旧判断を参照し、変更理由と影響を記録します。Baselineの再検討は[Reconsideration Policy](docs/product-spec.md#reconsideration-policy)に従い、人間の決定前に正式反映しません。
 リリース・提出前は[リリースとデモの手順](docs/operations/release-demo.md)を使います。
 

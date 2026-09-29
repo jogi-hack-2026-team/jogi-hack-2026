@@ -1,5 +1,7 @@
 # ArchitectureとTechnology Stack
 
+> 2026-09-30に旧判断として保管しました。以下の「現行」は当時の記述です。[現在のArchitecture](../../../docs/architecture.md)を参照してください。
+
 ## 現行状態（2026-09-29）
 
 音楽探索案は[Product Decision P-10](product-spec.md#p-10-音楽探索案の廃止)で廃止した。**次のProductに適用するArchitecture、Framework、Database、認証、外部Service、推薦方式、Deployment先は未決定。** 下記のD-08〜D-14とD-16、およびA-01〜A-07は旧音楽案の判断・設計履歴であり、新案の採択根拠にしない。
@@ -440,13 +442,13 @@ CacheはFeature/Mapping/変換の版と期限・失効をキーにし、provider
 
 ## 開発環境と版管理
 
-2026-09-27の依頼者判断（D-15）により、本番アプリの開発ToolchainはNode 24 LTSとnpmに固定する。[mise.toml](../../../mise.toml)はNode 24.21.0を指定し、その公式配布物に同梱されるnpmは11.19.0。文書チェックはNode不要なので`--skip-tools`を維持する。D-15時点で未作成だったpackage/lockfileとdev/build/typecheckタスクは[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)で追加した。比較PoCのpackage/lockfileは本番の依存関係の正本ではない。
+2026-09-27の依頼者判断（D-15）により、本番アプリの開発ToolchainはNode 24 LTSとnpmに固定する。[mise.toml](../mise.toml)はNode 24.21.0を指定し、その公式配布物に同梱されるnpmは11.19.0。文書チェックはNode不要なので`--skip-tools`を維持する。D-15時点で未作成だったpackage/lockfileとdev/build/typecheckタスクは[Issue #51](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/51)で追加した。比較PoCのpackage/lockfileは本番の依存関係の正本ではない。
 
-#51の起動構成は[ルートnpm workspaces](../../../package.json)で[FE](../../../apps/web/)と[BE](../../../apps/api/)を分け、単一の[package-lock.json](../../../package-lock.json)で依存版を揃える。FEはViteの開発proxy経由で、BEの`GET /api/health`を確認する。これはローカル起動確認であり、Product API、Guest認証、DB schema / migration、推薦や保存の実装を示さない。[Application CI](../../../.github/workflows/application.yml)はSecretとDBなしでinstall・typecheck・build・開発用image buildを確認する。アプリのテスト、ブラウザE2E、公開配置は後続Issueで扱う。
+#51の起動構成は[ルートnpm workspaces](../package.json)で[FE](../apps/web/)と[BE](../apps/api/)を分け、単一の[package-lock.json](../package-lock.json)で依存版を揃える。FEはViteの開発proxy経由で、BEの`GET /api/health`を確認する。これはローカル起動確認であり、Product API、Guest認証、DB schema / migration、推薦や保存の実装を示さない。[Application CI](../.github/workflows/application.yml)はSecretとDBなしでinstall・typecheck・build・開発用image buildを確認する。アプリのテスト、ブラウザE2E、公開配置は後続Issueで扱う。
 
-[Issue #54](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/54)で、ルートの[Compose](../../../compose.yaml)からWeb・API・PostgreSQLを一括起動できるようにした。Web/APIの[Dockerfile](../../../Dockerfile)はNode 24.21.0と単一lockfileを使い、コンテナ内のVite proxyは`api:3000`へ接続する。ホストでの開発起動はlocalhostへ接続する。公開portはホストの`127.0.0.1`に限定し、Web/APIのhealthとDBのhealthを分ける。ソースはbind mountせず、変更時は再buildする。Composeはローカル開発用であり、Production image / 配置方式の採択ではない。
+[Issue #54](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/54)で、ルートの[Compose](../compose.yaml)からWeb・API・PostgreSQLを一括起動できるようにした。Web/APIの[Dockerfile](../Dockerfile)はNode 24.21.0と単一lockfileを使い、コンテナ内のVite proxyは`api:3000`へ接続する。ホストでの開発起動はlocalhostへ接続する。公開portはホストの`127.0.0.1`に限定し、Web/APIのhealthとDBのhealthを分ける。ソースはbind mountせず、変更時は再buildする。Composeはローカル開発用であり、Production image / 配置方式の採択ではない。
 
-D-12の開発用DB imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。#51のhealthはこのDBへ接続しない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](../../../docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を正本とする。
+D-12の開発用DB imageは`postgres:18.6-trixie`に固定し、名前付きvolumeで保持する。各自のローカルパスワードは実値をGitへ置かずに起動時に渡す。PoCのtmpfs・trust認証DBとは別データであり、実ユーザー・Productionデータは入れない。#51のhealthはこのDBへ接続しない。Hosted DBのProvider・version・migration・restoreをこのComposeから採択しない。起動と確認は[開発ガイド](DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を正本とする。
 
 ## TestingとCI/CD
 

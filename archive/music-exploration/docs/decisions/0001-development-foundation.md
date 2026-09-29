@@ -1,5 +1,7 @@
 # ADR-0001: プロダクト未確定段階の開発基盤
 
+> 当時の採択記録です。2026-09-30の[Architecture D-18](../../../../docs/architecture.md#d-18-旧開発スタックの一時退避)で旧スタックは一時退避しました。
+
 状態: 採用方針を記録。導入・接続完了の宣言ではない。
 根拠: 2026-09-20の整備依頼と参照HTML。既存決定との相違は[状態表](../operations/development-foundation-status.md#資料との相違点)で保留する。
 
@@ -15,7 +17,7 @@
 - Secretの正本はDoppler。`.env.example`は確認済みキーと説明のみ。現時点のアプリキーは0件。
 - Docker ComposeはDB・依存サービス決定後、Formatter・Linter・アプリテストはスタック・実装に合わせて導入する。
 - 現段階のCIは文書・設定の実検証に限定し、Secretを渡さない。Git Hookはステージ済み差分の空白検査のみ。
-- 情報の役割分担は[CONTRIBUTING](../../CONTRIBUTING.md#ドキュメントと技術判断)に集約する。
+- 情報の役割分担は[CONTRIBUTING](../../../../CONTRIBUTING.md#ドキュメントと技術判断)に集約する。
 
 ## Alternatives
 

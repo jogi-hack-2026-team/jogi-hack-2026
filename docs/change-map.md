@@ -7,7 +7,7 @@
 | 対象 | 現在の状態 | 実装・確認の入口 |
 | --- | --- | --- |
 | Product機能 | 要件・実装とも未定 | 次案の決定後に仕様、コード、確認方法を追記する |
-| Web / APIの最小起動 | health表示・応答のみ。次案への再利用は未決定 | [Web](../apps/web/)、[API](../apps/api/)、[Application CI](../.github/workflows/application.yml)。`npm run typecheck`と`npm run build`はProduct動作を検証しない |
+| 旧Web / APIの最小起動 | 履歴へ一時退避。次案への再利用は未決定 | [旧Web](../archive/music-exploration/apps/web/)、[旧API](../archive/music-exploration/apps/api/)、[旧Application CI](../archive/music-exploration/.github/workflows/application.yml)。当時の型検査・ビルドはProduct動作を検証しない |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md)を参照。旧要件・設計・PoCの対応は[旧表](../archive/music-exploration/docs/change-map.md)に残す |
 
 ## 開発基盤と作業手順
@@ -16,8 +16,8 @@
 | --- | --- | --- |
 | Issue・Branch・PR・レビュー | [CONTRIBUTING](../CONTRIBUTING.md) | Issueの目的・Scope・担当・完了条件とPR検証を確認 |
 | 文書・設定チェック | [開発ガイド](DEVELOPMENT_GUIDE.md#文書チェックで起きること) | [mise設定](../mise.toml) → [check-foundation.ps1](../scripts/check-foundation.ps1)。`pwsh -NoProfile -File scripts/check-foundation.ps1` |
-| Web / API / ローカルDB | [開発ガイド](DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する) | [Compose](../compose.yaml)、[アプリ設定](../package.json)。DB schema・migration・Product試験は未整備 |
-| 開発用Toolchainと外部設定 | [Architecture D-15](architecture.md#d-15)、[基盤状態](operations/development-foundation-status.md) | 実際の接続・権限・他メンバー環境は利用前に別途確認 |
+| 旧Web / API / ローカルDB | [旧開発ガイド](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する) | [旧Compose](../archive/music-exploration/compose.yaml)、[旧アプリ設定](../archive/music-exploration/package.json)。現行の起動構成ではない |
+| 次の技術スタックと外部設定 | [Architecture D-18](architecture.md#d-18-旧開発スタックの一時退避)、[基盤状態](operations/development-foundation-status.md) | 新案の要件決定後に採否・接続・権限・検証をIssueで確定する |
 | 次案への引き継ぎ | [再利用資産](operations/reuse-handoff.md) | 要件を決めた後に各資産の採否と検証条件をIssueへ記録 |
 
 ## 確認記録と残課題

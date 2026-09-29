@@ -11,7 +11,7 @@
 | 確定 | 開発期間：2026-09-19 ～ 2026-10-12 / コードフリーズ：2026-10-12 |
 | DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
 | OPEN | 次のProduct、Target User、Core Value、MVP Scope、Product向けの技術採択。[Architecture D-17](docs/architecture.md#d-17-音楽案に依存したarchitectureの適用終了) |
-| DECIDED | 開発用ToolchainはNode 24 LTS / npm。miseでNode 24.21.0を固定し、ローカルDBはPostgreSQL 18.6のComposeを使用。[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ) |
+| OPEN | 次の技術スタックと開発用Toolchain。旧Web/API・Compose構成は一時退避した。[Architecture D-18](docs/architecture.md#d-18-旧開発スタックの一時退避) |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
@@ -24,23 +24,22 @@
 - **仮説**：検証が必要な推測。
 - **未定**：まだ議論・決定されていない事項。
 
-現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、Web・API・開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
-WebとAPIの最小起動構成は残っています。音楽案の製品機能は未実装です。旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移し、新Productの実装や技術採択と区別しています。
-採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
+現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、文書・設定検証用のGitHub Actionsがあります。
+旧Web/API・開発用DBの起動構成、旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成はありません。
+現行の未決定事項と当時の検証記録への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
 旧音楽案のML Issue向けCodex Harnessは通常の実行タスクとCIから外しました。再利用前の確認事項は[引き継ぎ](docs/operations/reuse-handoff.md)を参照してください。
 
 ## 開発基盤のセットアップと確認
 
-GitとPowerShell 7を使います。ホスト上でアプリを動かす場合はmise、Web・API・DBをComposeから起動する場合はDocker EngineとComposeを用意します。各CLIの導入と起動・停止は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。
+GitとPowerShell 7を使います。文書・設定チェックの手順は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。アプリ用Runtime、DB、Secret管理の採択は未定です。
 
 導入済みの環境では、リポジトリのルートで `mise run --skip-tools check` を実行します。文書・設定を検査し、成功時は `PASS:` が表示されます。
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
 
-`check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。
-Dockerで一括起動する場合はローカルDB専用パスワードを設定し、リポジトリのルートで`docker compose up --build -d --wait`を実行します。Webは`http://127.0.0.1:5173/`、API healthは`http://127.0.0.1:3000/api/health`です。ホスト上で変更を即座に反映する開発には、`mise exec -- npm ci`後、別々の端末で`mise exec -- npm run dev:api`と`mise exec -- npm run dev:web`を使えます。[詳細手順](docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)にパスワード・確認・停止・再ビルドを記載しています。型検査とビルドは`mise exec -- npm run typecheck`、`mise exec -- npm run build`です。Product機能、DB migration、Formatter・Linter・テストの具体構成は後続Issueで扱います。比較PoC専用の検証は[実験README](archive/music-exploration/experiments/stack-bakeoff/README.md)を参照してください。
+`check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。旧アプリを調べる場合だけ[履歴内の手順](archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照してください。次のProduct向け起動・型検査・ビルド・テストは技術採択後に定めます。
 
 ## 最初に読む順番
 
@@ -72,8 +71,8 @@ AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してくだ�
 | 現在のStatus・Scope | [GitHub Projects](https://github.com/orgs/jogi-hack-2026-team/projects/1)（アクセス権が必要） |
 | 正式Product仕様・要件・Scope・Product Decision Log | [Product Spec](docs/product-spec.md) |
 | 正式Architecture・技術候補・DB・Deployment・Architecture Decision Log | [Architecture](docs/architecture.md) |
-| 過去の開発基盤の判断履歴 | [開発基盤ADR](docs/decisions/0001-development-foundation.md)。新規Product設計の正本を増やさない |
-| 基盤の個別設定、未確認事項、手動作業 | [開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md) |
+| 過去の開発基盤の判断履歴 | [開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)。新規Product設計の正本を増やさない |
+| 現行基盤の状態と旧設定・検証記録への入口 | [開発基盤の状態](docs/operations/development-foundation-status.md) |
 | リリース・提出・デモ | [リリースとデモの手順](docs/operations/release-demo.md) |
 
 仕様・設計・資料の追加先は[ドキュメント運用](CONTRIBUTING.md#ドキュメントと技術判断)を参照してください。
