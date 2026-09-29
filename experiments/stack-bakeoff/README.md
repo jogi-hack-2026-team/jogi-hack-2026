@@ -1,6 +1,6 @@
 # Stack Bake-off
 
-**Supporting Artifact / Not a Source of Truth**。Issue #34の比較実験。正式仕様は[Product Spec](../../docs/product-spec.md)、候補の推奨・未決事項は[Architecture](../../docs/architecture.md)。本番へ直接転用しない。
+**Supporting Artifact / Not a Source of Truth**。Issue #34の旧音楽案向け比較実験。2026-09-29に音楽探索案を廃止したため、次のProductの採択・実装根拠にはしない。[現行Product状態](../../docs/product-spec.md#現行状態2026-09-29)と[Architecture](../../docs/architecture.md)を参照。本番へ直接転用しない。
 
 ## Purpose
 

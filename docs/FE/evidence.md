@@ -1,5 +1,7 @@
 # FE Evidence
 
+> 2026-09-29に音楽探索案を廃止しました。以下は旧案のSupporting Artifactであり、次のProductの仕様・採択・実装指示ではありません。[現行Product状態](../product-spec.md#現行状態2026-09-29)を先に確認してください。
+
 **Supporting Artifact / Not a Source of Truth**。正式判断は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。閲覧・コード確認日: 2026-09-25。論文の知見、公式仕様、過去実験、人間の判断を区別する。
 
 ## EV-FE-01

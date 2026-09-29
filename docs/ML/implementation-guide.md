@@ -1,5 +1,7 @@
 # Recommendation Implementation Guide
 
+> 2026-09-29に音楽探索案を廃止しました。以下は旧案のSupporting Artifactであり、次のProductの仕様・採択・実装指示ではありません。[現行Product状態](../product-spec.md#現行状態2026-09-29)を先に確認してください。
+
 **Supporting Artifact / Not a Source of Truth**。正式仕様は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。以下は2026-09-25の実装準備であり、本番実装済みという意味ではない。
 
 ## 最初の作業

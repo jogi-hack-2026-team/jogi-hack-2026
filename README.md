@@ -9,11 +9,10 @@
 | --- | --- |
 | 確定 | 大会：JOGI HACK 2026 / 対象：Webアプリケーション / チーム：3人 |
 | 確定 | 開発期間：2026-09-19 ～ 2026-10-12 / コードフリーズ：2026-10-12 |
-| DECIDED | ライト〜ミドル層のリスナーが、3〜5曲の好みを起点に仮説を次曲で確かめ、未知曲を発見・保存して探索を続ける。需要は未検証。[Product Spec](docs/product-spec.md) |
-| DECIDED | Modular Monolith、React / TypeScript / Vite / TanStack Router、Node / TypeScript / Fastify、PostgreSQL Engine、TypeScript Gaussian LinTS、Guest Core。[Architecture](docs/architecture.md) |
+| DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
+| OPEN | 次のProduct、Target User、Core Value、MVP Scope、Product向けの技術採択。[Architecture D-17](docs/architecture.md#d-17-音楽案に依存したarchitectureの適用終了) |
 | DECIDED | 開発用ToolchainはNode 24 LTS / npm。miseでNode 24.21.0を固定し、ローカルDBはPostgreSQL 18.6のComposeを使用。[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ) |
-| RECOMMENDED / CONDITIONAL | Cloud Run / Neon。region、pooler、cold/warm、容量・費用の受入は残る |
-| OPEN | 製品名・最終UX、Account Auth、数値校正、実Catalog/再生coverage、保存/学習用途の許諾、DB migration・Product API・実User検証等 |
+| 履歴 | 音楽案向けのModular Monolith、FE/BE、PostgreSQL、Gaussian LinTS、Cloud Run / Neonの判断・候補は新案に自動適用しない。[旧Architecture](docs/architecture.md#旧音楽案のarchitecture記録以下は新productの採択ではない) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
 過去の案・会話・実験コードは採用済みの仕様ではありません。
@@ -26,10 +25,10 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、Web・API・開発用DBのCompose、文書・設定検証用のGitHub Actionsがあります。
-採択済み技術による[FE](apps/web/)と[BE](apps/api/)の最小起動構成を追加しました。Productの探索・推薦・保存機能は未実装です。[比較PoC](experiments/stack-bakeoff/README.md)は別の実験であり、本番アプリの依存関係の正本ではありません。
+旧音楽案で用意した[FE](apps/web/)と[BE](apps/api/)の最小起動構成は残しています。音楽案の探索・推薦・保存機能は未実装です。[比較PoC](experiments/stack-bakeoff/README.md)と未mergeの調査は履歴であり、新Productの実装や技術採択を示しません。
 採用方針と接続・動作確認済みの状態は[開発基盤の状態と引き継ぎ](docs/operations/development-foundation-status.md)で区別しています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
-ML Issueを対象とする任意のCodex Harnessは[実行手順と制約](docs/operations/ml-agent-harness.md)を参照してください。GitHub CLIが未導入の環境では実行できません。
+旧音楽案のML Issue向けCodex Harnessは[履歴と制約](docs/operations/ml-agent-harness.md)を参照してください。廃止したIssueへの作業再開には使用しません。
 
 ## 開発基盤のセットアップと確認
 
@@ -53,7 +52,7 @@ Dockerで一括起動する場合はローカルDB専用パスワードを設定
 機能の仕様を知りたい・変更したい場合は、[対応表](docs/change-map.md#アプリの仕様と実装)から「目的・操作・入力や表示の条件・失敗時の動作」を説明する機能文書へ進み、内部処理、関連コード、確認方法をたどります。
 正式な設計文書は[Product Spec](docs/product-spec.md)と[Architecture](docs/architecture.md)の2本です。アプリの起動構成とProduct機能の実装状況、比較結果と未検証範囲はArchitectureからたどれます。[開発基盤と作業手順](docs/change-map.md#開発基盤と作業手順)と[配置ルール](CONTRIBUTING.md#仕様文書の配置)も参照してください。
 
-領域別の入口は[FE](docs/FE/README.md)、[BE](docs/BE/README.md)、[推薦・オンライン学習](docs/ML/README.md)です。各領域でDecisionの理由、Design Intent、不変条件、Evidence、既存PoCとの差分、実装順をたどれます。Supporting Docsは正本を増やさず、正式決定を詳細化します。
+旧音楽案の領域別記録は[FE](docs/FE/README.md)、[BE](docs/BE/README.md)、[推薦・オンライン学習](docs/ML/README.md)からたどれます。これらは現在の実装指示ではなく、当時のDecision、Design Intent、Evidence、PoCとの差分を残すSupporting Docsです。
 
 AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してください。
 

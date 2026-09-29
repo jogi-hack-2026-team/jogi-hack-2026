@@ -1,6 +1,8 @@
 # Recommendation / Online Learning
 
-**Supporting Artifact / Not a Source of Truth**。正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)。本書はIssue #36の基本設計とIssue #57の同順位判断への入口であり、本番実装済みを意味しない。
+> 2026-09-29に音楽探索案を廃止しました。以下は旧案のSupporting Artifactであり、次のProductの仕様・採択・実装指示ではありません。[現行Product状態](../product-spec.md#現行状態2026-09-29)を先に確認してください。
+
+**Supporting Artifact / Not a Source of Truth**。当時の正式決定は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)に記録。本書はIssue #36の基本設計とIssue #57の同順位判断への入口であり、本番実装済みを意味しない。
 
 ## この領域の責務
 

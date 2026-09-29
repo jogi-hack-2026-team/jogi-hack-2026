@@ -1,8 +1,22 @@
 # ArchitectureとTechnology Stack
 
-正式な実現方式のSingle Source of Truth。[Product Spec](product-spec.md)が振る舞い、本書が責務・採択・制約を定める。2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ正式反映した。FE / BEの最小起動構成はあるが、Product機能は未実装。D-01〜07と比較表は判断の履歴であり、古い推奨を現行採択と混同しない。
+## 現行状態（2026-09-29）
+
+音楽探索案は[Product Decision P-10](product-spec.md#p-10-音楽探索案の廃止)で廃止した。**次のProductに適用するArchitecture、Framework、Database、認証、外部Service、推薦方式、Deployment先は未決定。** 下記のD-08〜D-14とD-16、およびA-01〜A-07は旧音楽案の判断・設計履歴であり、新案の採択根拠にしない。
+
+現在のリポジトリにはReact / ViteのWeb、FastifyのAPI、開発用PostgreSQLの起動構成がある。これらは動作する開発基盤として保持するが、次のProduct向けの技術採択を意味しない。D-15のNode 24 LTS / npmというリポジトリの開発Toolchainは継続する。旧比較PoCと調査結果も履歴として保存する。
+
+### D-17 音楽案に依存したArchitectureの適用終了
+
+2026-09-29 / **DECIDED（依頼者判断に伴う適用範囲変更）** / 音楽探索案の廃止により、その要件を前提としたD-08〜D-14、D-16、A-01〜A-07は次のProductへ自動適用しない。理由は新しい課題・必要機能が未定であり、旧案向けの技術構成を先に固定できないため。既存の起動構成と実験結果は削除せず、新案の要件決定後に必要性を再評価する。D-15の開発Toolchainは維持。[Product P-10](product-spec.md#p-10-音楽探索案の廃止) / [整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。
+
+## 旧音楽案のArchitecture記録（以下は新Productの採択ではない）
+
+以下は2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）を根拠にD-08〜14へ反映した当時の実現方式。FE / BEの最小起動構成はあるが、音楽案のProduct機能は未実装。D-01〜07と比較表も判断の履歴として残す。
 
 ## 現在の採択と読む順番
+
+以下は**2026-09-25時点の音楽案向け採択**。新Productの技術選定ではない。現行の適用範囲は[D-17](#d-17-音楽案に依存したarchitectureの適用終了)を参照。
 
 | 状態 | 対象 | 詳細・残る条件 |
 | --- | --- | --- |

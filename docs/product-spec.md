@@ -1,6 +1,18 @@
-# 音楽探索プロダクト仕様
+# Product仕様
 
-正式なProduct仕様のSingle Source of Truth。実現方法の正本は[Architecture](architecture.md)。2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で初版を整理した。FE / BEの起動構成はあるがProduct機能は未実装であり、比較PoCの動作をそのまま正式仕様にはしない。
+## 現行状態（2026-09-29）
+
+**音楽探索案は廃止した。次のProduct、Target User、Core Value、MVP要件、Must / Should / Couldは未決定。** 旧案の要件 R-01〜R-19、Scope、User Flow、P-02〜P-09は新しいProductの現行仕様ではない。過去の判断と検証経緯を確認できるよう、以下に履歴として残す。正式仕様をProductとArchitectureの2文書に置くP-01の運用は継続する。
+
+FE / BEの最小起動構成は存在するが、音楽探索の製品機能は実装されていない。比較PoCと未mergeの調査結果は新案の採択・動作確認を意味しない。次案の要件とScopeが決まるまで、旧案のIssueを実装計画として再利用しない。
+
+### P-10 音楽探索案の廃止
+
+2026-09-29 / **DECIDED（依頼者判断）** / 音楽探索案をJOGI HACK 2026のProduct候補から外す。#66の固定候補に対する最終GateはREDを提案しており、必要なCatalogと再生経路を期限内に成立させる証拠が不足した。これは今回の廃止判断を支える調査結果であり、あらゆる音楽案の不可能性を証明するものではない。次のProduct案と技術採択は別途決める。[最終Gateの調査Issue #66](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/66) / [廃止と整理のIssue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。
+
+## 旧音楽探索案の記録（以下は現行仕様ではない）
+
+以下は2026-09-25までに採択した音楽案の仕様と判断履歴。実現方法の当時の記録は[Architecture](architecture.md)。2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で初版を整理した。FE / BEの起動構成はあるが音楽案のProduct機能は未実装であり、比較PoCの動作をそのまま正式仕様にはしない。
 
 ## 状態と根拠
 
@@ -11,9 +23,9 @@
 | CONDITIONAL | 条件の成立確認または詳細決定が必要な候補 |
 | OPEN | 未決。推測で補完しない |
 
-2026-09-25 JSTの依頼者「Product Spec / Architecture 全面同期・再評価」のConversation Decision Snapshot（S25）を現在の人間Baselineとして同期した。S25が定めるBehavior/Current Designは**DECIDED（現行Baseline）**へ戻す。Snapshot自身が「候補」「第一候補」「再評価」とする採択・Priorityはその区分を保つ。DECIDEDは実データ・実ユーザーでのValidation成功を意味しない。過去研究の全資料がRepositoryにないことを理由に、提示されたDecisionを再びOPENへ戻さない。
+2026-09-25 JSTの依頼者「Product Spec / Architecture 全面同期・再評価」のConversation Decision Snapshot（S25）を当時の人間Baselineとして同期した。S25が定めたBehavior/Current Designは**DECIDED（当時のBaseline）**と記録した。Snapshot自身が「候補」「第一候補」「再評価」とする採択・Priorityはその区分を保つ。DECIDEDは実データ・実ユーザーでのValidation成功を意味しない。P-10以前の判断を新Productの採択へ持ち越さない。
 
-2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）がS25の未決部分を更新した。以下のScopeと明示設計をDECIDEDとする。採択と動作確認は別で、Product機能は未実装。正式決定は本書とArchitecture、詳細な理由・Evidence・実装手順は[FE](FE/README.md) / [BE](BE/README.md) / [ML](ML/README.md)のSupporting Docsに置く。
+2026-09-25の依頼者「Documentation Finalization」（F25、[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)）がS25の未決部分を更新した。以下のScopeと明示設計は当時DECIDEDだった。採択と動作確認は別で、音楽案のProduct機能は未実装。判断理由・Evidence・実装手順は[FE](FE/README.md) / [BE](BE/README.md) / [ML](ML/README.md)のSupporting Docsに残す。
 
 ## Product Overview
 
@@ -182,7 +194,7 @@ F25で決定。MUSTの受入条件は上のR-IDで追跡する。
 
 ## Product Decision Log
 
-正本には結論の索引を置き、詳しい理由は領域別文書、作業経緯はIssue/PRへ分ける。[記録の規則](../CONTRIBUTING.md#decision-logを増やしすぎないためのルール)に従い、通常の修正のたびにDecisionを追加しない。
+P-02〜P-09は旧音楽案で有効だった判断の索引。現行の廃止判断は[P-10](#p-10-音楽探索案の廃止)。詳しい理由は領域別文書、作業経緯はIssue/PRへ分ける。[記録の規則](../CONTRIBUTING.md#decision-logを増やしすぎないためのルール)に従い、通常の修正のたびにDecisionを追加しない。
 
 | ID | 日付 | 状態 | 判断要約・後続判断 |
 | --- | --- | --- | --- |

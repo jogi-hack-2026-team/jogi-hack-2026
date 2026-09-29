@@ -1,6 +1,6 @@
 # リリース・デモ・提出の手順
 
-HTML §16–17に基づく最小運用。Product・DB Engine等の採択は[Product Spec](../product-spec.md)と[Architecture](../architecture.md)を参照。公開先の最終受入、担当者、URL、Account Authは未定。FE / BEの起動構成はあるがProduct機能は未実装。
+HTML §16–17に基づく最小運用。2026-09-29に音楽探索案を廃止したため、次のProduct・MVP・Product向け技術採択は[Product Spec](../product-spec.md#現行状態2026-09-29)と[Architecture](../architecture.md#現行状態2026-09-29)で未定とする。公開先の最終受入、担当者、URL、Account Authも未定。FE / BEの起動構成はあるがProduct機能は未実装。
 存在しない起動・migration・seed・deployコマンドは掲載しない。決定後にこの文書を更新する。
 
 ## リリース担当者が行うこと
@@ -18,9 +18,9 @@ HTML §16–17に基づく最小運用。Product・DB Engine等の採択は[Prod
 | --- | --- | --- |
 | 担当者・所要時間・説明順 | 未定 | 説明担当と操作担当で通し練習 |
 | 使用URL・対象Release SHA | 未定 | 別メンバーの端末から到達 |
-| Demo Account | Guest CoreはAccount不要。任意AccountはAuth採択待ち | 利用権限を確認。資格情報はDopplerで共有 |
-| Demo Data・初期状態への戻し方 | 実Catalog利用権・初期化手順・DB実装待ち | 開発データと分け、手順を再実行できる |
-| 操作手順・期待結果 | Product SpecのGuest Coreを実装・検証待ち | 主要Flowを順番どおりに再現 |
+| Demo Account | 次のProductの認証要件は未定 | 利用権限を確認。資格情報は承認済みの手段で共有 |
+| Demo Data・初期状態への戻し方 | 次のProductのData要件と初期化手順は未定 | 開発データと分け、手順を再実行できる |
+| 操作手順・期待結果 | 次のProductの主要Flowは未定 | 決定後に主要Flowを順番どおりに再現 |
 | 外部API障害・通信障害時の説明 | API採用待ち | タイムアウト・エラー表示と代替デモを事前確認 |
 | Backup Plan | 未定 | 許可された録画・画面資料などをチームで決める |
 

@@ -15,7 +15,16 @@
 
 ## アプリの仕様と実装
 
-2026-09-24、[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で2文書の初版と隔離した比較PoCを追加。2026-09-25に人間Snapshot、Longlist・成長設計、追加PoCへ同期しました。[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)で人間のF25採択、領域別Supporting Docs、利用権の公式規約調査を反映しました。上記の初回棚卸しは過去の記録であり、以下が現在の導線です。この対応表は仕様を複製せず、正式設計SSOTはProduct SpecとArchitectureの2本です。
+2026-09-29に音楽探索案を廃止しました。[Product P-10](product-spec.md#p-10-音楽探索案の廃止)と[Architecture D-17](architecture.md#d-17-音楽案に依存したarchitectureの適用終了)が現行状態の入口です。次のProduct/要件/技術採択は未決定で、製品機能の実装・テストはありません。下表の旧音楽案の情報は、変更時の調査・履歴参照に限ります。
+
+| 項目 | 現在の状態・説明先 | 実装・確認方法 |
+| --- | --- | --- |
+| 次のProduct / MVP / 実装計画 | [Product Specの現行状態](product-spec.md#現行状態2026-09-29)。決定待ち | 現行の製品機能なし。新要件を決めてから対応表を更新する |
+| 現存する開発用Web / API / DB | [Architectureの現行状態](architecture.md#現行状態2026-09-29)と[起動手順](DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する) | [apps/web](../apps/web/)・[apps/api](../apps/api/)・[compose.yaml](../compose.yaml)。healthとbuildはProduct機能の検証ではない |
+
+### 旧音楽案の対応（履歴）
+
+2026-09-24の[Issue #34](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/34)で比較PoC、2026-09-25の[Issue #36](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/36)で当時の仕様・Supporting Docsを整備しました。以下の表はその時点の設計とPoCの調査導線です。現行Productの実装計画として読まないでください。
 
 | 項目 | 現在の状態・説明先 | 実装・関連処理 | 確認方法・今後の更新先 |
 | --- | --- | --- | --- |
@@ -45,7 +54,7 @@
 | Projects・保護設定 | 文書と外部設定を区別。[状態表](operations/development-foundation-status.md#資料との相違点) | [Statusのルール](../CONTRIBUTING.md#github-projects)。ボード・保護設定自体はGit管理外 | 権限のある担当者が対象のGitHub画面で確認。文書整備を理由にカード削除・設定変更しない |
 | 文書保守・AIへの依頼 | [依頼方法](DEVELOPMENT_GUIDE.md#仕様を調べて変更するには)、[詳細な執筆・保守手順](../.agents/skills/documentation-sync/SKILL.md) | [issue-to-pr](../.agents/skills/issue-to-pr/SKILL.md)、[bug-investigation](../.agents/skills/bug-investigation/SKILL.md)、[review-gate](../.agents/skills/review-gate/SKILL.md)、[CLAUDE.md](../CLAUDE.md) → [AGENTS.md](../AGENTS.md) | 変更前・変更時・完了前の導線とPRの文書影響欄を確認。文書更新不要の場合も理由を記録 |
 | AIツール・Serena | [採択方針・導入状況](../AI_DEVELOPMENT_TOOLS.md)。アプリ用の言語サーバーは未設定 | [.serena/project.yml](../.serena/project.yml) の `language_servers: []`、[Skill一覧](../AI_DEVELOPMENT_TOOLS.md#リポジトリに配置されたskills) | ファイルの設定と実際の接続・シンボル探索を区別。利用時の確認はツールガイドに従う |
-| ML Issue向けHarness | [運用・復旧手順](operations/ml-agent-harness.md)。Product/Architecture仕様は変更しない | [runner](../scripts/run-ml-agent.mjs)、[選択規則](../scripts/ml-agent-core.mjs)、[runner統合テスト](../scripts/run-ml-agent.integration.test.mjs)、[Skill](../.agents/skills/ml-issue-execution/SKILL.md)、[mise Task](../mise.toml) | Node testとFoundation check。2026-09-27に実GitHubキューのdry-run成功、Project Ready 7件・自動選択可能2件。模擬CLIでPR作成・重複防止・判断待ち・統合監査・修正上限を検証。実GitHubでの通し実行は未検証 |
+| 旧ML Issue向けHarness（運用停止） | [履歴と制約](operations/ml-agent-harness.md)。音楽案廃止後の自動着手には使わない | [runner](../scripts/run-ml-agent.mjs)、[選択規則](../scripts/ml-agent-core.mjs)、[runner統合テスト](../scripts/run-ml-agent.integration.test.mjs)、[Skill](../.agents/skills/ml-issue-execution/SKILL.md)、[mise Task](../mise.toml) | 2026-09-27のdry-run・模擬CLI結果は履歴。次Productの自動化を保証しない |
 | Secret・環境変数・Doppler | 採用方針と接続完了は別。[引き継ぎ](operations/development-foundation-status.md#dopplerの引き継ぎ) | [mise.toml](../mise.toml)、[.env.example](../.env.example)、[.gitignore](../.gitignore) | 文書チェックは空の環境変数例・除外設定のみ検証。本番接続先や注入は前提待ち。比較DBは合成データ専用でSecret不要 |
 | 文字コード・改行・除外 | 設定あり | [.editorconfig](../.editorconfig)、[.gitattributes](../.gitattributes)、[.gitignore](../.gitignore)、[check-foundation.ps1](../scripts/check-foundation.ps1) | 全体チェックと `git diff --check`。エディタで設定が適用されたことはファイル存在だけでは保証しない |
 | 設計判断・参考資料 | [Product Decision Log](product-spec.md#product-decision-log)、[Architecture Decision Log](architecture.md#architecture-decision-log) | 過去の[ADR-0001](decisions/0001-development-foundation.md)・[提供HTML](references/jogi_hack_2026_dev_foundation_guide.html)は基盤履歴 | HTML内の例を採用済みと解釈しない。変更は人間決定後に2文書内のLogへ記録 |
@@ -73,7 +82,7 @@ MUST R-01〜05 / R-07〜13 / R-15〜17 / R-19は[双方向整合表](architectur
 
 ### 未確認・対象外の扱い
 
-- 大会公式資料、全メンバーの環境・外部サービスの接続は未確認。アプリ仕様の現在の採択は2正本を参照し、実装・実再生・User評価は未確認。担当者が各判断Issueまたは基盤の状態記録へ根拠を追記します。
+- 大会公式資料、全メンバーの環境・外部サービスの接続は未確認。次のアプリ仕様は未決定です。旧音楽案の実装・実再生・User評価も確認されていません。新たな採択は2正本へ反映します。
 - 既存PRカードとIssueのみの自動追加、Board列・WIP等の相違は[既存の相違点記録](operations/development-foundation-status.md#資料との相違点)を維持します。新たな運用決定や外部設定変更はしません。
 - 文書チェックは内容の正しさ、すべてのコード参照、外部URLの到達性、サービスの安全性・法的妥当性を保証しません。対象実装・決定記録との照合、必要な外部確認を別に扱います。
 - この整備の実行コマンド・結果、未実施事項、レビュー・マージ状態は[Issue #26](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/26)の開発情報と関連PRに残します。過去の基盤検証結果を今回の実行結果として転記しません。

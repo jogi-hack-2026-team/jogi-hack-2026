@@ -380,7 +380,7 @@ README更新
 
 # 13. 初回セットアップ
 
-アプリのRuntimeはNode.js、DB EngineはPostgreSQL、Package Managerはnpmに決定しています。[Architecture](architecture.md#現在の採択と読む順番)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。FE / BEの最小起動構成とlockfileはありますが、Product機能、DB migration、正式APIはまだありません。PowerShell 7は補助スクリプト用です。
+このリポジトリの開発ToolchainはNode 24 LTS / npmです。[Architectureの現行状態](architecture.md#現行状態2026-09-29)と[開発環境の境界](architecture.md#開発環境と版管理)を参照してください。旧音楽案向けのFE / BE、開発用PostgreSQL、lockfileは残っていますが、次のProduct向けの技術採択は未定です。Product機能、DB migration、正式APIはまだありません。PowerShell 7は補助スクリプト用です。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。

@@ -14,7 +14,7 @@
 
 ## 2026-09-27の現行開発環境（Issue #49）
 
-依頼者がNode 24 LTS / npmと本IssueのMustを判断した。[Architecture D-15](../architecture.md#d-15)を現行の採択、下記2026-09-20の表を基盤整備時の履歴として読む。Framework・DB Engineの現在の採択も[Architecture](../architecture.md#現在の採択と読む順番)が正本であり、下記履歴の「未定」を現行へ持ち越さない。
+依頼者がNode 24 LTS / npmと本IssueのMustを判断した。[Architecture D-15](../architecture.md#d-15)をリポジトリの開発Toolchainとして維持し、下記2026-09-20の表を基盤整備時の履歴として読む。音楽案廃止後のFramework・DB EngineのProduct向け採択は[Architectureの現行状態](../architecture.md#現行状態2026-09-29)を参照する。
 
 ルートの[mise設定](../../mise.toml)はNode 24.21.0とDoppler 3.76.5を固定し、npmはNode同梱の11.19.0を使う。ローカルDBの[Compose](../../compose.yaml)はPostgreSQL 18.6のみで、PoC用の一時DBと別。各自のセットアップ・版確認・DB起動は[開発ガイド](../DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照する。以下は#49時点の記録で、当時はアプリpackage/lockfileとアプリ用CIがなかった。#51で最小起動構成を追加したが、migration、Doppler接続先・権限、Hosted DBとDeploymentの受入はまだ完了していない。
 
