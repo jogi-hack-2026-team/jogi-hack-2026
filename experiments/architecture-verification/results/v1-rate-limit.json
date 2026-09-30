@@ -1,0 +1,191 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "verification-1 rate limiting",
+  "at": "2026-09-30T07:02:30.932Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin-arm64",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "totalMemGb": 16
+  },
+  "summary": {
+    "pass": 9,
+    "fail": 0,
+    "info": 2
+  },
+  "config": {
+    "signInMax": 5,
+    "windowSec": 60,
+    "nodeEnv": "production"
+  },
+  "checks": [
+    {
+      "id": "R1",
+      "name": "the first 5 sign-in attempts from one IP are processed, later ones get 429 with X-Retry-After",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429,
+          429
+        ],
+        "retryAfterPresent": true
+      }
+    },
+    {
+      "id": "R1b",
+      "name": "rows written to the \"rateLimit\" table",
+      "status": "INFO",
+      "detail": [
+        {
+          "key": "198.51.100.1|/sign-up/email",
+          "count": 1
+        },
+        {
+          "key": "198.51.100.7|/sign-in/email",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "id": "R2",
+      "name": "while limited, even the correct password is refused (429) for that IP",
+      "status": "PASS",
+      "detail": {
+        "status": 429,
+        "retryAfter": "179073384039613"
+      }
+    },
+    {
+      "id": "R3",
+      "name": "a different client IP is not affected (per-IP bucket)",
+      "status": "PASS",
+      "detail": {
+        "status": 401,
+        "retryAfter": null
+      }
+    },
+    {
+      "id": "R4",
+      "name": "rotating a forged left-most X-Forwarded-For value does not escape the limit (hardened bridge + 1 trusted hop)",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          429,
+          429,
+          429,
+          429
+        ]
+      }
+    },
+    {
+      "id": "R5",
+      "name": "after a process restart the limit still applies (stored in PostgreSQL)",
+      "status": "PASS",
+      "detail": {
+        "status": 429,
+        "retryAfter": "179073384039612"
+      }
+    },
+    {
+      "id": "R6",
+      "name": "two instances share one counter: 3 attempts on A + 3 on B -> the 6th is 429",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ]
+      }
+    },
+    {
+      "id": "R7",
+      "name": "20 parallel attempts across two instances: at most 5 are processed (atomic counting)",
+      "status": "PASS",
+      "detail": {
+        "processed": 5,
+        "limited": 15
+      }
+    },
+    {
+      "id": "R8",
+      "name": "memory storage: the counter is lost on restart and is not shared between instances",
+      "status": "PASS",
+      "detail": {
+        "beforeRestart": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "firstAttemptAfterRestart": [
+          401
+        ],
+        "fiveOnAThenFiveOnB": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          401,
+          401,
+          401,
+          401,
+          401
+        ],
+        "note": "Same limit, same IP. 10 attempts were processed where the DB-backed limiter allows 5."
+      }
+    },
+    {
+      "id": "R9",
+      "name": "guide bridge, single-value X-Forwarded-For: per-IP limiting works",
+      "status": "PASS",
+      "detail": {
+        "attacker": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "otherClient": 401
+      }
+    },
+    {
+      "id": "R10",
+      "name": "guide bridge, multi-value or missing X-Forwarded-For: every such client shares ONE bucket",
+      "status": "INFO",
+      "detail": {
+        "clientA": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "differentClientB": 429,
+        "clientWithoutHeader": 429,
+        "rows": [
+          {
+            "key": "no-trusted-ip|/sign-in/email",
+            "count": 5
+          }
+        ],
+        "note": "Client B and the header-less client are refused because client A used up the shared bucket. With the guide bridge, one client can lock sign-in for everyone behind a proxy that appends to X-Forwarded-For. The hardened bridge passes exactly one IP taken from Fastify trustProxy."
+      }
+    }
+  ]
+}

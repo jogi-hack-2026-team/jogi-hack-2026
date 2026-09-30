@@ -1,0 +1,4 @@
+# Local-only state for the verification spike (never commit).
+.local/
+results/local-*
+web-dist/

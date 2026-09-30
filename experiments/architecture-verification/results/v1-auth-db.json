@@ -1,0 +1,470 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "verification-1 auth and database",
+  "at": "2026-09-30T07:02:39.412Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin-arm64",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "totalMemGb": 16
+  },
+  "summary": {
+    "pass": 30,
+    "fail": 0,
+    "info": 3
+  },
+  "checks": [
+    {
+      "id": "A0",
+      "name": "PostgreSQL server under test",
+      "status": "INFO",
+      "detail": {
+        "version": "PostgreSQL 18.4 on x86_64-apple-darwin24.6.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit",
+        "source": "embedded-postgres binaries (no Docker on this machine)"
+      }
+    },
+    {
+      "id": "A1",
+      "name": "database starts empty",
+      "status": "PASS",
+      "detail": {
+        "publicTables": 0
+      }
+    },
+    {
+      "id": "A2",
+      "name": "first migrate creates auth tables (incl. rateLimit), then app tables",
+      "status": "PASS",
+      "detail": {
+        "first": {
+          "authTablesCreated": [
+            "user",
+            "session",
+            "account",
+            "verification",
+            "rateLimit"
+          ],
+          "authColumnsAdded": [],
+          "appMigrationsApplied": [
+            "001_app.sql"
+          ]
+        },
+        "tables": [
+          "account",
+          "action_log",
+          "goal",
+          "rateLimit",
+          "session",
+          "spike_schema_migrations",
+          "user",
+          "verification"
+        ]
+      }
+    },
+    {
+      "id": "A3",
+      "name": "second migrate is a no-op (idempotent)",
+      "status": "PASS",
+      "detail": {
+        "authTablesCreated": [],
+        "authColumnsAdded": [],
+        "appMigrationsApplied": []
+      }
+    },
+    {
+      "id": "B0",
+      "name": "health responds and includes a DB round trip",
+      "status": "PASS",
+      "detail": {
+        "ok": true,
+        "node": "v24.21.0"
+      }
+    },
+    {
+      "id": "B1",
+      "name": "every protected route returns 401 without a session",
+      "status": "PASS",
+      "detail": [
+        {
+          "route": "GET /api/goals",
+          "status": 401
+        },
+        {
+          "route": "POST /api/goals",
+          "status": 401
+        },
+        {
+          "route": "GET /api/goals/:goalId",
+          "status": 401
+        },
+        {
+          "route": "DELETE /api/goals/:goalId",
+          "status": 401
+        },
+        {
+          "route": "PUT /api/goals/:goalId/logs/2026-09-30",
+          "status": 401
+        },
+        {
+          "route": "GET /api/goals/:goalId/today",
+          "status": 401
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "sign-up succeeds and sets a session cookie",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "setCookie": [
+          {
+            "name": "better-auth.session_token",
+            "attributes": [
+              "Max-Age=604800",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "B3",
+      "name": "session cookie is HttpOnly, SameSite=Lax, Path=/ (no Secure on plain http base URL)",
+      "status": "PASS",
+      "detail": {
+        "name": "better-auth.session_token",
+        "attributes": [
+          "Max-Age=604800",
+          "Path=/",
+          "HttpOnly",
+          "SameSite=Lax"
+        ]
+      }
+    },
+    {
+      "id": "B4",
+      "name": "get-session returns the signed-up user",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "hasUser": true
+      }
+    },
+    {
+      "id": "B5",
+      "name": "a fresh request carrying only the cookie is still authenticated (\"reload\")",
+      "status": "PASS",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "B6",
+      "name": "sign-out succeeds and clears cookies with several Set-Cookie lines",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "setCookieLines": 3,
+        "setCookie": [
+          {
+            "name": "better-auth.session_token",
+            "attributes": [
+              "Max-Age=0",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          },
+          {
+            "name": "better-auth.session_data",
+            "attributes": [
+              "Max-Age=0",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          },
+          {
+            "name": "better-auth.dont_remember",
+            "attributes": [
+              "Max-Age=0",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "B7",
+      "name": "the old cookie is rejected after sign-out (session revoked in the DB)",
+      "status": "PASS",
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "B8",
+      "name": "sign-in with a wrong password fails with 401",
+      "status": "PASS",
+      "detail": {
+        "status": 401,
+        "code": "INVALID_EMAIL_OR_PASSWORD"
+      }
+    },
+    {
+      "id": "B9",
+      "name": "sign-in succeeds again after sign-out",
+      "status": "PASS",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "B10",
+      "name": "sign-in from an untrusted Origin is rejected",
+      "status": "PASS",
+      "detail": {
+        "status": 403,
+        "code": "INVALID_ORIGIN"
+      }
+    },
+    {
+      "id": "B11",
+      "name": "a cookie-bearing POST from an untrusted Origin is rejected (auth endpoints)",
+      "status": "PASS",
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "B12",
+      "name": "app routes do NOT check Origin by themselves (only SameSite=Lax protects them)",
+      "status": "INFO",
+      "detail": {
+        "status": 201,
+        "note": "A non-browser client sent a foreign Origin with a valid cookie. 201 means the app route has no Origin check of its own."
+      }
+    },
+    {
+      "id": "C0",
+      "name": "owner can create a goal",
+      "status": "PASS",
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "C1",
+      "name": "another user's goal is 404 for read, today, log write and delete; nothing is written or removed",
+      "status": "PASS",
+      "detail": {
+        "asB": [
+          {
+            "op": "GET goal",
+            "status": 404
+          },
+          {
+            "op": "GET today",
+            "status": 404
+          },
+          {
+            "op": "PUT log",
+            "status": 404
+          },
+          {
+            "op": "DELETE goal",
+            "status": 404
+          }
+        ],
+        "logsWrittenByOther": 0,
+        "ownerStillSees": 200
+      }
+    },
+    {
+      "id": "C2",
+      "name": "list returns only the caller's goals",
+      "status": "PASS",
+      "detail": {
+        "count": 0
+      }
+    },
+    {
+      "id": "D1",
+      "name": "contract violation returns 422 naming every offending field (needs allErrors)",
+      "status": "PASS",
+      "detail": {
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Request does not match the contract.",
+          "fields": [
+            {
+              "path": "body/extra",
+              "message": "must NOT have additional properties"
+            },
+            {
+              "path": "body/totalRequired",
+              "message": "must be > 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "D2",
+      "name": "response carries only contract fields (row columns user_id / created_at are not leaked)",
+      "status": "PASS",
+      "detail": {
+        "keys": [
+          "id",
+          "initialProgress",
+          "sessionAmount",
+          "timezone",
+          "title",
+          "totalRequired",
+          "unit"
+        ]
+      }
+    },
+    {
+      "id": "D3",
+      "name": "log upsert: same day overwrites, one row per (goal, date)",
+      "status": "PASS",
+      "detail": {
+        "rows": [
+          {
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "D4",
+      "name": "strict Ajv options: SKIPPED+amount, DONE without amount, string amount, impossible date are all 422",
+      "status": "PASS",
+      "detail": {
+        "skippedWithAmount": 422,
+        "doneWithoutAmount": 422,
+        "amountAsString": 422,
+        "badDate": 422
+      }
+    },
+    {
+      "id": "D5",
+      "name": "today endpoint returns server-decided dates from one snapshot (prediction is a labelled placeholder)",
+      "status": "PASS",
+      "detail": {
+        "today": "2026-09-30",
+        "yesterday": "2026-09-29",
+        "todayLog": {
+          "localDate": "2026-09-30",
+          "status": "SKIPPED",
+          "amount": null
+        },
+        "yesterdayMissing": true,
+        "prediction": {
+          "placeholder": true,
+          "observedDays": 1,
+          "computeMode": "inline",
+          "requestedBurnMs": 0
+        }
+      }
+    },
+    {
+      "id": "D6",
+      "name": "unknown API route is a JSON 404",
+      "status": "PASS",
+      "detail": {
+        "status": 404
+      }
+    },
+    {
+      "id": "D7",
+      "name": "Fastify's default Ajv options silently accept what the contract should reject",
+      "status": "INFO",
+      "detail": {
+        "defaultCases": {
+          "skippedWithAmount": 200,
+          "doneWithoutAmount": 422,
+          "amountAsString": 200,
+          "extraFieldOnGoal": 201
+        },
+        "note": "removeAdditional drops the unexpected property and coerceTypes converts \"30\" to 30, so these requests pass instead of returning 422. The strict options in D4 are required for the status-specific contract."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "bridge from the official guide: sign-in, authenticated call and sign-out work",
+      "status": "PASS",
+      "detail": {
+        "signIn": 200,
+        "goals": 200,
+        "signOut": 200
+      }
+    },
+    {
+      "id": "E2",
+      "name": "both bridges forward every Set-Cookie line Better Auth emits",
+      "status": "PASS",
+      "detail": {
+        "betterAuthDirect": 3,
+        "docsBridge": 3,
+        "hardenedBridge": 3
+      }
+    },
+    {
+      "id": "E3",
+      "name": "with an https base URL the session cookie is Secure and uses the __Secure- prefix",
+      "status": "PASS",
+      "detail": {
+        "name": "__Secure-better-auth.session_token",
+        "attributes": [
+          "Max-Age=604800",
+          "Path=/",
+          "HttpOnly",
+          "Secure",
+          "SameSite=Lax"
+        ]
+      }
+    },
+    {
+      "id": "E4",
+      "name": "with an https base URL, the plain-http origin is no longer trusted",
+      "status": "PASS",
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "F1",
+      "name": "deleting a user row removes that user's goals, logs and sessions inside one transaction (FK cascade); rollback restores them",
+      "status": "PASS",
+      "detail": {
+        "insideTransaction": {
+          "goals": 0,
+          "sessions": 0
+        },
+        "afterRollback": {
+          "goals": 1
+        },
+        "note": "SQL-level check of the schema. Better Auth's own delete-user endpoint/hooks were not exercised."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "DB rejects duplicate (goal, date), DONE without amount, SKIPPED with amount",
+      "status": "PASS",
+      "detail": {
+        "duplicateDay": "23505",
+        "doneWithoutAmount": "23514",
+        "skippedWithAmount": "23514"
+      }
+    }
+  ]
+}
