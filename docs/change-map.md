@@ -19,6 +19,7 @@
 | 旧Web / API / ローカルDB | [旧開発ガイド](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する) | [旧Compose](../archive/music-exploration/compose.yaml)、[旧アプリ設定](../archive/music-exploration/package.json)。現行の起動構成ではない |
 | 次の技術スタックと外部設定 | [Architecture D-18](architecture.md#d-18-旧開発スタックの一時退避)、[基盤状態](operations/development-foundation-status.md) | 新案の要件決定後に採否・接続・権限・検証をIssueで確定する |
 | 次案への引き継ぎ | [再利用資産](operations/reuse-handoff.md) | 要件を決めた後に各資産の採否と検証条件をIssueへ記録 |
+| 技術選定の最小検証（[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)） | Supporting Artifact。第一候補を採択前に実測した記録で、採択・Productの実装ではない。[検証報告](../experiments/architecture-verification/REPORT.md)、[訂正後の比較](../experiments/architecture-verification/SELECTION-v3.1.md) | [検証コードと再実行手順](../experiments/architecture-verification/README.md)。専用のpackageで `npm run verify:*`。予測エンジンの性能、コンテナ、配備先は未実施 |
 
 ## 確認記録と残課題
 
