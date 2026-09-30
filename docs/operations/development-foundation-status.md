@@ -1,6 +1,6 @@
 # 開発基盤の現行状態
 
-2026-09-30現在、現行のアプリ用Runtime、Framework、DB、Secret管理、Deploymentは未決定です。[Architecture D-18](../architecture.md#d-18-旧開発スタックの一時退避)により、旧Web/API・Compose・Node/npm・Doppler固定設定を[履歴](../../archive/music-exploration/README.md)へ一時退避しました。次案の採択後に不要と判断したものだけを整理します。
+2026-09-30、Future ROIの技術スタックと公開先の候補を[Architecture D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)に記録しました（技術選定確定待ち）。確定するまで、現行のアプリ用Runtime、Framework、DB、Secret管理、Deploymentは未決定です。[D-18](../architecture.md#d-18-旧開発スタックの一時退避)で[履歴](../../archive/music-exploration/README.md)へ退避した旧Web/API・Compose・Node/npmの設定は、確定後に必要な部分だけ現行の場所へ戻します。
 
 現行の共通基盤は、Issue/PR運用、Git Hook、`mise.toml`の共通タスク、[文書・設定チェック](../../scripts/check-foundation.ps1)、[Foundation CI](../../.github/workflows/foundation.yml)です。`pwsh -NoProfile -File scripts/check-foundation.ps1`はアプリの起動、ビルド、型検査、DB接続を実行しません。
 
@@ -8,9 +8,10 @@
 
 ## 現在の未決定事項
 
-- 次のProductの課題・機能・Scopeと必要な技術的性質。
-- アプリRuntime、FE/BE構成、DB、Secret管理、外部Service、公開先と検証方法。
-- 旧構成の再利用または削除。新しいIssueで要件と比較根拠を記録して判断する。
+- 技術スタックと公開先の確定（[D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)、別担当の精査結果と比較）。
+- 公開先のアカウント・課金設定・regionの作成と最終受入（確定後、承認を受けてから）。
+- アプリの起動構成・Application CIの現行の場所への復元と、その動作確認（I-01）。
+- 退避した旧構成のうち使わない部分の削除。
 
 ## 履歴への入口
 

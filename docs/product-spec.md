@@ -1,16 +1,75 @@
 # Product仕様
 
-## 現行状態（2026-09-29）
+## 現行状態（2026-09-30）
 
-**音楽探索案は廃止した。次のProduct、Target User、Core Value、MVP要件、Must / Should / Couldは未決定。** 現在のProduct Requirementはない。旧案のR-01〜R-19、Scope、User Flow、P-02〜P-09を次案へ持ち越さない。詳細は[旧Product Spec](../archive/music-exploration/docs/product-spec.md)に履歴として保管する。
+**Productは「Future ROI」。** 2026-09-30の依頼者決定で、Problem・Target User・Core Value・MVP要件・Must / Should / Couldを本書に確定した（[P-11](#p-11-future-roiの採用とcoreの境界)〜[P-14](#p-14-記録のルール)）。Product機能は未実装であり、実ユーザーでの需要・効果は未検証。予測方式と技術構成は[Architecture](architecture.md#現行状態2026-09-30)を正本とする。
 
-### P-10 音楽探索案の廃止
+旧音楽探索案は[P-10](#p-10-音楽探索案の廃止)で廃止した。旧案の要件・Scopeは[旧Product Spec](../archive/music-exploration/docs/product-spec.md)に履歴として保管し、現行へ持ち越さない。
 
-2026-09-29 / **DECIDED（依頼者判断）** / 音楽探索案をJOGI HACK 2026のProduct候補から外す。[最終Gate #66](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/66)は固定候補に対しREDを提案した。必要なCatalogと再生経路を期限内に成立させる証拠が不足したという調査結果と、依頼者の廃止判断を区別する。あらゆる音楽案の不可能性を示すものではない。次の案は別途決める。[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。
+## Product Overview
 
-## 現行のRequirementとScope
+| 項目 | 内容 |
+| --- | --- |
+| Problem | 今日行動しないことによる将来への影響が見えず、「今日はやらなくてもいいか」と判断しやすい |
+| Target User | 毎日取り組みたい、量で表せる継続行動を持つ人（英語学習、資格勉強、読書、コーディング学習、毎日の運動など）。MVPは「毎日1回の実行機会がある行動」に限定する |
+| Core Value | 自分の記録から、今日やらなかった場合に、自分で決めた努力量への到達がどれくらい後ろへずれるかを見える化する |
+| Hero Copy | **今日サボると、ゴールは何日遠ざかる？** |
+| 意味の範囲 | 今日実行しなかった場合、次に実行状態へ戻るまでにかかる日数だけ、設定した累積努力量への到達時期が後ろへずれる |
+| Need Validation | 未検証。表示が今日の行動判断に役立つかはProduct Hypothesisとして扱う |
 
-新Productが決まるまで未定。旧案のIssueを実装計画として再開しない。次案で課題・対象User・Core Value・MVP・Scopeを人間が決め、ここに正式反映する。利用できる開発資産の現状は[引き継ぎ](operations/reuse-handoff.md)を参照する。
+### Future ROIがしないこと
+
+- 成果そのもの（TOEICの点数、体重、合格）の達成日を予測しない。予測対象はユーザーが決めた累積努力量への到達だけ。
+- 「サボると雪だるま式に未来が悪化する」とは言わない。
+- 因果効果を主張しない。記録から推定した傾向が今後も続くと仮定した計算である。
+- 習慣の強さを測定すると主張しない。
+- LLMに予測・必要努力量の決定をさせない。
+
+## Core User Flow
+
+1. ユーザーがアカウントを作成してログインする。
+2. Goalを作成する（タイトル、単位、投資すると決めた総量、1回の量、記録を始める前に完了していた量）。
+3. 毎日、今日のDONE / SKIPPEDを記録する。昨日が未記録なら「昨日はどうでしたか？」で昨日分だけ補完できる。
+4. 休んだ翌日の記録がたまると、「今日サボると約○日遠ざかる」を確認できる。
+5. 今日やるかを判断し、DONE / SKIPPEDを記録する。
+
+## Requirements（MVP）
+
+| ID | 要件 | 条件・失敗時の保証 | Scope |
+| --- | --- | --- | --- |
+| R-01 | メールとパスワードで登録・ログイン・ログアウトできる | 未ログインではGoal・記録の画面とAPIを利用できない。他人のGoal・記録は取得も変更もできない | Must |
+| R-02 | Goalを作成・一覧・編集・削除できる | `totalRequired > 0`、`sessionAmount > 0`、`initialProgress ≥ 0`。`initialProgress`は「Future ROIで記録を始める前に完了していた量」で、現在の実績は常に`initialProgress`＋記録したDONEの量の合計。単位は「分」か「回」。timezoneは作成時のブラウザ設定を既定値にし、有効なIANA名だけ受け付ける。記録が1件でもあるGoalでは`timezone`と`initialProgress`を変更できない（エラーで理由を表示）。削除すると記録も消える | Must |
+| R-03 | 今日のDONE / SKIPPEDを記録・変更できる | 1日1件（同じ日の再記録は上書き）。DONEの量は既定で`sessionAmount`、変更可。「今日」はGoalのtimezoneで決まる | Must |
+| R-04 | 昨日が未記録なら、昨日分だけ補完できる | 画面を開いた時に「昨日はどうでしたか？」を表示し、1タップで記録できる。2日以上前の日は記録できず、記録なし（UNKNOWN）のまま扱う | Must |
+| R-05 | 今日が未記録なら、Today Decision画面に中心指標・補助指標・注釈を表示する | 表示内容は[表示仕様](#today-decision画面の表示仕様)に従う | Must |
+| R-06 | データ不足を正直に表示する | 休んだ翌日の記録（有効な遷移）が0件なら中心指標を出さない。完了の目安は「やった翌日」と「休んだ翌日」の記録がそれぞれ1件以上たまるまで出さない（事前分布だけで決まる部分を含む目安を出さないため）。件数による恣意的な閾値は設けない | Must |
+| R-07 | 今日が記録済みなら比較を出さない | 記録内容と、現在の状態からの完了の目安だけを表示する | Must |
+| R-08 | 総量に到達したら達成を表示する | 実績が`totalRequired`以上なら予測を出さず、達成済みと表示する | Must |
+| R-09 | デモ用アカウントで主要Flowを再現できる | 再開が早い例と遅い例のGoalを、合成した記録で用意する。実在ユーザーのデータを使わない | Must |
+| R-10 | 公開URLで主要Flowを操作できる | 公開先は[Architecture](architecture.md#deployment)に従う | Must |
+| S-01 | 記録の履歴（カレンダー）を見られる | Must完成後 | Should |
+| S-02 | 完了の目安の不確実性を図で見られる（20ドットのquantile dotplot） | 表示前に簡易ユーザーテストを行う | Should |
+| S-03 | Goalにきっかけ（例：夕食後に）を設定できる | 予測には使わない | Should |
+| C-01 | 自由文からGoal入力欄をLLMが提案する | 提案は編集可能、手入力を常に残す。予測・総量は提案しない | Could |
+| C-02 | 通知 | — | Could |
+| C-03 | 詳細な分析画面 | — | Could |
+
+### Today Decision画面の表示仕様
+
+| 要素 | 文言 | 値の出どころ |
+| --- | --- | --- |
+| 見出し | 今日サボると、ゴールは何日遠ざかる？ | — |
+| 中心指標 | ゴールが遠ざかる日数（目安）：**約{g50}日** | [Prediction Engine](architecture.md#prediction-engine)の`coreMetric.g50` |
+| 中心指標の注釈 | あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。 | — |
+| 補助指標1 | 休んだ翌日にやれたのは **{nSD+nSS}回中{nSD}回** | `observations` |
+| 補助指標2 | 今日やった場合の完了の目安：**{p50の週}ごろ**（10回中8回は{p80の週}まで） | `completion`。日付はその日を含む週の月曜日で表示する。3年を超える場合は「3年以上先」 |
+| 補助指標2の注釈 | 完了の目安は、同じ記録から推定した継続傾向でシミュレーションした見込みです。 | — |
+| データ不足（中心指標） | まだ「休んだ翌日」の記録がありません。記録がたまると、あなたの再開傾向から推定します。 | `coreMetric.status = insufficient` |
+| データ不足（完了の目安） | 「やった翌日」と「休んだ翌日」の記録がそれぞれたまると、完了の目安を表示します。 | `completion.status = insufficient` |
+
+中心指標を「シミュレーション」と呼ばない（閉形式の計算であるため）。「今日やれば○日早くなる」と断定する表現、損失を強調して休んだ日を責める表現を使わない。
+
+操作ボタンの文言は「やった」「今日は休む」。見出しの「サボる」と操作の「休む」の語の違いは、I-12の簡易ユーザー確認で「今日休むと、ゴールは何日遠ざかる？」と比べる。見出しを変える場合はP-12の改訂として記録する。
 
 ## Product Decision Log
 
@@ -18,6 +77,30 @@
 | --- | --- | --- | --- |
 | P-01 | 2026-09-24 | DECIDED | 正式なProduct・Architectureの正本を2文書に集約する。詳細な当時の記録は[旧Product Spec](../archive/music-exploration/docs/product-spec.md#product-decision-log) |
 | P-10 | 2026-09-29 | DECIDED | [音楽探索案を廃止](#p-10-音楽探索案の廃止)。旧P-02〜P-09は現行Productへの適用を終了 |
+| P-11 | 2026-09-30 | DECIDED | [Future ROIの採用とCoreの境界](#p-11-future-roiの採用とcoreの境界) |
+| P-12 | 2026-09-30 | DECIDED | [中心指標と表示の規則](#p-12-中心指標と表示の規則) |
+| P-13 | 2026-09-30 | DECIDED | [MVP Scope](#p-13-mvp-scope) |
+| P-14 | 2026-09-30 | DECIDED | [記録のルール](#p-14-記録のルール) |
+
+### P-10 音楽探索案の廃止
+
+2026-09-29 / **DECIDED（依頼者判断）** / 音楽探索案をJOGI HACK 2026のProduct候補から外す。[最終Gate #66](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/66)は固定候補に対しREDを提案した。必要なCatalogと再生経路を期限内に成立させる証拠が不足したという調査結果と、依頼者の廃止判断を区別する。あらゆる音楽案の不可能性を示すものではない。[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。
+
+### P-11 Future ROIの採用とCoreの境界
+
+2026-09-30 / **DECIDED（依頼者判断）** / Future ROIを採用し、Coreを「今日サボると、ゴールは何日遠ざかる？」とする。意味は「次に再開するまでの日数だけ、ユーザーが決めた累積努力量への到達が後ろへずれる」に限定する。`totalRequired`はユーザーが投資すると決めた量であり、成果に必要な量の推定ではない。成果の達成日予測・因果効果・習慣強度の測定・LLMによる予測は行わない。限定の根拠は、採用したモデルでは今日の影響が再開までの待ち日数に集約されること（[Architecture D-19](architecture.md#d-19)）。
+
+### P-12 中心指標と表示の規則
+
+2026-09-30 / **DECIDED（依頼者判断）** / 中心指標は「ゴールが遠ざかる日数」の中央値。補助指標は「休んだ翌日にやれた回数」と「今日やった場合の完了の目安」の2つまで。休んだ翌日の記録が0件なら中心指標を出さない。中心指標の説明に「シミュレーション」を使わない。計算方式は[Architecture D-21](architecture.md#d-21)。
+
+### P-13 MVP Scope
+
+2026-09-30 / **DECIDED（依頼者判断）** / Mustは[Requirements](#requirementsmvp)のR-01〜R-10とPrediction Engineのテスト。Should・Couldへ着手するのはMustの完成後。LLMはMustに入れない。
+
+### P-14 記録のルール
+
+2026-09-30 / **DECIDED（依頼者判断）** / 記録はDONE / SKIPPEDの2値。記録のない日はUNKNOWNとして扱い、SKIPPEDとみなさない。記録できるのは今日と昨日だけ（昨日は補完用）。記録が1件でもあるGoalはtimezoneと記録開始前の量を変更できない（過去の日付の基準と予測の意味を変えないため）。やらなかった日ほど記録されない偏りは統計的に補正せず、前日補完のUXで減らす。偏りはKnown Limitationとして[Architecture](architecture.md#known-limitations)に記録する。
 
 ## Reconsideration Policy
 

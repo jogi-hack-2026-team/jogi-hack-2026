@@ -1,6 +1,6 @@
 # 次のProduct案へ引き継ぐ資産
 
-2026-09-30、[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)時点の棚卸し。これは再利用のための作業案内であり、Productや技術採択の正本ではない。現行の決定は[Product Spec](../product-spec.md#現行状態2026-09-29)と[Architecture](../architecture.md#現行状態2026-09-30)を確認する。次のProduct、要件、Scope、技術スタックは未決定。
+2026-09-30、[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)時点の棚卸し。これは再利用のための作業案内であり、Productや技術採択の正本ではない。現行の決定は[Product Spec](../product-spec.md#現行状態2026-09-30)と[Architecture](../architecture.md#現行状態2026-09-30)を確認する。2026-09-30にProduct（Future ROI）を決定し、技術スタックの候補を[D-23](../architecture.md#d-23)に記録した（技術選定確定待ち）。下表の各資産の採否は、確定後に実装Issueで記録する。
 
 | 資産 | 残す理由と現在の到達点 | 次の案で行うこと |
 | --- | --- | --- |

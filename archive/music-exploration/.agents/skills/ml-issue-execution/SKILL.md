@@ -5,7 +5,7 @@ description: 旧音楽探索案のML Issue実行手順を参照するときに�
 
 # ML Issue実行
 
-> 音楽探索案は2026-09-29に廃止された。このSkill内のSeed・推薦・ML評価の条件は旧案の履歴であり、次のProductへ自動適用しない。[現行Product状態](../../../../../docs/product-spec.md#現行状態2026-09-29)と[引き継ぎの棚卸し](../../../../../docs/operations/reuse-handoff.md)を先に確認する。
+> 音楽探索案は2026-09-29に廃止された。このSkill内のSeed・推薦・ML評価の条件は旧案の履歴であり、次のProductへ自動適用しない。[現行Product状態](../../../../../docs/product-spec.md#現行状態2026-09-30)と[引き継ぎの棚卸し](../../../../../docs/operations/reuse-handoff.md)を先に確認する。
 
 このSkillは旧案のIssue単位のML作業を調べるために残す。GitHub/Project操作とPR作成の現行ルールは[issue-to-pr](../../../../../.agents/skills/issue-to-pr/SKILL.md)、文書同期は[documentation-sync](../../../../../.agents/skills/documentation-sync/SKILL.md)、PR前のセルフレビューは[review-gate](../../../../../.agents/skills/review-gate/SKILL.md)を参照する。
 
