@@ -45,8 +45,15 @@ for (const [uk, p] of Object.entries(USERS)) { const viaPmf = pmfDP(120, p, { st
 
 // 3) 中心指標の候補（M1, ctx=昨日DONE）: 同じ30日ログ系列での安定性
 // G = 遅延日数（M1ではT_skip = T_done + G, G~Geom(b) が厳密）→ 事後予測は Beta-Geometric
-const bgSurv = (al, be, t) => Math.exp(lB(al, be + t) - lB(al, be)); // P(G > t)
-const bgQ = (al, be, q) => { for (let t = 1; t < 100000; t++) if (1 - bgSurv(al, be, t) >= q) return t; return Infinity; };
+// 分位点は厳密に評価する：P(G>t) = Π_{i<t} (β+i)/(α+β+i) をBigIntの有理数で持ち、
+// CDF ≥ q を「10·N ≤ (10−10q)·D」で判定する（α・βは整数、qは0.1刻み）。
+// lBの差のexpによる浮動小数点の計算は、CDFが閾値に一致する境界で1日ずれた（PR #86レビュー）
+const bgQ = (al, be, q) => {
+  if (!Number.isInteger(al) || !Number.isInteger(be)) throw new Error('bgQ requires integer alpha/beta');
+  const qn = BigInt(Math.round(q * 10)), A = BigInt(al), B = BigInt(be); let N = 1n, D = 1n;
+  for (let t = 1; t < 100000; t++) { const i = BigInt(t - 1); N *= B + i; D *= A + B + i; if (10n * N <= (10n - qn) * D) return t; }
+  return Infinity;
+};
 console.log('\n## 3. 中心指標候補の比較（M1、各300人）');
 console.log('user | 日数 | 指標 | 真値 | 平均絶対誤差 | 1日反転時の変化P95 | 無限大/発散の割合');
 for (const [uk, p] of Object.entries(USERS)) for (const n of [14, 30, 60]) {

@@ -4,7 +4,13 @@ import { delta, countsM2 } from './final.mjs';
 const lg = z => { const k = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
   if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lg(1 - z); z -= 1; let x = k[0]; for (let i = 1; i < 9; i++) x += k[i] / (z + i); const t = z + 7.5; return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x); };
 const lB = (x, y) => lg(x) + lg(y) - lg(x + y);
-const bgQ = (al, be, q) => { for (let t = 1; t < 1e5; t++) if (1 - Math.exp(lB(al, be + t) - lB(al, be)) >= q) return t; return Infinity; };
+// 分位点は厳密に評価する（final2.mjsと同じ。浮動小数点だとCDFが閾値に一致する境界で1日ずれた）
+const bgQ = (al, be, q) => {
+  if (!Number.isInteger(al) || !Number.isInteger(be)) throw new Error('bgQ requires integer alpha/beta');
+  const qn = BigInt(Math.round(q * 10)), A = BigInt(al), B = BigInt(be); let N = 1n, D = 1n;
+  for (let t = 1; t < 1e5; t++) { const i = BigInt(t - 1); N *= B + i; D *= A + B + i; if (10n * N <= (10n - qn) * D) return t; }
+  return Infinity;
+};
 const USERS = { A: [0.6, 0.6, 0.6], B: [0.3, 0.55, 0.8], C: [0.7, 0.6, 0.45], D: [0.45, 0.55, 0.65] };
 function genLogs(p, n, rnd, pU = 0.1) { const out = []; let st = 'S';
   for (let i = -30; i < n; i++) { const pd = st === 'S' ? p[0] : st === 'D1' ? p[1] : p[2]; const d = rnd() < pd; st = d ? (st === 'S' ? 'D1' : 'D2') : 'S'; if (i >= 0) out.push(d ? 'D' : 'S'); }

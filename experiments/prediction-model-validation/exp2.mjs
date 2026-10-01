@@ -25,7 +25,8 @@ function genLogs(a, b, n, rnd, pMissSkip = 0) {
   return out;
 }
 // 事後予測での再開待ち日数 T の中央値: P(T>t) = B(α, β+t)/B(α,β)
-function restartMedian(al, be) { for (let t = 1; t < 5000; t++) if (Math.exp(lnB(al, be + t) - lnB(al, be)) <= 0.5) return t; return Infinity; }
+// P(G>t) を積の形で逐次計算する（lnBの差のexpより境界の誤差が小さい）。事前分布が非整数の場合もあるため浮動小数点で、境界は1e-12の許容で判定する
+function restartMedian(al, be) { let s = 1; for (let t = 1; t < 5000; t++) { s *= (be + t - 1) / (al + be + t - 1); if (s <= 0.5 + 1e-12) return t; } return Infinity; }
 const trueRestartMedian = b => Math.max(1, Math.ceil(Math.log(0.5) / Math.log(1 - b)));
 
 console.log('\n## 実験6: 事前分布の感度（各条件 40人の合成ユーザー、MC 400 trials）');

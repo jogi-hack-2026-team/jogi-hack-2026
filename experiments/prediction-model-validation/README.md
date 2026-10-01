@@ -2,7 +2,7 @@
 
 Supporting Artifact / Not a Source of Truth。使い捨ての数値実験で、本番のPrediction Engineではない。結果の要約は[Evidence](../../docs/prediction/evidence.md)、正式な判断は[Architecture](../../docs/architecture.md#prediction-engine)。
 
-依存パッケージなし。Node 24以上で、このフォルダから実行する（2026-09-30にNode 25で実行し、出力を`results/`に保存）。
+依存パッケージなし。Node 24以上で、このフォルダから実行する（2026-09-30にNode 25.2.0で実行。2026-10-02に分位点の境界誤差を直し、`bench.mjs`以外をNode 24.21.0で再実行して`results/`を更新）。
 
 | ファイル | 内容 | 実行 |
 | --- | --- | --- |
@@ -14,5 +14,6 @@ Supporting Artifact / Not a Source of Truth。使い捨ての数値実験で、�
 | `final3.mjs` | M1の中心指標での事前分布Beta(1,1)とBeta(2,2)の比較 | `node final3.mjs` |
 | `bench.mjs` | 仕様の乱数・サンプラーのテストベクトル、素朴なDPの実行時間 | `node bench.mjs` |
 | `bench2.mjs` | 配列の使い回しと刈り込みを入れたDPの最悪ケースの実行時間 | `node bench2.mjs` |
+| `bgq-boundary-check.mjs` | Beta-Geometric分位点の境界の回帰チェック（境界例・α = 2の閉形式との照合・旧実装との不一致件数） | `node bgq-boundary-check.mjs` |
 
 `exp2.mjs`の事前分布の感度（2状態・完了日P50の評価）は、中心指標が変わる前の検討で使ったもので、現在の事前分布の判断には`final.mjs prior`と`final3.mjs`を使う。
