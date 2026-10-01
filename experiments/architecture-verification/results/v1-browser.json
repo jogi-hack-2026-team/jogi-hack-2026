@@ -1,0 +1,15 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "verification-1 browser check (driven manually through a real browser, not an automated test)",
+  "at": "2026-09-30",
+  "how": "npm run web:build, then npm run start:browser (one process on http://localhost:3220 serving the built SPA and the API, fresh embedded PostgreSQL). A test account generated for this run was used; its credentials are not recorded.",
+  "checks": [
+    { "id": "W1", "name": "Register from the SPA form -> redirected to /goals, header shows the signed-in email", "status": "PASS" },
+    { "id": "W2", "name": "document.cookie is empty after sign-in (session cookie is HttpOnly, not readable by script)", "status": "PASS" },
+    { "id": "W3", "name": "Create a goal, open /goals/:goalId, press Done -> the today view shows log: DONE", "status": "PASS" },
+    { "id": "W4", "name": "Full page reload on the deep route /goals/:goalId keeps the session and renders the route (server fallback to index.html)", "status": "PASS" },
+    { "id": "W5", "name": "Sign out -> shows signed out; visiting /goals then shows the 401 message and the API returns 401", "status": "PASS" },
+    { "id": "W6", "name": "Sign in again with the same account -> /goals lists the goal created before", "status": "PASS" }
+  ],
+  "notRun": ["Playwright E2E (belongs to #83)", "Mobile width, other browsers, cookie-blocking modes"]
+}

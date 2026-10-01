@@ -1,0 +1,124 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "verification-3 single process (local)",
+  "at": "2026-09-30T07:16:54.781Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "darwin-arm64",
+    "cpu": "Apple M5",
+    "logicalCpus": 10,
+    "totalMemGb": 16
+  },
+  "summary": {
+    "pass": 7,
+    "fail": 0,
+    "info": 4
+  },
+  "checks": [
+    {
+      "id": "S1",
+      "name": "GET / serves the SPA shell",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "type": "text/html; charset=utf-8"
+      }
+    },
+    {
+      "id": "S2",
+      "name": "a deep client route falls back to index.html (history routing)",
+      "status": "PASS",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "S3",
+      "name": "hashed assets are served as JavaScript",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "type": "application/javascript; charset=utf-8",
+        "cacheControl": "public, max-age=0"
+      }
+    },
+    {
+      "id": "S3b",
+      "name": "default cache header on hashed assets",
+      "status": "INFO",
+      "detail": {
+        "cacheControl": "public, max-age=0",
+        "note": "No long-lived immutable caching unless configured on the static plugin."
+      }
+    },
+    {
+      "id": "S4",
+      "name": "unknown API routes and non-GET misses stay JSON 404 (never the SPA shell)",
+      "status": "PASS",
+      "detail": {
+        "api": 404,
+        "post": 404
+      }
+    },
+    {
+      "id": "S5",
+      "name": "static web -> auth -> DB write -> DB read -> today (placeholder prediction) works in one process",
+      "status": "PASS",
+      "detail": {
+        "steps": {
+          "signUp": 200,
+          "createGoal": 201,
+          "putLog": 200,
+          "today": 200
+        },
+        "todayLogAfterWrite": "DONE"
+      }
+    },
+    {
+      "id": "S6",
+      "name": "structured request logs are written and do not contain the session cookie value or the password",
+      "status": "PASS",
+      "detail": {
+        "logLines": 21
+      }
+    },
+    {
+      "id": "S7",
+      "name": "process footprint after the path check (local, not a container)",
+      "status": "INFO",
+      "detail": {
+        "startedInMs": 268,
+        "rssMb": 200,
+        "note": "Startup excludes migrations (SPIKE_MIGRATE=0). Local process start, not a Cloud Run cold start."
+      }
+    },
+    {
+      "id": "S8",
+      "name": "SIGTERM during an in-flight request: the request completes, then the process exits 0",
+      "status": "PASS",
+      "detail": {
+        "inflightStatus": 200,
+        "exitCode": 0,
+        "shutdownMs": 669
+      }
+    },
+    {
+      "id": "S9",
+      "name": "container image build",
+      "status": "INFO",
+      "detail": {
+        "status": "NOT RUN",
+        "reason": "Docker is not installed on the verification machine. No Dockerfile is included here; the container definition belongs to #70."
+      }
+    },
+    {
+      "id": "S10",
+      "name": "staging (Cloud Run + Neon), sleep/wake behaviour",
+      "status": "INFO",
+      "detail": {
+        "status": "NOT RUN",
+        "reason": "No approved staging exists. Creating cloud resources needs prior approval."
+      }
+    }
+  ]
+}
