@@ -37,21 +37,62 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 
 ## Technology Stack
 
-**状態：候補（技術選定確定待ち）。** 2026-09-30、依頼者の指示でAIが要件から候補を選んだ（[D-23](#d-23)〜[D-25](#d-25)）。技術スタックは別担当でも精査中のため、その結果と比較して確定するまで最終Decisionとは扱わない。確定まで、技術に強く依存する実装Issue（I-01・I-05・I-06・I-14）は着手しない。旧音楽案で導入・起動確認済みの構成（[履歴](../archive/music-exploration/README.md)）を再利用できる部分は再利用する案だが、その理由は下表の要件であり、過去の採用ではない。
+**状態：候補（技術選定確定待ち）。** 2026-09-30、依頼者の指示でAIが要件から候補を選んだ（[D-23](#d-23)〜[D-25](#d-25)）。技術スタックは別担当でも精査中のため、その結果と比較して確定するまで最終Decisionとは扱わない。確定まで、技術に強く依存する実装Issue（I-01 #70・I-05 #74・I-06 #75・I-14 #83）は着手しない。FE（#78〜#81）は、使用するFE基盤をチームで先に合意したうえで、画面・状態・APIモックの作業をBEの選定や接続と分けて先行してよい（レビュー合意、2026-10-01）。第一候補の実測結果は[検証状況](#第一候補の検証状況84--85)。旧音楽案で導入・起動確認済みの構成（[履歴](../archive/music-exploration/README.md)）を再利用できる部分は再利用する案だが、その理由は下表の要件であり、過去の採用ではない。
 
 | Requirement | Candidates | 候補（確定待ち） | Why | Rejected（候補段階） |
 | --- | --- | --- | --- | --- |
 | 全員が書ける言語、Engineと画面で型を共有 | TypeScript / Python | **TypeScript（Node 24 LTS、npm workspaces）** | 全員の経験、FE/BE/Engineで型を共有できる。旧構成の起動設定を再利用できる | Python：Engineだけ別言語になり型・CIが二重化 |
-| SPAの画面遷移 | React＋Vite＋TanStack Router / Next.js | **React＋Vite＋TanStack Router** | 画面は4〜5枚でSSR不要。旧構成でbuild確認済み、FEとAPIを1プロセスで同一origin配信できる | Next.js：SSR・Server Actionsの学習とAPIとの二重構成が不要 |
+| SPAの画面遷移・サーバー状態 | React＋Vite＋TanStack Router（＋TanStack Query）/ Next.js | **React＋Vite＋TanStack Router＋TanStack Query** | 画面は4〜5枚でSSR不要。FEとAPIを1プロセスで同一origin配信できる（#85で最小画面とSPA配信を確認）。**FE基盤はBEの選定と分けて先にチームで合意する**（レビュー合意、2026-10-01） | Next.js：SSR・Server Actionsの学習とAPIとの二重構成が不要 |
+| APIとWebの契約の共有 | 共有スキーマ（TypeBox）/ 手書きの型 / OpenAPI生成 | **TypeBoxの共有スキーマ。OpenAPI生成はCode Freeze後** | 同じスキーマを入力検証・応答の直列化・Webの型と実行時検証に使える（#85で確認） | OpenAPI生成：12日では生成物の管理コストが先に立つ |
 | HTTP API | Fastify / Hono / Express | **Fastify** | 旧構成で起動確認済み、Better AuthのFastify連携が公式Docsにある、スキーマ検証付き | Hono：Node常駐サーバーでは優位点が小さい |
 | 関係データ・一意制約 | PostgreSQL / SQLite | **PostgreSQL** | `(goal_id, local_date)`の一意制約・外部キー・ユーザーごとの分離。Managedの選択肢が多い | SQLite：公開環境での永続ボリューム管理が必要 |
 | DBアクセスとmigration | `pg`＋SQL / Drizzle / Prisma | **`pg`＋素のSQL＋`node-pg-migrate`** | テーブルは2つ、SQLをそのまま読める。Better Authも同じ`pg` Poolを使える | ORM：2テーブルに対してスキーマDSLと生成物の学習コストが大きい |
-| migrationの実行順 | — | **`db:migrate:auth` → `db:migrate:app` → `db:seed:demo`**（`db:migrate`は前2つを順に実行） | 認証テーブル（`user`）を`goal`が参照するため。Better AuthのCLIは`package-lock.json`で固定した版を使い、CI・本番で`@latest`を取得しない | — |
-| 認証 | Better Auth / Supabase Auth / 自作 | **Better Auth（メール＋パスワード、DBセッション、Cookie）** | 同じPostgreSQLに保存し、外部サービスを増やさない。公式DocsでFastify・`pg` Pool・migration CLIを確認（Context7、v1.6系、2026-09-30） | Supabase Auth：DB・認証の境界が外部に移る。自作：12日でのセキュリティリスク |
+| migrationの実行順 | — | **`db:migrate:auth` → `db:migrate:app` → `db:seed:demo`**（`db:migrate`は前2つを順に実行） | 認証テーブル（`user`）を`goal`が参照するため。Better Authの公式手順は`npx auth@latest migrate`だが使わず、lockfileで固定した版のライブラリから`getMigrations`を呼ぶ（#85 F-9で再現を確認） | — |
+| 認証 | Better Auth / Supabase Auth / 自作 | **Better Auth（メール＋パスワード、DBセッション、Cookie）** | 同じPostgreSQLに保存し、外部サービスを増やさない。公式DocsでFastify・`pg` Pool・migration CLIを確認（Context7、v1.6系、2026-09-30）。#85でbetter-auth 1.7.6の登録〜ログアウト・DB保存のレート制限を実測 | Supabase Auth：DB・認証の境界が外部に移る。自作：12日でのセキュリティリスク。Firebase Authentication：#84 v3.1で比較（セッションCookie・ADCも可能）、実装比較は未実施。逆転条件は「認証の運用をチームが担えるか」 |
 | 数値計算（lgamma、Beta関数、Beta乱数） | 自作 / jStat等 | **自作（Lanczos近似、Marsaglia–Tsang法）。ただしI-03でゲートを設ける** | 必要な関数は3つだけで、乱数を注入できる形にしやすい | 外部ライブラリ：依存に対して使う範囲が小さい。**リスク**：特殊関数・サンプラーの実装ミス。既知値・極端なパラメータ・テストベクトルのテスト（T-15）で保証できなければ、I-03の中で小さな成熟ライブラリへ切り替える |
 | テスト | Vitest＋fast-check / Jest | **Vitest＋fast-check** | Viteと設定を共有。事前検証でランダム入力が実装の欠陥を見つけたため、性質ベースのテストを採用 | Jest：ESM・TSの追加設定 |
 | E2E | Playwright CLI＋Skill | **Playwright CLI（主要Flowのみ）** | [AI開発ツールの方針](../AI_DEVELOPMENT_TOOLS.md)どおり | Playwright MCPの常時利用 |
 | デプロイ | [D-25](#d-25) | 1コンテナ＋Managed PostgreSQL | — | — |
+
+### 第一候補の検証状況（#84 / #85）
+
+[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)で第一候補を最小構成で実測した（PR #85でmain済み、Supporting Artifact）。詳細は[検証報告](../experiments/architecture-verification/REPORT.md)と[訂正後の比較 v3.1](../experiments/architecture-verification/SELECTION-v3.1.md)。報告の結論は「条件付きで採用可能」であり、**採択ではない**。D-23〜D-25は候補のまま。
+
+| 区分 | 内容 |
+| --- | --- |
+| 確認できた（ローカル、Node 24.21.0） | 登録→ログイン→再読み込み→ログアウト（APIと実ブラウザ）。未認証は401、他人のGoalは404。Cookie属性（HttpOnly・SameSite=Lax・httpsでSecure）。認証エンドポイントのOrigin検査。DB保存のレート制限が再起動・複数instance・並列をまたいで効く。空DBからのmigrationの再現。1プロセスでSPAとAPIを同一origin配信。SIGTERMで処理中のリクエストを完了してから終了 |
+| 見つかった問題（対処を確認済み） | 既定の入力検証が契約違反を受理する（F-1〜F-3）。公式ガイドの変換routeでは全クライアントがレート制限を共有しうる（F-5）。DB接続の既定設定で429の待ち時間が異常値になる（F-10）。同期の計算がAPI全体を止める（混合負荷） |
+| 未確認 | Prediction Engineの単体性能（T-14）。コンテナのビルド。Cloud Run＋Neonでの動作・休止後の応答・転送ヘッダーの実形式とhop数。実ブラウザでのCSRF。費用の実測。Firebase・Hono・TanStack Startの実装比較。混合負荷はApple M5の複数コアで計測しており、Cloud Runの1 vCPUでのworkerの効果は未確認 |
+
+### 実装時に必要な対策
+
+技術に依存しない要件は確定とし、具体策は第一候補を採用した場合の案（#85の対処）として記録する。各Issueの受け入れ条件への反映は、技術選定の確定後に行う。
+
+| 対策 | 要件（技術に依存しない） | 第一候補での具体策（#85） | 対応Issue |
+| --- | --- | --- | --- |
+| 入力検証 | 契約違反（未定義の項目、型の違い、状態と量の組み合わせ違反）は黙って受理せず422にする。違反した項目をすべて返す | 厳格な検証設定（`removeAdditional: false`・`coerceTypes: false`・`allErrors: true`）、検証エラーを422の共通形式へ変換、Type Providerをpluginごとに再適用（F-1〜F-4） | #70・#76・#77、表示は#78 |
+| レート制限 | ログイン等の認証操作に回数制限を設け、再起動・複数instanceでも効く。制限中は待ち時間を画面で伝える。共有回線（デモ会場）でも正当な利用者を止めない上限にする | DB保存のレート制限、信頼するproxyのhop数からクライアントIPを1つに決めて渡す修正版の変換route、`int8`を数値で読むDB接続設定と適用範囲の決定（F-5〜F-7、F-10） | #74・#75 |
+| CSRF / Origin | 状態を変えるAPIは、別originからのCookie付き要求を受け付けない方針を決める（`SameSite=Lax`だけでは同一siteの別originを防げない） | 方針は未決（F-8）。Origin検査を足すかをチームで決め、実ブラウザで確認する | #75・#76 |
+| 予測計算によるAPIの停止 | 予測の計算中も、記録・Goal操作・セッション確認を待たせない | T-14（500ms未満）を維持して計測する。計算時間に応じて同一プロセス内のworkerで実行する案（混合負荷で、同期実行では計算時間がそのままCRUDの待ち時間になり、worker 2本では数msのままだった） | #72・#73・#77 |
+| migrationの版固定 | CI・本番で依存ツールの`@latest`を取得しない | 固定版のライブラリから`getMigrations`を呼ぶ（F-9） | #74 |
+| 公開先のリージョン | DBとアプリの距離を作成前に決める | Neonに東京リージョンはない。Cloud Runとの組を決めてから作成する | #70・#83 |
+| 配備先での未確認項目 | 本番でしか見えない問題を最終公開前に確認する | コンテナ、休止後の応答、転送ヘッダーの実形式とhop数、1 vCPUでのworker、リージョン間の遅延 | #70・#75 |
+
+### 検証コードとの差分（変更案・未合意）
+
+正本（本書・Product Spec）は変更していない。#85の検証コード（`experiments/architecture-verification/src/contracts.ts`、`migrations/001_app.sql`）との差分を、変更案と理由として記録する。合意した項目だけ、正本へ反映する。
+
+| 項目 | 正本（現在） | 検証コード | 変更案 | 理由 |
+| --- | --- | --- | --- | --- |
+| DONEの量 | 省略可。省略時はAPIが`sessionAmount`で補う | 必須（クライアントが送る） | **正本を維持**。本実装は正本に従う | 量の既定値をサーバーで一元管理し、UIごとの補い方の違いを防ぐ |
+| T-14 | `requiredFutureDone = 120, 400, 1095`で500ms未満 | 混合負荷も判断材料にし、計算が長ければworkerで実行 | **500ms未満を維持**。混合負荷の確認を追加の受け入れ条件にするかを相談 | 単体の速さと、他のリクエストを止めないことは別の性質 |
+| 単位の値 | `minutes` / `sessions` | `minutes` / `count` | どちらかに統一。案：`count` | 「回」の意味が名前から読み取りやすい。検証コードで動作確認済み |
+| 量の型 | integer | numeric | 案：integerを維持 | 分・回は整数で足り、比較・合計で誤差が出ない |
+| タイトルの最大長 | 100 | 120 | 案：100を維持（どちらでもよい） | 画面の1行に収める目安 |
+| `action_log`の主キー | `id`（uuid）＋`(goal_id, local_date)`の一意制約 | `(goal_id, local_date)`を主キー | 案：複合主キーへ変更 | APIは日付で記録を特定し、`id`を使う場面がない |
+| 記録の時刻列 | `created_at` / `updated_at` | `recorded_at` | 案：正本を維持 | 上書きの有無を追える |
+| エラーの形式 | 422とだけ記載 | `{ error: { code, message, fields?: [{ path, message }] } }`。DB制約違反も422 | 案：検証コードの形式を契約に追加 | 項目ごとのエラー表示（R-02）に必要 |
+| `/today`の読み取り順 | 記載なし | Goalと記録を1つのsnapshotで取得、時計は1回だけ読む、DB接続を返してから予測を計算 | 案：契約に追加 | 日付の境界で`today`と記録が食い違うのを防ぐ |
 
 ## Data Model
 
@@ -318,7 +359,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-23
 
-2026-09-30 / **RECOMMENDED（技術選定確定待ち）** / 依頼者の指示でAIが選んだ候補。別担当による技術選定の精査結果と比較し、人間が確定するまで最終Decisionとは扱わない。確定時は、この項目の状態と該当Issue（I-01・I-05・I-06・I-14）だけを更新する。案：1つのNodeアプリ（Fastify APIがビルド済みSPAも配信）とPostgreSQLの構成とし、コードを`packages/prediction`（純粋関数）・`apps/api`（auth / goals / logs / prediction adapter）・`apps/web`に分ける。言語はTypeScript（Node 24 LTS、npm workspaces）、FEはReact＋Vite＋TanStack Router、DBアクセスは`pg`＋SQL＋`node-pg-migrate`、テストはVitest＋fast-check。理由と不採用案は[Technology Stack](#technology-stack)。
+2026-09-30 / **RECOMMENDED（技術選定確定待ち）** / 依頼者の指示でAIが選んだ候補。別担当による技術選定の精査結果と比較し、人間が確定するまで最終Decisionとは扱わない。確定時は、この項目の状態と該当Issue（I-01・I-05・I-06・I-14）だけを更新する。第一候補は#84で最小検証済み（「条件付きで採用可能」、[検証状況](#第一候補の検証状況84--85)）。FE基盤はBEと分けて先に合意する。案：1つのNodeアプリ（Fastify APIがビルド済みSPAも配信）とPostgreSQLの構成とし、コードを`packages/prediction`（純粋関数）・`apps/api`（auth / goals / logs / prediction adapter）・`apps/web`に分ける。言語はTypeScript（Node 24 LTS、npm workspaces）、FEはReact＋Vite＋TanStack Router、DBアクセスは`pg`＋SQL＋`node-pg-migrate`、テストはVitest＋fast-check。理由と不採用案は[Technology Stack](#technology-stack)。
 
 ### D-24
 
@@ -326,4 +367,4 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-25
 
-2026-09-30 / **RECOMMENDED / CONDITIONAL（技術選定確定待ち）** / 公開先はCloud Run（コンテナ）＋Neon（PostgreSQL）を候補とする。1コンテナ・同一origin・Managed PostgreSQLという形もD-23の候補に従う。Providerのアカウント・課金設定・regionの作成と最終受入は、対象と費用を示した承認の後に行う。旧案での比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)。
+2026-09-30 / **RECOMMENDED / CONDITIONAL（技術選定確定待ち）** / 公開先はCloud Run（コンテナ）＋Neon（PostgreSQL）を候補とする。1コンテナ・同一origin・Managed PostgreSQLという形もD-23の候補に従う。Neonには東京リージョンがない（#85で公式ページを確認、2026-09-30）ため、Cloud Runとのリージョンの組を作成前に決める。配備先での動作と費用は未実測。Providerのアカウント・課金設定・regionの作成と最終受入は、対象と費用を示した承認の後に行う。旧案での比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)。
