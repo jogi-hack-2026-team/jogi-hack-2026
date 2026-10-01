@@ -111,9 +111,9 @@ const csrfApp = await fetch(stack.url + '/api/goals', {
   headers: { 'content-type': 'application/json', cookie: A.jar.header(), origin: 'http://evil.example' },
   body: JSON.stringify(goalInput('csrf probe')),
 });
-report.info('B12', 'app routes do NOT check Origin by themselves (only SameSite=Lax protects them)', {
+report.info('B12', 'app routes do NOT check Origin by themselves', {
   status: csrfApp.status,
-  note: 'A non-browser client sent a foreign Origin with a valid cookie. 201 means the app route has no Origin check of its own.',
+  note: 'A non-browser client sent a foreign Origin with a valid cookie. 201 means the app route has no Origin check of its own. This says nothing about browsers: SameSite=Lax only withholds the cookie on cross-site requests, not on same-site ones (another subdomain or port), and no browser CSRF test was run.',
 });
 
 // ---- C. ownership: someone else's goal is 404 -------------------------------------------

@@ -25,7 +25,7 @@
 npm ci
 npm run typecheck
 npm run verify:auth-db        # 検証1: 認証・401/404・契約・Cookie・変換処理・migration再現
-npm run verify:rate-limit     # 検証1: DB保存のレート制限（再起動・複数instance・並列・転送ヘッダー）
+npm run verify:rate-limit     # 検証1: DB保存のレート制限（再起動・複数instance・並列・転送ヘッダー・待ち時間。windowの経過を待つため1分以上）
 npm run verify:mixed-load     # 検証2: 代用計算とCRUDの混合負荷（約2分半）
 npm run web:build
 npm run verify:single-process # 検証3: 1プロセスでSPA＋API、経路、ログ、SIGTERM
@@ -46,6 +46,7 @@ npm run web:build && npm run start:browser   # http://localhost:3220
 | `src/contracts.ts` | TypeBoxスキーマ。APIの検証・応答serializationとWebの型・実行時検証が共有 |
 | `src/app.ts` | Fastify本体。認証の変換route（公式ガイド版と修正版）、保護plugin、422のerror形式、SPA配信 |
 | `src/auth.ts` | Better Authの設定（メール／パスワード、DB保存のレート制限） |
+| `src/pool.ts` | DB接続pool。`SPIKE_PG_INT8=number` で `int8` を数値として読む（REPORTのF-10の対処。既定はnode-postgresの既定どおり文字列で、レート制限の検証だけが `number` を指定する） |
 | `src/migrate.ts`、`migrations/` | 認証テーブル → アプリテーブルの順で適用。アプリ側は最小の代用runner |
 | `src/predict-*.ts` | 代用のCPU消費と、同一プロセス内の固定サイズworker pool |
 | `src/server.ts` | 1プロセスの起動とSIGTERM処理 |

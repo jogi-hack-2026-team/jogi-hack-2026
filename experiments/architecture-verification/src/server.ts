@@ -3,12 +3,12 @@
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import pg from 'pg';
 import { buildApp } from './app.ts';
 import { createAuth } from './auth.ts';
 import { migrate } from './migrate.ts';
 import { localDir } from './paths.ts';
 import type { PgHandle } from './pg-embedded.ts';
+import { createPool } from './pool.ts';
 import { TRUSTED_IP_HEADER } from './app.ts';
 
 const env = process.env;
@@ -34,7 +34,7 @@ if (!databaseUrl) {
   databaseUrl = embedded.connectionString;
 }
 
-const pool = new pg.Pool({ connectionString: databaseUrl, max: Number(env.PG_POOL_MAX ?? 5) });
+const pool = createPool({ connectionString: databaseUrl, max: Number(env.PG_POOL_MAX ?? 5), int8: (env.SPIKE_PG_INT8 ?? 'string') as 'string' | 'number' });
 const auth = createAuth({
   pool,
   secret: env.BETTER_AUTH_SECRET ?? localSecret(),

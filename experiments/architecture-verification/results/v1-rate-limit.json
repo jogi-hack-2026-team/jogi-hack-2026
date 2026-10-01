@@ -1,7 +1,7 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "title": "verification-1 rate limiting",
-  "at": "2026-09-30T07:02:30.932Z",
+  "at": "2026-10-01T06:14:49.257Z",
   "environment": {
     "node": "v24.21.0",
     "platform": "darwin-arm64",
@@ -10,19 +10,20 @@
     "totalMemGb": 16
   },
   "summary": {
-    "pass": 9,
+    "pass": 11,
     "fail": 0,
     "info": 2
   },
   "config": {
     "signInMax": 5,
     "windowSec": 60,
-    "nodeEnv": "production"
+    "nodeEnv": "production",
+    "pgInt8": "number (R12: string)"
   },
   "checks": [
     {
       "id": "R1",
-      "name": "the first 5 sign-in attempts from one IP are processed, later ones get 429 with X-Retry-After",
+      "name": "the first 5 sign-in attempts from one IP are processed, later ones get 429 with an X-Retry-After of 1..60 whole seconds",
       "status": "PASS",
       "detail": {
         "statuses": [
@@ -34,7 +35,11 @@
           429,
           429
         ],
-        "retryAfterPresent": true
+        "retryAfterOf429s": [
+          "60",
+          "60",
+          "60"
+        ]
       }
     },
     {
@@ -54,11 +59,11 @@
     },
     {
       "id": "R2",
-      "name": "while limited, even the correct password is refused (429) for that IP",
+      "name": "while limited, even the correct password is refused (429) for that IP, with a valid X-Retry-After",
       "status": "PASS",
       "detail": {
         "status": 429,
-        "retryAfter": "179073384039613"
+        "retryAfter": "60"
       }
     },
     {
@@ -85,16 +90,17 @@
     },
     {
       "id": "R5",
-      "name": "after a process restart the limit still applies (stored in PostgreSQL)",
+      "name": "after a process restart the limit still applies (stored in PostgreSQL) and X-Retry-After is valid and has not grown",
       "status": "PASS",
       "detail": {
         "status": 429,
-        "retryAfter": "179073384039612"
+        "retryAfter": "60",
+        "retryAfterBeforeRestart": "60"
       }
     },
     {
       "id": "R6",
-      "name": "two instances share one counter: 3 attempts on A + 3 on B -> the 6th is 429",
+      "name": "two instances share one counter: 3 attempts on A + 3 on B -> the 6th is 429, and instance B reports a valid X-Retry-After",
       "status": "PASS",
       "detail": {
         "statuses": [
@@ -104,16 +110,55 @@
           401,
           401,
           429
-        ]
+        ],
+        "retryAfterFromInstanceB": "60"
       }
     },
     {
       "id": "R7",
-      "name": "20 parallel attempts across two instances: at most 5 are processed (atomic counting)",
+      "name": "20 parallel attempts across two instances: at most 5 are processed (atomic counting), every 429 carries a valid X-Retry-After",
       "status": "PASS",
       "detail": {
         "processed": 5,
-        "limited": 15
+        "limited": 15,
+        "retryAfterValues": [
+          "60"
+        ]
+      }
+    },
+    {
+      "id": "R11",
+      "name": "the advertised wait is truthful: ~1.5 s before it elapses the IP is still limited, once it has elapsed both instances process attempts again",
+      "status": "PASS",
+      "detail": {
+        "advertisedSeconds": "60",
+        "justBefore": {
+          "status": 429,
+          "retryAfter": "2"
+        },
+        "afterWindowOnInstanceBThenA": [
+          401,
+          401
+        ]
+      }
+    },
+    {
+      "id": "R12",
+      "name": "node-postgres defaults (int8 as string): the count limit still works, but X-Retry-After is not a usable wait time; it matches \"lastRequest\" and the window joined as text",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "retryAfter": "179081737872673",
+        "lastRequestReturnedAs": "string",
+        "expectedFromTextConcatenation": 179081737872673,
+        "note": "better-auth 1.7.6 computes lastRequest + window * 1000. With a string lastRequest that is a concatenation, not an addition."
       }
     },
     {
