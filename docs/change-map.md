@@ -27,6 +27,14 @@
 | 再利用資産 | [再利用資産](operations/reuse-handoff.md) | 実装Issueで採否を記録 |
 | 技術選定の最小検証（[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)） | Supporting Artifact。第一候補を採択前に実測した記録で、採択・Productの実装ではない。[検証報告](../experiments/architecture-verification/REPORT.md)、[訂正後の比較](../experiments/architecture-verification/SELECTION-v3.1.md)。要約と実装時の対策は[Architecture](architecture.md#第一候補の検証状況84--85) | [検証コードと再実行手順](../experiments/architecture-verification/README.md)。専用のpackageで `npm run verify:*`。予測エンジンの性能、コンテナ、配備先は未実施 |
 
+## 未採択の追加提案
+
+ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[文書レビューの追跡先](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
+
+| 提案 | 説明先 | 状態・確認範囲 |
+| --- | --- | --- |
+| 数日間の「やる／休む」を仮置きして比べる | [目的・例・現行Mustとの差・画面・計算・分担・受入条件案](prediction/action-scenarios-proposal.md) | 未採択。定型3例の既存DPへの還元、g50との前提差、表示の再検討案とレビュー報告を記録。実装・ユーザー検証・性能測定なし。Product/API/Prediction仕様・既存Issue依存・Ready/BLOCKEDは変更しない |
+
 ## 確認記録と残課題
 
 この表は2026-09-30のリポジトリ内の所在を示す。Product機能、DB接続、外部Service、公開配置は未実装・未確認。
