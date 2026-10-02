@@ -3,7 +3,7 @@
 **Supporting Doc / Not a Source of Truth。未採択の追加機能案。**
 
 - 記録日：2026-10-02。提案の文書化と独立したレビュー資料への分離は承認済み。製品への採用・実装開始の承認ではない。
-- 検討・文書レビューの追跡先：[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)と[文書レビューの追跡先](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)。技術選定は[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)・[PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)で別に扱う。技術採択と機能の採否は別々に判断する。
+- 検討・文書レビューの追跡先：[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)と[提案のDraft PR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)。技術選定は[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)・[PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)で別に扱う。技術採択と機能の採否は別々に判断する。
 - 正式仕様：[Product Spec](../product-spec.md)、[Architecture](../architecture.md)。既存Must、中心指標`g50`、API契約、D-23〜D-25、Issue依存・Ready/BLOCKEDは変更しない。
 - 状態：目的・画面・計算・受入条件はすべて提案。採用するか、いつ、どこまで作るか、Scopeをどう分類するかはチーム合意待ち。**追加比較の計算方式も未選定。** 実装・ユーザー検証・性能測定は未実施。
 
@@ -154,7 +154,7 @@ scope-guardの観点で、前提を比べる価値、FE/BE/Engineの追加負担
 
 | 参照先 | 関係 |
 | --- | --- |
-| [文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[文書レビューの追跡先](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94) | この未採択案と根拠・残課題の文書レビュー先。機能の採用・実装開始を承認するものではない |
+| [文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案のDraft PR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95) | この未採択案と根拠・残課題の文書レビュー先。機能の採用・実装開始を承認するものではない |
 | [#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)・[PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93) | 技術候補の採択・説明を扱う参照先。提案は別にレビューし、#84の完了条件へ追加しない。計算・表示の検討への既存レビューは上記リンクから追跡する |
 | [#69](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/69)・[最上位 #87](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/87) | 正式仕様・完成条件を確認する参照先。追加案が合意された後、正式文書と追跡先をどう扱うか決める |
 | [FE #88](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/88)・[Today画面 #81](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/81) | 表示・操作への影響を検討する参照先。現行の完了条件に追加しない |

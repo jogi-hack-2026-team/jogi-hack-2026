@@ -29,7 +29,7 @@
 
 ## 未採択の追加提案
 
-ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[文書レビューの追跡先](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
+ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案のDraft PR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
 
 | 提案 | 説明先 | 状態・確認範囲 |
 | --- | --- | --- |
