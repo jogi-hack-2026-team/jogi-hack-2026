@@ -1,0 +1,19 @@
+
+> @jogi/architecture-verification@0.0.0 verify:rate-limit
+> node verify/v1-rate-limit.ts
+
+PASS  R1  the first 5 sign-in attempts from one IP are processed, later ones get 429 with an X-Retry-After of 1..60 whole seconds
+INFO  R1b  rows written to the "rateLimit" table
+PASS  R2  while limited, even the correct password is refused (429) for that IP, with a valid X-Retry-After
+PASS  R3  a different client IP is not affected (per-IP bucket)
+PASS  R4  rotating a forged left-most X-Forwarded-For value does not escape the limit (hardened bridge + 1 trusted hop)
+PASS  R5  after a process restart the limit still applies (stored in PostgreSQL) and X-Retry-After is valid and has not grown
+PASS  R6  two instances share one counter: 3 attempts on A + 3 on B -> the 6th is 429, and instance B reports a valid X-Retry-After
+PASS  R7  20 parallel attempts across two instances: at most 5 are processed (atomic counting), every 429 carries a valid X-Retry-After
+PASS  R11  the advertised wait is truthful: ~1.5 s before it elapses the IP is still limited, once it has elapsed both instances process attempts again
+PASS  R12  node-postgres defaults (int8 as string): the count limit still works, but X-Retry-After is not a usable wait time; it matches "lastRequest" and the window joined as text
+PASS  R8  memory storage: the counter is lost on restart and is not shared between instances
+PASS  R9  guide bridge, single-value X-Forwarded-For: per-IP limiting works
+INFO  R10  guide bridge, multi-value or missing X-Forwarded-For: every such client shares ONE bucket
+
+verification-1 rate limiting: 11 pass, 0 fail, 2 info -> results/post-fix/v1-rate-limit.json

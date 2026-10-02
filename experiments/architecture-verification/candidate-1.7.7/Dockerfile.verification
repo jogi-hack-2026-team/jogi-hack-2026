@@ -1,0 +1,22 @@
+# Supporting Artifact / Not a Source of Truth. Local Linux verification only.
+FROM node:24.21.0-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY tsconfig.json ./
+COPY web ./web
+COPY src ./src
+RUN npm run web:build
+
+FROM node:24.21.0-bookworm-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080 SPIKE_MIGRATE=0 SPIKE_PG_INT8=number SPIKE_WEB_DIST=/app/web-dist
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+COPY src ./src
+COPY migrations ./migrations
+COPY container-start.mjs ./
+COPY --from=build /app/web-dist ./web-dist
+USER node
+EXPOSE 8080
+CMD ["node", "container-start.mjs"]

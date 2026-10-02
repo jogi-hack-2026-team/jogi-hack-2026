@@ -1,5 +1,7 @@
 # Architecture verification (Issue #84)
 
+> **2026-10-02追加検証：** この文書は#85時点の履歴。現在の旧版/1.7.7修正後の結果と未解決事項は[追加報告](FOLLOWUP-2026-10-02.md)、[Linux結果](LINUX-2026-10-02.md)。Linux終了試験はexit137で失敗しており、採択は保留。
+
 **Supporting Artifact / Not a Source of Truth.** 技術選定の第一候補を採択前に最小構成で実測した検証コードです。Productの実装ではありません。正式な仕様・採択は `docs/product-spec.md` と `docs/architecture.md`、およびチームの決定に従います。Architecture D-23〜D-25は候補のままです。
 
 - 検証結果と判断材料：[REPORT.md](REPORT.md)

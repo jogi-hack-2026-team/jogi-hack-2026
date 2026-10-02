@@ -1,0 +1,37 @@
+[
+  {
+    "log": "<isolated-workspace>\\repo-reflection\\experiments\\architecture-verification\\candidate-1.7.7\\results\\post-fix\\rerun-logs\\typecheck.log",
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "startedAt": "2026-10-02T14:00:28.9433723+00:00",
+    "assertionFailures": 0
+  },
+  {
+    "log": "<isolated-workspace>\\repo-reflection\\experiments\\architecture-verification\\candidate-1.7.7\\results\\post-fix\\rerun-logs\\web-build.log",
+    "command": "npm run web:build",
+    "exitCode": 0,
+    "startedAt": "2026-10-02T14:00:34.1074242+00:00",
+    "assertionFailures": 0
+  },
+  {
+    "log": "<isolated-workspace>\\repo-reflection\\experiments\\architecture-verification\\candidate-1.7.7\\results\\post-fix\\rerun-logs\\verify-auth-db.log",
+    "command": "npm run verify:auth-db",
+    "exitCode": 0,
+    "startedAt": "2026-10-02T14:00:35.7527528+00:00",
+    "assertionFailures": 0
+  },
+  {
+    "log": "<isolated-workspace>\\repo-reflection\\experiments\\architecture-verification\\candidate-1.7.7\\results\\post-fix\\rerun-logs\\verify-rate-limit.log",
+    "command": "npm run verify:rate-limit",
+    "exitCode": 0,
+    "startedAt": "2026-10-02T14:00:55.1495609+00:00",
+    "assertionFailures": 0
+  },
+  {
+    "log": "<isolated-workspace>\\repo-reflection\\experiments\\architecture-verification\\candidate-1.7.7\\results\\post-fix\\rerun-logs\\verify-fixed.log",
+    "command": "npm run verify:fixed",
+    "exitCode": 0,
+    "startedAt": "2026-10-02T14:02:24.5945893+00:00",
+    "assertionFailures": 0
+  }
+]

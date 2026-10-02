@@ -1,0 +1,186 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "local Linux Docker build/run/auth/SIGTERM",
+  "at": "2026-10-02T13:59:54.770Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "win32-x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "logicalCpus": 16,
+    "totalMemGb": 15.6
+  },
+  "summary": {
+    "pass": 8,
+    "fail": 1,
+    "info": 5
+  },
+  "checks": [
+    {
+      "id": "L-env",
+      "name": "actual local Docker Linux environment",
+      "status": "INFO",
+      "detail": {
+        "Platform": {
+          "Name": "Docker Desktop 4.81.0 (232925)"
+        },
+        "Version": "29.6.1",
+        "ApiVersion": "1.55",
+        "MinAPIVersion": "1.40",
+        "Os": "linux",
+        "Arch": "amd64",
+        "Components": [
+          {
+            "Name": "Engine",
+            "Version": "29.6.1",
+            "Details": {
+              "ApiVersion": "1.55",
+              "Arch": "amd64",
+              "BuildTime": "Fri Jun 26 11:41:04 2026",
+              "Experimental": "false",
+              "GitCommit": "8ec5ab3",
+              "GoVersion": "go1.26.4",
+              "KernelVersion": "6.18.40.1-microsoft-standard-WSL2",
+              "MinAPIVersion": "1.40",
+              "Module": "github.com/moby/moby/v2",
+              "ModuleVersion": "v2.0.0+unknown",
+              "Os": "linux"
+            }
+          },
+          {
+            "Name": "containerd",
+            "Version": "v2.2.5",
+            "Details": {
+              "GitCommit": "e53c7c1516c3b2bff98eb76f1f4117477e6f4e66"
+            }
+          },
+          {
+            "Name": "runc",
+            "Version": "1.3.6",
+            "Details": {
+              "GitCommit": "v1.3.6-0-g491b69ba"
+            }
+          },
+          {
+            "Name": "docker-init",
+            "Version": "0.19.0",
+            "Details": {
+              "GitCommit": "de40ad0"
+            }
+          }
+        ],
+        "GitCommit": "8ec5ab3",
+        "GoVersion": "go1.26.4",
+        "KernelVersion": "6.18.40.1-microsoft-standard-WSL2",
+        "BuildTime": "2026-06-26T11:41:04.000000000+00:00"
+      }
+    },
+    {
+      "id": "L-build",
+      "name": "official Node image, locked npm dependencies, SPA and runtime build",
+      "status": "PASS",
+      "detail": {
+        "metadata": "\"sha256:7b3aa21df5ae5ba5193d1033c394c9258f14d2ae6162f98062f55e6e8d46e64e\" 100968993"
+      }
+    },
+    {
+      "id": "L-pg-image",
+      "name": "official PG digest",
+      "status": "INFO",
+      "detail": "[\"postgres@sha256:3725f4e2499eef5134592b3b4ab79a543ed7f8e533b05b5b637af926630f6650\"]"
+    },
+    {
+      "id": "L-pg-version",
+      "name": "actual isolated Linux PostgreSQL version",
+      "status": "INFO",
+      "detail": "PostgreSQL 18.6 (Debian 18.6-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+    },
+    {
+      "id": "L-node-version",
+      "name": "actual runtime Node version",
+      "status": "INFO",
+      "detail": "v24.21.0"
+    },
+    {
+      "id": "L-spa",
+      "name": "one Node process serves SPA, deep route, JS and JSON API 404",
+      "status": "PASS",
+      "detail": {
+        "shell": 200,
+        "deep": 200,
+        "apiMissing": 404,
+        "asset": 200
+      }
+    },
+    {
+      "id": "L-auth",
+      "name": "only two synthetic identities register and protected cookie flow works",
+      "status": "PASS"
+    },
+    {
+      "id": "L-db",
+      "name": "owner creates, writes and reads DB-backed today",
+      "status": "PASS"
+    },
+    {
+      "id": "L-isolation",
+      "name": "other owner 404 and same-site different Origin 403",
+      "status": "PASS",
+      "detail": {
+        "otherOwner": 404,
+        "wrongOrigin": 403
+      }
+    },
+    {
+      "id": "L-logout",
+      "name": "logout invalidates old Cookie and preserves multiple Set-Cookie rows",
+      "status": "PASS",
+      "detail": {
+        "logout": 200,
+        "oldCookie": 401,
+        "setCookieCount": 3
+      }
+    },
+    {
+      "id": "L-rate",
+      "name": "20 parallel attempts admit five; 429 wait is integer 1..60",
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "401": 5,
+          "429": 15
+        },
+        "waits": [
+          "60"
+        ]
+      }
+    },
+    {
+      "id": "L-SIGTERM",
+      "name": "Linux SIGTERM during received in-flight worker request drains HTTP then exits 0 within 10s",
+      "status": "FAIL",
+      "detail": {
+        "received": true,
+        "runningAtSignal": true,
+        "response": 200,
+        "exitCode": 137,
+        "shutdownMs": 11034
+      }
+    },
+    {
+      "id": "L-logs",
+      "name": "app request logs exist and omit generated credential/Cookie values",
+      "status": "PASS"
+    },
+    {
+      "id": "L-limits",
+      "name": "local test scope",
+      "status": "INFO",
+      "detail": {
+        "transport": "HTTP, NODE_ENV=test; production HTTPS gate unchanged",
+        "memoryCpu": "Docker defaults, no Cloud Run quota emulation",
+        "engine": "synthetic CPU worker only",
+        "cloud": false
+      }
+    }
+  ]
+}

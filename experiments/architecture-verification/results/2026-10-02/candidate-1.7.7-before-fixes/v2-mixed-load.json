@@ -1,0 +1,749 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "verification-2 mixed load with a placeholder compute",
+  "at": "2026-10-02T12:16:40.285Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "win32-x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "logicalCpus": 16,
+    "totalMemGb": 15.6
+  },
+  "summary": {
+    "pass": 3,
+    "fail": 0,
+    "info": 2
+  },
+  "setup": {
+    "users": 2,
+    "logDaysPerGoal": 60,
+    "crudOpenLoopPerSec": 20,
+    "crudMix": "GET /api/goals, PUT log, GET /api/auth/get-session in rotation",
+    "measuredWindowMs": 8000,
+    "warmupMs": 1000,
+    "pgPoolMax": 5,
+    "workerThreads": 2,
+    "database": "PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit",
+    "caveats": [
+      "Load generator, API server and PostgreSQL all run on the same laptop.",
+      "Each scenario was run once for 8 s. Treat the numbers as order-of-magnitude.",
+      "Open-loop generator in a separate process on the same machine; latency is measured from the moment each request is sent.",
+      "The compute is a placeholder CPU burn, not the prediction engine."
+    ]
+  },
+  "checks": [
+    {
+      "id": "M0",
+      "name": "T-14 (#73) single-computation benchmark",
+      "status": "INFO",
+      "detail": {
+        "status": "NOT RUN",
+        "reason": "No Product prediction engine exists in the inspected main snapshot. Experimental numerical prototypes are not Product engine performance evidence. Other branches were not exhaustively inspected."
+      }
+    },
+    {
+      "id": "M1",
+      "name": "mixed-load runs with a placeholder compute",
+      "status": "INFO",
+      "detail": [
+        {
+          "scenario": {
+            "burnMs": 0,
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0,
+          "crud": {
+            "n": 94,
+            "p50": 6.1,
+            "p95": 10.1,
+            "p99": 12.9,
+            "max": 12.9
+          },
+          "session": {
+            "n": 48,
+            "p50": 9.8,
+            "p95": 14.1,
+            "p99": 15,
+            "max": 15
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 6.9,
+            "p95": 113.8,
+            "p99": 113.8,
+            "max": 113.8
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 1188,
+            "wallMs": 8017,
+            "cpuUtilization": 0.15,
+            "rssMb": 160,
+            "eventLoopDelayMeanMs": 15.68,
+            "eventLoopDelayP99Ms": 24.85,
+            "eventLoopDelayMaxMs": 51.05,
+            "dbAcquireWaitP95Ms": 0.07,
+            "dbAcquireWaitMaxMs": 0.22,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 100,
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0.1,
+          "crud": {
+            "n": 96,
+            "p50": 6.9,
+            "p95": 66.5,
+            "p99": 301.4,
+            "max": 301.4
+          },
+          "session": {
+            "n": 49,
+            "p50": 9.6,
+            "p95": 110,
+            "p99": 214.5,
+            "max": 214.5
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 107.6,
+            "p95": 146.6,
+            "p99": 146.6,
+            "max": 146.6
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 1938,
+            "wallMs": 8011,
+            "cpuUtilization": 0.24,
+            "rssMb": 159,
+            "eventLoopDelayMeanMs": 16.41,
+            "eventLoopDelayP99Ms": 104.14,
+            "eventLoopDelayMaxMs": 110.49,
+            "dbAcquireWaitP95Ms": 0.07,
+            "dbAcquireWaitMaxMs": 0.17,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 100,
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0.1,
+          "crud": {
+            "n": 96,
+            "p50": 6.5,
+            "p95": 11.6,
+            "p99": 50.3,
+            "max": 50.3
+          },
+          "session": {
+            "n": 48,
+            "p50": 9.4,
+            "p95": 20.1,
+            "p99": 29,
+            "max": 29
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 108.9,
+            "p95": 189.4,
+            "p99": 189.4,
+            "max": 189.4
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 1985,
+            "wallMs": 8006,
+            "cpuUtilization": 0.25,
+            "rssMb": 193,
+            "eventLoopDelayMeanMs": 15.42,
+            "eventLoopDelayP99Ms": 24.76,
+            "eventLoopDelayMaxMs": 55.67,
+            "dbAcquireWaitP95Ms": 0.09,
+            "dbAcquireWaitMaxMs": 0.18,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.09
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 250,
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0.25,
+          "crud": {
+            "n": 96,
+            "p50": 6.8,
+            "p95": 227.2,
+            "p99": 348.1,
+            "max": 348.1
+          },
+          "session": {
+            "n": 49,
+            "p50": 10.4,
+            "p95": 214.3,
+            "p99": 261.2,
+            "max": 261.2
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 258.8,
+            "p95": 371,
+            "p99": 371,
+            "max": 371
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 3031,
+            "wallMs": 8006,
+            "cpuUtilization": 0.38,
+            "rssMb": 160,
+            "eventLoopDelayMeanMs": 19.73,
+            "eventLoopDelayP99Ms": 256.25,
+            "eventLoopDelayMaxMs": 297.53,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.16,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 250,
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0.25,
+          "crud": {
+            "n": 96,
+            "p50": 5.7,
+            "p95": 10.8,
+            "p99": 14.7,
+            "max": 14.7
+          },
+          "session": {
+            "n": 48,
+            "p50": 8.6,
+            "p95": 17.3,
+            "p99": 23.6,
+            "max": 23.6
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 259.2,
+            "p95": 295.1,
+            "p99": 295.1,
+            "max": 295.1
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 3234,
+            "wallMs": 8010,
+            "cpuUtilization": 0.4,
+            "rssMb": 194,
+            "eventLoopDelayMeanMs": 15.2,
+            "eventLoopDelayP99Ms": 24.53,
+            "eventLoopDelayMaxMs": 26.48,
+            "dbAcquireWaitP95Ms": 0.1,
+            "dbAcquireWaitMaxMs": 0.2,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.15
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 500,
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0.5,
+          "crud": {
+            "n": 95,
+            "p50": 40.7,
+            "p95": 473,
+            "p99": 594.7,
+            "max": 594.7
+          },
+          "session": {
+            "n": 47,
+            "p50": 12.8,
+            "p95": 482.8,
+            "p99": 503.9,
+            "max": 503.9
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 506.6,
+            "p95": 537.7,
+            "p99": 537.7,
+            "max": 537.7
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 4813,
+            "wallMs": 8002,
+            "cpuUtilization": 0.6,
+            "rssMb": 159,
+            "eventLoopDelayMeanMs": 29.94,
+            "eventLoopDelayP99Ms": 506.99,
+            "eventLoopDelayMaxMs": 533.99,
+            "dbAcquireWaitP95Ms": 2.81,
+            "dbAcquireWaitMaxMs": 5.94,
+            "poolMaxWaiting": 4,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 500,
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "offeredCpuLoad": 0.5,
+          "crud": {
+            "n": 97,
+            "p50": 5.4,
+            "p95": 10.1,
+            "p99": 18.1,
+            "max": 18.1
+          },
+          "session": {
+            "n": 48,
+            "p50": 7.8,
+            "p95": 13.7,
+            "p99": 14.9,
+            "max": 14.9
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 8,
+            "p50": 507.9,
+            "p95": 545.6,
+            "p99": 545.6,
+            "max": 545.6
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 4906,
+            "wallMs": 8015,
+            "cpuUtilization": 0.61,
+            "rssMb": 194,
+            "eventLoopDelayMeanMs": 15.56,
+            "eventLoopDelayP99Ms": 24.46,
+            "eventLoopDelayMaxMs": 25.41,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.22,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.07
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 0,
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 0,
+          "crud": {
+            "n": 97,
+            "p50": 5.4,
+            "p95": 11.6,
+            "p99": 14.9,
+            "max": 14.9
+          },
+          "session": {
+            "n": 49,
+            "p50": 8.9,
+            "p95": 14.8,
+            "p99": 33.2,
+            "max": 33.2
+          },
+          "today": {
+            "sent": 32,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 32,
+            "p50": 5.3,
+            "p95": 16.6,
+            "p99": 29.3,
+            "max": 29.3
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 1110,
+            "wallMs": 8006,
+            "cpuUtilization": 0.14,
+            "rssMb": 105,
+            "eventLoopDelayMeanMs": 15.02,
+            "eventLoopDelayP99Ms": 24.46,
+            "eventLoopDelayMaxMs": 25.74,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.27,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 100,
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 0.4,
+          "crud": {
+            "n": 97,
+            "p50": 7.8,
+            "p95": 96.6,
+            "p99": 106.5,
+            "max": 106.5
+          },
+          "session": {
+            "n": 48,
+            "p50": 11.1,
+            "p95": 105,
+            "p99": 118.1,
+            "max": 118.1
+          },
+          "today": {
+            "sent": 32,
+            "unfinishedWhenWindowClosed": 1,
+            "n": 32,
+            "p50": 106.4,
+            "p95": 109.8,
+            "p99": 111.2,
+            "max": 111.2
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 4062,
+            "wallMs": 8044,
+            "cpuUtilization": 0.5,
+            "rssMb": 162,
+            "eventLoopDelayMeanMs": 23.89,
+            "eventLoopDelayP99Ms": 110.3,
+            "eventLoopDelayMaxMs": 110.82,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.1,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 100,
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 0.4,
+          "crud": {
+            "n": 97,
+            "p50": 5,
+            "p95": 9.9,
+            "p99": 12.8,
+            "max": 12.8
+          },
+          "session": {
+            "n": 48,
+            "p50": 7.1,
+            "p95": 15,
+            "p99": 19.3,
+            "max": 19.3
+          },
+          "today": {
+            "sent": 32,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 32,
+            "p50": 106,
+            "p95": 113.8,
+            "p99": 115.5,
+            "max": 115.5
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 4172,
+            "wallMs": 8018,
+            "cpuUtilization": 0.52,
+            "rssMb": 197,
+            "eventLoopDelayMeanMs": 14.98,
+            "eventLoopDelayP99Ms": 23.53,
+            "eventLoopDelayMaxMs": 25.3,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.23,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.01
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 250,
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 1,
+          "crud": {
+            "n": 100,
+            "p50": 375.9,
+            "p95": 666.7,
+            "p99": 775.4,
+            "max": 780.2
+          },
+          "session": {
+            "n": 49,
+            "p50": 507,
+            "p95": 754.8,
+            "p99": 791.1,
+            "max": 791.1
+          },
+          "today": {
+            "sent": 31,
+            "unfinishedWhenWindowClosed": 2,
+            "n": 32,
+            "p50": 541.1,
+            "p95": 698.4,
+            "p99": 710.4,
+            "max": 710.4
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 8484,
+            "wallMs": 8529,
+            "cpuUtilization": 0.99,
+            "rssMb": 159,
+            "eventLoopDelayMeanMs": 146.88,
+            "eventLoopDelayP99Ms": 261.75,
+            "eventLoopDelayMaxMs": 263.59,
+            "dbAcquireWaitP95Ms": 252.05,
+            "dbAcquireWaitMaxMs": 254.94,
+            "poolMaxWaiting": 8,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 250,
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 1,
+          "crud": {
+            "n": 96,
+            "p50": 5.1,
+            "p95": 8.7,
+            "p99": 18.5,
+            "max": 18.5
+          },
+          "session": {
+            "n": 47,
+            "p50": 7.2,
+            "p95": 12,
+            "p99": 13.2,
+            "max": 13.2
+          },
+          "today": {
+            "sent": 32,
+            "unfinishedWhenWindowClosed": 1,
+            "n": 33,
+            "p50": 256,
+            "p95": 261.4,
+            "p99": 302.2,
+            "max": 302.2
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 8922,
+            "wallMs": 8120,
+            "cpuUtilization": 1.1,
+            "rssMb": 197,
+            "eventLoopDelayMeanMs": 15.32,
+            "eventLoopDelayP99Ms": 24.38,
+            "eventLoopDelayMaxMs": 25.43,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.09,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.02
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 500,
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 2,
+          "crud": {
+            "n": 107,
+            "p50": 5254,
+            "p95": 9019.5,
+            "p99": 9563,
+            "max": 9690
+          },
+          "session": {
+            "n": 54,
+            "p50": 8923.9,
+            "p95": 11245.2,
+            "p99": 11571.6,
+            "max": 11571.6
+          },
+          "today": {
+            "sent": 31,
+            "unfinishedWhenWindowClosed": 19,
+            "n": 34,
+            "p50": 5330.2,
+            "p95": 9371.4,
+            "p99": 9611.2,
+            "max": 9611.2
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 17297,
+            "wallMs": 17470,
+            "cpuUtilization": 0.99,
+            "rssMb": 165,
+            "eventLoopDelayMeanMs": 356.32,
+            "eventLoopDelayP99Ms": 1012.92,
+            "eventLoopDelayMaxMs": 1012.92,
+            "dbAcquireWaitP95Ms": 6098.52,
+            "dbAcquireWaitMaxMs": 7096.76,
+            "poolMaxWaiting": 95,
+            "workerQueueWaitP95Ms": null
+          }
+        },
+        {
+          "scenario": {
+            "burnMs": 500,
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "offeredCpuLoad": 2,
+          "crud": {
+            "n": 94,
+            "p50": 3.9,
+            "p95": 5.6,
+            "p99": 7,
+            "max": 7
+          },
+          "session": {
+            "n": 47,
+            "p50": 5.8,
+            "p95": 7.5,
+            "p99": 11.1,
+            "max": 11.1
+          },
+          "today": {
+            "sent": 31,
+            "unfinishedWhenWindowClosed": 2,
+            "n": 34,
+            "p50": 504.8,
+            "p95": 546.5,
+            "p99": 548.7,
+            "max": 548.7
+          },
+          "errors": 0,
+          "server": {
+            "cpuMs": 16812,
+            "wallMs": 8370,
+            "cpuUtilization": 2.01,
+            "rssMb": 200,
+            "eventLoopDelayMeanMs": 15.97,
+            "eventLoopDelayP99Ms": 24.85,
+            "eventLoopDelayMaxMs": 25.92,
+            "dbAcquireWaitP95Ms": 0.03,
+            "dbAcquireWaitMaxMs": 0.11,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 37.88
+          }
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "baseline (no compute): CRUD p95 stays under 50 ms and no request fails",
+      "status": "PASS",
+      "detail": {
+        "crud": {
+          "n": 97,
+          "p50": 5.4,
+          "p95": 11.6,
+          "p99": 14.9,
+          "max": 14.9
+        },
+        "session": {
+          "n": 49,
+          "p50": 8.9,
+          "p95": 14.8,
+          "p99": 33.2,
+          "max": 33.2
+        },
+        "errors": 0
+      }
+    },
+    {
+      "id": "M3",
+      "name": "inline compute blocks everything else: at 500 ms x 1/s, CRUD p95 is of the order of the compute time",
+      "status": "PASS",
+      "detail": {
+        "crud": {
+          "n": 95,
+          "p50": 40.7,
+          "p95": 473,
+          "p99": 594.7,
+          "max": 594.7
+        },
+        "session": {
+          "n": 47,
+          "p50": 12.8,
+          "p95": 482.8,
+          "p99": 503.9,
+          "max": 503.9
+        },
+        "eventLoopDelayMaxMs": 533.99
+      }
+    },
+    {
+      "id": "M4",
+      "name": "the same compute in a 2-thread worker pool keeps CRUD p95 under 50 ms",
+      "status": "PASS",
+      "detail": {
+        "crud": {
+          "n": 97,
+          "p50": 5.4,
+          "p95": 10.1,
+          "p99": 18.1,
+          "max": 18.1
+        },
+        "session": {
+          "n": 48,
+          "p50": 7.8,
+          "p95": 13.7,
+          "p99": 14.9,
+          "max": 14.9
+        },
+        "eventLoopDelayMaxMs": 25.41,
+        "todayP95": 545.6
+      }
+    }
+  ]
+}

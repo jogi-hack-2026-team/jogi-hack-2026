@@ -1,0 +1,6 @@
+node_modules
+.local
+results
+web-dist
+verify
+.env*

@@ -1,0 +1,104 @@
+[
+  {
+    "operation": "version",
+    "code": 0,
+    "stdout": "{\"Platform\":{\"Name\":\"Docker Desktop 4.81.0 (232925)\"},\"Version\":\"29.6.1\",\"ApiVersion\":\"1.55\",\"MinAPIVersion\":\"1.40\",\"Os\":\"linux\",\"Arch\":\"amd64\",\"Components\":[{\"Name\":\"Engine\",\"Version\":\"29.6.1\",\"Details\":{\"ApiVersion\":\"1.55\",\"Arch\":\"amd64\",\"BuildTime\":\"Fri Jun 26 11:41:04 2026\",\"Experimental\":\"false\",\"GitCommit\":\"8ec5ab3\",\"GoVersion\":\"go1.26.4\",\"KernelVersion\":\"6.18.40.1-microsoft-standard-WSL2\",\"MinAPIVersion\":\"1.40\",\"Module\":\"github.com/moby/moby/v2\",\"ModuleVersion\":\"v2.0.0+unknown\",\"Os\":\"linux\"}},{\"Name\":\"containerd\",\"Version\":\"v2.2.5\",\"Details\":{\"GitCommit\":\"e53c7c1516c3b2bff98eb76f1f4117477e6f4e66\"}},{\"Name\":\"runc\",\"Version\":\"1.3.6\",\"Details\":{\"GitCommit\":\"v1.3.6-0-g491b69ba\"}},{\"Name\":\"docker-init\",\"Version\":\"0.19.0\",\"Details\":{\"GitCommit\":\"de40ad0\"}}],\"GitCommit\":\"8ec5ab3\",\"GoVersion\":\"go1.26.4\",\"KernelVersion\":\"6.18.40.1-microsoft-standard-WSL2\",\"BuildTime\":\"2026-06-26T11:41:04.000000000+00:00\"}\n",
+    "stderr": ""
+  },
+  {
+    "operation": "pull",
+    "code": 0,
+    "stdout": "18-bookworm: Pulling from library/postgres\nddda533f81f8: Pulling fs layer\nd1c18bcbca3a: Pulling fs layer\na9bacfc8d232: Pulling fs layer\n0e6c3beb32b1: Pulling fs layer\n211cec8da20e: Pulling fs layer\n5178c10d12ba: Pulling fs layer\n980abddbe295: Pulling fs layer\nbdbb8057313b: Pulling fs layer\nc56d732b49fe: Pulling fs layer\n9dd6e8795674: Pulling fs layer\nc043c1caa591: Pulling fs layer\n6bd876b3b38f: Pulling fs layer\n980abddbe295: Download complete\nddda533f81f8: Download complete\na9bacfc8d232: Download complete\n9dd6e8795674: Download complete\nd1c18bcbca3a: Download complete\nbdbb8057313b: Download complete\n211cec8da20e: Download complete\n5178c10d12ba: Download complete\n6bd876b3b38f: Download complete\nc043c1caa591: Download complete\nc56d732b49fe: Download complete\n211cec8da20e: Pull complete\n8fb05e9dd616: Download complete\nc56d732b49fe: Pull complete\na9bacfc8d232: Pull complete\n07e468e1d065: Download complete\nc043c1caa591: Pull complete\nbdbb8057313b: Pull complete\n6bd876b3b38f: Pull complete\nd1c18bcbca3a: Pull complete\n0e6c3beb32b1: Download complete\n980abddbe295: Pull complete\n0e6c3beb32b1: Pull complete\n5178c10d12ba: Pull complete\nddda533f81f8: Pull complete\n9dd6e8795674: Pull complete\nDigest: sha256:3725f4e2499eef5134592b3b4ab79a543ed7f8e533b05b5b637af926630f6650\nStatus: Downloaded newer image for postgres:18-bookworm\ndocker.io/library/postgres:18-bookworm\n",
+    "stderr": ""
+  },
+  {
+    "operation": "build",
+    "code": 0,
+    "stdout": "",
+    "stderr": "#0 building with \"desktop-linux\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile.verification\n#1 transferring dockerfile: 43B 0.0s\n#1 transferring dockerfile: 771B 0.1s done\n#1 DONE 0.2s\n\n#2 [internal] load metadata for docker.io/library/node:24.21.0-bookworm-slim\n#2 ...\n\n#3 [auth] library/node:pull token for registry-1.docker.io\n#3 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/node:24.21.0-bookworm-slim\n#2 DONE 1.5s\n\n#4 [internal] load .dockerignore\n#4 transferring context: 90B 0.0s done\n#4 DONE 0.2s\n\n#5 [internal] load build context\n#5 DONE 0.0s\n\n#6 [build 1/8] FROM docker.io/library/node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6\n#6 resolve docker.io/library/node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 0.1s done\n#6 DONE 0.1s\n\n#5 [internal] load build context\n#5 transferring context: 167.49kB 0.0s done\n#5 DONE 0.1s\n\n#7 [build 2/8] WORKDIR /app\n#7 CACHED\n\n#8 [build 3/8] COPY package.json package-lock.json ./\n#8 DONE 1.6s\n\n#9 [build 4/8] RUN npm ci --no-audit --no-fund\n#9 ...\n\n#10 [runtime 4/8] RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund\n#10 25.83 \n#10 25.83 added 112 packages in 25s\n#10 25.84 npm notice\n#10 25.84 npm notice New major version of npm available! 11.19.0 -> 12.2.0\n#10 25.84 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0\n#10 25.84 npm notice To update run: npm install -g npm@12.2.0\n#10 25.84 npm notice\n#10 DONE 27.6s\n\n#9 [build 4/8] RUN npm ci --no-audit --no-fund\n#9 ...\n\n#11 [runtime 5/8] COPY src ./src\n#11 DONE 0.8s\n\n#9 [build 4/8] RUN npm ci --no-audit --no-fund\n#9 ...\n\n#12 [runtime 6/8] COPY migrations ./migrations\n#12 DONE 0.2s\n\n#9 [build 4/8] RUN npm ci --no-audit --no-fund\n#9 ...\n\n#13 [runtime 7/8] COPY container-start.mjs ./\n#13 DONE 0.2s\n\n#9 [build 4/8] RUN npm ci --no-audit --no-fund\n#9 49.21 \n#9 49.21 added 201 packages in 48s\n#9 49.21 npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:\n#9 49.21 npm warn install-scripts   @embedded-postgres/linux-x64@18.4.0-beta.17 (postinstall: node scripts/hydrate-symlinks.js)\n#9 49.21 npm warn install-scripts   node@24.21.0 (preinstall: node installArchSpecificPackage)\n#9 49.21 npm warn install-scripts\n#9 49.21 npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.\n#9 49.21 npm notice\n#9 49.21 npm notice New major version of npm available! 11.19.0 -> 12.2.0\n#9 49.21 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0\n#9 49.21 npm notice To update run: npm install -g npm@12.2.0\n#9 49.21 npm notice\n#9 DONE 50.2s\n\n#14 [build 5/8] COPY tsconfig.json ./\n#14 DONE 0.3s\n\n#15 [build 6/8] COPY web ./web\n#15 DONE 0.2s\n\n#16 [build 7/8] COPY src ./src\n#16 DONE 0.2s\n\n#17 [build 8/8] RUN npm run web:build\n#17 1.181 \n#17 1.181 > @jogi/architecture-verification@0.0.0 web:build\n#17 1.181 > vite build --config web/vite.config.ts\n#17 1.181 \n#17 1.693 vite v8.3.1 building client environment for production...\n#17 1.715 transforming...\n#17 1.860 ✓ 440 modules transformed.\n#17 1.973 rendering chunks...\n#17 2.073 computing gzip size...\n#17 2.081 web-dist/index.html                  0.34 kB │ gzip:   0.25 kB\n#17 2.081 web-dist/assets/index-Cby1Rzid.js  418.53 kB │ gzip: 131.45 kB\n#17 2.081 \n#17 2.088 ✓ built in 393ms\n#17 DONE 2.2s\n\n#18 [runtime 8/8] COPY --from=build /app/web-dist ./web-dist\n#18 DONE 0.2s\n\n#19 exporting to image\n#19 exporting layers\n#19 exporting layers 3.3s done\n#19 exporting manifest sha256:fd0df2d2adc63009ad6868a813206187ef3991e1dab52b3c7c1fc60c033d7908 0.1s done\n#19 exporting config sha256:406bdd1de469c80963a00eefee5c2f79646b40b20087ae562635d52827e31bf8 0.0s done\n#19 exporting attestation manifest sha256:e6844d4895ca4d639c321775e67bf54aea2d86e0263dd2662e679a9982f54965 0.1s done\n#19 exporting manifest list sha256:3a313fea55d21cfb6dc97ec281d633fbc45a16669fc0bed2bc668368d95feb7b\n#19 exporting manifest list sha256:3a313fea55d21cfb6dc97ec281d633fbc45a16669fc0bed2bc668368d95feb7b 0.1s done\n#19 naming to docker.io/library/future-roi-84-1790949206255:verification 0.0s done\n#19 unpacking to docker.io/library/future-roi-84-1790949206255:verification\n#19 unpacking to docker.io/library/future-roi-84-1790949206255:verification 1.9s done\n#19 DONE 5.6s\n\nView build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/xv097vsw6y00w0cop1j5r2ilp\n"
+  },
+  {
+    "operation": "image",
+    "code": 0,
+    "stdout": "\"sha256:3a313fea55d21cfb6dc97ec281d633fbc45a16669fc0bed2bc668368d95feb7b\" 100968993\n",
+    "stderr": ""
+  },
+  {
+    "operation": "image",
+    "code": 0,
+    "stdout": "[\"postgres@sha256:3725f4e2499eef5134592b3b4ab79a543ed7f8e533b05b5b637af926630f6650\"]\n",
+    "stderr": ""
+  },
+  {
+    "operation": "run",
+    "code": 0,
+    "stdout": "8df423b78e0d024564796034abe3010c9a165deeaa837f7e9037c23e8ff60047\n",
+    "stderr": ""
+  },
+  {
+    "operation": "exec",
+    "code": 2,
+    "stdout": "/var/run/postgresql:5432 - no response\n",
+    "stderr": ""
+  },
+  {
+    "operation": "exec",
+    "code": 2,
+    "stdout": "/var/run/postgresql:5432 - no response\n",
+    "stderr": ""
+  },
+  {
+    "operation": "exec",
+    "code": 0,
+    "stdout": "/var/run/postgresql:5432 - accepting connections\n",
+    "stderr": ""
+  },
+  {
+    "operation": "run",
+    "code": 0,
+    "stdout": "{\"authTablesCreated\":[\"user\",\"session\",\"account\",\"verification\",\"rateLimit\"],\"authColumnsAdded\":[],\"appMigrationsApplied\":[\"001_app.sql\"]}\n",
+    "stderr": "2026-10-02T13:54:57.420Z ERROR [Better Auth]: Database schema mismatch\n\n  Missing tables\n    user, session, account, verification, rateLimit\n\n  help: Run `npx auth migrate` to add the missing tables and columns.\n"
+  },
+  {
+    "operation": "run",
+    "code": 0,
+    "stdout": "03f2d8c712da7848dfec67bc4dfe76812d2fae078a6716e4154d95854d6d2272\n",
+    "stderr": ""
+  },
+  {
+    "operation": "inspect",
+    "code": 0,
+    "stdout": "future-roi-84-1790949206255\n",
+    "stderr": ""
+  },
+  {
+    "operation": "rm",
+    "code": 0,
+    "stdout": "future-roi-84-1790949206255-app\n",
+    "stderr": ""
+  },
+  {
+    "operation": "inspect",
+    "code": 0,
+    "stdout": "future-roi-84-1790949206255\n",
+    "stderr": ""
+  },
+  {
+    "operation": "rm",
+    "code": 0,
+    "stdout": "future-roi-84-1790949206255-db\n",
+    "stderr": ""
+  },
+  {
+    "operation": "image",
+    "code": 0,
+    "stdout": "future-roi-84-1790949206255\n",
+    "stderr": ""
+  },
+  {
+    "operation": "image",
+    "code": 0,
+    "stdout": "Untagged: future-roi-84-1790949206255:verification\nDeleted: sha256:3a313fea55d21cfb6dc97ec281d633fbc45a16669fc0bed2bc668368d95feb7b\n",
+    "stderr": ""
+  }
+]
