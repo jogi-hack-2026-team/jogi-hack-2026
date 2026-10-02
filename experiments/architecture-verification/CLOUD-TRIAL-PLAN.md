@@ -25,7 +25,7 @@ Supporting Artifact / Not a Source of Truth。2026-10-02。採択、課金、配
 | 終了 | LinuxコンテナでSIGTERM→処理中要求完了→pool解放→10秒以内終了を確認 |
 | 不要 | min 1、Redis、Cloud SQL、VPC connector、CDN、独自domain、メール、LLM、外部worker、Queueを追加しない |
 
-`candidate-1.7.7/Dockerfile.verification`はローカルLinuxでbuild/起動済み、runtime約101MB。認証/DBは成功したが、SIGTERM後10秒で終了せずexit137。[Linux結果](LINUX-2026-10-02.md)を採用ブロッカーとし、そのまま公開しない。Secret不足・productionの非HTTPSを拒否するgateは維持する。
+`candidate-1.7.7/Dockerfile.verification`はローカルLinuxでbuild/起動済み、runtime約101MB。認証/DBは成功。修正前SIGTERMはexit137、承認済み最小hook後は通常keep-alive/9条件で10秒以内exit0。[Linux結果](LINUX-2026-10-02.md)はローカル証拠であり、実Cloud/Engine/費用等の残条件を解消せず、そのまま公開しない。Secret不足・productionの非HTTPSを拒否するgateは維持する。
 
 ## 合成データと回数
 
@@ -63,4 +63,4 @@ Supporting Artifact / Not a Source of Truth。2026-10-02。採択、課金、配
 
 ローカルOrigin・429・session失効の修正後結果は[追加報告](FOLLOWUP-2026-10-02.md)に記録した。[Linux試験](LINUX-2026-10-02.md)はbuild/認証成功・終了失敗。Neon PITR、user/password復旧方針、実Engine、HTTPS/proxy/cold/warmは未実施のまま。
 
-追加のpool分離：修正版はapp max2＋auth max2から開始し、2instanceで計8接続。通常app5＋auth2なら2instanceで14接続。全poolの合算とNeon接続上限を確認する。Cloud Run承認の前にLinux終了失敗を調査・再試験する。
+追加のpool分離：修正版はapp max2＋auth max2から開始し、2instanceで計8接続。通常app5＋auth2なら2instanceで14接続。全poolの合算とNeon接続上限を確認する。Linux終了問題は最小hook後にローカル再試験済み。Cloud Runの実signal/TLS/proxy/CPU割当条件は別途、対象と費用の承認後に確認する。

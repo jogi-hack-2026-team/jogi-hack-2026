@@ -10,4 +10,4 @@ computing gzip size...
 web-dist/index.html                  0.34 kB │ gzip:   0.25 kB
 web-dist/assets/index-Cby1Rzid.js  418.53 kB │ gzip: 131.45 kB
 
-✓ built in 256ms
+✓ built in 502ms

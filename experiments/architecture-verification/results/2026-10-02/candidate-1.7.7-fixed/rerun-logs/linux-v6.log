@@ -1,0 +1,18 @@
+INFO  L-env  actual local Docker Linux environment
+PASS  L-build  official Node image, locked npm dependencies, SPA and runtime build
+INFO  L-pg-image  official PG digest
+INFO  L-pg-version  actual isolated Linux PostgreSQL version
+INFO  L-node-version  actual runtime Node version
+PASS  L-spa  one Node process serves SPA, deep route, JS and JSON API 404
+PASS  L-auth  only two synthetic identities register and protected cookie flow works
+PASS  L-db  owner creates, writes and reads DB-backed today
+PASS  L-isolation  other owner 404 and same-site different Origin 403
+PASS  L-logout  logout invalidates old Cookie and preserves multiple Set-Cookie rows
+PASS  L-rate  20 parallel attempts admit five; 429 wait is integer 1..60
+INFO  L-shutdown-phases  nonsecret shutdown phase trace
+PASS  L-SIGTERM  Linux SIGTERM during received in-flight worker request drains HTTP then exits 0 within 10s
+PASS  L-logs  app request logs exist and omit generated credential/Cookie values
+INFO  L-limits  local test scope
+
+local Linux Docker build/run/auth/SIGTERM: 9 pass, 0 fail, 6 info -> results/post-fix/v6-linux-container.json
+{"pass":9,"fail":0,"info":6}

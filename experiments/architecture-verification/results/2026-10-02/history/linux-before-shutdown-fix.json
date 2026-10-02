@@ -1,7 +1,7 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "title": "local Linux Docker build/run/auth/SIGTERM",
-  "at": "2026-10-02T14:47:41.537Z",
+  "at": "2026-10-02T14:21:05.819Z",
   "environment": {
     "node": "v24.21.0",
     "platform": "win32-x64",
@@ -10,8 +10,8 @@
     "totalMemGb": 15.6
   },
   "summary": {
-    "pass": 9,
-    "fail": 0,
+    "pass": 8,
+    "fail": 1,
     "info": 6
   },
   "checks": [
@@ -79,7 +79,7 @@
       "name": "official Node image, locked npm dependencies, SPA and runtime build",
       "status": "PASS",
       "detail": {
-        "metadata": "\"sha256:69919717461ec6adb578ad09373bc61ce5746ebecc3e2e1765d901b0f351b928\" 100969352"
+        "metadata": "\"sha256:2356f021639b30ec2bc81308b696eea5f69019d4c72c121e84b9e5d6b013f1df\" 100969203"
       }
     },
     {
@@ -164,29 +164,20 @@
         "phases": [
           "{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}",
           "{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-21\"}",
-          "{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}",
-          "{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}",
-          "{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}",
-          "{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}",
-          "{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}",
-          "{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}",
-          "{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}",
-          "{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}",
-          "{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}",
-          "{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}"
+          "{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}"
         ]
       }
     },
     {
       "id": "L-SIGTERM",
       "name": "Linux SIGTERM during received in-flight worker request drains HTTP then exits 0 within 10s",
-      "status": "PASS",
+      "status": "FAIL",
       "detail": {
         "received": true,
         "runningAtSignal": true,
         "response": 200,
-        "exitCode": 0,
-        "shutdownMs": 7179
+        "exitCode": 137,
+        "shutdownMs": 10940
       }
     },
     {

@@ -34,7 +34,7 @@ const base = (port: number, over: Record<string, string> = {}) => ({
   ...over,
 });
 
-type Attempt = { status: number; retryAfter: string | null };
+type Attempt = { status: number; retryAfter: string | null; sentAt: number; receivedAt: number };
 // A wait time a screen can show: whole seconds, at least 1 and never longer than the window.
 const validRetryAfter = (v: string | null) => v !== null && /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= WINDOW_SEC;
 const statuses = (a: Attempt[]) => a.map((x) => x.status);
@@ -42,13 +42,14 @@ const sameStatuses = (a: Attempt[], expected: number[]) => JSON.stringify(status
 
 const cred = newCredentials();
 async function attempt(url: string, xff: string | null, password = 'wrong-password-for-the-spike'): Promise<Attempt> {
+  const sentAt = Date.now();
   const res = await fetch(url + '/api/auth/sign-in/email', {
     method: 'POST',
     headers: { 'content-type': 'application/json', origin: url, ...(xff ? { 'x-forwarded-for': xff } : {}) },
     body: JSON.stringify({ email: cred.email, password }),
   });
   await res.arrayBuffer();
-  return { status: res.status, retryAfter: res.headers.get('x-retry-after') };
+  return { status: res.status, retryAfter: res.headers.get('x-retry-after'), sentAt, receivedAt: Date.now() };
 }
 const many = async (url: string, xff: string | null, n: number) => {
   const out: Attempt[] = [];
@@ -117,6 +118,8 @@ report.add(
 
 // The wait time must also be truthful: still limited just before it elapses, processed again once it has.
 if (validRetryAfter(last.retryAfter)) {
+  const storedWindow = (await admin.query('select count, "lastRequest" from "rateLimit" where key = $1', ['198.51.100.7|/sign-in/email'])).rows[0];
+  const dbWindowEndsAt = Number(storedWindow?.lastRequest) + WINDOW_SEC * 1000;
   const releaseAt = lastAt + Number(last.retryAfter) * 1000;
   await sleep(Math.max(0, releaseAt - 1500 - Date.now()));
   const justBefore = await attempt(s1.url, '198.51.100.7');
@@ -126,7 +129,10 @@ if (validRetryAfter(last.retryAfter)) {
     'R11',
     'the advertised wait is truthful: ~1.5 s before it elapses the IP is still limited, once it has elapsed both instances process attempts again',
     justBefore.status === 429 && validRetryAfter(justBefore.retryAfter) && Number(justBefore.retryAfter) <= 2 && sameStatuses(afterWindow, [401, 401]),
-    { advertisedSeconds: last.retryAfter, justBefore, afterWindowOnInstanceBThenA: statuses(afterWindow) },
+    { advertisedSeconds: last.retryAfter, lastAt, releaseAt, scheduledBeforeAt: releaseAt - 1500,
+      dbWindowEndsAt, beforeSentRelativeToDbExpiryMs: justBefore.sentAt - dbWindowEndsAt,
+      beforeReceivedRelativeToDbExpiryMs: justBefore.receivedAt - dbWindowEndsAt,
+      justBefore, afterWindowOnInstanceBThenA: afterWindow },
   );
 } else {
   report.add('R11', 'the advertised wait is truthful (not run: X-Retry-After was not a usable wait time)', false, { advertised: last.retryAfter });

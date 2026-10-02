@@ -1,7 +1,7 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "title": "verification-1 rate limiting",
-  "at": "2026-10-02T15:14:04.886Z",
+  "at": "2026-10-02T14:54:44.501Z",
   "environment": {
     "node": "v24.21.0",
     "platform": "win32-x64",
@@ -10,8 +10,8 @@
     "totalMemGb": 15.6
   },
   "summary": {
-    "pass": 11,
-    "fail": 0,
+    "pass": 10,
+    "fail": 1,
     "info": 2
   },
   "config": {
@@ -63,9 +63,7 @@
       "status": "PASS",
       "detail": {
         "status": 429,
-        "retryAfter": "60",
-        "sentAt": 1790953967752,
-        "receivedAt": 1790953967765
+        "retryAfter": "60"
       }
     },
     {
@@ -74,9 +72,7 @@
       "status": "PASS",
       "detail": {
         "status": 401,
-        "retryAfter": null,
-        "sentAt": 1790953967765,
-        "receivedAt": 1790953967932
+        "retryAfter": null
       }
     },
     {
@@ -98,9 +94,7 @@
       "status": "PASS",
       "detail": {
         "status": 429,
-        "retryAfter": "58",
-        "sentAt": 1790953970210,
-        "receivedAt": 1790953970327,
+        "retryAfter": "57",
         "retryAfterBeforeRestart": "60"
       }
     },
@@ -135,34 +129,16 @@
     {
       "id": "R11",
       "name": "the advertised wait is truthful: ~1.5 s before it elapses the IP is still limited, once it has elapsed both instances process attempts again",
-      "status": "PASS",
+      "status": "FAIL",
       "detail": {
         "advertisedSeconds": "60",
-        "lastAt": 1790953967743,
-        "releaseAt": 1790954027743,
-        "scheduledBeforeAt": 1790954026243,
-        "dbWindowEndsAt": 1790954027603,
-        "beforeSentRelativeToDbExpiryMs": -1357,
-        "beforeReceivedRelativeToDbExpiryMs": -1272,
         "justBefore": {
-          "status": 429,
-          "retryAfter": "2",
-          "sentAt": 1790954026246,
-          "receivedAt": 1790954026331
+          "status": 401,
+          "retryAfter": null
         },
         "afterWindowOnInstanceBThenA": [
-          {
-            "status": 401,
-            "retryAfter": null,
-            "sentAt": 1790954027752,
-            "receivedAt": 1790954027961
-          },
-          {
-            "status": 401,
-            "retryAfter": null,
-            "sentAt": 1790954027961,
-            "receivedAt": 1790954028125
-          }
+          401,
+          401
         ]
       }
     },
@@ -179,9 +155,9 @@
           401,
           429
         ],
-        "retryAfter": "179093612136629",
+        "retryAfter": "179093495202699",
         "lastRequestReturnedAs": "string",
-        "expectedFromTextConcatenation": 179093612136629,
+        "expectedFromTextConcatenation": 179093495202699,
         "note": "Explicit legacy-string negative control on Better Auth 1.7.7. Normal auth pool converts safely; this control computes lastRequest + window * 1000 as text concatenation."
       }
     },

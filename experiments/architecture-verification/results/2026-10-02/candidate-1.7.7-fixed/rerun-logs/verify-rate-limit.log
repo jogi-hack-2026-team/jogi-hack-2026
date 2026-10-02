@@ -2,6 +2,12 @@
 > @jogi/architecture-verification@0.0.0 verify:rate-limit
 > node verify/v1-rate-limit.ts
 
+2026-10-02T15:12:44.595Z ERROR [Better Auth]: Database schema mismatch
+
+  Missing tables
+    user, session, account, verification, rateLimit
+
+  help: Run `npx auth migrate` to add the missing tables and columns.
 PASS  R1  the first 5 sign-in attempts from one IP are processed, later ones get 429 with an X-Retry-After of 1..60 whole seconds
 INFO  R1b  rows written to the "rateLimit" table
 PASS  R2  while limited, even the correct password is refused (429) for that IP, with a valid X-Retry-After

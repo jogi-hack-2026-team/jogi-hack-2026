@@ -1,6 +1,6 @@
-# SIGTERM の原因切り分けと最小修正案
+# SIGTERM の原因切り分け・承認済み最小修正
 
-Supporting Artifact / Not a Source of Truth。終了処理の新規変更案は**未適用・未承認・未検証**。
+Supporting Artifact / Not a Source of Truth。最小onSend変更はユーザー承認後に隔離candidateへ適用し、通常keep-aliveと追加9条件で検証済み。後述の対照表は修正前の履歴。最新結果は[Linux結果](LINUX-2026-10-02.md)。
 
 通常の Linux worker800ms＋keep-alive 条件で、SIGTERM後の要求は200になるが HTTP server のcloseが終わらず10秒後exit137。非秘密traceはsignal受信→`app-close-start`→`pre-close`、接続数21。`http-server-closed`もworkerの`onClose`も到達せず、poolの終了はその後なので未到達。
 
@@ -16,7 +16,7 @@ Supporting Artifact / Not a Source of Truth。終了処理の新規変更案は*
 
 **原因分類は、非同期処理中のHTTP接続が応答後も持続し、HTTP closeの完了を妨げる条件。**正確なNode/Fastify内部の不具合位置は未確定。[Node24 HTTP close](https://nodejs.org/docs/latest-v24.x/api/http.html#serverclosecallback) と [Fastify close](https://fastify.dev/docs/latest/Reference/Server/#close) の既定動作では、idle接続を閉じ処理中要求を待つ。今回の観測ではその完了条件を満たさない。worker終了や両poolの解放を先に強制すると要求の途中切断やDB処理失敗になりうるので、その順序は維持する。
 
-最小案は `candidate-1.7.7/src/app.ts` の Fastify instance に、HTTP listenerが停止した後の処理中応答へ `Connection: close` を付けるhookを追加すること。**以下は差分案のみで、実装していない。**
+適用した最小修正は `candidate-1.7.7/src/app.ts` の Fastify instance に、HTTP listenerが停止した後の処理中応答へ `Connection: close` を付けるhookを追加すること。以下のhookを実装した。
 
 ```diff
  const app = Fastify(options).withTypeProvider<TypeBoxTypeProvider>();
@@ -26,6 +26,6 @@ Supporting Artifact / Not a Source of Truth。終了処理の新規変更案は*
 +});
 ```
 
-必要性は処理中HTTPの200完了と10秒以内の正常終了を両立するため。全接続の強制destroyやtimeout延長はしない。`onSend`登録範囲・HTTP/1.1応答・Fastify listener stateの時機は適用後に検証が必要。応答header送出後や別protocolの一般的対策を保証しない。別案はshutdown中の`onResponse`からidle接続のみを閉じることだが、Nodeのidle判定とhook時機を別途確認する必要があり、現時点で広げない。
+必要性は処理中HTTPの200完了と10秒以内の正常終了を両立するため。全接続の強制destroyやtimeout延長はしない。通常keep-aliveのHTTP/1.1処理中応答・listener停止時機・処理完了後の全resource終了を実測した。応答header送出後や別protocolの一般的対策を保証しない。別案はshutdown中の`onResponse`からidle接続のみを閉じることだが、Nodeのidle判定とhook時機を別途確認する必要があり、現時点で広げない。
 
-最小承認は、この隔離candidateだけへの終了hookの変更と同じ合成Linux回帰の再実行。3点のauth修正、Product仕様、クラウド設定・deploy・課金の変更を含まない。承認後は通常keep-alive worker条件を少なくとも3回、処理前/中/後のSIGTERM、複数の処理中要求、Cookie/複数Set-Cookie・認証/DB/rate-limit回帰、timeout10秒の維持を確認する。成功までは採用ブロッカーを解除しない。
+承認後のv6は9 PASS/0 FAIL、v7は29 PASS/0 FAIL。待ち時間延長・判定弱化なし。詳細、失敗履歴、fixture時機の変更、限定条件は[Linux結果](LINUX-2026-10-02.md)。この条件の終了問題を解消した範囲に留め、Cloud Run本番適合・全protocol・実Engineの証拠にしない。新しいクラウド操作/費用/採用の承認は得ていない。

@@ -1,7 +1,7 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "title": "post-fix positive and negative regressions",
-  "at": "2026-10-02T14:02:43.285Z",
+  "at": "2026-10-02T15:14:31.307Z",
   "environment": {
     "node": "v24.21.0",
     "platform": "win32-x64",
@@ -265,12 +265,12 @@
         "fetchRejected": true,
         "requests": [
           {
-            "id": "36560.7",
+            "id": "35736.7",
             "method": "POST",
             "url": "http://127.0.0.1:3290/api/goals"
           },
           {
-            "id": "82495496D4B198DFF9A4A3FF25F89ABC",
+            "id": "5EE3182560A1C7897D0A867C5D35CBF0",
             "method": "OPTIONS",
             "url": "http://127.0.0.1:3290/api/goals",
             "cookie": false,
@@ -296,7 +296,7 @@
         "fetchRejected": true,
         "requests": [
           {
-            "id": "36560.8",
+            "id": "35736.8",
             "method": "POST",
             "url": "http://127.0.0.1:3290/api/goals",
             "cookie": true,
@@ -313,7 +313,7 @@
       "detail": {
         "requests": [
           {
-            "id": "A0B88387D1CDE563BD8A995DCB86A969",
+            "id": "7D522A974A0B4F1B000617759070ABB1",
             "method": "POST",
             "url": "http://127.0.0.1:3290/api/goals",
             "status": 403,
@@ -331,12 +331,12 @@
         "fetchRejected": true,
         "requests": [
           {
-            "id": "5924.3",
+            "id": "26796.3",
             "method": "POST",
             "url": "http://127.0.0.1:3290/api/goals"
           },
           {
-            "id": "20D8EAE0A2FB06E508888F46F6B8E85E",
+            "id": "E670F5B8CE722E9B6F945EE991CFD572",
             "method": "OPTIONS",
             "url": "http://127.0.0.1:3290/api/goals",
             "cookie": false,
@@ -362,7 +362,7 @@
         "fetchRejected": true,
         "requests": [
           {
-            "id": "5924.4",
+            "id": "26796.4",
             "method": "POST",
             "url": "http://127.0.0.1:3290/api/goals",
             "cookie": false,
@@ -381,7 +381,7 @@
       "detail": {
         "requests": [
           {
-            "id": "3784CBDD9F75336CA6740ECE3CE3CCEA",
+            "id": "A3C0D830B18E4ADA706D3FDC2C7DCB3D",
             "method": "POST",
             "url": "http://127.0.0.1:3290/api/goals",
             "status": 403,

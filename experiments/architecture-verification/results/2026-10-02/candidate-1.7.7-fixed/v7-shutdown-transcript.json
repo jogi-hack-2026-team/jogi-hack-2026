@@ -1,0 +1,1485 @@
+[
+  {
+    "args": [
+      "version",
+      "--format",
+      "{{json .Server}}"
+    ],
+    "code": 0,
+    "stdout": "{\"Platform\":{\"Name\":\"Docker Desktop 4.81.0 (232925)\"},\"Version\":\"29.6.1\",\"ApiVersion\":\"1.55\",\"MinAPIVersion\":\"1.40\",\"Os\":\"linux\",\"Arch\":\"amd64\",\"Components\":[{\"Name\":\"Engine\",\"Version\":\"29.6.1\",\"Details\":{\"ApiVersion\":\"1.55\",\"Arch\":\"amd64\",\"BuildTime\":\"Fri Jun 26 11:41:04 2026\",\"Experimental\":\"false\",\"GitCommit\":\"8ec5ab3\",\"GoVersion\":\"go1.26.4\",\"KernelVersion\":\"6.18.40.1-microsoft-standard-WSL2\",\"MinAPIVersion\":\"1.40\",\"Module\":\"github.com/moby/moby/v2\",\"ModuleVersion\":\"v2.0.0+unknown\",\"Os\":\"linux\"}},{\"Name\":\"containerd\",\"Version\":\"v2.2.5\",\"Details\":{\"GitCommit\":\"e53c7c1516c3b2bff98eb76f1f4117477e6f4e66\"}},{\"Name\":\"runc\",\"Version\":\"1.3.6\",\"Details\":{\"GitCommit\":\"v1.3.6-0-g491b69ba\"}},{\"Name\":\"docker-init\",\"Version\":\"0.19.0\",\"Details\":{\"GitCommit\":\"de40ad0\"}}],\"GitCommit\":\"8ec5ab3\",\"GoVersion\":\"go1.26.4\",\"KernelVersion\":\"6.18.40.1-microsoft-standard-WSL2\",\"BuildTime\":\"2026-06-26T11:41:04.000000000+00:00\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "build",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "-f",
+      "Dockerfile.verification",
+      "-t",
+      "future-roi-84-shutdown-1790953777822:verification",
+      "."
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": "#0 building with \"default\" instance using docker driver\n\n#1 [internal] load build definition from Dockerfile.verification\n#1 transferring dockerfile: 771B 0.0s done\n#1 DONE 0.1s\n\n#2 [internal] load metadata for docker.io/library/node:24.21.0-bookworm-slim\n#2 ...\n\n#3 [auth] library/node:pull token for registry-1.docker.io\n#3 DONE 0.0s\n\n#2 [internal] load metadata for docker.io/library/node:24.21.0-bookworm-slim\n#2 DONE 1.6s\n\n#4 [internal] load .dockerignore\n#4 transferring context: 90B done\n#4 DONE 0.1s\n\n#5 [build 1/8] FROM docker.io/library/node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6\n#5 resolve docker.io/library/node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 0.1s done\n#5 DONE 0.1s\n\n#6 [internal] load build context\n#6 transferring context: 168.70kB 0.1s done\n#6 DONE 0.2s\n\n#7 [build 8/8] RUN npm run web:build\n#7 CACHED\n\n#8 [build 4/8] RUN npm ci --no-audit --no-fund\n#8 CACHED\n\n#9 [build 6/8] COPY web ./web\n#9 CACHED\n\n#10 [build 3/8] COPY package.json package-lock.json ./\n#10 CACHED\n\n#11 [runtime 5/8] COPY src ./src\n#11 CACHED\n\n#12 [build 7/8] COPY src ./src\n#12 CACHED\n\n#13 [runtime 4/8] RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund\n#13 CACHED\n\n#14 [runtime 7/8] COPY container-start.mjs ./\n#14 CACHED\n\n#15 [build 2/8] WORKDIR /app\n#15 CACHED\n\n#16 [runtime 6/8] COPY migrations ./migrations\n#16 CACHED\n\n#17 [build 5/8] COPY tsconfig.json ./\n#17 CACHED\n\n#18 [runtime 8/8] COPY --from=build /app/web-dist ./web-dist\n#18 CACHED\n\n#19 exporting to image\n#19 exporting layers done\n#19 exporting manifest sha256:14efc6c6010f4c42d4f1be90b93c14b3062f8f8221b826837397996c5024bbf7 0.0s done\n#19 exporting config sha256:14750f41106cc28cd50e660fd64b2cdd1321782eadb79c7b0d49aaabfe2606af 0.0s done\n#19 exporting attestation manifest sha256:caf315f1413cd623d359f882a8580a2031c707203e9c5022e9731afbf74653df 0.1s done\n#19 exporting manifest list sha256:a7c21fbdc3375dce441f0504c036b4f8c78f33cfbff02922fe36a9ac32dbbd3f\n#19 exporting manifest list sha256:a7c21fbdc3375dce441f0504c036b4f8c78f33cfbff02922fe36a9ac32dbbd3f 0.0s done\n#19 naming to docker.io/library/future-roi-84-shutdown-1790953777822:verification done\n#19 unpacking to docker.io/library/future-roi-84-shutdown-1790953777822:verification\n#19 unpacking to docker.io/library/future-roi-84-shutdown-1790953777822:verification 3.8s done\n#19 DONE 4.2s\n\nView build details: docker-desktop://dashboard/build/default/default/7wb12a04q0w0zbuh3g3o95h50\n"
+  },
+  {
+    "args": [
+      "image",
+      "inspect",
+      "--format",
+      "{{json .Id}} {{json .Size}}",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "\"sha256:a7c21fbdc3375dce441f0504c036b4f8c78f33cfbff02922fe36a9ac32dbbd3f\" 100969361\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822-db.env",
+      "--tmpfs",
+      "/var/lib/postgresql:rw",
+      "-p",
+      "127.0.0.1:3390:8080",
+      "postgres:18-bookworm"
+    ],
+    "code": 0,
+    "stdout": "3e63e38f73dde1602ac67023ee015aa8b576a9c7215c9f72eef0a881c031ed3b\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select 1"
+    ],
+    "code": 2,
+    "stdout": "",
+    "stderr": "psql: error: connection to server on socket \"/var/run/postgresql/.s.PGSQL.5432\" failed: No such file or directory\n\tIs the server running locally and accepting connections on that socket?\n"
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select 1"
+    ],
+    "code": 2,
+    "stdout": "",
+    "stderr": "psql: error: connection to server on socket \"/var/run/postgresql/.s.PGSQL.5432\" failed: No such file or directory\n\tIs the server running locally and accepting connections on that socket?\n"
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select 1"
+    ],
+    "code": 2,
+    "stdout": "",
+    "stderr": "psql: error: connection to server on socket \"/var/run/postgresql/.s.PGSQL.5432\" failed: FATAL:  database \"future_roi_spike\" does not exist\n"
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select 1"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "--rm",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification",
+      "node",
+      "--input-type=module",
+      "--eval",
+      "import{createPool,createAuthPool}from'./src/pool.ts';import{createAuth}from'./src/auth.ts';import{migrate}from'./src/migrate.ts';const p=createPool({connectionString:process.env.DATABASE_URL,max:2,int8:'string'}),a=createAuthPool({connectionString:process.env.DATABASE_URL,max:2});try{await migrate(p,createAuth({pool:a,secret:process.env.BETTER_AUTH_SECRET,baseURL:process.env.BASE_URL}));}finally{await p.end();await a.end();}"
+    ],
+    "code": 0,
+    "stdout": "",
+    "stderr": "2026-10-02T15:09:55.336Z ERROR [Better Auth]: Database schema mismatch\n\n  Missing tables\n    user, session, account, verification, rateLimit\n\n  help: Run `npx auth migrate` to add the missing tables and columns.\n"
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "1a122b162fafa8639b295d0d61de26886cfb58f32e722432de7feaa18592d062\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:09:56.269476603Z\",\"FinishedAt\":\"2026-10-02T15:10:00.687216994Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "88274fe203ac5ab7a57a9048fb57fd142df118b66a350455f423a950ab7d495c\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953803087,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953803087,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953803323,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59256},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803355,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":29.270696000000044,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803373,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59276},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803412,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59288},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803414,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59294},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803416,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59266},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803417,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59290},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803440,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59300},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803442,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59310},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803443,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59312},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803451,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59314},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803456,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59320},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803488,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":114.2581090000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803498,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":57.70238599999993,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803502,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":89.89529799999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803504,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":61.007102999999915,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803505,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":88.8809920000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803506,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":91.48948599999994,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803507,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":56.05745200000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803508,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":52.13455799999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803509,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":91.66499900000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803510,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":68.50383099999999,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:01.800254975Z\",\"FinishedAt\":\"2026-10-02T15:10:03.895445658Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953803087,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953803087,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953803323,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59256},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803355,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":29.270696000000044,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803373,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59276},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803412,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59288},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803414,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59294},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803416,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59266},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803417,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59290},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803440,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59300},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803442,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59310},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803443,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59312},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803451,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59314},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803456,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59320},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953803488,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":114.2581090000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803498,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":57.70238599999993,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803502,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":89.89529799999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803504,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":61.007102999999915,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803505,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":88.8809920000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803506,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":91.48948599999994,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803507,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":56.05745200000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803508,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":52.13455799999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803509,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":91.66499900000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953803510,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":68.50383099999999,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 30, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "1e197ff22bab43b6af408f8cd4411665a0bfafc24c662112f7e1f5330c60961c\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953806857,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953806858,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953806879,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59384},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806894,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":14.602991999999858,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953806909,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59394},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806942,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59402},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806950,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59408},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806952,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59410},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806953,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59424},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806955,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59434},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59450},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59454},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806959,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59458},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806960,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59460},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806998,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":89.13100399999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807006,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":49.11890200000016,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807008,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":50.64095099999986,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807010,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":51.04458199999999,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807011,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":61.484455000000025,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807012,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":70.10092899999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807012,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":51.65419500000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807013,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":61.53563299999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807015,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":59.124487000000045,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807015,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":61.84199200000012,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953806857,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953806858,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953806879,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59384},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806894,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":14.602991999999858,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953806909,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59394},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806942,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59402},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806950,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59408},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806952,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59410},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806953,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59424},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806955,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59434},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59450},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59454},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806959,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59458},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806960,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59460},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806998,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":89.13100399999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807006,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":49.11890200000016,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807008,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":50.64095099999986,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807010,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":51.04458199999999,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807011,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":61.484455000000025,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807012,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":70.10092899999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807012,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":51.65419500000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807013,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":61.53563299999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807015,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":59.124487000000045,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807015,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":61.84199200000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807159,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59384},\"msg\":\"incoming request\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:05.551670476Z\",\"FinishedAt\":\"2026-10-02T15:10:09.231185948Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953806857,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953806858,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953806879,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59384},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806894,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":14.602991999999858,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953806909,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59394},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806942,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59402},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806950,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59408},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806952,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59410},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806953,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59424},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806955,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59434},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59450},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59454},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806959,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59458},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806960,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59460},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953806998,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":89.13100399999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807006,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":49.11890200000016,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807008,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":50.64095099999986,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807010,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":51.04458199999999,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807011,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":61.484455000000025,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807012,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":70.10092899999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807012,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":51.65419500000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807013,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":61.53563299999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807015,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":59.124487000000045,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807015,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":61.84199200000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953807159,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":59384},\"msg\":\"incoming request\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"level\":30,\"time\":1790953809205,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"res\":{\"statusCode\":200},\"responseTime\":2045.70478,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 30, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "921a92690991c493105c13bf751379bf31f74bc7f23737dd7563ddf5ada49c94\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953812529,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953812529,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953812567,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44634},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812589,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":20.621675000000096,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812605,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44636},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812639,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44646},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812641,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44658},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812642,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44664},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812644,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44678},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812645,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44690},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812646,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44702},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812647,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44708},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812648,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44716},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812649,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44724},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812688,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":83.16522699999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812696,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":50.44747100000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812699,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":59.77183500000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812701,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":54.49215699999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812703,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":60.00377800000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812703,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":62.57455699999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812704,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":56.05239400000005,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812705,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":56.067224000000124,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812706,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":62.23723300000006,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812707,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":61.720325,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953812529,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953812529,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953812567,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44634},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812589,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":20.621675000000096,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812605,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44636},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812639,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44646},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812641,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44658},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812642,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44664},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812644,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44678},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812645,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44690},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812646,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44702},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812647,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44708},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812648,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44716},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812649,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44724},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812688,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":83.16522699999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812696,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":50.44747100000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812699,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":59.77183500000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812701,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":54.49215699999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812703,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":60.00377800000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812703,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":62.57455699999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812704,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":56.05239400000005,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812705,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":56.067224000000124,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812706,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":62.23723300000006,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812707,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":61.720325,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812875,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44634},\"msg\":\"incoming request\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:10.998416676Z\",\"FinishedAt\":\"2026-10-02T15:10:14.950188563Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953812529,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953812529,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953812567,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44634},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812589,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":20.621675000000096,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812605,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44636},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812639,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44646},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812641,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44658},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812642,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44664},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812644,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44678},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812645,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44690},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812646,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44702},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812647,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44708},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812648,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44716},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812649,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44724},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953812688,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":83.16522699999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812696,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":50.44747100000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812699,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":59.77183500000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812701,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":54.49215699999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812703,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":60.00377800000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812703,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":62.57455699999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812704,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":56.05239400000005,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812705,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":56.067224000000124,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812706,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":62.23723300000006,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812707,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":61.720325,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953812875,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44634},\"msg\":\"incoming request\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"level\":30,\"time\":1790953814923,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"res\":{\"statusCode\":200},\"responseTime\":2048.108793,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 30, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "208ba8c4784aeb5f38a9d5768868564d94d4401776bffb490e55e3cc83c8c5e2\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953818430,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953818430,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953818693,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44764},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818707,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.688525000000027,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818721,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44766},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818757,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44772},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818758,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44774},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818767,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44776},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818769,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44778},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818770,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44780},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818772,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44788},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818773,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44792},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818773,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44794},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818774,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44804},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818817,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":95.66938700000014,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818826,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":53.31958900000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818830,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":62.156611999999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818832,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":75.09366399999999,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818835,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":61.9434339999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818836,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":62.008736,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818836,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":78.20123200000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818838,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":63.38400700000011,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818839,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":69.16071199999988,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818840,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":71.44063899999992,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select count(*) from pg_stat_activity where datname=current_database() and wait_event='PgSleep'"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953818430,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953818430,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953818693,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44764},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818707,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.688525000000027,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818721,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44766},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818757,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44772},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818758,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44774},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818767,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44776},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818769,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44778},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818770,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44780},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818772,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44788},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818773,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44792},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818773,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44794},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818774,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44804},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818817,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":95.66938700000014,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818826,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":53.31958900000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818830,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":62.156611999999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818832,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":75.09366399999999,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818835,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":61.9434339999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818836,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":62.008736,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818836,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":78.20123200000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818838,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":63.38400700000011,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818839,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":69.16071199999988,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818840,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":71.44063899999992,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953819335,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44772},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953819338,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-d\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44764},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953819339,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-e\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44766},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953819341,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-f\",\"req\":{\"method\":\"PUT\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/logs/2026-10-03\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44774},\"msg\":\"incoming request\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select count(*) from pg_stat_activity where datname=current_database() and wait_event_type='Lock'"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "begin; select 1 from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03' for update; select pg_sleep(4); commit;"
+    ],
+    "code": 0,
+    "stdout": "BEGIN\n1\n\nCOMMIT\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:16.8507068Z\",\"FinishedAt\":\"2026-10-02T15:10:25.403958089Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953818430,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953818430,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953818693,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44764},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818707,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.688525000000027,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818721,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44766},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818757,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44772},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818758,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44774},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818767,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44776},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818769,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44778},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818770,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44780},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818772,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44788},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818773,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44792},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818773,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44794},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818774,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44804},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953818817,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":95.66938700000014,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818826,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":53.31958900000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818830,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":62.156611999999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818832,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":75.09366399999999,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818835,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":61.9434339999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818836,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":62.008736,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818836,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":78.20123200000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818838,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":63.38400700000011,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818839,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":69.16071199999988,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953818840,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":71.44063899999992,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953819335,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44772},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953819338,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-d\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44764},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953819339,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-e\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/today\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44766},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953819341,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-f\",\"req\":{\"method\":\"PUT\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/logs/2026-10-03\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":44774},\"msg\":\"incoming request\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"level\":30,\"time\":1790953821397,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"res\":{\"statusCode\":200},\"responseTime\":2061.4771320000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953823300,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-f\",\"res\":{\"statusCode\":200},\"responseTime\":3959.559435,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953823381,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-d\",\"res\":{\"statusCode\":200},\"responseTime\":4043.2440500000002,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953825379,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-e\",\"res\":{\"statusCode\":200},\"responseTime\":6042.953853000001,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 31, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "8ecac7f6ee8012a556bea42d2da2dbee94bb6d435af920609a53331bd0463145\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953828956,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953828957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953829169,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40280},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829191,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":20.72121900000002,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829206,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40296},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829264,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40310},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829267,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40326},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829279,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40336},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829282,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40338},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829284,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40344},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829286,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40358},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829288,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40362},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829291,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40368},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829301,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40370},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829359,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":152.8879599999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829374,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":90.16648299999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829378,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":89.42454199999975,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829386,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":121.40685300000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829389,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":97.82449100000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829391,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":108.95903800000019,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829392,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":125.0086080000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829393,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":114.4077400000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829395,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":93.15604799999983,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829397,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":110.73153899999988,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select count(*) from pg_stat_activity where datname=current_database() and wait_event='PgSleep'"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953828956,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953828957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953829169,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40280},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829191,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":20.72121900000002,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829206,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40296},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829264,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40310},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829267,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40326},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829279,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40336},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829282,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40338},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829284,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40344},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829286,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40358},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829288,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40362},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829291,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40368},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829301,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40370},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829359,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":152.8879599999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829374,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":90.16648299999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829378,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":89.42454199999975,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829386,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":121.40685300000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829389,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":97.82449100000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829391,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":108.95903800000019,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829392,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":125.0086080000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829393,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":114.4077400000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829395,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":93.15604799999983,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829397,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":110.73153899999988,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953830069,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"PUT\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/logs/2026-10-03\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40280},\"msg\":\"incoming request\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select count(*) from pg_stat_activity where datname=current_database() and wait_event_type='Lock'"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "begin; select 1 from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03' for update; select pg_sleep(4); commit;"
+    ],
+    "code": 0,
+    "stdout": "BEGIN\n1\n\nCOMMIT\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:27.101758034Z\",\"FinishedAt\":\"2026-10-02T15:10:34.062251898Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953828956,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953828957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953829169,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40280},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829191,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":20.72121900000002,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829206,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40296},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829264,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40310},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829267,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40326},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829279,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40336},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829282,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40338},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829284,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40344},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829286,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40358},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829288,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40362},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829291,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40368},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829301,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40370},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953829359,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":152.8879599999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829374,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":90.16648299999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829378,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":89.42454199999975,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829386,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":121.40685300000018,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829389,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":97.82449100000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829391,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":108.95903800000019,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829392,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":125.0086080000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829393,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":114.4077400000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829395,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":93.15604799999983,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953829397,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":110.73153899999988,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953830069,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"PUT\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/logs/2026-10-03\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40280},\"msg\":\"incoming request\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"level\":30,\"time\":1790953834034,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"res\":{\"statusCode\":200},\"responseTime\":3964.9946349999996,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 32, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "0fe5c239b5596d8e8b94e6e802025591ea635ef5a3c3e27aebfbb566a28d6a6d\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953837001,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953837002,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953837165,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40418},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837176,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":10.94408999999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837185,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40430},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837210,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40436},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837212,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40446},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837213,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40450},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837220,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40452},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837222,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40468},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837223,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40480},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837224,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40482},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837224,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40484},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837225,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40500},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837259,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":73.21065199999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837265,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":42.18947400000002,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837267,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":55.13646000000017,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837269,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":58.678247000000056,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837271,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":47.440252999999984,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837272,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":47.08009600000014,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837272,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":59.271580000000085,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837273,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":47.73232200000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837274,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":53.23210000000017,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837274,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":52.128344999999854,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:35.619708217Z\",\"FinishedAt\":\"2026-10-02T15:10:37.601669212Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953837001,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953837002,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953837165,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40418},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837176,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":10.94408999999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837185,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40430},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837210,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40436},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837212,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40446},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837213,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40450},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837220,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40452},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837222,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40468},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837223,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40480},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837224,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40482},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837224,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40484},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837225,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":40500},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953837259,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":73.21065199999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837265,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":42.18947400000002,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837267,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":55.13646000000017,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837269,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":58.678247000000056,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837271,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":47.440252999999984,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837272,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":47.08009600000014,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837272,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":59.271580000000085,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837273,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":47.73232200000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837274,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":53.23210000000017,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953837274,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":52.128344999999854,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"worker-close-done\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 32, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "3b39af06ace5a9fc32fb0abac19215abfbeab88800cb24d91261bb9b6033ec17\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953840446,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953840446,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953840673,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34038},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840687,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.071429999999964,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840700,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34050},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840739,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34048},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840747,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34066},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840748,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34096},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840749,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34080},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840750,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34106},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840752,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34116},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840754,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34130},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840756,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34140},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840758,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34144},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840809,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":107.70235600000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840818,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":78.19129500000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840820,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":73.39681199999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840821,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":68.87740299999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840823,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":69.338346,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840824,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":68.15028899999993,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840825,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":76.96080700000016,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840826,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":68.16527399999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840828,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":78.13010000000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840829,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":78.01518899999996,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:39.150390856Z\",\"FinishedAt\":\"2026-10-02T15:10:41.284820671Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953840446,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953840446,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953840673,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34038},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840687,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.071429999999964,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840700,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34050},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840739,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34048},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840747,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34066},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840748,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34096},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840749,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34080},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840750,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34106},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840752,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34116},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840754,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34130},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840756,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34140},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840758,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34144},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953840809,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":107.70235600000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840818,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":78.19129500000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840820,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":73.39681199999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840821,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":68.87740299999996,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840823,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":69.338346,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840824,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":68.15028899999993,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840825,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":76.96080700000016,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840826,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":68.16527399999995,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840828,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":78.13010000000008,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953840829,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":78.01518899999996,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 32, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "a97686c0b87c6e53cd310d1184104929f59a73a99a76fbef807ce43c86560045\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953844608,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953844609,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953844815,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34212},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844829,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.18523899999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844843,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34224},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844881,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34226},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844883,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34242},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844896,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34246},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844898,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34248},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844900,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34254},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844902,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34258},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844903,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34270},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844905,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34286},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844906,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34290},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844947,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":103.36281600000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":54.740182000000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844959,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":62.66633300000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844960,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":78.68986099999984,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844962,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":58.77490799999987,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844963,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":58.38077899999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844964,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":80.7205550000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844965,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":58.615819999999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844966,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":65.51385400000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844967,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":68.15109399999983,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select count(*) from pg_stat_activity where datname=current_database() and wait_event='PgSleep'"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953844608,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953844609,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953844815,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34212},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844829,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.18523899999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844843,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34224},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844881,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34226},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844883,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34242},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844896,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34246},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844898,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34248},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844900,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34254},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844902,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34258},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844903,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34270},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844905,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34286},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844906,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34290},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844947,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":103.36281600000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":54.740182000000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844959,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":62.66633300000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844960,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":78.68986099999984,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844962,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":58.77490799999987,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844963,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":58.38077899999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844964,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":80.7205550000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844965,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":58.615819999999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844966,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":65.51385400000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844967,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":68.15109399999983,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953845471,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"PUT\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/logs/2026-10-03\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34212},\"msg\":\"incoming request\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select count(*) from pg_stat_activity where datname=current_database() and wait_event_type='Lock'"
+    ],
+    "code": 0,
+    "stdout": "1\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "begin; select 1 from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03' for update; select pg_sleep(4); commit;"
+    ],
+    "code": 0,
+    "stdout": "BEGIN\n1\n\nCOMMIT\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:43.0373951Z\",\"FinishedAt\":\"2026-10-02T15:10:49.463047603Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953844608,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953844609,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953844815,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34212},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844829,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.18523899999991,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844843,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34224},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844881,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34226},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844883,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34242},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844896,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34246},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844898,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34248},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844900,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34254},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844902,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34258},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844903,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34270},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844905,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34286},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844906,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34290},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953844947,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":103.36281600000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844957,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":54.740182000000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844959,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":62.66633300000012,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844960,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":78.68986099999984,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844962,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":58.77490799999987,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844963,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":58.38077899999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844964,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":80.7205550000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844965,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":58.615819999999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844966,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":65.51385400000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953844967,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":68.15109399999983,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953845471,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"req\":{\"method\":\"PUT\",\"url\":\"/api/goals/cc833fcf-ac9b-4242-955d-932f28150856/logs/2026-10-03\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":34212},\"msg\":\"incoming request\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"level\":30,\"time\":1790953849441,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-c\",\"res\":{\"statusCode\":200},\"responseTime\":3969.946524,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 33, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "run",
+      "-d",
+      "--name",
+      "future-roi-84-shutdown-1790953777822-app",
+      "--network",
+      "container:future-roi-84-shutdown-1790953777822-db",
+      "--label",
+      "future-roi-verification=future-roi-84-shutdown-1790953777822",
+      "--env-file",
+      "<candidate-package>\\.local\\future-roi-84-shutdown-1790953777822.env",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "fcb3d518496b94b230ae5249aec2bf3a6c9d66cc24909cb3bc6386a7f7c64636\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953852685,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953852685,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953852915,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49790},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852929,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.023617000000058,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953852941,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49794},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852978,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49806},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852980,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49820},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852981,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49814},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852983,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49822},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852984,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49834},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852985,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49850},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852986,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49852},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852987,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49854},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852988,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49862},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953853036,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":93.89692500000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853046,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":60.582283999999845,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853049,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":67.86798899999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853051,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":64.92089099999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853053,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":74.87248999999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853054,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":67.38182399999982,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853055,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":75.79622900000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853057,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":68.76867500000003,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853059,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":75.92617100000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853061,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":76.83574799999997,\"msg\":\"request completed\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{json .State}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"Status\":\"exited\",\"Running\":false,\"Paused\":false,\"Restarting\":false,\"OOMKilled\":false,\"Dead\":false,\"Pid\":0,\"ExitCode\":0,\"Error\":\"\",\"StartedAt\":\"2026-10-02T15:10:51.090768759Z\",\"FinishedAt\":\"2026-10-02T15:10:53.409446123Z\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "logs",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "{\"level\":30,\"time\":1790953852685,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://127.0.0.1:8080\"}\n{\"event\":\"listening\",\"port\":8080,\"host\":\"0.0.0.0\",\"baseURL\":\"http://127.0.0.1:3390\",\"node\":\"v24.21.0\",\"bridge\":\"hardened\"}\n{\"level\":30,\"time\":1790953852685,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"msg\":\"Server listening at http://172.17.0.2:8080\"}\n{\"level\":30,\"time\":1790953852915,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"req\":{\"method\":\"GET\",\"url\":\"/api/health\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49790},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852929,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-1\",\"res\":{\"statusCode\":200},\"responseTime\":13.023617000000058,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953852941,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49794},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852978,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49806},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852980,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49820},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852981,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49814},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852983,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49822},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852984,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49834},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852985,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49850},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852986,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49852},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852987,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49854},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953852988,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"req\":{\"method\":\"GET\",\"url\":\"/api/goals\",\"host\":\"127.0.0.1:3390\",\"remoteAddress\":\"172.17.0.1\",\"remotePort\":49862},\"msg\":\"incoming request\"}\n{\"level\":30,\"time\":1790953853036,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-2\",\"res\":{\"statusCode\":200},\"responseTime\":93.89692500000001,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853046,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-8\",\"res\":{\"statusCode\":200},\"responseTime\":60.582283999999845,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853049,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-5\",\"res\":{\"statusCode\":200},\"responseTime\":67.86798899999985,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853051,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-9\",\"res\":{\"statusCode\":200},\"responseTime\":64.92089099999998,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853053,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-3\",\"res\":{\"statusCode\":200},\"responseTime\":74.87248999999997,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853054,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-a\",\"res\":{\"statusCode\":200},\"responseTime\":67.38182399999982,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853055,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-4\",\"res\":{\"statusCode\":200},\"responseTime\":75.79622900000004,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853057,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-b\",\"res\":{\"statusCode\":200},\"responseTime\":68.76867500000003,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853059,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-6\",\"res\":{\"statusCode\":200},\"responseTime\":75.92617100000007,\"msg\":\"request completed\"}\n{\"level\":30,\"time\":1790953853061,\"pid\":1,\"hostname\":\"3e63e38f73dd\",\"reqId\":\"req-7\",\"res\":{\"statusCode\":200},\"responseTime\":76.83574799999997,\"msg\":\"request completed\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-start\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"http-connections-11\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"pre-close\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"http-server-closed\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-start\"}\n{\"event\":\"shutdown-resource\",\"phase\":\"on-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-close-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"app-pool-end-done\"}\n{\"event\":\"shutdown-phase\",\"signal\":\"SIGTERM\",\"phase\":\"auth-pool-end-done\"}\n{\"event\":\"shutdown-complete\",\"signal\":\"SIGTERM\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select json_build_object('users',(select count(*) from \"user\"),'goals',(select count(*) from goal),'aCount',(select count(*) from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856'),'aAmount',(select amount from action_log where goal_id='cc833fcf-ac9b-4242-955d-932f28150856' and local_date='2026-10-03'),'bCount',(select count(*) from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a'),'bAmount',(select amount from action_log where goal_id='92899a3b-4325-4871-89a2-b541e5af700a' and local_date='2026-10-03'))"
+    ],
+    "code": 0,
+    "stdout": "{\"users\" : 2, \"goals\" : 2, \"aCount\" : 1, \"aAmount\" : 33, \"bCount\" : 1, \"bAmount\" : 7}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "false\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-app\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "exec",
+      "future-roi-84-shutdown-1790953777822-db",
+      "psql",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-U",
+      "spike",
+      "-d",
+      "future_roi_spike",
+      "-Atc",
+      "select version()"
+    ],
+    "code": 0,
+    "stdout": "PostgreSQL 18.6 (Debian 18.6-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-app"
+    ],
+    "code": 1,
+    "stdout": "\n",
+    "stderr": "error: no such object: future-roi-84-shutdown-1790953777822-app\n"
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822-db"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "inspect",
+      "--format",
+      "{{.State.Running}}",
+      "future-roi-84-shutdown-1790953777822-db"
+    ],
+    "code": 0,
+    "stdout": "true\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "stop",
+      "--time",
+      "10",
+      "future-roi-84-shutdown-1790953777822-db"
+    ],
+    "code": 0,
+    "stdout": "Flag --time has been deprecated, use --timeout instead\nfuture-roi-84-shutdown-1790953777822-db\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "future-roi-84-shutdown-1790953777822-db"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822-db\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "image",
+      "inspect",
+      "--format",
+      "{{index .Config.Labels \"future-roi-verification\"}}",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "future-roi-84-shutdown-1790953777822\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "image",
+      "rm",
+      "future-roi-84-shutdown-1790953777822:verification"
+    ],
+    "code": 0,
+    "stdout": "Untagged: future-roi-84-shutdown-1790953777822:verification\nDeleted: sha256:a7c21fbdc3375dce441f0504c036b4f8c78f33cfbff02922fe36a9ac32dbbd3f\n",
+    "stderr": ""
+  }
+]

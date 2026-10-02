@@ -49,6 +49,12 @@ export async function buildApp(c: AppConfig) {
     ajv: c.ajvMode === 'strict' ? { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: true } } : undefined,
   };
   const app = Fastify(options).withTypeProvider<TypeBoxTypeProvider>();
+  // HTTP/1.1 drain: a response completed after listener shutdown must not keep
+  // its socket alive. Preserve the response, then let HTTP close precede pools.
+  app.addHook('onSend', async (_request, reply, payload) => {
+    if (!app.server.listening) reply.header('connection', 'close');
+    return payload;
+  });
 
   const predictPool = c.predict.mode === 'worker' ? new PredictPool(c.predict.workers) : null;
 

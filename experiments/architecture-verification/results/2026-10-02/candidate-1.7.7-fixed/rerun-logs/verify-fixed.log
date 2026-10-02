@@ -2,7 +2,7 @@
 > @jogi/architecture-verification@0.0.0 verify:fixed
 > node verify/v5-fixed-regression.ts
 
-2026-10-02T14:02:37.632Z ERROR [Better Auth]: Database schema mismatch
+2026-10-02T15:14:22.883Z ERROR [Better Auth]: Database schema mismatch
 
   Missing tables
     user, session, account, verification, rateLimit
@@ -19,19 +19,19 @@ PASS  O-spoofed suffix  negative: spoofed suffix Origin cannot create/write/dele
 PASS  O-side-effect  negative: rejected mutations leave owner goal and logs unchanged
 PASS  O-owner  negative: same-origin other user still gets 404 for every owner operation
 PASS  O-read  positive: safe GET with Cookie and no Origin remains allowed
-2026-10-02T14:02:38.319Z ERROR [Better Auth]: Invalid origin: http://127.0.0.2:3292
+2026-10-02T15:14:24.505Z ERROR [Better Auth]: Invalid origin: http://127.0.0.2:3292
 PASS  A-http://127.0.0.2:3292  negative: existing auth sign-out Origin protection remains
-2026-10-02T14:02:38.324Z ERROR [Better Auth]: Invalid origin: http://127.0.0.1:3291
+2026-10-02T15:14:24.516Z ERROR [Better Auth]: Invalid origin: http://127.0.0.1:3291
 PASS  A-http://127.0.0.1:3291  negative: existing auth sign-out Origin protection remains
 PASS  A-null  negative: existing auth sign-out Origin protection remains
 PASS  I-safe  positive: exact signed safe-integer boundaries in auth pool, app stays string
 PASS  I-unsafe  negative: unsafe int8 never silently rounds; app pool preserves full strings
 PASS  I-other  positive: auth parser does not change other OIDs
-2026-10-02T14:02:38.622Z WARN [Better Auth]: Invalid password
-2026-10-02T14:02:38.626Z WARN [Better Auth]: Invalid password
-2026-10-02T14:02:38.642Z WARN [Better Auth]: Invalid password
-2026-10-02T14:02:38.652Z WARN [Better Auth]: Invalid password
-2026-10-02T14:02:38.693Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:25.097Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:25.150Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:25.183Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:25.188Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:25.254Z WARN [Better Auth]: Invalid password
 PASS  I-rate  positive: dedicated default auth pool yields five 401 and fifteen 429, all waits integer 1..60
 INFO  Browser-environment  real browser scope and environment
 PASS  BR1  real browser same-origin auth login
@@ -43,7 +43,7 @@ PASS  BR6  same-site distinct port browser form POST rejected
 PASS  BR7  cross-site JSON preflight blocks mutation
 PASS  BR8  cross-site simple fetch POST rejected before parsing
 PASS  BR9  cross-site browser form POST rejected
-2026-10-02T14:02:42.188Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:29.700Z WARN [Better Auth]: Invalid password
 PASS  S-password-before  positive: post-snapshot password change accepts new and rejects old password before restore
 PASS  S-before  positive: logged-out and deleted user old cookie is 401
 PASS  S-risk-control  negative control: raw row restoration still revives logged-out old cookie
@@ -53,7 +53,7 @@ PASS  S-procedure  positive: confirmed standalone procedure removes all restored
 PASS  S-cookies  positive: both restored old cookies rejected after revocation
 PASS  S-unresolved-user  negative control: session revocation does not reapply user deletion
 PASS  S-unresolved-password  negative control: restored account password still authenticates
-2026-10-02T14:02:43.282Z WARN [Better Auth]: Invalid password
+2026-10-02T15:14:31.303Z WARN [Better Auth]: Invalid password
 PASS  S-password-rollback  negative control: password changed after snapshot is rejected after restore and session purge
 
 post-fix positive and negative regressions: 37 pass, 0 fail, 1 info -> results/post-fix/v5-fixed-regression.json

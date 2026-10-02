@@ -1,7 +1,7 @@
 {
   "label": "Supporting Artifact / Not a Source of Truth",
   "title": "verification-1 auth and database",
-  "at": "2026-10-02T14:00:55.043Z",
+  "at": "2026-10-02T15:12:27.363Z",
   "environment": {
     "node": "v24.21.0",
     "platform": "win32-x64",
@@ -360,8 +360,8 @@
       "name": "today endpoint returns server-decided dates from one snapshot (prediction is a labelled placeholder)",
       "status": "PASS",
       "detail": {
-        "today": "2026-10-02",
-        "yesterday": "2026-10-01",
+        "today": "2026-10-03",
+        "yesterday": "2026-10-02",
         "todayLog": null,
         "yesterdayMissing": true,
         "prediction": {
