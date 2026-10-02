@@ -4,6 +4,8 @@
 
 @AGENTS.md
 
+Issueの着手・進捗更新・Close前には、[開発ガイドのFuture ROIのIssue運用](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を確認してください。詳細は同ガイドを参照し、このファイルへ複製しません。
+
 ## Claude Code固有ルール
 
 - `AGENTS.md` と、そこから参照する情報ごとの正本に従う。

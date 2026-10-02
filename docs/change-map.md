@@ -20,7 +20,7 @@
 
 | 対象 | 状態・説明先 | 実装・確認方法 |
 | --- | --- | --- |
-| Issue・Branch・PR・レビュー | [CONTRIBUTING](../CONTRIBUTING.md) | Issueの目的・Scope・担当・完了条件とPR検証を確認 |
+| Issue・Branch・PR・レビュー | [CONTRIBUTING](../CONTRIBUTING.md)、[Future ROIのIssue運用](DEVELOPMENT_GUIDE.md#future-roiのissue運用) | GitHubで階層、最新Issue・PR、着手条件と完了証拠を確認。AIの入口は[AGENTS](../AGENTS.md#16-issue)・[Claude向け指示](../CLAUDE.md) |
 | 文書・設定チェック | [開発ガイド](DEVELOPMENT_GUIDE.md#文書チェックで起きること) | [mise設定](../mise.toml) → [check-foundation.ps1](../scripts/check-foundation.ps1)。`pwsh -NoProfile -File scripts/check-foundation.ps1` |
 | アプリの起動構成（npm workspaces・Compose・Application CI） | [D-23](architecture.md#d-23)の候補（技術選定確定待ち）。確定後、現行の場所への復元をI-01で行う | 復元前は[旧構成](../archive/music-exploration/package.json)・[旧Compose](../archive/music-exploration/compose.yaml)が履歴として残る |
 | 公開先と外部設定 | [D-25](architecture.md#d-25)、[基盤状態](operations/development-foundation-status.md) | アカウント・課金の作成は承認後 |

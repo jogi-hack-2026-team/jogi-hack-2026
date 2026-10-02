@@ -141,9 +141,11 @@ AIが常に守るプロジェクト共通ルール。
 - Definition of Ready
 - Definition of Done
 
-### `docs/DEVELOPMENT_GUIDIDE.md`
+### `docs/DEVELOPMENT_GUIDE.md`
 
 GitHubや開発フローに慣れていないメンバー向けの詳細ガイド。
+
+管理IssueのReady・Status・Close判断は[開発ガイドのFuture ROIのIssue運用](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)へ集約する。共通の開発運用は `CONTRIBUTING.md` を参照する。
 
 ### `AI_DEVELOPMENT_TOOLS.md`
 
@@ -562,6 +564,8 @@ AIエージェントによるIssue・GitHub Projects・Pull Request操作は[採
 実装・修正・設定・文書の変更は、変更着手前にIssueへ紐付ける。チケット未作成のままローカル編集を先行しない。
 既存Issueの利用、新規作成、承認・権限待ちの扱いは[CONTRIBUTINGの着手条件](CONTRIBUTING.md#チケット作成を着手条件にする)に従う。
 
+Issueの着手・進捗更新・Close前には、[開発ガイドのFuture ROIのIssue運用](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を読む。階層、管理IssueのReady、最新情報の確認、Close・製品完成の判断手順は同ガイドへ集約し、このファイルに複製しない。
+
 Issueを確認するときは、
 
 - 背景
@@ -613,7 +617,7 @@ Mustの完成度を犠牲にしてShould / Couldを実装しない。
 
 開発フローの詳細は `CONTRIBUTING.md` を正本とする。
 
-現在の基本フロー：
+個別の作業Issueに適用する基本フロー：
 
 Issue
 ↓
@@ -639,7 +643,7 @@ Done
 
 AIはこの流れを無視して独自のGit Workflowを導入しない。
 
-AIは、作業開始時に `In Progress`、PR作成時に `In Review`、Merge後に `Done` へGitHub ProjectsのStatusを更新する。承認要件と状態遷移の正本は `CONTRIBUTING.md` とし、必要なApproveがないPRをMergeしたり、保護ルールをbypassしたりしない。
+AIは、個別の作業Issueについて、作業開始時に `In Progress`、PR作成時に `In Review`、Merge後に `Done` へGitHub ProjectsのStatusを更新する。管理IssueのStatusは[開発ガイド](docs/DEVELOPMENT_GUIDE.md#管理issueのstatus)に従う。承認要件と状態遷移の正本は `CONTRIBUTING.md` とし、必要なApproveがないPRをMergeしたり、保護ルールをbypassしたりしない。
 
 ---
 
@@ -665,7 +669,7 @@ Branch名は `CONTRIBUTING.md` に従う。
 
 `1 Issue = 1 Branch = 1 Pull Request`
 
-とする。
+を個別の変更を扱う作業Issueに適用する。管理Issueの扱いは[開発ガイド](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を参照する。
 
 ---
 
