@@ -562,6 +562,8 @@ AIエージェントによるIssue・GitHub Projects・Pull Request操作は[採
 実装・修正・設定・文書の変更は、変更着手前にIssueへ紐付ける。チケット未作成のままローカル編集を先行しない。
 既存Issueの利用、新規作成、承認・権限待ちの扱いは[CONTRIBUTINGの着手条件](CONTRIBUTING.md#チケット作成を着手条件にする)に従う。
 
+Issueの着手・進捗更新・Close前には、[開発ガイドのFuture ROIのIssue運用](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を読む。階層、管理IssueのReady、最新情報の確認、Close・製品完成の判断手順は同ガイドへ集約し、このファイルに複製しない。
+
 Issueを確認するときは、
 
 - 背景
@@ -665,7 +667,7 @@ Branch名は `CONTRIBUTING.md` に従う。
 
 `1 Issue = 1 Branch = 1 Pull Request`
 
-とする。
+を個別の変更を扱う作業Issueに適用する。管理Issueの扱いは[開発ガイド](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を参照する。
 
 ---
 

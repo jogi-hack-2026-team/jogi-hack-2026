@@ -38,7 +38,7 @@ description: GitHub Issueをもとに、ブランチ作成、実装、検証、P
 4. ドキュメントとの整合性を確認する。
 5. [review-gate](../review-gate/SKILL.md)でセルフレビューを行う。
 6. [AGENTS.mdのAI向け言語ルール](../../../AGENTS.md#21-git-safety)に従い、説明が日本語のPRタイトルを確認してから`CONTRIBUTING.md`に従ってPull Requestを作成する。Squash MergeでPRタイトルがCommitメッセージになる場合も考慮する。
-7. PR本文に `Closes #<Issue番号>` を記載し、作成後にIssue本文の「開発情報」へPRのURLまたは番号を追記する。Branchの記載とAssigneeも確認する。
+7. [CONTRIBUTINGの紐付けルール](../../../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け)に従い、PRで全て解決するIssueは `Closes #<Issue番号>`、一部対応・参考は `Refs #<Issue番号>` を記載する。作成後にIssue本文の「開発情報」へPRのURLまたは番号を追記し、Branchの記載とAssigneeも確認する。
 8. PRを作成してレビューを依頼した時点で、IssueカードのGitHub Projects Statusを `In Review` に更新する。修正対応ではIssueカードを `In Progress` に戻し、再レビュー依頼後に `In Review` に戻す。
 
 `main` を対象とするPRは、書き込み権限を持つ別メンバーのApproveが最低1件必要です。ユーザーから明示的な指示がない限り、Pull Requestを自動でMergeしません。指示がある場合も、保護ルールをbypassしません。

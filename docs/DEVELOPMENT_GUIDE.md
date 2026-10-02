@@ -15,7 +15,7 @@ Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況�
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
 機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。FE / BEは最小起動構成のみでProduct機能は未実装です。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
-本ガイドの検索機能やIssue番号・Branch名は操作を説明する例です。実装済み機能や実在する対応Issueを示すものではありません。
+本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
 
@@ -223,6 +223,49 @@ Investigationでは、
 
 ---
 
+## Future ROIのIssue運用
+
+### 3階層と情報の参照先
+
+Future ROIは、最上位 → 領域の子 → 実装Issueの3階層で追跡します。親子関係はGitHubのネイティブSub-issuesで確認し、本文にリンクがあるだけで登録済みとは判断しません。
+
+| 階層 | 追跡先 | 役割 |
+| --- | --- | --- |
+| 最上位 | [#87](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/87) | 領域と横断ゲートを含めてMVP完成・公開・提出を確認する |
+| 領域の子 | [FE #88](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/88)、[BE #89](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/89)、[Prediction #90](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/90) | 配下の実装Issueと領域の受け入れ条件を管理する |
+| 実装Issue | 各領域のSub-issuesから既存Issueを開く | 個別の目的・依存・完了条件に沿って実装と検証を行う |
+
+最上位・領域Issueは管理用です。Branch・PRは個別の変更を扱う作業Issueへ紐付け、管理Issueごとに実装PRを作る必要はありません。担当者はIssueのAssignees、現在のStatus・Scopeは[GitHub Projects](https://github.com/orgs/jogi-hack-2026-team/projects/1)を確認します。このガイドへ担当表・現在Status・実装Issueごとの依存一覧を複製しません。
+
+### 着手前に読み直す
+
+領域IssueのReadyは管理用であり、配下の実装開始を許可する意味ではありません。最上位がReadyでも同様です。各実装Issueの着手可否を個別に確認します。
+
+1. 対象の最新Issue本文・コメント、親・領域Issue、依存先を読み、目的・Scope・完了条件・AssigneeとProjectのStatusを確認します。既存の実装Issueを再利用し、同じ作業を別の領域名や別エージェント用に重複起票しません。
+2. Issueの開発情報・Development欄から関連PRを開き、最新の差分・レビュー・未解決指摘・CI・Merge状況を確認します。作業中のPRがあれば、既存作業との重複を避けます。
+3. 正式仕様の[Product Spec](product-spec.md)・[Architecture](architecture.md)と[変更対応表](change-map.md)を読み、対象Requirement・Decision・実装・テストを照合します。仕様反映は[#69](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/69)とその関連PR、技術採択は[#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)の最新記録まで確認します。未Mergeの仕様案、技術候補、Supporting Artifactの検証成功・Approve・Mergeを正式採択や本実装完了へ昇格させません。
+4. 各IssueのHard依存（着手の前提）とIntegration依存（結合・完了までに確認する条件）、本文・ラベルのBLOCKED、人間の判断待ち、必要な技術の採択・正式反映を確認します。Hard依存はClose表示だけでなく完了条件と必要なMergeの証拠を確認します。領域図の要約だけで依存を決めず、各実装Issueの記載を読みます。
+5. 対象の[Definition of Ready](../CONTRIBUTING.md#definition-of-ready)を満たしてから専用Branchで着手します。例外として先行できる作業は、対象Issueに明記された承認済みの範囲だけです。モックやスタブで進められることをHard依存・BLOCKEDの解除と解釈しません。
+
+既存Issueや正式仕様に不一致・不足があれば、根拠と必要な判断をIssueへ記録してチームに確認します。仕様・依存関係・Scopeを無断で書き換えたり、BLOCKEDを解除したりしません。読めない情報は未確認として扱い、着手条件を推測で満たしたことにしません。別作業が必要な場合も既存Issueを検索してから、[チケット作成の着手条件](../CONTRIBUTING.md#チケット作成を着手条件にする)に従います。
+
+### Closeと製品完成を確認する
+
+Close前に、そのIssueの全完了条件、必要なテスト・結合確認、レビューと未解決指摘、必要なmainへのMergeを証拠で確認します。実行済み・未検証・残課題をIssue/PRに記録し、[Definition of Done](../CONTRIBUTING.md#definition-of-done)と照合します。実装コード、PR作成、CI成功、検証用PRのMergeのいずれか一つだけでCloseしません。
+
+実装Issueを全て解決するPRには`Closes #<実装Issue番号>`、一部対応・Supporting Artifact・管理Issueの参照には`Refs #<Issue番号>`を使います。自動Closeを指定する前にも、そのPRで残る完了条件がないことを確認します。管理Issueは配下の完了だけでなく自身の受け入れ条件・結合確認まで満たしてからCloseします。進捗バーを進めるためだけに子・実装IssueをCloseしません。
+
+最上位 #87 の進捗バーは、**直接の子 #88〜90 の3件のうち完了した件数**です。孫の実装Issueの完了数や製品全体の完成率ではありません。3件が完了しても、次の独立した横断ゲートを全て満たすまで製品完成としません。
+
+- [#69](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/69)：正式仕様のレビューとmain反映
+- [#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)：チームの技術採択と正式仕様・関連Issueへの反映
+- [#82](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/82)：再現可能なデモデータ
+- [#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)：公開環境・E2E・デモ・提出の確認
+
+横断ゲートを #87 の直接の子へ追加して進捗の分母を変えません。最上位のCloseは、領域・横断ゲート・未完了Must・重大な未解決レビュー・Freeze条件を #87 の最新完了条件と照合して判断します。公開URL・動作したSHA・CI/E2E・制約・提出記録は #83 から確認します。
+
+---
+
 # 7. Assignee
 
 Assigneeは、
@@ -281,7 +324,7 @@ LabelはIssueやPRの性質を補足するために使用します。
 
 # 10. GitHub ProjectsのStatus
 
-IssueやPull RequestはGitHub Projectsで管理します。
+GitHub ProjectsではIssueを管理し、PRはIssueの開発情報・Development欄から追跡します。
 
 ```text
 Backlog
@@ -310,7 +353,7 @@ Done
 
 ## Ready
 
-実装を始められる状態です。
+個別の作業Issueが着手条件を満たした状態です。最上位・領域の管理Issueについては[Future ROIのIssue運用](#future-roiのissue運用)を確認してください。
 
 ## In Progress
 
@@ -330,7 +373,7 @@ Pull RequestがmainへMergeされ、作業が完了した状態です。
 
 # 11. Definition of Ready
 
-Issueを`Ready`にするには、最低限以下を満たしている必要があります。
+個別の作業Issueを`Ready`にするには、最低限以下を満たしている必要があります。管理Issueの扱いと実装前の再確認は[Future ROIのIssue運用](#future-roiのissue運用)に従います。
 
 - [ ] 目的・背景が分かる
 - [ ] やることが分かる
@@ -346,7 +389,7 @@ Issueを`Ready`にするには、最低限以下を満たしている必要が�
 
 # 12. Issueの粒度
 
-原則として、
+個別の変更を扱う作業Issueでは原則として、
 
 ```text
 1 Issue
@@ -448,7 +491,7 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 
 # 14. 作業を始める前に
 
-自分がIssueのAssigneeに設定されていることを確認します。
+[Future ROIのIssue運用](#future-roiのissue運用)に沿って最新の着手条件を読み直し、自分が対象IssueのAssigneeに設定されていることを確認します。
 Branch作成後はIssue本文の「開発情報」にBranch名を記載し、Push後にBranchのリンクを追記します。
 記載形式は [CONTRIBUTINGの紐付けルール](../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
 
@@ -693,7 +736,7 @@ In Review
 Branch名・リンクも記載済みか確認してください。未作成の間は「未作成」としておきます。
 記載例は [CONTRIBUTINGの紐付けルール](../CONTRIBUTING.md#issueとbranch--pull-requestの紐付け) を参照してください。
 
-PRには、
+対象IssueをこのPRで全て解決する場合は、
 
 ```text
 Closes #12
@@ -709,7 +752,7 @@ Closes #12
 
 とします。
 
-PRがmainへMergeされると、対応するIssueもCloseされます。
+`Closes`を指定したPRがmainへMergeされると、対応するIssueもCloseされます。一部対応・管理Issueの参照は`Refs`を使い、[Close前の確認](#closeと製品完成を確認する)に従ってください。
 
 ---
 
@@ -892,7 +935,7 @@ mainの履歴を読みやすくするために使用します。
 
 # 30. Definition of Done
 
-以下を満たした状態をDoneとします。
+個別の変更を扱う作業Issueは、以下を満たした状態をDoneとします。管理Issueは[Closeと製品完成の確認](#closeと製品完成を確認する)に従います。
 
 - [ ] Issueの完了条件を満たしている
 - [ ] 必要な動作確認が完了している

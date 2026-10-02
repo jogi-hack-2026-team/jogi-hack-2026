@@ -18,7 +18,7 @@
 9. 変更内容を確認してCommitする
 10. Pushする
 11. Pull Requestを作成する
-12. PRに対応Issueを `Closes #<Issue番号>` で記載する
+12. PRで全て解決するIssueを `Closes #<Issue番号>`、一部対応・参考を `Refs #<Issue番号>` で記載する
 13. Issue本文の「開発情報」にPull Requestのリンクを記載する
 14. `In Review` にする
 15. レビューを受ける
@@ -49,7 +49,7 @@
 
 `1 Issue = 1 Branch = 1 Pull Request`
 
-とします。
+を個別の変更を扱う作業Issueに適用します。管理Issueの扱いは[開発ガイド](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を参照してください。
 
 複数の無関係なIssueを同じBranchで扱わないでください。
 
@@ -91,6 +91,8 @@
 
 実装・修正・設定変更・ドキュメント更新は、変更着手前にGitHub Issueへ紐付けます。
 小さな変更やローカルだけの作業でも、チケットを省略しません。
+
+Future ROIの階層・管理IssueのReady・着手前の再確認・Closeと製品完成の判断手順は、[開発ガイドのIssue運用](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)へ集約します。個別Issueの目的・依存・完了条件とProjectの担当・Status・ScopeはGitHubで確認し、文書へ現在値を複製しません。
 
 1. 既存Issueを検索し、目的・範囲が一致する未完了Issueがあれば利用します。追加修正も同じ範囲なら同じIssueに記録し、重複作成しません。
 2. 対応するIssueがなければ、目的・範囲・完了条件を記載して作成します。投稿案をローカルに用意しただけでは作成完了ではありません。
@@ -199,7 +201,7 @@ GitHub上でもIssueとBranchの関係を追いやすくするためです。
 
 ### Pull Request
 
-Pull Requestには対応するIssueを以下の形式で記載します。
+Pull Requestで対応Issueを全て解決する場合は、以下の形式で記載します。
 
 `Closes #12`
 
@@ -212,6 +214,8 @@ Pull Requestには対応するIssueを以下の形式で記載します。
 の関係を追いやすくします。
 
 PRが `main` へMergeされると、対応Issueも自動的にCloseされます。
+
+一部対応・Supporting Artifact・管理Issueの参照には `Refs #12` を使います。自動Closeの指定前と手動Close前の確認は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#closeと製品完成を確認する)に従ってください。
 
 ---
 
@@ -252,6 +256,8 @@ BoardのWIP上限と資料との差分の旧記録は[履歴](archive/music-expl
 
 Statusは以下を使用します。
 
+以下の着手・PR・Mergeの遷移は個別の作業Issueに適用します。最上位・領域の管理Issueの扱いは[開発ガイド](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)を参照してください。
+
     Backlog
     ↓
     Ready
@@ -287,7 +293,7 @@ Projectの自動追加対象はIssueです。PRはIssue本文の開発情報とD
 
 ### Ready
 
-すぐに作業を開始できる状態です。
+個別の作業Issueが着手条件を満たした状態です。管理Issueについては[開発ガイド](docs/DEVELOPMENT_GUIDE.md#着手前に読み直す)に従います。
 
 ### In Progress
 
@@ -307,7 +313,7 @@ PRが `main` へMergeされ、作業が完了した状態です。
 
 ## Definition of Ready
 
-Issueを `Ready` にするには、最低限以下を満たしている必要があります。
+個別の作業Issueを `Ready` にするには、最低限以下を満たしている必要があります。管理Issueの扱いと実装前の再確認は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)に従います。
 
 - [ ] 目的・背景が分かる
 - [ ] やることが分かる
@@ -786,7 +792,7 @@ Design IntentにはContext、Intent、Design、Why、Invariants、Non-goals、Al
 
 ## Definition of Done
 
-以下を満たした状態をDoneとします。
+個別の変更を扱う作業Issueは、以下を満たした状態をDoneとします。管理Issueの完了判定は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#closeと製品完成を確認する)に従います。
 
 - [ ] Issueの完了条件を満たしている
 - [ ] 必要な動作確認が完了している
