@@ -141,9 +141,11 @@ AIが常に守るプロジェクト共通ルール。
 - Definition of Ready
 - Definition of Done
 
-### `docs/DEVELOPMENT_GUIDIDE.md`
+### `docs/DEVELOPMENT_GUIDE.md`
 
 GitHubや開発フローに慣れていないメンバー向けの詳細ガイド。
+
+管理IssueのReady・Status・Close判断は[開発ガイドのFuture ROIのIssue運用](docs/DEVELOPMENT_GUIDE.md#future-roiのissue運用)へ集約する。共通の開発運用は `CONTRIBUTING.md` を参照する。
 
 ### `AI_DEVELOPMENT_TOOLS.md`
 
