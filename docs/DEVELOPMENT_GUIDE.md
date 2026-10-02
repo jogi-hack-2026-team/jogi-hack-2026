@@ -380,7 +380,7 @@ README更新
 
 # 13. 初回セットアップ
 
-現行のアプリ用Toolchainと技術スタックは未定です。[Architectureの現行状態](architecture.md#現行状態2026-09-30)を参照してください。旧Web/API・開発用PostgreSQL・lockfileは[履歴](../archive/music-exploration/README.md)に保管しました。Product機能、DB migration、正式APIはまだありません。PowerShell 7は共通の文書・設定チェックに使用します。
+アプリ用Toolchainと技術スタックは[Architecture](architecture.md#technology-stack)に候補を記録しています（技術選定確定待ち）。起動構成は確定後に現行の場所へ復元し、この節を更新します。旧Web/API・開発用PostgreSQL・lockfileは[履歴](../archive/music-exploration/README.md)に保管しました。Product機能、DB migration、正式APIはまだありません。PowerShell 7は共通の文書・設定チェックに使用します。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。

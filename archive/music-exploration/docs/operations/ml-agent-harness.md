@@ -1,6 +1,6 @@
 # ML Issue向けCodex Agent Harness
 
-> 2026-09-29に音楽探索案を廃止しました。このHarnessと下記のML Issue一覧は旧案の開発記録です。廃止したIssueへの自動着手に使用しません。2026-09-30に`mise run ml-agent`のタスクとFoundation CIのHarnessテストを外し、runner・テスト・Skillをこの保管場所へ移しました。コードとテストは[引き継ぎの棚卸し](../../../../docs/operations/reuse-handoff.md)に従って履歴として保持します。[現行Product状態](../../../../docs/product-spec.md#現行状態2026-09-29)を参照してください。
+> 2026-09-29に音楽探索案を廃止しました。このHarnessと下記のML Issue一覧は旧案の開発記録です。廃止したIssueへの自動着手に使用しません。2026-09-30に`mise run ml-agent`のタスクとFoundation CIのHarnessテストを外し、runner・テスト・Skillをこの保管場所へ移しました。コードとテストは[引き継ぎの棚卸し](../../../../docs/operations/reuse-handoff.md)に従って履歴として保持します。[現行Product状態](../../../../docs/product-spec.md#現行状態2026-09-30)を参照してください。
 
 **開発補助 / Product・Architectureの正本ではない。** [Issue #47](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/47)の範囲。Code Freezeは2026-10-12。Harnessの整備をMust実装より優先しない。
 
