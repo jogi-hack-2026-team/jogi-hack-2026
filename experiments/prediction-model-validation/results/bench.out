@@ -1,0 +1,15 @@
+test vectors: seedFor(20261012,0..2) = [ 3373737972, 1247035355, 785837188 ]
+splitmix32 first 3 = [ 1452544342, 2306341868, 1978446536 ]
+draw m=0 Beta(14,7),Beta(7,9) = 0.7650622193905133 0.25593304542490336
+need=120 30日相当 prune=false: 302 ms p50=208 p80=249
+need=120 30日相当 prune=true: 307 ms p50=208 p80=249
+need=120 高実行率 prune=false: 299 ms p50=127 p80=133
+need=120 高実行率 prune=true: 301 ms p50=127 p80=133
+need=400 30日相当 prune=false: 611 ms p50=694 p80=826
+need=400 30日相当 prune=true: 570 ms p50=694 p80=826
+need=400 高実行率 prune=false: 613 ms p50=424 p80=441
+need=400 高実行率 prune=true: 571 ms p50=424 p80=441
+need=1095 30日相当 prune=false: 1526 ms p50=null p80=null
+need=1095 30日相当 prune=true: 1223 ms p50=null p80=null
+need=1095 高実行率 prune=false: 1736 ms p50=null p80=null
+need=1095 高実行率 prune=true: 1303 ms p50=null p80=null

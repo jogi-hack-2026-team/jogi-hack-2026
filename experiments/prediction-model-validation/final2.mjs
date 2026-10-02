@@ -1,6 +1,7 @@
 // 最終検証 追補: 同一観測でのモデル選択 / 漸化式の厳密性 / 中心指標 / 実行時間
 import { mulberry32, mix, betaSample } from './engine2.mjs';
 import { delta, countsM2 } from './final.mjs';
+import { completionPmf, quantileDays } from './completion-dp.mjs';
 
 const lg = z => { const k = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
   if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lg(1 - z); z -= 1; let x = k[0]; for (let i = 1; i < 9; i++) x += k[i] / (z + i); const t = z + 7.5; return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x); };
@@ -37,7 +38,7 @@ function pmfDP(N, p, start, H = 4000) { // start: {state, k}
   for (let d = 1; d <= H; d++) { const n = { S: new Float64Array(N), D1: new Float64Array(N), D2: new Float64Array(N) };
     for (const [st, pd] of [['S', p[0]], ['D1', p[1]], ['D2', p[2]]]) for (let k = 0; k < N; k++) { const m = D[st][k]; if (!m) continue;
       const nx = st === 'S' ? 'D1' : 'D2'; if (k + 1 >= N) { mean += d * m * pd; mass += m * pd; } else n[nx][k + 1] += m * pd; n.S[k] += m * (1 - pd); }
-    D = n; if (1 - mass < 1e-13) break; }
+    D = n; if (1 - mass < 1e-13) break; } // 期待値の照合用。残り1e-13未満で止める（分位点には使わない。平均への影響は最大でも 4000日×1e-13）
   return mean; }
 console.log('\n## 2. 漸化式Δ vs 到達日pmf DPの平均差（N=120, ctx=連続中）');
 for (const [uk, p] of Object.entries(USERS)) { const viaPmf = pmfDP(120, p, { state: 'S', k: 0 }) - pmfDP(120, p, { state: 'D2', k: 1 });
@@ -71,21 +72,15 @@ for (const [uk, p] of Object.entries(USERS)) for (const n of [14, 30, 60]) {
     console.log(`${uk} | ${n} | ${k} | ${t.toFixed(2)} | ${(fin.reduce((s, x) => s + Math.abs(x - t), 0) / fin.length).toFixed(2)} | ${f[Math.floor(0.95 * (f.length - 1))].toFixed(2)} | ${((300 - fin.length) / 3).toFixed(0)}%`); }
 }
 
-// 4) 補助指標（完了見込み）の実行時間: θ抽選K回×到達日pmf DP（早期打ち切り）
+// 4) 補助指標（完了見込み）の実行時間: θ抽選K回×到達日pmf DP（微小確率の打ち切りなし。PR #86レビュー）
+// N回のうち今日の1回は実績に含め、DPは残り N−1 回（requiredFutureDone）から始める
 function completionMixture(N, c, K = 200, seed = 20261012, H = 1095) {
-  const pmf = new Float64Array(H + 2); // H+1 = 3年超
-  for (let m = 0; m < K; m++) { const r = mulberry32(mix(seed, m));
-    const a = betaSample(1 + c.dd, 1 + c.ds, r), b = betaSample(1 + c.sd, 1 + c.ss, r);
-    let Dd = new Float64Array(N), Ss = new Float64Array(N); Dd[1 % N] = 1; let rest = 1; if (N <= 1) { pmf[0] += 1 / K; continue; }
-    for (let d = 1; d <= H && rest > 1e-9; d++) { const nD = new Float64Array(N), nS = new Float64Array(N);
-      for (let k = 0; k < N; k++) { const pd = Dd[k] * a + Ss[k] * b, ps = Dd[k] * (1 - a) + Ss[k] * (1 - b); if (!pd && !ps) continue;
-        if (k + 1 >= N) { pmf[d] += pd / K; rest -= pd; } else nD[k + 1] += pd; nS[k] += ps; }
-      Dd = nD; Ss = nS; }
-    pmf[H + 1] += Math.max(0, rest) / K; }
-  return pmf; }
+  const draws = [];
+  for (let m = 0; m < K; m++) { const r = mulberry32(mix(seed, m)); const a = betaSample(1 + c.dd, 1 + c.ds, r); draws.push([a, betaSample(1 + c.sd, 1 + c.ss, r)]); }
+  return completionPmf(N - 1, draws, H, 'D');
+}
 console.log('\n## 4. 補助指標の計算時間（今日DONEの完了見込み分布, N=120）');
 for (const K of [200, 500]) { const t0 = performance.now(); const pmf = completionMixture(120, { dd: 12, ds: 5, sd: 5, ss: 7 }, K);
-  let c = 0, p50, p80; for (let d = 0; d < pmf.length; d++) { c += pmf[d]; if (p50 === undefined && c >= 0.5) p50 = d; if (p80 === undefined && c >= 0.8) { p80 = d; break; } }
-  console.log(`K=${K}: ${(performance.now() - t0).toFixed(0)} ms, P50=${p50}日 P80=${p80}日`); }
-{ const a = [], b = []; for (const s of [1, 2, 3, 4, 5]) { const pmf = completionMixture(120, { dd: 12, ds: 5, sd: 5, ss: 7 }, 200, s); let c = 0; for (let d = 0; d < pmf.length; d++) { c += pmf[d]; if (c >= 0.5) { a.push(d); break; } } }
+  console.log(`K=${K}: ${(performance.now() - t0).toFixed(0)} ms, P50=${quantileDays(pmf, 0.5, 1095)}日 P80=${quantileDays(pmf, 0.8, 1095)}日`); }
+{ const a = []; for (const s of [1, 2, 3, 4, 5]) a.push(quantileDays(completionMixture(120, { dd: 12, ds: 5, sd: 5, ss: 7 }, 200, s), 0.5, 1095));
   console.log(`K=200 のseed違い5回でのP50: ${a.join(', ')}`); }

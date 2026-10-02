@@ -1,15 +1,15 @@
 test vectors: seedFor(20261012,0..2) = [ 3373737972, 1247035355, 785837188 ]
 splitmix32 first 3 = [ 1452544342, 2306341868, 1978446536 ]
 draw m=0 Beta(14,7),Beta(7,9) = 0.7650622193905133 0.25593304542490336
-need=120 30日相当: 41 ms p50=208 p80=249
-need=120 高実行率: 8 ms p50=127 p80=133
-need=400 30日相当: 129 ms p50=694 p80=826
-need=400 高実行率: 59 ms p50=424 p80=441
-need=600 30日相当: 158 ms p50=1042 p80=null
-need=600 高実行率: 112 ms p50=637 p80=661
-need=800 30日相当: 121 ms p50=null p80=null
-need=800 高実行率: 119 ms p50=849 p80=882
-need=1000 30日相当: 24 ms p50=null p80=null
-need=1000 高実行率: 61 ms p50=1062 p80=null
-need=1095 30日相当: 1 ms p50=null p80=null
-need=1095 高実行率: 6 ms p50=null p80=null
+need=120 30日相当: 85 ms p50=208 p80=249
+need=120 高実行率: 65 ms p50=127 p80=133
+need=400 30日相当: 149 ms p50=694 p80=826
+need=400 高実行率: 166 ms p50=424 p80=441
+need=600 30日相当: 261 ms p50=1042 p80=null
+need=600 高実行率: 152 ms p50=637 p80=661
+need=800 30日相当: 128 ms p50=null p80=null
+need=800 高実行率: 125 ms p50=849 p80=882
+need=1000 30日相当: 60 ms p50=null p80=null
+need=1000 高実行率: 59 ms p50=1062 p80=null
+need=1095 30日相当: 12 ms p50=null p80=null
+need=1095 高実行率: 15 ms p50=null p80=null

@@ -19,7 +19,7 @@ function completion(need, post, K, H, prune) {
   for (let m = 0; m < K; m++) { const n = splitmix32(seedFor(20261012, m));
     const a = beta(post.a[0], post.a[1], n), b = beta(post.b[0], post.b[1], n);
     let D = new Float64Array(need), S = new Float64Array(need); D[0] = 1; let rest = 1;
-    for (let d = 1; d <= H && rest > 1e-9; d++) { const nD = new Float64Array(need), nS = new Float64Array(need);
+    for (let d = 1; d <= H; d++) { const nD = new Float64Array(need), nS = new Float64Array(need); // 微小確率の打ち切りはしない（PR #86レビュー）
       const kmin = prune ? Math.max(0, need - (H - d + 1)) : 0; // これ未満のkはH日以内に届かない
       const kmax = Math.min(need - 1, d - 1);
       for (let k = kmin; k <= kmax; k++) { const pd = D[k] * a + S[k] * b, ps = D[k] * (1 - a) + S[k] * (1 - b);
