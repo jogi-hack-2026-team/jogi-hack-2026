@@ -237,6 +237,22 @@ Future ROIは、最上位 → 領域の子 → 実装Issueの3階層で追跡し
 
 最上位・領域Issueは管理用です。Branch・PRは個別の変更を扱う作業Issueへ紐付け、管理Issueごとに実装PRを作る必要はありません。担当者はIssueのAssignees、現在のStatus・Scopeは[GitHub Projects](https://github.com/orgs/jogi-hack-2026-team/projects/1)を確認します。このガイドへ担当表・現在Status・実装Issueごとの依存一覧を複製しません。
 
+### 管理IssueのStatus
+
+最上位・領域の管理Issueは、Projectsの次のStatusで管理します。
+
+| Status | 管理Issueでの扱い |
+| --- | --- |
+| `Backlog` | 管理範囲・配下のIssue・受け入れ条件・Assignee・Scopeがまだ整理されていない |
+| `Ready` | 上記が整理され、配下の作業は未着手。配下の実装着手を許可する意味ではない |
+| `In progress` | 配下の作業Issueが1件でも着手したら変更する。最上位も領域配下の着手に合わせて変更し、自身の完了条件を満たすまで維持する |
+| `In review` | 管理Issue自体には使わない。配下のPRレビューは個別の作業Issueで追跡し、管理Issueは `In progress` を維持する |
+| `Done` | [Close前の確認](#closeと製品完成を確認する)に従い、配下の完了と自身の受け入れ条件・結合確認を満たしてCloseしたことを確認する。最上位 #87 は横断ゲート #69・#84・#82・#83 も必要 |
+
+管理Issueのために専用PRを作ったり、配下のStatusを一括変更したりしません。各実装IssueのHard依存・BLOCKED・着手条件は[着手前の確認](#着手前に読み直す)を維持します。原則1人1IssueとWIP上限は個別の作業Issueで数え、同じ作業を最上位・領域の管理Issueで重ねて数えません。
+
+配下や自身の受け入れ条件が再び未達になったら、領域・最上位の完了判定も見直し、必要な管理Issueを再オープンします。追加対応が着手済みなら `In progress`、未着手なら管理準備に応じて `Ready` または `Backlog` に戻し、理由と残る条件をIssueへ記録します。
+
 ### 着手前に読み直す
 
 領域IssueのReadyは管理用であり、配下の実装開始を許可する意味ではありません。最上位がReadyでも同様です。各実装Issueの着手可否を個別に確認します。
@@ -323,6 +339,8 @@ LabelはIssueやPRの性質を補足するために使用します。
 ---
 
 # 10. GitHub ProjectsのStatus
+
+以下の着手・PR・Mergeの遷移は個別の作業Issueに適用します。最上位・領域の管理Issueは[管理IssueのStatus](#管理issueのstatus)に従ってください。
 
 GitHub ProjectsではIssueを管理し、PRはIssueの開発情報・Development欄から追跡します。
 

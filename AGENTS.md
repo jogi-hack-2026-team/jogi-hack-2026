@@ -615,7 +615,7 @@ Mustの完成度を犠牲にしてShould / Couldを実装しない。
 
 開発フローの詳細は `CONTRIBUTING.md` を正本とする。
 
-現在の基本フロー：
+個別の作業Issueに適用する基本フロー：
 
 Issue
 ↓
@@ -641,7 +641,7 @@ Done
 
 AIはこの流れを無視して独自のGit Workflowを導入しない。
 
-AIは、作業開始時に `In Progress`、PR作成時に `In Review`、Merge後に `Done` へGitHub ProjectsのStatusを更新する。承認要件と状態遷移の正本は `CONTRIBUTING.md` とし、必要なApproveがないPRをMergeしたり、保護ルールをbypassしたりしない。
+AIは、個別の作業Issueについて、作業開始時に `In Progress`、PR作成時に `In Review`、Merge後に `Done` へGitHub ProjectsのStatusを更新する。管理IssueのStatusは[開発ガイド](docs/DEVELOPMENT_GUIDE.md#管理issueのstatus)に従う。承認要件と状態遷移の正本は `CONTRIBUTING.md` とし、必要なApproveがないPRをMergeしたり、保護ルールをbypassしたりしない。
 
 ---
 
