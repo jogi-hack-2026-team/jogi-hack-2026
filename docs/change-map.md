@@ -30,3 +30,11 @@
 ## 確認記録と残課題
 
 この表は2026-09-30のリポジトリ内の所在を示す。Product機能、DB接続、外部Service、公開配置は未実装・未確認。
+
+## 未採択の追加提案
+
+ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。
+
+| 提案 | 説明先 | 状態・確認範囲 |
+| --- | --- | --- |
+| 数日間の「やる／休む」を仮置きして比べる | [目的・例・現行Mustとの差・画面・計算・分担・受入条件案](prediction/action-scenarios-proposal.md)。共有先は[PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93) | 未採択。既存の累積努力量への到達見通しを同じ履歴から比較する案。実装・ユーザー検証・性能測定なし。Product/API/Prediction仕様・Issue依存・Ready/BLOCKEDは変更しない |
