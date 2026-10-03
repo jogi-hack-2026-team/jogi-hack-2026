@@ -29,12 +29,14 @@
 
 ## 未採択の追加提案
 
-ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案のDraft PR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
+ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue #94](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案PR #95](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
 
 | 提案 | 説明先 | 状態・確認範囲 |
 | --- | --- | --- |
 | 数日間の「やる／休む」を仮置きして比べる | [目的・例・現行Mustとの差・画面・計算・分担・受入条件案](prediction/action-scenarios-proposal.md) | 未採択。定型3例の既存DPへの還元、g50との前提差、表示の再検討案とレビュー報告を記録。実装・ユーザー検証・性能測定なし。Product/API/Prediction仕様・既存Issue依存・Ready/BLOCKEDは変更しない |
 
 ## 確認記録と残課題
+
+業務API・昨日補完・Engine集計／エラー・表示の明記不足は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docの未採択案であり、上表の上書きやPoCの動作から昨日の変更可否・成功DTOを決めない。正式仕様の記載済み範囲と判断待ちは[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
 
 この表は2026-09-30のリポジトリ内の所在を示す。Product機能、DB接続、外部Service、公開配置は未実装・未確認。

@@ -761,7 +761,7 @@ Merge前に以下を確認してください。
 | Product / Architecture Decision | 2文書内のDecision Log。別の正式requirements・scope・technology-stack・deployment文書やADR群を増やさない |
 | 領域別の理由・実装支援 | 新Productの要件と領域が決まってから、必要なSupporting Docsを`docs/`に置く。[旧音楽案のFE/BE/ML文書](archive/music-exploration/README.md)は履歴として保管し、現行仕様にはしない |
 | 調査資料・PoC・測定CSV/JSON・experiment README | `Supporting Artifact / Not a Source of Truth`と明記。正式Decisionは2文書へ反映し、補助資料だけに残さない |
-| 過去の開発基盤の判断 | 既存の`docs/decisions/`を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
+| 過去の開発基盤の判断 | [旧開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
 | ページ・機能・基盤の棚卸しと、仕様・コード・確認方法の対応 | [docs/change-map.md](docs/change-map.md)。動的URLはルートのパターン単位で扱う |
 
 Figma / FigJamの図や画面表現から、条件・制約を説明するGit管理の仕様文書へ相互に参照できるようにします。外部資料の共有先が未確認ならURLを創作せず、同じ仕様の別正本を作りません。
