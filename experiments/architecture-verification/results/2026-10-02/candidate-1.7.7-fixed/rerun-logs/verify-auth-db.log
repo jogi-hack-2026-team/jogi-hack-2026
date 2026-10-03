@@ -1,0 +1,45 @@
+
+> @jogi/architecture-verification@0.0.0 verify:auth-db
+> node verify/v1-auth-db.ts
+
+INFO  A0  PostgreSQL server under test
+PASS  A1  database starts empty
+PASS  A2  first migrate creates auth tables (incl. rateLimit), then app tables
+2026-10-02T15:12:23.254Z WARN [Better Auth]: Field lastRequest in table rateLimit has a different type in the database. Expected number but got int8.
+PASS  A3  second migrate is a no-op (idempotent)
+PASS  B0  health responds and includes a DB round trip
+PASS  B1  every protected route returns 401 without a session
+PASS  B2  sign-up succeeds and sets a session cookie
+PASS  B3  session cookie is HttpOnly, SameSite=Lax, Path=/ (no Secure on plain http base URL)
+PASS  B4  get-session returns the signed-up user
+PASS  B5  a fresh request carrying only the cookie is still authenticated ("reload")
+PASS  B6  sign-out succeeds and clears cookies with several Set-Cookie lines
+PASS  B7  the old cookie is rejected after sign-out (session revoked in the DB)
+2026-10-02T15:12:24.553Z WARN [Better Auth]: Invalid password
+PASS  B8  sign-in with a wrong password fails with 401
+PASS  B9  sign-in succeeds again after sign-out
+2026-10-02T15:12:24.710Z ERROR [Better Auth]: Invalid origin: http://evil.example
+PASS  B10  sign-in from an untrusted Origin is rejected
+2026-10-02T15:12:24.723Z ERROR [Better Auth]: Invalid origin: http://evil.example
+PASS  B11  a cookie-bearing POST from an untrusted Origin is rejected (auth endpoints)
+PASS  B12  app mutation rejects foreign Origin without weakening auth protection
+PASS  C0  owner can create a goal
+PASS  C1  another user's goal is 404 for read, today, log write and delete; nothing is written or removed
+PASS  C2  list returns only the caller's goals
+PASS  D1  contract violation returns 422 naming every offending field (needs allErrors)
+PASS  D2  response carries only contract fields (row columns user_id / created_at are not leaked)
+PASS  D3  log upsert: same day overwrites, one row per (goal, date)
+PASS  D4  strict Ajv options: SKIPPED+amount, DONE without amount, string amount, impossible date are all 422
+PASS  D5  today endpoint returns server-decided dates from one snapshot (prediction is a labelled placeholder)
+PASS  D6  unknown API route is a JSON 404
+INFO  D7  Fastify's default Ajv options silently accept what the contract should reject
+2026-10-02T15:12:25.763Z WARN [Better Auth]: Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.
+PASS  E1  bridge from the official guide: sign-in, authenticated call and sign-out work
+PASS  E2  both bridges forward every Set-Cookie line Better Auth emits
+PASS  E3  with an https base URL the session cookie is Secure and uses the __Secure- prefix
+2026-10-02T15:12:26.706Z ERROR [Better Auth]: Invalid origin: http://127.0.0.1:3187
+PASS  E4  with an https base URL, the plain-http origin is no longer trusted
+PASS  F1  deleting a user row removes that user's goals, logs and sessions inside one transaction (FK cascade); rollback restores them
+PASS  F2  DB rejects duplicate (goal, date), DONE without amount, SKIPPED with amount
+
+verification-1 auth and database: 31 pass, 0 fail, 2 info -> results/post-fix/v1-auth-db.json

@@ -1,0 +1,201 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "additional auth, Origin and logical restore probes",
+  "at": "2026-10-02T12:12:49.902Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "win32-x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "logicalCpus": 16,
+    "totalMemGb": 15.6
+  },
+  "summary": {
+    "pass": 12,
+    "fail": 0,
+    "info": 1
+  },
+  "browserTest": false,
+  "restoreMode": "in-memory logical row snapshot",
+  "realEngine": false,
+  "checks": [
+    {
+      "id": "X1",
+      "name": "exactly two synthetic users exist",
+      "status": "PASS"
+    },
+    {
+      "id": "X2",
+      "name": "another user cannot read the owner goal",
+      "status": "PASS",
+      "detail": {
+        "status": 404
+      }
+    },
+    {
+      "id": "X3",
+      "name": "auth rejects cookie-bearing same-site distinct Origin",
+      "status": "PASS",
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "X4",
+      "name": "app mutation with same-site distinct Origin",
+      "status": "INFO",
+      "detail": {
+        "status": 201,
+        "blocker": true,
+        "browserTest": false,
+        "note": "Cookie explicitly sent by Node; does not test browser SameSite, CORS or form/content-type exploitability."
+      }
+    },
+    {
+      "id": "X5",
+      "name": "auth rejects Origin null",
+      "status": "PASS",
+      "detail": {
+        "status": 403
+      }
+    },
+    {
+      "id": "X6",
+      "name": "expired DB session cookie is rejected",
+      "status": "PASS",
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "X7",
+      "name": "ten bursts of twenty attempts obey max five; integer wait headers",
+      "status": "PASS",
+      "detail": [
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        },
+        {
+          "processed": 5,
+          "limited": 15,
+          "retryValid": true
+        }
+      ]
+    },
+    {
+      "id": "X8",
+      "name": "all logout Set-Cookie lines retain separate attributes",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "lines": 3,
+        "shapes": [
+          {
+            "name": "better-auth.session_token",
+            "attributes": [
+              "Max-Age=0",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          },
+          {
+            "name": "better-auth.session_data",
+            "attributes": [
+              "Max-Age=0",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          },
+          {
+            "name": "better-auth.dont_remember",
+            "attributes": [
+              "Max-Age=0",
+              "Path=/",
+              "HttpOnly",
+              "SameSite=Lax"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "X9",
+      "name": "old cookie rejected before logical restoration",
+      "status": "PASS",
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "id": "X10",
+      "name": "deleted synthetic user is absent",
+      "status": "PASS"
+    },
+    {
+      "id": "X11",
+      "name": "logical restoration resurrects the previously deleted synthetic user",
+      "status": "PASS"
+    },
+    {
+      "id": "X12",
+      "name": "logical restoration revives logged-out session with unchanged signing secret",
+      "status": "PASS",
+      "detail": {
+        "status": 200,
+        "riskConfirmed": true,
+        "mechanism": "replay of pre-revocation rows; NOT provider PITR validation"
+      }
+    },
+    {
+      "id": "X13",
+      "name": "purging restored DB sessions rejects old cookie again",
+      "status": "PASS",
+      "detail": {
+        "status": 401
+      }
+    }
+  ]
+}

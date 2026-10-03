@@ -1,0 +1,58 @@
+
+> @jogi/architecture-verification@0.0.0 verify:fixed
+> node verify/v5-fixed-regression.ts
+
+2026-10-02T13:06:29.159Z ERROR [Better Auth]: Database schema mismatch
+
+  Missing tables
+    user, session, account, verification, rateLimit
+
+  help: Run `npx auth migrate` to add the missing tables and columns.
+PASS  P1  positive: only two synthetic identities, registration works
+PASS  P2  positive: owner same-origin creation and write/read/delete work
+PASS  P3  positive: same-origin owner DELETE succeeds
+PASS  O-cross-site  negative: cross-site Origin cannot create/write/delete
+PASS  O-same-site port  negative: same-site port Origin cannot create/write/delete
+PASS  O-null  negative: null Origin cannot create/write/delete
+PASS  O-missing  negative: missing Origin cannot create/write/delete
+PASS  O-spoofed suffix  negative: spoofed suffix Origin cannot create/write/delete
+PASS  O-side-effect  negative: rejected mutations leave owner goal and logs unchanged
+PASS  O-owner  negative: same-origin other user still gets 404 for every owner operation
+PASS  O-read  positive: safe GET with Cookie and no Origin remains allowed
+2026-10-02T13:06:30.777Z ERROR [Better Auth]: Invalid origin: http://127.0.0.2:3292
+PASS  A-http://127.0.0.2:3292  negative: existing auth sign-out Origin protection remains
+2026-10-02T13:06:30.790Z ERROR [Better Auth]: Invalid origin: http://127.0.0.1:3291
+PASS  A-http://127.0.0.1:3291  negative: existing auth sign-out Origin protection remains
+PASS  A-null  negative: existing auth sign-out Origin protection remains
+PASS  I-safe  positive: exact signed safe-integer boundaries in auth pool, app stays string
+PASS  I-unsafe  negative: unsafe int8 never silently rounds; app pool preserves full strings
+PASS  I-other  positive: auth parser does not change other OIDs
+2026-10-02T13:06:31.481Z WARN [Better Auth]: Invalid password
+2026-10-02T13:06:31.514Z WARN [Better Auth]: Invalid password
+2026-10-02T13:06:31.549Z WARN [Better Auth]: Invalid password
+2026-10-02T13:06:31.552Z WARN [Better Auth]: Invalid password
+2026-10-02T13:06:31.648Z WARN [Better Auth]: Invalid password
+PASS  I-rate  positive: dedicated default auth pool yields five 401 and fifteen 429, all waits integer 1..60
+INFO  Browser-environment  real browser scope and environment
+PASS  BR1  real browser same-origin auth login
+PASS  BR2  real browser stores HttpOnly Lax session cookie on local HTTP
+PASS  BR3  real browser same-origin JSON mutation succeeds
+FAIL  BR4  same-site distinct port JSON preflight blocks mutation
+PASS  BR5  same-site distinct port simple fetch POST rejected before parsing
+PASS  BR6  same-site distinct port browser form POST rejected
+FAIL  BR7  cross-site JSON preflight blocks mutation
+PASS  BR8  cross-site simple fetch POST rejected before parsing
+PASS  BR9  cross-site browser form POST rejected
+2026-10-02T13:06:35.424Z WARN [Better Auth]: Invalid password
+PASS  S-password-before  positive: post-snapshot password change accepts new and rejects old password before restore
+PASS  S-before  positive: logged-out and deleted user old cookie is 401
+PASS  S-risk-control  negative control: raw row restoration still revives logged-out old cookie
+PASS  S-guard  negative: standalone restore revocation refuses missing explicit confirmation
+PASS  S-procedure  positive: confirmed standalone procedure removes all restored sessions
+PASS  S-cookies  positive: both restored old cookies rejected after revocation
+PASS  S-unresolved-user  negative control: session revocation does not reapply user deletion
+PASS  S-unresolved-password  negative control: restored account password still authenticates
+2026-10-02T13:06:36.466Z WARN [Better Auth]: Invalid password
+PASS  S-password-rollback  negative control: password changed after snapshot is rejected after restore and session purge
+
+post-fix positive and negative regressions: 34 pass, 2 fail, 1 info -> results/v5-fixed-regression.json

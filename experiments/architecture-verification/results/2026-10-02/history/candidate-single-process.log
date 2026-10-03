@@ -1,0 +1,32 @@
+
+> @jogi/architecture-verification@0.0.0 verify:single-process
+> node verify/v3-single-process.ts
+
+2026-10-02T12:13:04.705Z ERROR [Better Auth]: Database schema mismatch
+
+  Missing tables
+    user, session, account, verification, rateLimit
+
+  help: Run `npx auth migrate` to add the missing tables and columns.
+PASS  S1  GET / serves the SPA shell
+PASS  S2  a deep client route falls back to index.html (history routing)
+PASS  S3  hashed assets are served as JavaScript
+INFO  S3b  default cache header on hashed assets
+PASS  S4  unknown API routes and non-GET misses stay JSON 404 (never the SPA shell)
+PASS  S5  static web -> auth -> DB write -> DB read -> today (placeholder prediction) works in one process
+PASS  S6  structured request logs are written and do not contain the session cookie value or the password
+INFO  S7  process footprint after the path check (local, not a container)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+[TypeError: fetch failed] {
+  [cause]: Error: read ECONNRESET
+      at TCP.onStreamRead (node:internal/stream_base_commons:216:20) {
+    errno: -4077,
+    code: 'ECONNRESET',
+    syscall: 'read'
+  }
+}
+
+Node.js v24.21.0

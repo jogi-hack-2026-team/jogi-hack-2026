@@ -25,7 +25,7 @@
 | アプリの起動構成（npm workspaces・Compose・Application CI） | [D-23](architecture.md#d-23)の候補（技術選定確定待ち）。確定後、現行の場所への復元をI-01で行う | 復元前は[旧構成](../archive/music-exploration/package.json)・[旧Compose](../archive/music-exploration/compose.yaml)が履歴として残る |
 | 公開先と外部設定 | [D-25](architecture.md#d-25)、[基盤状態](operations/development-foundation-status.md) | アカウント・課金の作成は承認後 |
 | 再利用資産 | [再利用資産](operations/reuse-handoff.md) | 実装Issueで採否を記録 |
-| 技術選定の最小検証（[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)） | Supporting Artifact。第一候補を採択前に実測した記録で、採択・Productの実装ではない。[検証報告](../experiments/architecture-verification/REPORT.md)、[訂正後の比較](../experiments/architecture-verification/SELECTION-v3.1.md)。要約と実装時の対策は[Architecture](architecture.md#第一候補の検証状況84--85) | [検証コードと再実行手順](../experiments/architecture-verification/README.md)。専用のpackageで `npm run verify:*`。予測エンジンの性能、コンテナ、配備先は未実施 |
+| 技術選定の最小検証（[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)） | Supporting Artifact。第一候補を採択前に実測した記録で、採択・Productの実装ではない。[検証報告](../experiments/architecture-verification/REPORT.md)、[訂正後の比較](../experiments/architecture-verification/SELECTION-v3.1.md)。要約と実装時の対策は[Architecture](architecture.md#第一候補の検証状況84--85) | [検証コードと再実行手順](../experiments/architecture-verification/README.md)。専用のpackageで `npm run verify:*`。[2026-10-02追加報告](../experiments/architecture-verification/FOLLOWUP-2026-10-02.md)・[候補の再実行](../experiments/architecture-verification/candidate-1.7.7/README.md)・[Linux試験](../experiments/architecture-verification/LINUX-2026-10-02.md)。Linux build/認証成功、修正前SIGTERM失敗・承認済み最小hook後v6/v7正常終了。実Engine/実クラウド/費用は未実測 |
 
 ## 未採択の追加提案
 

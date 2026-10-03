@@ -1,0 +1,35 @@
+INFO  D-env  actual Linux Docker engine
+INFO  D-image  fixed runtime image ID/bytes
+PASS  D-setup  only two synthetic identities, independent goals/logs
+PASS  D-setup-stop  initial HTTP keep-alive stack stops normally
+PASS  D-worker-idle  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-worker-idle  after shutdown committed write exact once; other owner untouched
+PASS  LOG-worker-idle  request logs omit generated Cookie/password/DB secrets
+PASS  D-worker-active-one  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-worker-active-one  after shutdown committed write exact once; other owner untouched
+PASS  LOG-worker-active-one  request logs omit generated Cookie/password/DB secrets
+PASS  D-worker-active-repeat  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-worker-active-repeat  after shutdown committed write exact once; other owner untouched
+PASS  LOG-worker-active-repeat  request logs omit generated Cookie/password/DB secrets
+PASS  D-worker-active-three-and-write  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-worker-active-three-and-write  after shutdown committed write exact once; other owner untouched
+PASS  LOG-worker-active-three-and-write  request logs omit generated Cookie/password/DB secrets
+PASS  D-worker-write-only  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-worker-write-only  after shutdown committed write exact once; other owner untouched
+PASS  LOG-worker-write-only  request logs omit generated Cookie/password/DB secrets
+PASS  D-worker-idle-repeat  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-worker-idle-repeat  after shutdown committed write exact once; other owner untouched
+PASS  LOG-worker-idle-repeat  request logs omit generated Cookie/password/DB secrets
+PASS  D-inline-idle  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-inline-idle  after shutdown committed write exact once; other owner untouched
+PASS  LOG-inline-idle  request logs omit generated Cookie/password/DB secrets
+PASS  D-inline-write  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-inline-write  after shutdown committed write exact once; other owner untouched
+PASS  LOG-inline-write  request logs omit generated Cookie/password/DB secrets
+PASS  D-inline-idle-repeat  normal keep-alive, drain all received requests, all resources end within 10s
+PASS  DB-inline-idle-repeat  after shutdown committed write exact once; other owner untouched
+PASS  LOG-inline-idle-repeat  request logs omit generated Cookie/password/DB secrets
+INFO  D-scope  local conditions and non-goals
+
+Linux shutdown regression: keep-alive, in-flight writes and repeated restart: 29 pass, 0 fail, 3 info -> results/post-fix/v7-shutdown-regression.json
+{"pass":29,"fail":0,"info":3}

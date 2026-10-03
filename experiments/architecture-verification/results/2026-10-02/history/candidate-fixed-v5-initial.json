@@ -1,0 +1,456 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "post-fix positive and negative regressions",
+  "at": "2026-10-02T13:06:36.471Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "win32-x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "logicalCpus": 16,
+    "totalMemGb": 15.6
+  },
+  "summary": {
+    "pass": 34,
+    "fail": 2,
+    "info": 1
+  },
+  "provisionalPolicy": "same-origin mutation only; null/missing rejected",
+  "realEngine": false,
+  "restoreMode": "in-memory logical rows; offline session revocation",
+  "checks": [
+    {
+      "id": "P1",
+      "name": "positive: only two synthetic identities, registration works",
+      "status": "PASS"
+    },
+    {
+      "id": "P2",
+      "name": "positive: owner same-origin creation and write/read/delete work",
+      "status": "PASS"
+    },
+    {
+      "id": "P3",
+      "name": "positive: same-origin owner DELETE succeeds",
+      "status": "PASS"
+    },
+    {
+      "id": "O-cross-site",
+      "name": "negative: cross-site Origin cannot create/write/delete",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          403,
+          403,
+          403
+        ]
+      }
+    },
+    {
+      "id": "O-same-site port",
+      "name": "negative: same-site port Origin cannot create/write/delete",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          403,
+          403,
+          403
+        ]
+      }
+    },
+    {
+      "id": "O-null",
+      "name": "negative: null Origin cannot create/write/delete",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          403,
+          403,
+          403
+        ]
+      }
+    },
+    {
+      "id": "O-missing",
+      "name": "negative: missing Origin cannot create/write/delete",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          403,
+          403,
+          403
+        ]
+      }
+    },
+    {
+      "id": "O-spoofed suffix",
+      "name": "negative: spoofed suffix Origin cannot create/write/delete",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          403,
+          403,
+          403
+        ]
+      }
+    },
+    {
+      "id": "O-side-effect",
+      "name": "negative: rejected mutations leave owner goal and logs unchanged",
+      "status": "PASS"
+    },
+    {
+      "id": "O-owner",
+      "name": "negative: same-origin other user still gets 404 for every owner operation",
+      "status": "PASS"
+    },
+    {
+      "id": "O-read",
+      "name": "positive: safe GET with Cookie and no Origin remains allowed",
+      "status": "PASS"
+    },
+    {
+      "id": "A-http://127.0.0.2:3292",
+      "name": "negative: existing auth sign-out Origin protection remains",
+      "status": "PASS"
+    },
+    {
+      "id": "A-http://127.0.0.1:3291",
+      "name": "negative: existing auth sign-out Origin protection remains",
+      "status": "PASS"
+    },
+    {
+      "id": "A-null",
+      "name": "negative: existing auth sign-out Origin protection remains",
+      "status": "PASS"
+    },
+    {
+      "id": "I-safe",
+      "name": "positive: exact signed safe-integer boundaries in auth pool, app stays string",
+      "status": "PASS",
+      "detail": [
+        {
+          "input": "-9007199254740991",
+          "authType": "number",
+          "appType": "string",
+          "exact": true
+        },
+        {
+          "input": "0",
+          "authType": "number",
+          "appType": "string",
+          "exact": true
+        },
+        {
+          "input": "9007199254740991",
+          "authType": "number",
+          "appType": "string",
+          "exact": true
+        }
+      ]
+    },
+    {
+      "id": "I-unsafe",
+      "name": "negative: unsafe int8 never silently rounds; app pool preserves full strings",
+      "status": "PASS",
+      "detail": [
+        {
+          "input": "-9007199254740992",
+          "rejected": true,
+          "appUnchanged": true
+        },
+        {
+          "input": "9007199254740992",
+          "rejected": true,
+          "appUnchanged": true
+        },
+        {
+          "input": "-9223372036854775808",
+          "rejected": true,
+          "appUnchanged": true
+        },
+        {
+          "input": "9223372036854775807",
+          "rejected": true,
+          "appUnchanged": true
+        }
+      ]
+    },
+    {
+      "id": "I-other",
+      "name": "positive: auth parser does not change other OIDs",
+      "status": "PASS",
+      "detail": {
+        "int4Type": "number",
+        "numericType": "string",
+        "textType": "string"
+      }
+    },
+    {
+      "id": "I-rate",
+      "name": "positive: dedicated default auth pool yields five 401 and fifteen 429, all waits integer 1..60",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429,
+          429
+        ],
+        "retries": [
+          "60"
+        ]
+      }
+    },
+    {
+      "id": "Browser-environment",
+      "name": "real browser scope and environment",
+      "status": "INFO",
+      "detail": {
+        "browser": "Chrome/154.0.8037.95",
+        "unavailable": null,
+        "httpsTest": false
+      }
+    },
+    {
+      "id": "BR1",
+      "name": "real browser same-origin auth login",
+      "status": "PASS",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "BR2",
+      "name": "real browser stores HttpOnly Lax session cookie on local HTTP",
+      "status": "PASS",
+      "detail": [
+        {
+          "name": "better-auth.session_token",
+          "httpOnly": true,
+          "secure": false,
+          "sameSite": "Lax",
+          "path": "/"
+        }
+      ]
+    },
+    {
+      "id": "BR3",
+      "name": "real browser same-origin JSON mutation succeeds",
+      "status": "PASS",
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "id": "BR4",
+      "name": "same-site distinct port JSON preflight blocks mutation",
+      "status": "FAIL",
+      "detail": {
+        "fetchRejected": true,
+        "requests": [
+          {
+            "id": "18708.7",
+            "method": "POST",
+            "url": "http://127.0.0.1:3290/api/goals"
+          },
+          {
+            "id": "9F1C222D4F45BA90E1000931ECCA4663",
+            "method": "OPTIONS",
+            "url": "http://127.0.0.1:3290/api/goals",
+            "cookie": false,
+            "blockedReasons": [],
+            "status": 404
+          }
+        ]
+      }
+    },
+    {
+      "id": "BR5",
+      "name": "same-site distinct port simple fetch POST rejected before parsing",
+      "status": "PASS",
+      "detail": {
+        "fetchRejected": true,
+        "requests": [
+          {
+            "id": "18708.8",
+            "method": "POST",
+            "url": "http://127.0.0.1:3290/api/goals",
+            "cookie": true,
+            "blockedReasons": [],
+            "status": 403
+          }
+        ]
+      }
+    },
+    {
+      "id": "BR6",
+      "name": "same-site distinct port browser form POST rejected",
+      "status": "PASS",
+      "detail": {
+        "requests": [
+          {
+            "id": "890077016F03F0DEE23B9F25812B0810",
+            "method": "POST",
+            "url": "http://127.0.0.1:3290/api/goals",
+            "status": 403,
+            "cookie": true,
+            "blockedReasons": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "BR7",
+      "name": "cross-site JSON preflight blocks mutation",
+      "status": "FAIL",
+      "detail": {
+        "fetchRejected": true,
+        "requests": [
+          {
+            "id": "20236.3",
+            "method": "POST",
+            "url": "http://127.0.0.1:3290/api/goals"
+          },
+          {
+            "id": "A6B37843A10F4C78C3D51F44CDB708BC",
+            "method": "OPTIONS",
+            "url": "http://127.0.0.1:3290/api/goals",
+            "cookie": false,
+            "blockedReasons": [],
+            "status": 404
+          }
+        ]
+      }
+    },
+    {
+      "id": "BR8",
+      "name": "cross-site simple fetch POST rejected before parsing",
+      "status": "PASS",
+      "detail": {
+        "fetchRejected": true,
+        "requests": [
+          {
+            "id": "20236.4",
+            "method": "POST",
+            "url": "http://127.0.0.1:3290/api/goals",
+            "cookie": false,
+            "blockedReasons": [
+              "SchemefulSameSiteLax"
+            ],
+            "status": 403
+          }
+        ]
+      }
+    },
+    {
+      "id": "BR9",
+      "name": "cross-site browser form POST rejected",
+      "status": "PASS",
+      "detail": {
+        "requests": [
+          {
+            "id": "CF806629783FEEDF75F01FB6B2FA602B",
+            "method": "POST",
+            "url": "http://127.0.0.1:3290/api/goals",
+            "status": 403,
+            "cookie": false,
+            "blockedReasons": [
+              "SchemefulSameSiteLax"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "S-password-before",
+      "name": "positive: post-snapshot password change accepts new and rejects old password before restore",
+      "status": "PASS",
+      "detail": {
+        "change": 200,
+        "newPassword": 200,
+        "oldPassword": 401
+      }
+    },
+    {
+      "id": "S-before",
+      "name": "positive: logged-out and deleted user old cookie is 401",
+      "status": "PASS"
+    },
+    {
+      "id": "S-risk-control",
+      "name": "negative control: raw row restoration still revives logged-out old cookie",
+      "status": "PASS",
+      "detail": {
+        "riskReproduced": true,
+        "restoreMode": "logical in-memory replay, not Neon PITR"
+      }
+    },
+    {
+      "id": "S-guard",
+      "name": "negative: standalone restore revocation refuses missing explicit confirmation",
+      "status": "PASS"
+    },
+    {
+      "id": "S-procedure",
+      "name": "positive: confirmed standalone procedure removes all restored sessions",
+      "status": "PASS",
+      "detail": {
+        "event": "restored-sessions-revoked",
+        "deleted": 3
+      }
+    },
+    {
+      "id": "S-cookies",
+      "name": "positive: both restored old cookies rejected after revocation",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          401,
+          401
+        ]
+      }
+    },
+    {
+      "id": "S-unresolved-user",
+      "name": "negative control: session revocation does not reapply user deletion",
+      "status": "PASS",
+      "detail": {
+        "userDeletionStillUnresolved": true
+      }
+    },
+    {
+      "id": "S-unresolved-password",
+      "name": "negative control: restored account password still authenticates",
+      "status": "PASS",
+      "detail": {
+        "oldPasswordPolicyNotSolved": true,
+        "status": 200
+      }
+    },
+    {
+      "id": "S-password-rollback",
+      "name": "negative control: password changed after snapshot is rejected after restore and session purge",
+      "status": "PASS",
+      "detail": {
+        "status": 401,
+        "passwordRollbackStillUnresolved": true
+      }
+    }
+  ]
+}
