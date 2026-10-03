@@ -1,6 +1,6 @@
 # 仕様・実装・確認方法の対応表
 
-現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**2026-09-30時点でProduct機能のコードはない。** 下表の「実装予定の場所」は[Architecture](architecture.md#repository構成)の候補構成（技術選定確定待ち）に基づく予定であり、実装後に実在するパスとテストへ更新する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
+現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**Product機能のコードは未実装。** 下表の場所は[Repository構成](architecture.md#repository構成)の予定です。[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)を確認し、実装後に実在するパスとテストへ更新する。旧対応表は[履歴](../archive/music-exploration/docs/change-map.md)に保持する。
 
 ## アプリの仕様と実装
 
@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | Issue・Branch・PR・レビュー | [CONTRIBUTING](../CONTRIBUTING.md)、[Future ROIのIssue運用](DEVELOPMENT_GUIDE.md#future-roiのissue運用) | GitHubで階層、最新Issue・PR、着手条件と完了証拠を確認。AIの入口は[AGENTS](../AGENTS.md#16-issue)・[Claude向け指示](../CLAUDE.md) |
 | 文書・設定チェック | [開発ガイド](DEVELOPMENT_GUIDE.md#文書チェックで起きること) | [mise設定](../mise.toml) → [check-foundation.ps1](../scripts/check-foundation.ps1)。`pwsh -NoProfile -File scripts/check-foundation.ps1` |
-| アプリの起動構成（npm workspaces・Compose・Application CI） | [D-23](architecture.md#d-23)の候補（技術選定確定待ち）。確定後、現行の場所への復元をI-01で行う | 復元前は[旧構成](../archive/music-exploration/package.json)・[旧Compose](../archive/music-exploration/compose.yaml)が履歴として残る |
+| アプリの起動構成（workspace・Compose・Application CI） | [D-23](architecture.md#d-23)の基本構成は採用済み。版・追加ツール・復元と動作確認はI-01の着手条件に従う | 復元前は[旧構成](../archive/music-exploration/package.json)・[旧Compose](../archive/music-exploration/compose.yaml)が履歴として残る |
 | 公開先と外部設定 | [D-25](architecture.md#d-25)、[基盤状態](operations/development-foundation-status.md) | アカウント・課金の作成は承認後 |
 | 再利用資産 | [再利用資産](operations/reuse-handoff.md) | 実装Issueで採否を記録 |
 | 技術選定の最小検証（[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)） | Supporting Artifact。第一候補を採択前に実測した記録で、採択・Productの実装ではない。[検証報告](../experiments/architecture-verification/REPORT.md)、[訂正後の比較](../experiments/architecture-verification/SELECTION-v3.1.md)。要約と実装時の対策は[Architecture](architecture.md#第一候補の検証状況84--85) | [検証コードと再実行手順](../experiments/architecture-verification/README.md)。専用のpackageで `npm run verify:*`。予測エンジンの性能、コンテナ、配備先は未実施 |
