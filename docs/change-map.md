@@ -7,8 +7,8 @@
 | 対象 | 仕様 | 実装予定の場所 | 確認方法（予定） |
 | --- | --- | --- | --- |
 | 認証（R-01） | [R-01](product-spec.md#requirementsmvp)、[D-24](architecture.md#d-24) | `apps/api/src/auth/`、`apps/web/src/routes/` | APIテスト（未ログイン401・他人404）、主要FlowのE2E |
-| Goal（R-02） | [R-02](product-spec.md#requirementsmvp)、[Data Model](architecture.md#data-model) | `apps/api/src/goals/`、`apps/api/migrations/` | APIテスト |
-| 記録・前日補完（R-03・R-04） | [R-03・R-04](product-spec.md#requirementsmvp)、[P-14](product-spec.md#p-14-記録のルール) | `apps/api/src/logs/` | APIテスト（今日・昨日以外は422、上書き、timezone境界） |
+| Goal（R-02） | [R-02](product-spec.md#requirementsmvp)、[Data Model](architecture.md#data-model)、[初期量と開始日の境界](architecture.md#初期進捗と日々の記録の境界) | `apps/api/src/goals/`、`apps/api/migrations/`（予定）。#76・#78、開始日の保存・共有と既存Goal互換性は未決 | APIテスト・[開始日等の受入条件](architecture.md#記録補完訂正の受入確認)（未実装・未検証） |
+| 記録・前日補完・訂正（R-03・R-04） | [R-03・R-04](product-spec.md#requirementsmvp)、[P-14の理由・分担と未決事項](product-spec.md#p-14-記録のルール)、[上書きと再計算](architecture.md#記録の上書きと予測の再計算) | `apps/api/src/logs/`、`apps/web/src/routes/`（予定）。#77・#79・#80、昨日の訂正導線は調整待ち | [受入条件・固定例](architecture.md#記録補完訂正の受入確認)（API・UIは未実装・未検証）。[初期量との境界方針は承認済み、開始日保存等はOPEN](architecture.md#初期進捗と日々の記録の境界) |
 | Today Decision（R-05〜R-08） | [表示仕様](product-spec.md#today-decision画面の表示仕様) | `apps/api/src/prediction/`、`apps/web/src/routes/` | APIテスト（`/today`）、E2E |
 | Prediction Engine | [Prediction Engine](architecture.md#prediction-engine) | `packages/prediction/` | Vitest＋fast-check（[T-01〜T-15](architecture.md#test-strategy)） |
 | デモデータ（R-09） | [R-09](product-spec.md#requirementsmvp) | 未定（Demo Seedスクリプト） | デモ手順の通し確認 |
