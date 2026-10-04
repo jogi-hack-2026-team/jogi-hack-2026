@@ -37,6 +37,6 @@
 
 ## 確認記録と残課題
 
-業務API・昨日補完・Engine集計／エラー・表示の明記不足は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docの未採択案であり、上表の上書きやPoCの動作から昨日の変更可否・成功DTOを決めない。正式仕様の記載済み範囲と判断待ちは[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
+業務API・昨日補完・Engine集計／エラー・表示の明記不足は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日訂正と#103のmetadata・公開エラーには依頼者承認の記録があるため、main反映待ちと残る未採択案を分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
 
 この表は2026-09-30のリポジトリ内の所在を示す。Product機能、DB接続、外部Service、公開配置は未実装・未確認。

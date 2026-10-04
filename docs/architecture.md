@@ -138,7 +138,7 @@ CREATE TABLE action_log (
 
 業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の候補であり、R-01の確定要件と区別する。認証ライブラリのエラーを業務APIのstatus・共通error形式へ揃える範囲は未決定。
 
-以下はmethod / pathと記載済みの規則の一覧。成功DTO・成功status、PATCHの省略・null・空body、Goal一覧の今日状態の表現、SKIPPEDの応答量は未定義であり、[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日の変更と昨日の未記録補完はProduct R-03・R-04・P-14を参照する。下表の「上書き」と#77を昨日の既存記録にも適用するかは[解釈の判断待ち](contract-review-proposal.md#昨日補完と再送競合)。
+以下はmethod / pathと記載済みの規則の一覧。成功DTO・成功status、PATCHの省略・null・空body、Goal一覧の今日状態の表現、SKIPPEDの応答量は未定義であり、[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日の変更と昨日の未記録補完はmainのProduct R-03・R-04・P-14を参照する。昨日訂正と記録開始日の依頼者承認方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映待ちであり、[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)で反映待ちと未決の再送・競合方式を分ける。
 
 | Method / Path | 内容 |
 | --- | --- |
@@ -156,7 +156,7 @@ CREATE TABLE action_log (
 
 ### インターフェース
 
-説明のためTypeScriptで記述する。以下に明記した入出力の項目・規則・既定値は確定。`observedDays` / `recordedDays`の集計細則、入力・設定エラーの全範囲と表現は[判断待ち](contract-review-proposal.md#engineと表示の不足)。実装言語は[D-23](#d-23)の確定に従う。
+説明のためTypeScriptで記述する。以下に明記した入出力の項目・規則・既定値は確定。`observedDays` / `recordedDays`の集計細則と公開エラー契約は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)に依頼者承認の記録があり、mainの本節へは未反映。[契約の判断事項](contract-review-proposal.md#engineと表示の不足)で反映待ちと未決のHTTP変換等を分ける。実装言語は[D-23](#d-23)の確定に従う。
 
 ```ts
 type LocalDate = string; // 'YYYY-MM-DD'（Goalのtimezoneでの日付）
