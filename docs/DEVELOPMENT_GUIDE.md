@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。FE / BEは最小起動構成のみでProduct機能は未実装です。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行Product機能とアプリの起動構成は未実装で、旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)へ退避しています。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---

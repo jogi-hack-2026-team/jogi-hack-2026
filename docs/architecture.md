@@ -2,7 +2,7 @@
 
 ## 現行状態（2026-09-30）
 
-Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Model、API契約、Prediction Engine仕様は確定。**構成と技術（[D-23](#d-23)〜[D-25](#d-25)）は候補であり、技術選定の確定待ち**（別担当の精査結果と比較して確定する）。**Product機能・Prediction Engine・DB・公開環境はすべて未実装。** 下記は実装の契約であり、動作確認済みの記述ではない。
+Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Modelと、以下に明記した業務API・Prediction Engineの規則は確定。APIの成功DTO・HTTP status等の未定義部分と、文書間で解釈が一致しない部分は[契約の判断事項](contract-review-proposal.md)へ分け、契約全体が確定済みとは扱わない。**構成と技術（[D-23](#d-23)〜[D-25](#d-25)）は候補であり、技術選定の確定待ち**（別担当の精査結果と比較して確定する）。**Product機能・Prediction Engine・DB・公開環境はすべて未実装。** 下記は実装の契約であり、動作確認済みの記述ではない。
 
 旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
@@ -103,7 +103,7 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 ## Data Model
 
 ```sql
--- 認証テーブル（user, session, account, verification）はBetter AuthのCLIで作成する
+-- Better Auth採択時の認証テーブルは候補。固定版getMigrations案はTechnology Stackを参照
 CREATE TABLE goal (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
@@ -136,11 +136,13 @@ CREATE TABLE action_log (
 
 ## API契約
 
-すべて`/api`配下、同一originのCookieセッション。未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。
+業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の候補であり、R-01の確定要件と区別する。認証ライブラリのエラーを業務APIのstatus・共通error形式へ揃える範囲は未決定。
+
+以下はmethod / pathと記載済みの規則の一覧。成功DTO・成功status、PATCHの省略・null・空body、Goal一覧の今日状態の表現、SKIPPEDの応答量は未定義であり、[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日の変更と昨日の未記録補完はProduct R-03・R-04・P-14を参照する。下表の「上書き」と#77を昨日の既存記録にも適用するかは[解釈の判断待ち](contract-review-proposal.md#昨日補完と再送競合)。
 
 | Method / Path | 内容 |
 | --- | --- |
-| `/api/auth/*` | Better Authのハンドラ（登録・ログイン・ログアウト・セッション） |
+| `/api/auth/*`（候補） | Better Auth採択時のハンドラ（登録・ログイン・ログアウト・セッション）。業務APIの確定契約とは別 |
 | `GET /api/goals` | 自分のGoal一覧（今日の記録状態を含む） |
 | `POST /api/goals` | 作成。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone`。timezoneは有効なIANA名のみ（それ以外は422） |
 | `GET / PATCH / DELETE /api/goals/:goalId` | 取得・編集・削除。記録があるGoalで`timezone`・`initialProgress`を変えようとすると422 |
@@ -154,7 +156,7 @@ CREATE TABLE action_log (
 
 ### インターフェース
 
-説明のためTypeScriptで記述する。入出力の項目・意味・既定値は確定。実装言語は[D-23](#d-23)の確定に従う。
+説明のためTypeScriptで記述する。以下に明記した入出力の項目・規則・既定値は確定。`observedDays` / `recordedDays`の集計細則、入力・設定エラーの全範囲と表現は[判断待ち](contract-review-proposal.md#engineと表示の不足)。実装言語は[D-23](#d-23)の確定に従う。
 
 ```ts
 type LocalDate = string; // 'YYYY-MM-DD'（Goalのtimezoneでの日付）
@@ -329,7 +331,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | --- | --- |
 | 形 | 1つのコンテナ（Fastifyが`/api`と、ビルド済みSPAを同一originで配信）＋Managed PostgreSQL。Cookieを同一originに閉じ、CORSを不要にする |
 | 公開先 | [D-25](#d-25)：Cloud Run＋Neonを推奨。アカウント・課金設定の作成は承認後 |
-| 早期のstaging確認 | 本番でしか見えない問題（Cookie・`BETTER_AUTH_URL`・proxy・migration・環境変数・DB接続・cold start・SPA fallback・HTTPS）を早く見つけるため、最終公開を待たずに2段階で確認する。①I-01：healthだけのコンテナをstagingへ出し、DBへ接続できる ②I-06：stagingで登録・ログイン・セッション維持ができる。I-14は最終確認・E2E・Demo Seed・仕上げに限る |
+| 早期のstaging確認 | 本番でしか見えない問題（Cookie・`BETTER_AUTH_URL`・proxy・migration・環境変数・DB接続・cold start・SPA fallback・HTTPS）を早く見つけるため、最終公開を待たずに2段階で確認する。①I-01：healthだけのコンテナをstagingへ出し、DBへ接続できる ②I-06：stagingで登録・ログイン・セッション維持ができる。I-14は最終確認・E2E・Demo Seed・仕上げを担う。公開先の承認が遅れた場合の既存移管例外（[#70](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/70)のstaging項目を[#75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)へ、#75のstaging確認を[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)へ）に従い、移管先で未確認項目を追跡する。移管を公開確認済みと扱わない |
 | 環境変数 | `DATABASE_URL`、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`。実値はProviderのSecret設定に置き、Gitへ入れない |
 | デモ | Demo Seed（合成記録）を開発データと分けて投入。手順は[リリースとデモ](operations/release-demo.md) |
 

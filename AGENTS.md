@@ -969,7 +969,7 @@ Merge前に修正が必要。
 - `docs/DEVELOPMENT_GUIDE.md`
 - `docs/product-spec.md`
 - `docs/architecture.md`
-- `docs/decisions/`（既存基盤判断の履歴参照）
+- [旧開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)（既存基盤判断の履歴参照）
 
 以下が変更された場合はDocumentation更新を検討する。
 
