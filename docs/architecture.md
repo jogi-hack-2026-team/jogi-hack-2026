@@ -2,13 +2,13 @@
 
 ## 現行状態（2026-09-30）
 
-Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Modelと、以下に明記した業務API・Prediction Engineの規則は確定。APIの成功DTO・HTTP status等の未定義部分と、文書間で解釈が一致しない部分は[契約の判断事項](contract-review-proposal.md)へ分け、契約全体が確定済みとは扱わない。**構成と技術（[D-23](#d-23)〜[D-25](#d-25)）は候補であり、技術選定の確定待ち**（別担当の精査結果と比較して確定する）。**Product機能・DB・公開環境は未実装。** 純粋Prediction Engineと関連テストは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みだが、アプリへの正式結合は未完了。下記の契約をアプリ動作確認済みとは扱わない。
+Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Modelと記載済みの業務API・Prediction Engineの規則は確定。成功応答のデータ項目（DTO）・HTTP status等の未定義部分と文書間の解釈差は[契約の判断事項](contract-review-proposal.md)へ分ける。**2026-10-03、依頼者によるチーム合意報告を受け[D-23](#d-23)の基本構成を採用。[D-24](#d-24)／[D-25](#d-25)は検証・運用条件付きの第一候補。** [合意範囲](#2026-10-03の技術構成合意)を超えて認証・公開先・API細則を確定しない。**Product機能・DB・公開環境は未実装。** 純粋Prediction Engineと関連テストは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みだが、アプリへの正式結合は未完了。構成の採用や下記の契約をアプリ動作確認済みとは扱わない。
 
 旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
 ## System構成
 
-Productと予測仕様から必要になる性質は「本人だけが記録を操作できる認証・記録と予測の整合・純粋な計算モジュール・決定的なテスト」。これを満たす最小構成の**候補**として、**1つのNodeアプリ（API＋静的配信）＋PostgreSQL** とし、コード上はモジュールで責務を分ける（モジュラーモノリス）。配備するサービスを増やさず、計算だけを切り離して検証・改善できる形を狙う。Microservices、Queue、Cache、ML frameworkは現時点で追加する根拠がない。下図とモジュール表の具体技術名は候補（[D-23](#d-23)）。確定しているのは「Prediction EngineをUI・DB・HTTPから独立した純粋関数にする」という責務の分け方。[比較理由・弱点・増強の再検討条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)を参照。
+Productと予測仕様から必要になる性質は「本人だけが記録を操作できる認証・記録と予測の整合・純粋な計算モジュール・決定的なテスト」。[D-23](#d-23)で、これを満たす基本構成として**1つのNodeアプリ（API＋静的配信）＋PostgreSQL** を採用し、コード上はモジュールで責務を分ける（モジュラーモノリス）。配備するサービスを増やさず、計算だけを切り離して検証・改善できる形を狙う。Microservices、Queue、Cache、ML frameworkは現時点で追加する根拠がない。下図のReact／Fastify／PostgreSQLはD-23の採用範囲、認証ライブラリ・テーブルは[D-24](#d-24)の条件付き第一候補。確定しているのは「Prediction EngineをUI・DB・HTTPから独立した純粋関数にする」という責務の分け方。[比較理由・弱点・増強の再検討条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)を参照。
 
 低い月額費用と1〜2年の保守・継続開発は、2026-10-02に依頼者が説明整理の中心として指定した**比較の観点**であり、チーム合意済みの非機能要件ではない。月額の上限や保守期間の受入条件は未決定で、Product Specへ要件を追加しない。3人での開発、Code Freeze（2026-10-12）までの学習・実装・検証への影響も[共通ルール](../AGENTS.md#11-技術選定)に従って確認する。TypeScript経験や締切の近さを技術の採用理由には使わず、実現可能性・負担の確認と分ける。全員に必要な操作と保守を説明できるかは採択前に確認する。
 
@@ -22,7 +22,7 @@ flowchart LR
 | モジュール | 責務 | 依存してよいもの |
 | --- | --- | --- |
 | `packages/prediction` | 予測の計算だけ。時刻・DB・HTTP・乱数の外部状態を持たない | なし（外部依存0） |
-| `apps/api` の `auth` | 登録・ログイン・セッション（Better Auth） | DB |
+| `apps/api` の `auth` | 登録・ログイン・セッション（Better Authは条件付き第一候補） | DB |
 | `apps/api` の `goals` / `logs` | Goal・記録のCRUD、所有者チェック、「今日」「昨日」の判定 | DB |
 | `apps/api` の `prediction` | DBから入力を組み立て、Goalのtimezoneで`today`を計算し、`predict`を呼ぶ | `packages/prediction`、`goals` / `logs` |
 | `apps/web` | 画面と表示文言。数値の計算をしない | APIの契約 |
@@ -35,9 +35,11 @@ interfaceは差替えやテストに必要な境界だけに置く。大がか�
 
 ### Repository構成
 
+`packages/prediction` は実在する限定先行実装で、[利用条件と検証手順](../packages/prediction/README.md)を参照する。rootのworkspace・`apps/api`・`apps/web`・Composeは予定構成で、復元や動作確認は未完了。
+
 ```text
-package.json            npm workspaces（apps/web, apps/api, packages/prediction）
-packages/prediction/    src/{index,types,transitions,betaGeometric,completion,random}.ts, test/
+package.json            npm workspacesは候補（管理方式は未確定。apps/web, apps/api, packages/prediction）
+packages/prediction/    src/{index,types,predict,observations,recovery,completion,random,config,errors}.ts, tests/, examples/
 apps/api/               src/{server,auth,goals,logs,prediction,db}/, migrations/
 apps/web/               src/routes/, src/api/
 compose.yaml            ローカル開発用 Web・API・PostgreSQL
@@ -45,7 +47,38 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 
 ## Technology Stack
 
-**状態：候補（技術選定確定待ち）。** 2026-09-30、依頼者の指示でAIが要件から候補を選んだ（[D-23](#d-23)〜[D-25](#d-25)）。技術スタックは別担当でも精査中のため、その結果と比較して確定するまで最終Decisionとは扱わない。確定まで、技術に強く依存する実装Issue（I-01 #70・I-05 #74・I-06 #75・I-14 #83）は着手しない。FE基盤はBEと分けて合意できるが、FE（#78〜#81）の具体的な先行範囲・依存変更は#84での採択時に合意して対象Issueへ反映する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。先行着手は[開発ガイド](DEVELOPMENT_GUIDE.md#着手前に読み直す)と対象Issueの承認済み範囲に従い、この説明だけでHard依存・Ready・BLOCKEDを変更しない。第一候補の実測結果は[検証状況](#第一候補の検証状況84--85)。旧音楽案で導入・起動確認済みの構成（[履歴](../archive/music-exploration/README.md)）を再利用できる部分は再利用する案だが、その理由は下表の要件であり、過去の採用ではない。
+**基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録（DECIDED）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../archive/music-exploration/README.md)として保持し、復元と動作確認は実装Issueで行う。
+
+### 2026-10-03の技術構成合意
+
+採用する基本構成と理由は次のとおり。版・追加ツールは今回の合意では確定していない。
+
+| 作る部分 | 採用する構成 | この構成にする理由 |
+| --- | --- | --- |
+| 共通の言語と実行環境 | TypeScript／Node | 画面・API・計算の型を共有し、実行環境を分散させない |
+| 画面 | React＋Vite＋TanStack Router／Query | Reactは画面、Viteはビルド、Routerは画面遷移、Queryは取得・更新後の再取得を担当する |
+| APIと共有契約 | Fastify＋TypeBox | 画面とAPIで同じデータ定義を使い、入力を実行時にも検証する |
+| データ保存 | PostgreSQL | 記録の一意性と関連データの整合をDBの制約で守る |
+| 配信 | 単一SPA／APIコンテナ | 画面とAPIを同じorigin（URLのスキーム・ホスト・ポート）で配信し、配備対象を少なくする |
+| 予測 | 独立した純粋計算コア | 入力だけから同じ結果を返し、画面・DB・HTTPと分けて検証する |
+
+**次の作業：** [#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)〜#73の限定先行Engineは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。アプリへの正式結合・採用基盤への整合・正式受入は未完了。基盤担当は#70の版・追加ツール・起動構成、FE担当は#78〜#81の具体的な先行範囲・依存変更を各Issueで確認する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。合意だけでHard依存・BLOCKEDを解除せず、[着手前の確認](DEVELOPMENT_GUIDE.md#着手前に読み直す)と対象Issueの承認済み範囲に従う。担当者氏名・ProjectsのStatusは推測しない。
+
+| 条件付き第一候補 | 引き続き残る条件 |
+| --- | --- |
+| Better Auth（D-24） | 採用版、認証更新／DB復旧担当、CSRF／Origin細則・回数制限、復元後の削除user／password／account巻戻し対処、公開HTTPSの確認 |
+| Cloud Run＋Neon（D-25） | 最終受入、regionの組合せ、予算・利用前提・運用担当、実Cloud／proxy／1 vCPU／休止後応答の確認。アカウント・課金・リソース作成と一般公開は別承認 |
+
+API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこの合意の対象外。[契約の判断事項](contract-review-proposal.md)で現行契約・#101のmain統合済み記録境界方針・残る未採択案を区別し、D-19〜D-22、DONEのサーバー量補完、SKIPPED入力amount禁止／保存NULL、T-14の500ms未満を変えない。#84のClose、Projects変更、本実装開始、Merge、クラウド作成はこの文書から自動実行しない。
+
+**合意の出所：** FE側のDiscord上の了承は依頼者の報告に基づく。BE側は[本人による#84の了承記録](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84#issuecomment-5978901576)で確認できる。採用範囲は上記の基本構成に限り、D-24／D-25の最終採択・版・追加ツール・API細則は含めない。PR #85／#93の限定Approveを採択根拠へ読み替えない。
+
+[PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)の比較説明はmain統合済み、[PR #96](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96)の追加実測もmain統合済みのSupporting資料。PR #96の[未解決レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96#pullrequestreview-5399521304)（Origin encoded-path疑いはレビュー時未実行、Cloud試験計画の古い記述、終了hookの承認主体）を構成合意で解消済みにしない。PR #96の競合解消・Foundation成功と、候補コード・保存ログ・既存レビュー指摘の対応は別に追跡する。
+
+以下の比較表は2026-09-30の候補提案と2026-10-02の比較説明を保持したもの。版・追加ツール・migration順・代替候補の不採用を含む表全体を採択した記録ではない。現在の採用範囲は上記とD-23〜D-25で確認する。
+
+<details>
+<summary>2026-09-30の候補と2026-10-02の比較を見る（現在の採用範囲は上記）</summary>
 
 | Requirement | Candidates | 候補（確定待ち） | 推奨する理由の要約 | 第一候補にしない理由（採択待ち） |
 | --- | --- | --- | --- | --- |
@@ -62,13 +95,15 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 | E2E | Playwright CLI＋Skill | **Playwright CLI（主要Flowのみ）** | [AI開発ツールの方針](../AI_DEVELOPMENT_TOOLS.md)どおり | Playwright MCPの常時利用 |
 | デプロイ | [D-25](#d-25) | 1コンテナ＋Managed PostgreSQL | — | — |
 
-技術ごとの用途、比較案、弱点、根拠の支持範囲は[既存の比較文書 §9](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)へまとめる。表の「第一候補にしない」は現時点の提案であり、チームが不採用を確定した記録ではない。**推奨（RECOMMENDED）は採択前の第一候補、条件付き（CONDITIONAL）は追加条件を満たす場合の候補、未決定（OPEN）は選択・条件がまだ決まっていない状態。採用済み（DECIDED）と区別する。** D-23〜D-25の状態は変更しない。
+技術ごとの用途、比較案、弱点、根拠の支持範囲は[既存の比較文書 §9](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)へまとめる。表の「第一候補にしない」は現時点の提案であり、チームが不採用を確定した記録ではない。**推奨（RECOMMENDED）は採択前の第一候補、条件付き（CONDITIONAL）は追加条件を満たす場合の候補、未決定（OPEN）は選択・条件がまだ決まっていない状態。採用済み（DECIDED）と区別する。** 現在の状態は上記の合意範囲とD-23〜D-25で確認する。
 
-予測方式D-19〜D-22は採用済みで、実装言語・Web/API・認証・配備先の採択とは別である。#85ではT-14を未実施だったが、その後の[予測モデルEvidence](prediction/evidence.md#dpとmonte-carloの比較)には試作DPの単体計測がある。**試作の計測、本実装のT-14、実エンジンを使った混合負荷・配備先の性能確認は別の証拠**であり、後二者が完了したことにはならない。
+予測方式D-19〜D-22は採用済みで、実装言語・Web/API・認証・配備先の採択とは別である。#85ではT-14を未実施だったが、その後の[予測モデルEvidence](prediction/evidence.md#dpとmonte-carloの比較)には試作DPの単体計測がある。その後の純粋Engineの実装T-14は[#103の検証CI](../packages/prediction/README.md#検証ci)で確認する。**試作の計測、純粋EngineのT-14、採用環境での実Engine混合負荷・コンテナ・配備先の性能確認は別の証拠**であり、最後の条件を完了したことにはならない。
+
+</details>
 
 ### 第一候補の検証状況（#84 / #85）
 
-[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)で第一候補を最小構成で実測した（PR #85でmain済み、Supporting Artifact）。詳細は[検証報告](../experiments/architecture-verification/REPORT.md)と[訂正後の比較 v3.1](../experiments/architecture-verification/SELECTION-v3.1.md)。報告の結論は「条件付きで採用可能」であり、**採択ではない**。D-23〜D-25は候補のまま。
+[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)で第一候補を最小構成で実測した（PR #85でmain済み、Supporting Artifact）。詳細は[検証報告](../experiments/architecture-verification/REPORT.md)と[訂正後の比較 v3.1](../experiments/architecture-verification/SELECTION-v3.1.md)。この報告自体の結論は「条件付きで採用可能」であり、**検証成功やPR統合は採択ではない**。その後の基本構成の採用は[別の合意報告](#2026-10-03の技術構成合意)に基づく。下表は#85当時の確認範囲で、[PR #96](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96)の追加実測・未解決レビューや本実装の状況とは分ける。
 
 | 区分 | 内容 |
 | --- | --- |
@@ -156,7 +191,7 @@ CREATE TABLE action_log (
 
 業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の候補であり、R-01の確定要件と区別する。認証ライブラリのエラーを業務APIのstatus・共通error形式へ揃える範囲は未決定。
 
-以下はmethod / pathと記載済みの規則の一覧。成功DTO・成功status、PATCHの省略・null・空body、Goal一覧の今日状態の表現、SKIPPEDの応答量は未定義であり、[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日の変更と昨日の未記録補完はmainのProduct R-03・R-04・P-14を参照する。昨日訂正と記録開始日の依頼者承認方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映待ちであり、[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)で反映待ちと未決の再送・競合方式を分ける。
+以下はmethod / pathと記載済みの規則の一覧。成功DTO・成功status、PATCHの省略・null・空body、Goal一覧の今日状態の表現、SKIPPEDの応答量は未定義であり、[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
 
 | Method / Path | 内容 |
 | --- | --- |
@@ -388,7 +423,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 | 項目 | 内容 |
 | --- | --- |
-| 形 | 1つのコンテナ（Fastifyが`/api`と、ビルド済みSPAを同一originで配信）＋Managed PostgreSQL。Cookieを同一originに閉じ、CORSを不要にする |
+| 形 | D-23で採用した単一SPA／APIコンテナ（Fastifyで同一origin配信）＋PostgreSQL。Cookie方式はD-24の候補、Managed DBの提供先はD-25の条件付き第一候補 |
 | 公開先 | [D-25](#d-25)：Cloud Run＋Neonを推奨。アカウント・課金設定の作成は承認後 |
 | 早期のstaging確認 | 本番でしか見えない問題（Cookie・`BETTER_AUTH_URL`・proxy・migration・環境変数・DB接続・cold start・SPA fallback・HTTPS）を早く見つけるため、最終公開を待たずに2段階で確認する。①I-01：healthだけのコンテナをstagingへ出し、DBへ接続できる ②I-06：stagingで登録・ログイン・セッション維持ができる。I-14は最終確認・E2E・Demo Seed・仕上げを担う。公開先の承認が遅れた場合の既存移管例外（[#70](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/70)のstaging項目を[#75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)へ、#75のstaging確認を[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)へ）に従い、移管先で未確認項目を追跡する。移管を公開確認済みと扱わない |
 | 環境変数 | `DATABASE_URL`、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`。実値はProviderのSecret設定に置き、Gitへ入れない |
@@ -400,20 +435,20 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | --- | --- | --- | --- |
 | D-15 | 2026-09-27 | SUPERSEDED by D-18 | 当時の[Node 24 LTS / npm](#d-15)採択 |
 | D-17 | 2026-09-29 | DECIDED | [旧音楽案向け設計の適用終了](#d-17-音楽案に依存したarchitectureの適用終了) |
-| D-18 | 2026-09-30 | DECIDED（技術選定の確定時にD-23で置き換える予定） | [旧開発スタックを一時退避](#d-18-旧開発スタックの一時退避)し、次の採択を未定にする |
+| D-18 | 2026-09-30 → 2026-10-03 | SUPERSEDED by D-23（基本構成の未定状態） | [旧開発スタックの一時退避](#d-18-旧開発スタックの一時退避)は履歴として保持。復元・検証は未完了 |
 | D-19 | 2026-09-30 | DECIDED | [予測モデルにM1（2状態Bayesian Markov）を採用、M0・M2は不採用](#d-19)（ADR-001） |
 | D-20 | 2026-09-30 | DECIDED | [事前分布をBeta(2,2)とする](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
-| D-23 | 2026-09-30 | RECOMMENDED（技術選定確定待ち） | [1アプリ＋PostgreSQLのモジュール構成とTypeScriptスタックの候補](#d-23) |
-| D-24 | 2026-09-30 | RECOMMENDED（技術選定確定待ち） | [認証にBetter Authの候補](#d-24) |
-| D-25 | 2026-09-30 | RECOMMENDED / CONDITIONAL（技術選定確定待ち） | [公開先はCloud Run＋Neonの候補](#d-25) |
+| D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
+| D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
+| D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
 ### D-15
 
-2026-09-27 / **SUPERSEDED by D-18** / Node 24 LTSとnpmを当時の開発Toolchainに採用した。[当時の判断理由](../archive/music-exploration/docs/architecture.md#d-15) / [Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)。Node 24 LTS / npmは[D-23](#d-23)で新Product向けの候補にしている（確定待ち）。
+2026-09-27 / **SUPERSEDED by D-18** / Node 24 LTSとnpmを当時の開発Toolchainに採用した。[当時の判断理由](../archive/music-exploration/docs/architecture.md#d-15) / [Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)。新Productでは[D-23](#d-23)でTypeScript／Nodeの基本構成を採用したが、Node 24 LTS／npmを含む版と管理方式は今回の合意では未確定。
 
 ### D-17 音楽案に依存したArchitectureの適用終了
 
@@ -421,7 +456,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-18 旧開発スタックの一時退避
 
-2026-09-30 / **DECIDED（技術選定の確定時にD-23で置き換える予定）** / Node/npm・React/Vite・Fastify・PostgreSQLの旧起動構成、Compose、Application CIを[履歴](../archive/music-exploration/README.md)へ一時退避し、次の技術スタックを未定にした。旧構成を新案へ暗黙に適用しないため。[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。Future ROIの要件から[D-23](#d-23)で候補を選んだ。技術選定が確定したらこの判断をSUPERSEDEDにし、再利用する部分を実装Issueで現行の場所へ戻す。
+2026-09-30の退避判断を、2026-10-03に**SUPERSEDED by D-23（基本構成の未定状態）**へ更新。旧Web/API・Compose・Application CIを[履歴](../archive/music-exploration/README.md)へ退避した理由と[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)は保持する。D-23で新Productの基本構成を採用したが、旧設定・版の再採用や復元済みを意味しない。必要部分の復元と動作確認は#70等の実装Issueで行う。
 
 ### D-19
 
@@ -441,12 +476,12 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-23
 
-2026-09-30 / **RECOMMENDED（技術選定確定待ち）** / 依頼者の指示でAIが選んだ候補。別担当による技術選定の精査結果と比較し、人間が確定するまで最終Decisionとは扱わない。第一候補は#84で最小検証済み（「条件付きで採用可能」、[検証状況](#第一候補の検証状況84--85)）。案：1つのNodeアプリ（Fastify APIがビルド済みSPAも配信）とPostgreSQLの構成とし、コードを`packages/prediction`（純粋関数）・`apps/api`（auth / goals / logs / prediction adapter）・`apps/web`に分ける。言語はTypeScript（Node 24 LTS、npm workspaces）、FEはReact＋Vite＋TanStack Router＋TanStack Query、契約はTypeBox、DBアクセスは`pg`＋SQL＋`node-pg-migrate`、テストはVitest＋fast-check。記録と予測の整合を保ち、配備・更新対象を少なくする狙い。[理由の要約](#technology-stack)と[比較・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)。FE基盤はBEと分けて合意できるが、具体的な先行範囲・依存変更は#84での採択時に合意して対象Issueへ反映する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。本追記は依存・Ready・BLOCKEDを変更しない。
+2026-10-03 / **DECIDED（基本構成、FE報告・BE本人記録）** / 2026-09-30のAI候補提案から[合意範囲と出所](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則は今回追加採択しない。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。記録と予測の整合を保ち、配備・更新対象を少なくする狙い。[Technology Stack](#technology-stack)と[比較・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)に候補提案を保持する。
 
 ### D-24
 
-2026-09-30 / **RECOMMENDED（技術選定確定待ち）** / D-23と同じく未採択。案：認証にBetter Auth（メール＋パスワード、DBセッション、Cookie）を使い、アプリと同じPostgreSQLに保存する。管理対象をDBへ寄せて記録との整合を設計しやすくするため。採用を推奨できるのは、認証ライブラリの更新・復旧・障害対応を継続して担える場合。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。Firebase・Supabase Authは代替候補であり、チームによる不採用確定の記録はない。自作認証は安全性を継続して保守する責任から第一候補にしない。Cookie方式やmigration候補を固定要件として採用理由にしない。
+2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち）** / 2026-09-30の候補Better Authを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。メール＋パスワードの業務要件はR-01、DBセッション／Cookieは候補方式。版・認証更新／DB復旧担当・CSRF／Origin・回数制限・復元対処・公開HTTPSの確認を#75・#74・#84で追跡する。管理対象をDBへ寄せて記録との整合を設計しやすくする狙い。認証ライブラリの更新・復旧・障害対応を継続して担えることを条件とする。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。PR #96のレビューやFirebase／Supabase Auth等の不採用まで合意したと扱わない。
 
 ### D-25
 
-2026-09-30 / **RECOMMENDED / CONDITIONAL（技術選定確定待ち）** / 公開先はCloud Run（コンテナ）＋Neon（PostgreSQL）を条件付き候補とする。利用が少ない時間の計算資源を抑え、DBサーバーそのものの管理を減らす狙い。1コンテナ・同一origin・Managed PostgreSQLという形もD-23の候補に従う。[費用・代替案・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)を参照。Neonには東京リージョンがないという#85の確認記録（2026-09-30）があるため、現行の提供地域を再確認してCloud Runとの組を作成前に決める。配備先での動作と費用は未実測であり、安価・安全な継続公開は未保証。Providerのアカウント・課金設定・regionの作成と最終受入は、対象と費用を示した承認の後に行う。旧案での比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)。
+2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち）** / Cloud Run＋Neonを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。利用が少ない時間の計算資源を抑え、DBサーバー自体の管理を減らす狙い。[費用・代替案・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)を参照。単一SPA／APIコンテナとPostgreSQLはD-23の採用範囲だが、サービスの最終受入・一般公開・課金作成の許可ではない。#85のregion確認は2026-09-30の記録で、現在の提供地域と組合せは作成前に再確認する。予算・利用前提・担当・実Cloud／proxy／1 vCPU／休止後応答・費用は未確認。アカウント・課金・リソース作成は対象と費用を示した別承認後。旧比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)に保持する。
