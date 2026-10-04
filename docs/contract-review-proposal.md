@@ -16,7 +16,7 @@ Supporting Doc / Not a Source of Truth。契約の不足、未採択の選択肢
 
 Architectureの記載済み規則は実装の基準だが、完全なHTTP契約を定めた記載ではない。採択後に成功DTO・status・入力細則を正本と共有契約へ反映し、FE・BEが同じfixtureで確認できるようにする案。
 
-| 対象 | 不足している判断 | 最小の案・代替案（未採択） | 確認案 |
+| 対象 | 不足している判断 | 未採択の案・関連PRの承認済み方針 | 確認案 |
 | --- | --- | --- | --- |
 | `GET /api/goals` | 配列かwrapperか、並び順、今日状態の項目名・値・日付基準 | 200＋Goal配列、各Goalにtimezoneから導出した日付とDONE / SKIPPED / UNRECORDEDを含める案。wrapperも選択肢。記録行なしをSKIPPEDにしない | 空一覧、Goalごとに異なるtimezone、日跨ぎ、今日未記録 |
 | `POST /api/goals` | 成功DTO・status、初期量の入力形式、サーバーの既定値とブラウザのtimezone既定値の境界 | 201＋Goal DTO案。#101は初期量の既定0・固定記録開始日の前日までの量を承認済み方針として持つ。省略・nullの入力細則、開始日の保存・DTO共有は未決。timezoneは明示送信案（ブラウザ既定値はUIの責務） | 省略・null・0、開始日前の重複加算、無効IANA名、DTOに所有者・認証情報が混ざらない |
@@ -44,7 +44,7 @@ Goal / Logの応答項目は上の案から正式に一覧化する必要があ�
 
 ## Engineと表示の不足
 
-| 判断事項 | 現行で明記済みの範囲 | 提案・確認案（未採択） |
+| 判断事項 | 現行で明記済みの範囲 | 承認済み反映待ち／未決の確認案 |
 | --- | --- | --- |
 | `observedDays` / `recordedDays` | mainは出力項目と観測窓のみ。#103は依頼者承認済みの集計契約・純粋Engine実装を持ち、main反映待ち | #103の契約はobservedDays＝最古ログから今日記録済みなら今日／未記録なら昨日までのUNKNOWN込み暦日数、recordedDays＝窓内の一意な明示DONE／SKIPPED数、空logsは両方0。初期量や固定記録開始日から推測せず、有効遷移起点の不足判定を維持。統合時に正本と同期する |
 | 入力・設定エラー | mainの個別入力規則に加え、#103は依頼者承認済みの`PredictionInputError`／`PredictionConfigError`・`reason`・変更できない`path`を持ち、main反映待ち | Engine例外分類を再採択待ちにせず、#103の契約・テストへ参照を寄せる。HTTP status・応答JSON・DB例外変換・画面表示と、外部JSONの構造検証は呼び出し側の未決事項。DEFAULT_CONFIGは変えない |
