@@ -1,6 +1,6 @@
 # 予測モデルのEvidence
 
-Supporting Artifact / Not a Source of Truth。正式な判断は[Architecture](../architecture.md#prediction-engine)と[判断記録](decision-log.md)。
+Supporting Artifact / Not a Source of Truth。正式な状態と結論は[Architecture](../architecture.md#architecture-decision-log)のD-19〜D-22、モデル仕様は[Prediction Engine](../architecture.md#prediction-engine)を正本とする。[判断記録](decision-log.md)は比較理由・代替案・影響を説明するSupporting Doc。
 
 - **種別**：LOCAL_POC（合成データによる数値実験）。実ユーザーデータでの検証は未実施。
 - **実施日・環境**：2026-09-30にNode 25.2.0で実施。2026-10-02、PR #86のレビューで見つかった分位点の境界誤差とDPの微小確率の打ち切りを直し、全スクリプトを候補Runtime（Node 24.21.0）で再実行した。`results/`はこの再実行の出力。スクリプトは[実験フォルダ](../../experiments/prediction-model-validation/README.md)に保存。

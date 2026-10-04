@@ -1,6 +1,6 @@
 # 仕様・実装・確認方法の対応表
 
-現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**Prediction純粋計算の限定先行実装を独立レビューへ出すが、アプリ機能は未結合。** 下表の予定パスは[Architecture](architecture.md#repository構成)の候補構成に基づく。実在するPredictionと未実装のアプリを分けて記載する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
+現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**Prediction純粋計算の限定先行実装はmain統合済みだが、アプリ機能は未結合。** 下表の予定パスは[Architecture](architecture.md#repository構成)の候補構成に基づく。実在するPredictionと未実装のアプリを分けて記載する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
 
 ## アプリの仕様と実装
 
@@ -29,13 +29,15 @@
 
 ## 未採択の追加提案
 
-ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案のDraft PR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
+ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue #94](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案PR #95](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
 
 | 提案 | 説明先 | 状態・確認範囲 |
 | --- | --- | --- |
 | 数日間の「やる／休む」を仮置きして比べる | [目的・例・現行Mustとの差・画面・計算・分担・受入条件案](prediction/action-scenarios-proposal.md) | 未採択。定型3例の既存DPへの還元、g50との前提差、表示の再検討案とレビュー報告を記録。実装・ユーザー検証・性能測定なし。Product/API/Prediction仕様・既存Issue依存・Ready/BLOCKEDは変更しない |
 
 ## 確認記録と残課題
+
+業務API・昨日補完・Engine集計／エラー・表示の判断事項は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日訂正は依頼者承認済みでmain反映待ち、#103のmetadata・公開エラー契約と純粋Engineはmain統合済み。残る未採択のAPI・表示案とは分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
 
 表の実装予定は2026-09-30の仕様に基づく。Product機能、DB接続、外部Service、公開配置は未実装・未確認。
 
