@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-10-03",
+  "scope": "read-only reference; no issue changes or ready/close claims",
+  "issues": [
+    {
+      "issue_number": 73,
+      "title": "[Task] I-04 Prediction Engine：不変条件テスト（性質ベース・厳密解オラクル）",
+      "url": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73",
+      "state": "open",
+      "assignees": [
+        {
+          "login": "Kaito-Iwase",
+          "name": "Kaito-Iwase",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/175584093?v=4",
+          "id": 175584093
+        }
+      ],
+      "body": "### 目的\n\n予測の数値の正しさを、例示ではなく性質で保証する。\n\n### やること（仕様：`docs/architecture.md`「Test Strategy」T-01〜T-15）\n\n- 有効な入力をランダム生成する性質ベーステスト（候補：fast-check）でT-01〜T-15を検証\n- T-05（Beta-Geometricと「bを抽選→幾何分布を抽選」のMCの一致）、T-06（恒等式オラクル：θ固定でSKIP開始の分布 = DONE開始の分布 ⊕ Geometric(b)）、T-10（刈り込みあり・なしのDPの一致）\n- T-14：`requiredFutureDone = 120, 400, 1095`、`K = 200`の計測\n- 失敗例の再現用seedをテストに残す\n\n### 完了条件\n\n- [ ] T-01〜T-15がCIで実行され、通る\n- [ ] T-14の計測値をPRに記録し、すべて500ms未満\n- [ ] Architectureのテスト表とテスト名が対応している\n\n\n#### 補完する完了条件（2026-10-02）\n\n- [ ] #69 / PR #86で確定したDP刈り込み保証について、分位点境界の回帰ケースを含む刈り込みあり／なしの比較を #72 と共有する。保証を弱めて既存契約を回避しない。\n- [ ] 既定のT-14（3条件・K=200・500ms未満）の計測対象は実Engineとし、採用Runtime・seed・入力・CPU/メモリなど実行環境を記録する。代用計算・別CPUの結果を本番性能として扱わない。\n\n\n#### 採択待ちの追加品質条件（完了ゲート・依存の変更ではない）\n\n- 混合負荷の追加条件は #84 でチーム採択待ち。採択後に #77 と実Engineを結合した予測＋CRUD＋セッション確認を測り、p95・event-loop遅延・DB待ち・未完了数と実行環境を記録する。合否の負荷条件と許容値は測定前にチーム合意する。\n- workerの要否は測定から判断し、採用時は配備先CPU/メモリで再確認する。別サービス・Queue・Cacheを先に増やさない。\n- #77 との結合確認候補であり、現行Integrationなしを変更せず、#73→#77 のHard依存や循環を作らない。#77も #73 全完了待ちにはしない。500ms契約を非同期応答契約へ変更しない。\n\n### 補足\n\n- Scope: Must ／ 担当目安：A\n- 依存：**Hard** I-03 #72 ／ **Integration** なし\n\n### 開発情報\n\n- Branch: 未作成\n- Pull Request: 未作成"
+    },
+    {
+      "issue_number": 71,
+      "title": "[Feature] I-02 Prediction Engine：遷移数・事後分布・中心指標",
+      "url": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71",
+      "state": "open",
+      "assignees": [
+        {
+          "login": "Kaito-Iwase",
+          "name": "Kaito-Iwase",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/175584093?v=4",
+          "id": 175584093
+        }
+      ],
+      "body": "### 背景\n\nCoreの数値「今日サボると、ゴールは何日遠ざかる？」を計算する純粋関数を作る。UI・DB・HTTP・時計から独立させる。\n\n### やること（仕様：`docs/architecture.md`「Prediction Engine」の状態の判定順、手順1〜4）\n\n- 型（`PredictionInput`・`PredictionResult`・`DEFAULT_CONFIG`、`modelVersion = behavior-persistence-m1-v1`）\n- 観測列の構築（記録なし＝UNKNOWN、今日が未記録なら昨日まで）、遷移数`nDD, nDS, nSD, nSS`（UNKNOWNを含む隣接ペアは除外）\n- `actualDone = initialProgress + Σ DONEのamount`、達成判定、入力検証（未来日付・重複日付はエラー）\n- Beta-Geometricの`P(G > t) = Π_{i<t} (β+i)/(α+β+i)`（`α = 2+nSD`、`β = 2+nSS`）。`g50`・`g80`は任意精度整数による厳密比較で求める（`2·N_t ≤ D_t`、`5·N_t ≤ D_t`。lgammaは使わない）\n- 状態の判定順（入力エラー → 達成済み → 未達成）に従う分岐：達成済み（`not_applicable / COMPLETED`）、今日記録済み（`not_applicable / TODAY_RECORDED`）、休んだ翌日の記録が0件（`insufficient`）\n\n### 完了条件\n\n- [ ] 例：休んだ翌日にやれたのが10回中3回 → `g50 = 2`\n- [ ] 境界の例：`(α,β) = (5,5)`で`g50 = 1`、`(2,2)`で`g50 = 1`・`g80 = 3`\n- [ ] Engineのコードは外部ライブラリ・UI・DB・HTTPをimportしない\n- [ ] T-01・T-02・T-03・T-11・T-12・T-13が通る\n\n### 補足\n\n- Scope: Must ／ 担当目安：A（Prediction Engine）\n- 依存：**Hard** I-01 #70（`packages/prediction`の雛形）／ **Integration** なし\n- I-01は技術選定確定待ち。実装言語（候補：TypeScript）が確定したら、I-01のMergeを待たずに雛形をこのIssue内で作って先行してよい（後でI-01に合わせる）。\n- 予測モデル（M1・Beta(2,2)・Beta-Geometric）は確定済み（D-19〜D-21）。再検討しない。\n- 2026-10-02：PR #86のレビュー対応で、分位点の計算方式（厳密比較）と状態の判定順を反映した。\n\n### 開発情報\n\n- Branch: 未作成\n- Pull Request: 未作成"
+    },
+    {
+      "issue_number": 72,
+      "title": "[Feature] I-03 Prediction Engine：完了の目安（事後サンプル＋DP）とpredictの統合",
+      "url": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72",
+      "state": "open",
+      "assignees": [
+        {
+          "login": "Kaito-Iwase",
+          "name": "Kaito-Iwase",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/175584093?v=4",
+          "id": 175584093
+        }
+      ],
+      "body": "### 背景\n\n補助指標「今日やった場合の完了の目安」を決定的に計算する。将来の日々のMonte Carloは使わない（D-22）。\n\n### やること（仕様：`docs/architecture.md`「Prediction Engine」手順5〜6、「乱数とサンプラーの仕様」）\n\n- `seedFor`・`splitmix32`・`uniform`・`normal`・Gamma（Marsaglia–Tsang）・Beta（仕様の演算・抽選順どおり）\n- `projectedDone`と`requiredFutureDone`の分離（今日のDONEをDPで数え直さない。DPは`futureDoneCount = 0`から開始）\n- 配列の使い回しと到達不能状態の刈り込みを入れたDP、H=1095日の打ち切り、`p50Days`・`p80Days`（未到達は`null`、到達分だけで分位点を計算しない）\n- **確率の大きさで計算を打ち切らない**（省いてよいのは、届かない状態と、生きている状態が無くなった後だけ）。分位点は`累積 ≥ q − 1e-12`で判定する\n- 完了の目安のデータ不足（DONE起点またはSKIPPED起点の遷移が0件なら`insufficient`）\n- `predict`で中心指標と完了の目安を統合し、`modelVersion`・`config`を含める\n\n### 完了条件\n\n- [ ] T-07・T-08・T-09・T-10・T-15が通る（T-10はPR #86レビューの例：開始DONE・`requiredFutureDone = 1`・K=2・H=10で`p50Days = 3`を含む）\n- [ ] **数値部品のゲート**：T-15（既知値・極端なパラメータ・サンプラーの平均と分散・テストベクトル）を自作で満たせない場合、このIssueの中で小さな成熟ライブラリへ切り替え、Architectureを更新する\n- [ ] 採用するRuntimeの版でテストベクトルのBeta抽選値を確認し、Architectureの値を確定する\n\n\n#### 補完する完了条件（2026-10-02）\n\n- [ ] 分位点境界の回帰ケースを含めて刈り込みあり／なしを比較する。回帰テストは #73 と共有し、同じテストを別々に実装しない。既存の確率打ち切り禁止・分位点判定規則を維持する。\n\n### 補足\n\n- Scope: Must ／ 担当目安：A\n- 依存：**Hard** I-02 #71 ／ **Integration** なし\n- 参照実装：`experiments/prediction-model-validation/completion-dp.mjs`、回帰チェック：`dp-truncation-check.mjs`（Supporting Artifact。本番コードではない）\n- 2026-10-02：PR #86のレビュー対応で、微小確率の打ち切りの廃止と分位点の判定規則を反映した。テストベクトルはNode 24.21.0とNode 25.2.0で一致を確認済み。\n\n### 開発情報\n\n- Branch: 未作成\n- Pull Request: 未作成"
+    }
+  ]
+}
