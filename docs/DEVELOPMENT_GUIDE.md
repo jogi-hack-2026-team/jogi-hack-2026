@@ -441,7 +441,7 @@ README更新
 
 # 13. 初回セットアップ
 
-基本構成は[Architecture D-23](architecture.md#d-23)に依頼者の合意報告に基づく採用として記録しています（FE・BE本人の公開確認待ち）。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動構成の復元・版固定・動作確認は各実装Issueの着手条件に従い、その結果でこの節を更新します。旧Web/API・開発用PostgreSQL・lockfileは[履歴](../archive/music-exploration/README.md)に保持。Product機能、DB migration、正式APIはまだありません。PowerShell 7は文書・設定チェックに使用します。
+基本構成は[Architecture D-23](architecture.md#d-23)に依頼者によるDiscord上の了承報告に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動構成の復元・版固定・動作確認は各実装Issueの着手条件に従い、その結果でこの節を更新します。旧Web/API・開発用PostgreSQL・lockfileは[履歴](../archive/music-exploration/README.md)に保持。Product機能、DB migration、正式APIはまだありません。PowerShell 7は文書・設定チェックに使用します。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。

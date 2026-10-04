@@ -12,7 +12,7 @@
 | DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
 | DECIDED | 2026-09-30にProductを「Future ROI」（今日サボると、ゴールは何日遠ざかる？）に決定し、要件・MVP Scopeを確定した。[Product Spec](docs/product-spec.md#現行状態2026-09-30) |
 | DECIDED | 予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
-| DECIDED（基本構成、公開確認待ち） | 2026-10-03、依頼者によるFE・BE二人の合意報告に基づきD-23の基本構成を採用。両担当による採択範囲の公開確認は待ち。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。版・追加ツール・API細則は未確定 |
+| DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、依頼者によるDiscord上のリアクションでFE・BEの了承を得たとの報告に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。版・追加ツール・API細則は未確定 |
 | 条件付き第一候補 | Better Auth＋Cloud Run＋Neonは検証・運用条件付き。[D-24](docs/architecture.md#d-24)／[D-25](docs/architecture.md#d-25)。最終採択・公開受入、一般公開、アカウント・課金作成の許可ではない |
 | 未実装 | Product機能・Prediction Engine・DB・公開環境のコードはまだない。旧Web/API・Compose構成の復元は実装Issueで行う |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
