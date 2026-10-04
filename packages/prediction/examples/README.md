@@ -35,12 +35,31 @@ node packages/prediction/examples/recalculate.mjs
 
 nullはH以内の分位点未到達、0日は今日の仮実行で到達、insufficientは遷移起点不足、completedは既に実績で達成。いずれも別状態として扱う。明日は1日目で、日付/週への変換は既存Product仕様に従う呼出側の責務。
 
+## デモ向けの30日合成入力
+
+[demo-inputs.mjs](demo-inputs.mjs)は、#82へ渡せる純粋Engine入力の2ケースを追加する。上の11境界例とは目的を分け、DB seed・アカウント・HTTP DTOは実装しない。testでコンパイル後、repo rootから実行する。
+
+```powershell
+node packages/prediction/examples/demo-inputs.mjs
+```
+
+todayは2026-10-01固定、記録は2026-09-01〜09-30の30日。両Goalともtotal=60/initialProgress=0/sessionAmount=1、DONE実量合計15、今日未記録、既定K=200/H=1095/seed=20261012で、初期量・残量・設定による違いを混ぜず記録パターンを比較する。
+
+| name | 合成履歴 | nDD / nDS / nSD / nSS | 中心g50 / g80 |
+| --- | --- | --- | --- |
+| fast-resumption | DONE・SKIPPEDを交互に15組 | 0 / 15 / 14 / 0 | 1日 / 1日 |
+| slow-resumption | DONE15日、その後SKIPPED15日 | 14 / 1 / 0 / 14 | 7日 / 21日 |
+
+どちらもDONE起点・SKIPPED起点の遷移があり、実績15・available/TODAY_DONEの完了の目安を出す。スクリプトは全入力と実PredictionResultをJSONへ出し、2ケースで完了P50/P80が異なることも[fixtureテスト](../tests/demo-inputs.test.mjs)で確認する。入力JSONの往復で結果が一致する確認は内部入力の再現性であり、HTTP応答schemaを採択するものではない。
+
+CIはNodeごとにこのJSONを`demo-inputs-ci.json`として既存証跡artifactへ保存する。固定の過去日付で再現する例であり、実デモの日付を現在へ揃える方法、Goal timezoneの設定、初期化・認証・永続化・再実行でデモだけ戻す処理は#82側の既存条件に従って別途用意する。このfixture追加だけで#82受入を完了扱いにしない。
+
 ## 接続先ごとの使い方
 
 #77はGoalのtimezoneで決めたtodayと、そのGoalの一意日付の全ログsnapshotを`predict(input)`へ渡す。UNKNOWNは行を作らず、DONEは確定した実量、SKIPPEDはnullを渡す。保存時の省略amount補完や外部JSONの構造検証はAPI側の既存契約に従う。補完・訂正で1行を置き換えた後、snapshot全体から再計算する。読み取り順・transaction・workerの未採択部分をこの例から決めない。
 
 #81は中心/完了それぞれのstatusとreasonを参照する。今日記録済みなら比較を出さず、達成済みなら予測を出さない。null/0/不足/達成を区別し、metadataの日数や件数から十分性を再定義しない。通信・Engine例外をinsufficientへ変換しない。[公開例外の扱い](../README.md#metadata公開エラーの契約)を参照する。
 
-#82は固定today/seed/合成履歴から状態を再現するために利用できる。この11ケースは境界確認用で、#82の30–45日・再開が早い/遅い2Goal・認証済みデモアカウント・DB初期化の実装や受入を代替しない。実在ユーザー・資格情報は含まない。
+#82は固定today/seed/合成履歴から状態を再現するために利用できる。11ケースは境界確認用、上の30日2ケースは合成入力の受け渡し用で、#82の認証済みデモアカウント・DB初期化・通し確認の実装や受入を代替しない。実在ユーザー・資格情報は含まない。
 
 型を呼出側へ接続するときの入口は[公開index](../src/index.ts)の`predict`/`PredictionInput`/`PredictionResult`。`PredictionInputError`/`PredictionConfigError`のclass/reason/pathを使い、message文面から分類しない。HTTP status/API応答codeの変換は新規定義せず、未知の例外も成功Resultへ置換しない。実行例は[connection-examples.test.mjs](../tests/connection-examples.test.mjs)で状態・実量・UNKNOWN・補完後の両側遷移を検証する。

@@ -10,7 +10,7 @@
 | Goal（R-02） | [R-02](product-spec.md#requirementsmvp)、[Data Model](architecture.md#data-model) | `apps/api/src/goals/`、`apps/api/migrations/` | APIテスト |
 | 記録・前日補完（R-03・R-04） | [R-03・R-04](product-spec.md#requirementsmvp)、[P-14](product-spec.md#p-14-記録のルール) | `apps/api/src/logs/` | APIテスト（今日・昨日以外は422、上書き、timezone境界） |
 | Today Decision（R-05〜R-08） | [表示仕様](product-spec.md#today-decision画面の表示仕様) | `apps/api/src/prediction/`、`apps/web/src/routes/` | APIテスト（`/today`）、E2E |
-| Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と46テスト・実Engine T-14。[接続例](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
+| Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と47テスト・実Engine T-14。[11境界例と30日合成2入力](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
 | デモデータ（R-09） | [R-09](product-spec.md#requirementsmvp) | 未定（Demo Seedスクリプト） | デモ手順の通し確認 |
 | 公開（R-10） | [Deployment](architecture.md#deployment) | 未定 | 公開URLで主要Flow |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
