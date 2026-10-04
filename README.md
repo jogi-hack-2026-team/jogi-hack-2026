@@ -13,7 +13,7 @@
 | DECIDED | 2026-09-30にProductを「Future ROI」（今日サボると、ゴールは何日遠ざかる？）に決定し、要件・MVP Scopeを確定した。[Product Spec](docs/product-spec.md#現行状態2026-09-30) |
 | DECIDED | 予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Model、API契約。[Architecture](docs/architecture.md#現行状態2026-09-30) |
 | 候補（技術選定確定待ち） | 技術スタック（TypeScript、React＋Vite、Fastify、PostgreSQL、Better Auth）と公開先（Cloud Run＋Neon）。Issue #84（PR #85）で第一候補を最小検証済み（条件付きで採用可能）で、チームの採択待ち。[Architecture D-23](docs/architecture.md#d-23)、[検証状況](docs/architecture.md#第一候補の検証状況84--85) |
-| 未実装 | Product機能・Prediction Engine・DB・公開環境のコードはまだない。旧Web/API・Compose構成の復元は実装Issueで行う |
+| 限定先行／結合待ち | #71〜#73の承認範囲で[Prediction計算本体・テスト](packages/prediction/README.md)を実装し、独立レビューへ出す。日数metadata・公開例外の契約も依頼者承認を反映。アプリ結合・EngineテストCI・正式受入は未完了。Product画面・API・DB・公開環境は未実装。#70のBLOCKEDと正式Hard依存を維持する |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
