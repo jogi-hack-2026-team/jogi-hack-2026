@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。FE / BEは最小起動構成のみでProduct機能は未実装です。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行Product機能とアプリの起動構成は未実装で、旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)へ退避しています。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
@@ -479,6 +479,10 @@ mise run --skip-tools hooks:install
 miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File scripts/check-foundation.ps1`を実行します。Hook導入はローカルの`core.hooksPath`を変更するため、既存Hookを確認してから行います。
 
 旧Web/API・Compose・Node/npmの起動手順は[履歴内の開発ガイド](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)に保管しています。次のProduct向けの起動コマンドと技術スタックは未定です。
+
+## Predictionの限定先行計算を確認する
+
+#71〜#73に記録した限定先行承認に沿った[packageの手順](../packages/prediction/README.md#ローカル検証)を使います。純粋計算本体・T-01〜T-15に対応するローカルテストと実性能を確認できます。終了コード0やFoundation成功をアプリ結合・正式受入の完了と扱いません。#70のworkspace・runtime・採択済みrunnerとの整合は[残条件](../packages/prediction/README.md#70後に合わせる点と残条件)に従います。#70のBLOCKEDと正式Hard依存は維持します。[検証CI](../packages/prediction/README.md#検証ci)は純粋Engineの型検査と46テストをPR時に実行し、Foundationとは別です。アプリの起動・DB・HTTP・UIは今回追加していません。
 
 ## 文書チェックで起きること
 
