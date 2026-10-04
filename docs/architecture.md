@@ -37,7 +37,7 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 
 ## Technology Stack
 
-**基本構成は依頼者によるDiscord上の了承報告に基づく採用記録（DECIDED）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../archive/music-exploration/README.md)として保持し、復元と動作確認は実装Issueで行う。
+**基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録（DECIDED）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../archive/music-exploration/README.md)として保持し、復元と動作確認は実装Issueで行う。
 
 ### 2026-10-03の技術構成合意
 
@@ -61,7 +61,7 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 
 API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこの合意の対象外。[未採択の契約案](contract-review-proposal.md)を維持し、D-19〜D-22、DONEのサーバー量補完、SKIPPED入力amount禁止／保存NULL、T-14の500ms未満を変えない。#84のClose、Projects変更、本実装開始、Merge、クラウド作成はこの文書から自動実行しない。
 
-**合意の出所：** 2026-10-03の基本構成採用は、依頼者によるFE・BE二人の合意報告に基づく。依頼者から、Discord上で対象技術構成にリアクションによる了承を得たとの説明を受けた。参照リンクは未掲載で、投稿内容・反応者は独立に確認していない。リンク未掲載を合意未成立や追加承認待ちの条件とせず、GitHubでの個別確認コメントを必須にしない。採用範囲は上記の基本構成に限り、D-24／D-25の最終採択・版・追加ツール・API細則は含めない。PR #85／#93の限定Approveを採択根拠へ読み替えない。先行文書のレビュー・統合手順は[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)で追跡する。
+**合意の出所：** FE側のDiscord上の了承は依頼者の報告に基づく。BE側は[本人による#84の了承記録](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84#issuecomment-5978901576)で確認できる。採用範囲は上記の基本構成に限り、D-24／D-25の最終採択・版・追加ツール・API細則は含めない。PR #85／#93の限定Approveを採択根拠へ読み替えない。
 
 [PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)の比較説明と[PR #96](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96)の追加実測は未Mergeの別資料。PR #96の[未解決レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96#pullrequestreview-5399521304)（Origin encoded-path疑いはレビュー時未実行、Cloud試験計画の古い記述、終了hookの承認主体）を構成合意で解消済みにしない。コード・レビュー対応は今回行わない。
 
@@ -373,7 +373,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-20 | 2026-09-30 | DECIDED | [事前分布をBeta(2,2)とする](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
-| D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、依頼者によるDiscord了承報告） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
+| D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
 | D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 
@@ -409,7 +409,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-23
 
-2026-10-03 / **DECIDED（基本構成、依頼者によるDiscord了承報告）** / 2026-09-30のAI候補提案から[合意範囲](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則は今回追加採択しない。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。比較提案は[Technology Stack](#technology-stack)に保持する。
+2026-10-03 / **DECIDED（基本構成、FE報告・BE本人記録）** / 2026-09-30のAI候補提案から[合意範囲と出所](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則は今回追加採択しない。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。比較提案は[Technology Stack](#technology-stack)に保持する。
 
 ### D-24
 
