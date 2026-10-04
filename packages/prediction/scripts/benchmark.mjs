@@ -33,6 +33,12 @@ for (const requiredFutureDone of counts) {
 console.log(JSON.stringify({ criterion: 'T-14: each real predict call <500ms; no probability pruning',
   limitation: 'Measured representative inputs on this machine; not a worst-case or deployment guarantee. 548 is informational only.',
   environment: { node: process.version, platform: platform(), release: release(), arch: arch(),
-    cpu: cpus()[0]?.model, logicalCpuCount: cpus().length, memoryGiB: totalmem() / 2 ** 30 },
+    cpu: cpus()[0]?.model, logicalCpuCount: cpus().length, memoryGiB: totalmem() / 2 ** 30,
+    // Only public Actions provenance; no credentials or application env are read.
+    ...(process.env.GITHUB_ACTIONS === 'true' ? { actions: {
+      checkoutSha: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID,
+      runAttempt: process.env.GITHUB_RUN_ATTEMPT, runnerOs: process.env.RUNNER_OS,
+      runnerArch: process.env.RUNNER_ARCH,
+    } } : {}) },
   config: DEFAULT_CONFIG, cases }, null, 2));
 if (cases.some(row => row.requiredByT14 && !row.pass)) process.exitCode = 1;
