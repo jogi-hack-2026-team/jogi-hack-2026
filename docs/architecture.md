@@ -28,7 +28,7 @@ flowchart LR
 ### Repository構成
 
 ```text
-package.json            npm workspaces（apps/web, apps/api, packages/prediction）
+package.json            npm workspacesは候補（管理方式は未確定。apps/web, apps/api, packages/prediction）
 packages/prediction/    src/{index,types,transitions,betaGeometric,completion,random}.ts, test/
 apps/api/               src/{server,auth,goals,logs,prediction,db}/, migrations/
 apps/web/               src/routes/, src/api/
@@ -37,7 +37,7 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 
 ## Technology Stack
 
-**基本構成は採用済み（DECIDED）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../archive/music-exploration/README.md)として保持し、復元と動作確認は実装Issueで行う。
+**基本構成は依頼者の合意報告に基づく採用記録（DECIDED、公開確認待ち）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../archive/music-exploration/README.md)として保持し、復元と動作確認は実装Issueで行う。
 
 ### 2026-10-03の技術構成合意
 
@@ -61,7 +61,7 @@ compose.yaml            ローカル開発用 Web・API・PostgreSQL
 
 API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこの合意の対象外。[未採択の契約案](contract-review-proposal.md)を維持し、D-19〜D-22、DONEのサーバー量補完、SKIPPED入力amount禁止／保存NULL、T-14の500ms未満を変えない。#84のClose、Projects変更、本実装開始、Merge、クラウド作成はこの文書から自動実行しない。
 
-**合意の出所：** 2026-10-03、依頼者本人がFE・BE二人の合意を報告し、上記の「基本構成を採用、認証・公開先は検証・運用条件付き」という範囲確認に08:44:36 UTC「うん」と回答した。本人の報告に基づく記録で、両メンバーのGitHub上のApproveを直接確認した証拠ではない。[#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)への記録は別途反映する。
+**合意の出所と公開確認：** 2026-10-03に依頼者がFE・BE二人の合意を報告したため、報告された基本構成だけをD-23へ記録した。**依頼者による合意報告であり、FE・BE本人による採択範囲の公開確認は待ち。** [#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)または[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)に、両担当が上記の採用範囲とD-24／D-25・版・追加ツール・API細則を含めない範囲を明記したコメントまたは採択確認を含むApproveを残し、そのURLを本項へ追記する必要がある。PR #85の検証資料へのApproveや、D-23〜D-25の採択・FE先行合意を含まない[PR #93のApprove](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93#pullrequestreview-5390202983)を代用しない。公開記録の確認と先行文書のレビュー・統合をmain反映前の条件とする。統合手順と未実施事項はPR #97で追跡する。
 
 [PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)の比較説明と[PR #96](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96)の追加実測は未Mergeの別資料。PR #96の[未解決レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/96#pullrequestreview-5399521304)（Origin encoded-path疑いはレビュー時未実行、Cloud試験計画の古い記述、終了hookの承認主体）を構成合意で解消済みにしない。コード・レビュー対応は今回行わない。
 
@@ -373,7 +373,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-20 | 2026-09-30 | DECIDED | [事前分布をBeta(2,2)とする](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
-| D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、依頼者によるチーム合意報告） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
+| D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、依頼者による合意報告・公開確認待ち） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
 | D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 
@@ -409,7 +409,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-23
 
-2026-10-03 / **DECIDED（基本構成、依頼者によるチーム合意報告）** / 2026-09-30のAI候補提案から[合意範囲](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則は今回追加採択しない。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。比較提案は[Technology Stack](#technology-stack)に保持する。
+2026-10-03 / **DECIDED（基本構成、依頼者による合意報告・公開確認待ち）** / 2026-09-30のAI候補提案から[合意範囲](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則は今回追加採択しない。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。比較提案は[Technology Stack](#technology-stack)に保持する。
 
 ### D-24
 
