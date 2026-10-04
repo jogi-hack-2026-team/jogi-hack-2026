@@ -21,7 +21,7 @@ HTML §16–17に基づく最小運用。ProductはFuture ROI（[Product Spec](.
 | Demo Account | メール＋パスワード認証（[R-01](../product-spec.md#requirementsmvp)）。アカウントは未作成 | 利用権限を確認。資格情報は承認済みの手段で共有 |
 | Demo Data・初期状態への戻し方 | 再開が早いGoalと遅いGoalの合成記録（[R-09](../product-spec.md#requirementsmvp)）。スクリプトは未作成 | 開発データと分け、手順を再実行できる |
 | 操作手順・期待結果 | [Core User Flow](../product-spec.md#core-user-flow)。期待結果は実装後に記入 | 主要Flowを順番どおりに再現 |
-| 外部API障害・通信障害時の説明 | API採用待ち | タイムアウト・エラー表示と代替デモを事前確認 |
+| 通信・業務API障害時の説明 | 未確認（アプリ実装後に確認） | タイムアウト・エラー表示と代替デモを事前確認。MVPにない外部APIの採用を前提にしない |
 | Backup Plan | 未定 | 許可された録画・画面資料などをチームで決める |
 
 MVP完成後に主要デモFlowをPlaywright CLI＋SkillによるE2E対象にする。実装前に空の成功テストを作らない。
