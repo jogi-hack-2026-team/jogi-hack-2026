@@ -1,0 +1,75 @@
+name: Prediction Engine
+
+on:
+  pull_request:
+    paths:
+      - 'packages/prediction/**'
+      - '.github/workflows/prediction.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/prediction/**'
+      - '.github/workflows/prediction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prediction-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prediction:
+    name: Typecheck and numerical tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.15.1', '24.x']
+    defaults:
+      run:
+        working-directory: packages/prediction
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          # Verification version, not a production runtime decision (Refs #70).
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Install locked verification dependency
+        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Show verification versions
+        run: |
+          node --version
+          npm --version
+          node node_modules/typescript/bin/tsc --version
+      - name: Typecheck public contracts and source
+        run: npm run typecheck
+      - name: Run numerical and regression tests
+        run: npm test
+      - name: Generate Engine connection input and output examples
+        run: node examples/recalculate.mjs > verification/connection-ci.json
+      - name: Measure real Engine T-14 on the verification runner
+        id: t14
+        # The existing <500ms criterion applies to every required call.
+        # This runner is verification evidence, not a production host decision.
+        run: node scripts/benchmark.mjs > verification/t14-ci.json
+      - name: Check both evidence files are present
+        if: ${{ always() && steps.t14.outcome != 'skipped' }}
+        run: |
+          test -s verification/t14-ci.json
+          test -s verification/connection-ci.json
+      - name: Retain T-14 evidence even when measurement fails
+        if: ${{ always() && steps.t14.outcome != 'skipped' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: prediction-evidence-node-${{ matrix.node }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            packages/prediction/verification/t14-ci.json
+            packages/prediction/verification/connection-ci.json
+          if-no-files-found: error
+          retention-days: 14

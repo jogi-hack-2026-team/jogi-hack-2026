@@ -2,7 +2,7 @@
 
 Supporting Doc / Not a Source of Truth。契約の不足、未採択の選択肢、関連PRの承認記録と確認案。正式仕様は[Product Spec](product-spec.md)と[Architecture](architecture.md)、技術採択は[#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)で確認する。本書を保存・レビューしてもAPI・Product・予測Decisionを採択変更しない。以下のテストは提案で、未実行。
 
-2026-10-04時点のmain（`e449b6c`）との差分を整理する。[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)の記録境界・昨日訂正方針と、[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)の日数metadata・公開エラー契約には依頼者承認の記録があるが、いずれもmain未統合。本書では再び未採択へ戻さず、正本への反映待ちと残る判断を区別する。これらのPR統合時には下記の差分も同期する。
+2026-10-04時点のmain（`c0e289d`）との差分を整理する。[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)の記録境界・昨日訂正方針は依頼者承認済みでmain反映待ち。[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)の日数metadata・公開エラー契約と純粋Engineはmain統合済み。本書では現行契約、承認済み反映待ち、残る未採択案を区別する。#101統合時には下記の差分も同期する。
 
 ## 現行規則と候補の境界
 
@@ -44,14 +44,14 @@ Goal / Logの応答項目は上の案から正式に一覧化する必要があ�
 
 ## Engineと表示の不足
 
-| 判断事項 | 現行で明記済みの範囲 | 承認済み反映待ち／未決の確認案 |
+| 判断事項 | 現行で明記済みの範囲 | 現行契約と未決の確認案 |
 | --- | --- | --- |
-| `observedDays` / `recordedDays` | mainは出力項目と観測窓のみ。#103は依頼者承認済みの集計契約・純粋Engine実装を持ち、main反映待ち | #103の契約はobservedDays＝最古ログから今日記録済みなら今日／未記録なら昨日までのUNKNOWN込み暦日数、recordedDays＝窓内の一意な明示DONE／SKIPPED数、空logsは両方0。初期量や固定記録開始日から推測せず、有効遷移起点の不足判定を維持。統合時に正本と同期する |
-| 入力・設定エラー | mainの個別入力規則に加え、#103は依頼者承認済みの`PredictionInputError`／`PredictionConfigError`・`reason`・変更できない`path`を持ち、main反映待ち | Engine例外分類を再採択待ちにせず、#103の契約・テストへ参照を寄せる。HTTP status・応答JSON・DB例外変換・画面表示と、外部JSONの構造検証は呼び出し側の未決事項。DEFAULT_CONFIGは変えない |
+| `observedDays` / `recordedDays` | #103の依頼者承認済みの集計契約・純粋Engine実装はmain統合済み。[正本](architecture.md#集計metadataと計算エラー)を参照 | observedDays＝最古ログから今日記録済みなら今日／未記録なら昨日までのUNKNOWN込み暦日数、recordedDays＝窓内の一意な明示DONE／SKIPPED数、空logsは両方0。初期量や固定記録開始日から推測せず、有効遷移起点の不足判定を維持 |
+| 入力・設定エラー | #103の依頼者承認済みの`PredictionInputError`／`PredictionConfigError`・`reason`・変更できない`path`はmain統合済み。[正本](architecture.md#集計metadataと計算エラー)を参照 | Engine例外分類を再採択待ちにしない。HTTP status・応答JSON・DB例外変換・画面表示と、外部JSONの構造検証は呼び出し側の未決事項。DEFAULT_CONFIGは変えない |
 | `CURRENT_STATE`の文言 | 今日記録済みなら中心比較を出さず、現在の状態から完了の目安を返す | Product表示表の「今日やった場合」をCURRENT_STATEへ流用せず「現在の記録からの完了の目安」とする案。今日DONE／SKIPPED、未達成／達成／不足を照合 |
 | P50／P80の片側nullと週表示 | 月曜始まりの週、H日以内に届かない分位点はnull | P50は週・P80は「3年以上先」を個別に表す案。「p50=null、p80有限」は順序に反するため正常値にしない。0日、日曜／月曜、うるう日、年跨ぎ、両null、異なるtimezoneで確認。週の日付は暦日で計算する案 |
 
-これらはD-19〜D-22の変更提案ではなく、明記不足と反映待ちを区別する判断材料。週表示・CURRENT_STATE文言の採択はProduct、#103の承認済みEngine契約の統合と未決のAPI mappingはArchitectureへ反映する。既存T-01〜T-15の期待値や不足条件を弱めない。
+これらはD-19〜D-22の変更提案ではなく、現行契約と明記不足を区別する判断材料。#103の承認済みEngine契約は正本に反映済み。未採択の週表示・CURRENT_STATE文言は採択後にProduct、未決のAPI mappingは採択後にArchitectureへ反映する。既存T-01〜T-15の期待値や不足条件を弱めない。
 
 ## 採択後の反映先
 
