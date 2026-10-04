@@ -1,6 +1,6 @@
 # 開発基盤の現行状態
 
-2026-09-30、Future ROIの技術スタックと公開先の候補を[Architecture D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)に記録しました（技術選定確定待ち）。確定するまで、現行のアプリ用Runtime、Framework、DB、Secret管理、Deploymentは未決定です。[D-18](../architecture.md#d-18-旧開発スタックの一時退避)で[履歴](../../archive/music-exploration/README.md)へ退避した旧Web/API・Compose・Node/npmの設定は、確定後に必要な部分だけ現行の場所へ戻します。
+2026-09-30の候補記録を、2026-10-03の[技術構成合意](../architecture.md#2026-10-03の技術構成合意)に基づき更新しました。[D-23](../architecture.md#d-23)の基本構成は依頼者によるDiscord上の了承報告に基づく採用記録。[D-24](../architecture.md#d-24)／[D-25](../architecture.md#d-25)は検証・運用条件付き第一候補で、最終採択・公開・課金作成の許可ではありません。版・追加ツール・Secret管理・外部設定・運用担当は未確定。[D-18](../architecture.md#d-18-旧開発スタックの一時退避)の基本構成未定状態はD-23で置き換えますが、[履歴](../../archive/music-exploration/README.md)の復元・動作確認は実装Issueで行い、未完了です。
 
 現行の共通基盤は、Issue/PR運用、Git Hook、`mise.toml`の共通タスク、[文書・設定チェック](../../scripts/check-foundation.ps1)、[Foundation CI](../../.github/workflows/foundation.yml)です。`pwsh -NoProfile -File scripts/check-foundation.ps1`はアプリの起動、ビルド、型検査、DB接続を実行しません。
 
@@ -8,7 +8,7 @@
 
 ## 現在の未決定事項
 
-- 技術スタックと公開先の確定（[D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)、別担当の精査結果と比較）。
+- 採用基本構成の版・追加ツールと、認証／公開先の最終採択・検証・運用条件（[D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)）。
 - 公開先のアカウント・課金設定・regionの作成と最終受入（確定後、承認を受けてから）。
 - アプリの起動構成・Application CIの現行の場所への復元と、その動作確認（I-01）。
 - 退避した旧構成のうち使わない部分の削除。
