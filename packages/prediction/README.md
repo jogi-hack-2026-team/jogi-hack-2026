@@ -1,12 +1,12 @@
 # Prediction Engineの限定先行実装（Refs #71・#72・#73）
 
-**Supporting Doc / Not a Source of Truth.** 正式仕様は[Prediction Engine D-19〜D-22](../../docs/architecture.md#prediction-engine)と[Test Strategy T-01〜T-15](../../docs/architecture.md#test-strategy)。このpackageはDB・HTTP・UI・時計から独立した計算本体とローカルテストを持つ。アプリ結合・正式受入・CIまで完了したものではない。
+**Supporting Doc / Not a Source of Truth.** 正式仕様は[Prediction Engine D-19〜D-22](../../docs/architecture.md#prediction-engine)と[Test Strategy T-01〜T-15](../../docs/architecture.md#test-strategy)。このpackageはDB・HTTP・UI・時計から独立した計算本体とローカルテストを持つ。アプリ結合・正式受入まで完了したものではない。純粋Engineの型検査・数値テストCIは[検証CI](#検証ci)を参照する。
 
 ## 承認範囲と現在の状態
 
 2026-10-03の依頼者承認を[#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)・[#72](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72)・[#73](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73)の「承認済みの限定先行」へ記録した。独立ローカルBranchでEngine計算本体と関連テストを先行できる。正式なアプリへの組み込みは#70完了後で、#70のBLOCKED、FE／BEの依存、正式結合・レビュー・Merge・完了判定のHard依存は維持する。
 
-元の先行作業はmain `af001c6e797b9833a63234bd1646171ac8e8c542`を基点とした。今回の独立レビューbranchは最新main `e449b6cc78cd5261bcd0390f9883e9d37d6773e6`から作成し、2026-10-04の依頼者指示に沿ってcommit／push／通常PRへ出す。依頼者は2026-10-03T08:44ZにFE／BEを含むTypeScript／Nodeの基本構成合意を報告し、反映案は[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)にある。確認時は未Merge。このpackageでは技術Decisionやrootのpackage／workspace／CI／runtime設定を変更していない。質問由来prior／初期seedの追加案は取り込んでいない。
+元の先行作業はmain `af001c6e797b9833a63234bd1646171ac8e8c542`を基点とした。今回の独立レビューbranchは最新main `e449b6cc78cd5261bcd0390f9883e9d37d6773e6`から作成し、2026-10-04の依頼者指示に沿ってcommit／push／通常PRへ出す。依頼者は2026-10-03T08:44ZにFE／BEを含むTypeScript／Nodeの基本構成合意を報告し、反映案は[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)にある。確認時は未Merge。このpackageでは技術Decisionやrootのpackage／workspace／runtime設定を変更していない。2026-10-04の依頼者指示で純粋Engineの検証CIを追加するが、製品の採用runtime・runnerを確定するものではない。質問由来prior／初期seedの追加案は取り込んでいない。
 
 ## 計算の利用条件と処理
 
@@ -31,7 +31,7 @@
 
 ## ローカル検証
 
-導入済みNode、TypeScript compiler、PowerShell 7を使う。install・ネットワーク・Secret・DBは不要。Node標準`node:test`は限定先行packageの仮runnerで、Vitest／fast-checkやruntime版を採択したものではない。dependencies／devDependencies／lockfile／enginesは追加していない。
+導入済みNode、TypeScript compiler、PowerShell 7を使う。既存compilerのパスを渡す方法はinstall・ネットワーク・Secret・DB不要。Node標準`node:test`は限定先行packageのrunnerで、Vitest／fast-checkや製品runtime版を採択したものではない。CI用のTypeScript 5.8.3だけをdevDependenciesに固定し、package内のpackage-lock.jsonを追加した。実行時dependencies・engines・root workspaceは追加していない。
 
 PowerShellでrepoのルートから実行する。`<existing-compiler>`は導入済み`typescript/bin/tsc`の実パス。
 
@@ -48,7 +48,7 @@ package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm tes
 | 対応する正式テスト | 実在する確認 |
 | --- | --- |
 | T-01、T-04、T-07〜T-09、T-11〜T-13 | [predict.test.mjs](tests/predict.test.mjs)：UNKNOWN、日付境界、中心の独立性、決定性、不変入力、今日量、状態優先、不足、未来・重複、単調性、CURRENT_STATEの独立閉形式 |
-| T-02、T-03、T-05、T-15（中心） | [recovery.test.mjs](tests/recovery.test.mjs)：独立した整数階乗比、alpha=2閉形式、境界、単調性、beta=10000、unsafe形状和、固定seedのBeta→Geometric MC。MC許容差はこのローカル検証の基準で、CI採択ではない |
+| T-02、T-03、T-05、T-15（中心） | [recovery.test.mjs](tests/recovery.test.mjs)：独立した整数階乗比、alpha=2閉形式、境界、単調性、beta=10000、unsafe形状和、固定seedのBeta→Geometric MC。MC許容差は既存テストの基準で、CI追加時に変更していない |
 | T-06、T-10 | [completion.test.mjs](tests/completion.test.mjs)：2100入力条件を独立した整数全経路で照合し、到達不能刈り込みの有無を比較。同じtheta条件の畳み込み、微小確率P50=3、閾値一致、P50あり／P80 nullを確認 |
 | T-15（乱数） | [random.test.mjs](tests/random.test.mjs)：正式vector、乱数消費順、Gamma／Betaの平均・分散、uniformの開区間 |
 | T-14 | [benchmark.mjs](scripts/benchmark.mjs)：実Engine・K=200／H=1095、必要120／400／1095回。Windows・Node v22.15.1・Intel i7-1360Pで各500ms未満を確認。代表入力はposterior a=(14,7)、b=(7,9)。[2026-10-04の全入力・CPU/メモリ・各6回の計測](verification/benchmark-node22.json)を保存。採用runtime・配備機での結果ではない。548回は情報用で追加ゲートではない |
@@ -56,6 +56,22 @@ package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm tes
 | metadata／公開errorの契約 | [observations.test.mjs](tests/observations.test.mjs)、[result-contract.test.mjs](tests/result-contract.test.mjs)：空履歴・今日・昨日・UNKNOWN・逆順・初期進捗・達成済み・暦日境界の公開値。未来／重複は結果を返さず、入力／設定／導出値pathを分類。HTTP応答への結合は未完了 |
 
 テスト期待値は正本の固定例と独立オラクルに基づく。過去の準備branch（`dcc6440`／`f29e24d`）やmainの実験を本体へ丸ごとコピーせず、lgamma参照値を現在の中心計算のオラクルとして流用していない。テスト成功をAPI／UI結合、公開環境、正式なIssue受入の成功と扱わない。
+
+## 検証CI
+
+[prediction.yml](../../.github/workflows/prediction.yml)は、`packages/prediction/**`またはこのworkflowが変わるPR、mainへのpush、手動実行を対象にする。Foundation CIは別に維持する。PRではGitHubのmerge用commitをcheckoutして基底branchとの組み合わせを検証する。同じPR／branchの古い実行は取り消し、各jobは10分で打ち切る。read-only permissions・checkout credentials非保持で、Secret・DB・`pull_request_target`は使わない。fork PRも同じ構成で、GitHub側の実行承認が必要な場合はその制限に従う。
+
+Ubuntu runnerで、以前のローカル検証と同じNode 22.15.1と検証済みTypeScript 5.8.3を固定する。これは再現用の検証版で、製品runtimeの最終採択ではない。package内のlockfileには公式npm registryの配布先とintegrityを含め、`npm ci --include=dev --ignore-scripts --no-audit --no-fund`で検証依存だけをinstallする。lifecycle scriptsとcacheは使わない。
+
+同じ手順をローカルで再現する場合は、repoの`packages/prediction`内で次を実行する。初回installには公式npm registryへの接続が必要で、Secret・DBは不要。
+
+```sh
+npm ci --include=dev --ignore-scripts --no-audit --no-fund
+npm run typecheck
+npm test
+```
+
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの44テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。性能benchmarkはCIで実行せず、既存T-14のローカル計測と採用runtime／配備先での再確認を分ける。required checksやbranch protectionは変更しない。
 
 ## 補完・訂正後の再計算例
 
@@ -81,4 +97,4 @@ TODAY_DONEは未記録の今日を1回実行した仮定からの将来日数、
 
 #70が用意する同名workspace packageへ整合させ、二重packageを作らない。TypeScript版・module方式、採用runtime、採用runnerと依存／lockfile、統一コマンド、CIを#70に合わせる。正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
 
-今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。#72の採用Runtimeによるvector確認、#73の採用runnerでのEngineテストCIも未完了。Foundation CIは文書・設定だけを確認し、Engineテストの成功とは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。
+今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・44テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。

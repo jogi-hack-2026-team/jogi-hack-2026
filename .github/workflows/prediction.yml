@@ -1,0 +1,49 @@
+name: Prediction Engine
+
+on:
+  pull_request:
+    paths:
+      - 'packages/prediction/**'
+      - '.github/workflows/prediction.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/prediction/**'
+      - '.github/workflows/prediction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prediction-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prediction:
+    name: Typecheck and numerical tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/prediction
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          # Verification version, not a production runtime decision (Refs #70).
+          node-version: '22.15.1'
+          package-manager-cache: false
+      - name: Install locked verification dependency
+        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Show verification versions
+        run: |
+          node --version
+          npm --version
+          node node_modules/typescript/bin/tsc --version
+      - name: Typecheck public contracts and source
+        run: npm run typecheck
+      - name: Run numerical and regression tests
+        run: npm test
