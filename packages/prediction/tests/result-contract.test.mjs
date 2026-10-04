@@ -92,6 +92,32 @@ test('Error contract: public classes classify input/config/derived paths without
   }
 });
 
+test('Config error: unsafe posterior identifies prior plus transition count without rejecting safe boundary shapes', () => {
+  // Completed inputs isolate validation from sampling with enormous shapes.
+  const input = { goal: { ...goal, initialProgress: goal.totalRequired }, today, logs: [] };
+  const max = Number.MAX_SAFE_INTEGER;
+  assert.equal(predict(input, { ...config, prior: max }).completion.status, 'completed');
+  for (const [before, after, parameter, shape] of [
+    ['DONE', 'DONE', 'a', 'alpha'], ['DONE', 'SKIPPED', 'a', 'beta'],
+    ['SKIPPED', 'DONE', 'b', 'alpha'], ['SKIPPED', 'SKIPPED', 'b', 'beta'],
+  ]) {
+    const recorded = { ...input, logs: [log(7, before), log(8, after)] };
+    const boundary = predict(recorded, { ...config, prior: max - 1 });
+    assert.equal(boundary.posterior[parameter][shape], max);
+    assert.equal(boundary.completion.status, 'completed');
+    assert.throws(() => predict(recorded, { ...config, prior: max }), error => {
+      assert.ok(error instanceof PredictionConfigError);
+      assert.equal(error.reason, 'UNSAFE_POSTERIOR');
+      assert.deepEqual(error.path, ['posterior', parameter, shape]);
+      assert.ok(Object.isFrozen(error.path));
+      // Diagnostic wording is informative; reason/path remain the stable contract.
+      assert.match(error.message, /prior.*transition count.*exact integer range/i);
+      assert.equal(error.message.includes(String(max)), false);
+      return true;
+    });
+  }
+});
+
 test('Result contract: recording or correcting today recomputes the complete result without retained state', () => {
   const input = { goal, today, logs: [log(7, 'SKIPPED'), log(8), log(9)] };
   const original = predict(input, config);

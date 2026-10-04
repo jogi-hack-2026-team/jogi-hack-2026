@@ -25,7 +25,7 @@
 2026-10-04に、集計の具体定義とエラーの種類・理由・場所を区別する契約について、採用理由を説明したうえで依頼者が承認した。[正本](../../docs/architecture.md#集計metadataと計算エラー)へ反映した。M1、既存観測窓、数値計算、HTTP／DB応答の範囲は変えていない。
 
 - `observedDays`：最古の明示ログ日から、今日記録済みなら今日／未記録なら昨日まで、両端を含む暦日数。UNKNOWN日も含む。`recordedDays`：その窓の一意な明示DONE／SKIPPED数。ログなしは観測起点も明示記録もないため0／0。初期進捗、Goal作成日、記録開始日から観測期間を推測しない。metadataは不足判定や遷移数へ影響させない。
-- [errors.ts](src/errors.ts)の既存`PredictionInputError`／`PredictionConfigError`を公開exportする。RangeError派生classの`reason`と凍結した`path`で分類する。pathは入力・設定項目、または導出値の場所（`UNSAFE_POSTERIOR`ならposterior以下）。messageの文面を契約にせず、入力実値・HTTP statusCode・公開response code・DB変換を含めない。未知の例外を握りつぶさない。
+- [errors.ts](src/errors.ts)の既存`PredictionInputError`／`PredictionConfigError`を公開exportする。RangeError派生classの`reason`と凍結した`path`で分類する。pathは入力・設定項目、または導出値の場所（`UNSAFE_POSTERIOR`ならposterior以下）。messageの文面を契約にせず、入力実値・HTTP statusCode・公開response code・DB変換を含めない。未知の例外を握りつぶさない。`UNSAFE_POSTERIOR`のmessageは`prior + transition count`がposterior shapeのsafe integer範囲を超えたことを説明する。prior単独の大きさだけで失敗と断定せず、reasonと導出値pathは維持する。4種類の隣接遷移について、最大safe integerの境界は受理し、1だけ超える場合は対応するpathで拒否する回帰ケースを確認する。
 
 完了分位点は既存仕様どおり明日が1日目。未記録の今日の仮実行で届く場合は0日、H日以内に分位点へ届かなければnull。insufficient／completedを0日へ変換しない。[result-contract.test.mjs](tests/result-contract.test.mjs)で公開Result・空履歴・暦日境界・metadataだけの変化・公開class・訂正再計算を検証する。型検査では必須metadataがない内部計算の型を完全Resultへ代入できない負例と、実際の`predict`が完全Result型に適合する正例を維持する。
 
@@ -61,7 +61,7 @@ package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm tes
 
 [prediction.yml](../../.github/workflows/prediction.yml)は、`packages/prediction/**`またはこのworkflowが変わるPR、mainへのpush、手動実行を対象にする。Foundation CIは別に維持する。PRではGitHubのmerge用commitをcheckoutして基底branchとの組み合わせを検証する。同じPR／branchの古い実行は取り消し、各jobは10分で打ち切る。read-only permissions・checkout credentials非保持で、Secret・DB・`pull_request_target`は使わない。fork PRも同じ構成で、GitHub側の実行承認が必要な場合はその制限に従う。
 
-Ubuntu runnerで、以前のローカル検証と同じNode 22.15.1と検証済みTypeScript 5.8.3を固定する。これは再現用の検証版で、製品runtimeの最終採択ではない。package内のlockfileには公式npm registryの配布先とintegrityを含め、`npm ci --include=dev --ignore-scripts --no-audit --no-fund`で検証依存だけをinstallする。lifecycle scriptsとcacheは使わない。
+Ubuntu runnerで、Node 22.15.1とNode 24系（`24.x`）のmatrixを使い、TypeScript 5.8.3を固定する。Node 24系は採用候補での回帰検出を目的に追加し、24.xが解決した実版は各Actionsログで確認する。一方の失敗でももう一方の検証結果を得るためfail-fastは無効にする。これらは検証版で、製品runtimeの最終採択ではない。package内のlockfileには公式npm registryの配布先とintegrityを含め、`npm ci --include=dev --ignore-scripts --no-audit --no-fund`で検証依存だけをinstallする。lifecycle scriptsとcacheは使わない。
 
 同じ手順をローカルで再現する場合は、repoの`packages/prediction`内で次を実行する。初回installには公式npm registryへの接続が必要で、Secret・DBは不要。
 
@@ -71,7 +71,7 @@ npm run typecheck
 npm test
 ```
 
-型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの44テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。性能benchmarkはCIで実行せず、既存T-14のローカル計測と採用runtime／配備先での再確認を分ける。required checksやbranch protectionは変更しない。
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの45テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。性能benchmarkはCIで実行せず、既存T-14のローカル計測と採用runtime／配備先での再確認を分ける。required checksやbranch protectionは変更しない。
 
 ## 補完・訂正後の再計算例
 
@@ -97,4 +97,4 @@ TODAY_DONEは未記録の今日を1回実行した仮定からの将来日数、
 
 #70が用意する同名workspace packageへ整合させ、二重packageを作らない。TypeScript版・module方式、採用runtime、採用runnerと依存／lockfile、統一コマンド、CIを#70に合わせる。正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
 
-今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・44テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。
+今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・45テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。

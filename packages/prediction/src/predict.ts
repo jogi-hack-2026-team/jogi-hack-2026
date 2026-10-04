@@ -32,7 +32,7 @@ export function predict(input: PredictionInput, config: PredictionConfig = DEFAU
     for (const shape of ['alpha', 'beta'] as const) {
       if (!Number.isSafeInteger(posterior[parameter][shape])) {
         throw new PredictionConfigError('UNSAFE_POSTERIOR', ['posterior', parameter, shape],
-          'Posterior shape exceeds exact integer range');
+          'prior + transition count exceeds exact integer range for posterior shape');
       }
     }
   }
