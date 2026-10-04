@@ -8,7 +8,7 @@ const today = '2026-10-10';
 const done = day => ({ localDate: `2026-10-${String(day).padStart(2, '0')}`, status: 'DONE', amount: 1 });
 const skipped = day => ({ ...done(day), status: 'SKIPPED', amount: null });
 const config = { ...DEFAULT_CONFIG, samples: 10, horizonDays: 20 };
-// Fixed UTC parsing is a test oracle only. Engine source uses integer arithmetic, no platform dates.
+// 固定UTCの日付変換はテスト用の独立参照だけで使う。Engine本体は整数演算で、環境依存の日付処理を使わない。
 const ordinalOracle = date => Date.parse(`${date}T00:00:00Z`) / 86400000 + 719163;
 
 test('window facts cover empty, today, yesterday, UNKNOWN, reverse order and initial-only progress', () => {

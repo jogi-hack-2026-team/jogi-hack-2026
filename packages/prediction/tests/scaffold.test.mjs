@@ -32,7 +32,7 @@ test('scaffold: source imports stay inside the pure package; no ambient platform
 });
 
 test('fixture audit: known recovery quantiles match independent integer factorial ratios', () => {
-  // Gamma's integer factorial identity audits fixture values only. No production call occurs.
+  // Gamma関数の整数での階乗恒等式を固定参照値の確認だけに使う。本体計算は呼ばない。
   const factorial = n => {
     let result = 1n;
     for (let i = 2; i <= n; i++) result *= BigInt(i);

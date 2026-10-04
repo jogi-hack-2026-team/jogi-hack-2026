@@ -1,6 +1,6 @@
-// Public Engine classifications distinguish causes without parsing messages.
-// Paths locate input/config fields or a derived value (UNSAFE_POSTERIOR).
-// They are not HTTP statuses, response codes, or a response schema.
+// 公開例外の種類・reasonで原因を区別し、messageの文字列解析に依存させない。
+// pathは入力・設定項目、または導出値の場所（UNSAFE_POSTERIOR）を示す。
+// HTTPのstatus・response code・応答形式はここでは定めない。
 type FieldPath = readonly (string | number)[];
 type InputReason = 'INVALID_LOCAL_DATE' | 'FUTURE_LOG_DATE' | 'DUPLICATE_LOG_DATE' |
   'INVALID_QUANTITY' | 'INVALID_LOG_STATUS' | 'INVALID_LOG_AMOUNT' | 'UNSAFE_PROGRESS';

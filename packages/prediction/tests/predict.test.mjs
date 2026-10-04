@@ -86,7 +86,7 @@ test('T-08: unrecorded today uses one hypothetical session; remaining one gives0
   assert.deepEqual(one.completion, { status: 'available', scenario: 'TODAY_DONE', p50Days: 0, p80Days: 0 });
   const two = predict({ ...input, goal: { ...input.goal, totalRequired: done + 20 } }, smallConfig);
   const samples = samplePosterior(two.posterior, smallConfig.samples, smallConfig.seed);
-  // Independent closed form for reaching the first future DONE from DONE.
+  // DONE起点から最初の将来DONEへ到達する確率を、独立した閉形式で求める。
   const quantile = q => {
     for (let day = 1; day <= smallConfig.horizonDays; day++) {
       const cdf = 1 - samples.reduce((sum, s) => sum + (1 - s.a) * (1 - s.b) ** (day - 1), 0) / samples.length;
@@ -195,7 +195,7 @@ test('integer ceil and technical config errors remain separate from HTTP error m
   const input = { ...todayDoneInput, goal: { totalRequired: Number.MAX_SAFE_INTEGER, initialProgress: 2,
     sessionAmount: 4503599627370494 } };
   const result = predict(input, { ...smallConfig, horizonDays: 1 });
-  assert.equal(result.completion.p50Days, null); // Two future DONEs cannot fit into H=1.
+  assert.equal(result.completion.p50Days, null); // 上限H=1日の間に将来DONE2回は実行できない。
   for (const changed of [
     { prior: 1.5 }, { samples: 0 }, { horizonDays: 0 }, { seed: -1 }, { seed: 2 ** 32 },
     { modelVersion: 'unimplemented-model' },

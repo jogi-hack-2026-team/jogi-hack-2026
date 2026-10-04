@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdirSync } from 'node:fs';
 
-// Use an existing compiler explicitly; never install a tool or consult private env files.
+// 導入済みのコンパイラを明示して使い、自動installや秘密の環境設定ファイルの参照は行わない。
 const [mode, flag, compilerPath, ...extra] = process.argv.slice(2);
 if (!['typecheck', 'test'].includes(mode) || extra.length ||
     (flag !== undefined && (flag !== '--tsc' || !compilerPath))) {

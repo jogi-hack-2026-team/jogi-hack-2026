@@ -71,8 +71,8 @@ test('a late actual-log correction can enter and leave COMPLETED without stale s
   assert.deepEqual(predict(base, config), initial);
 });
 
-// Independent dense calendar oracle: it visits every day, including UNKNOWN slots.
-// It neither sorts sparse logs nor calls the production observation or RNG helpers.
+// UNKNOWNも含めて全暦日を走査する独立参照。
+// 疎なログの整列や、本体の観測集計・乱数関数を流用しない。
 test('120 reproducible generated histories agree with a dense calendar oracle and preserve frozen inputs', () => {
   let state = 0x71c0ffee;
   const next = max => {

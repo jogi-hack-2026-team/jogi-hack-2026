@@ -1,4 +1,4 @@
-// Architecture: Prediction Engine interface, D-19–D-22. No runtime/tool version decision.
+// ArchitectureのPrediction Engine契約・D-19〜D-22に従う。runtimeやツールの版を採択する設定ではない。
 export const DEFAULT_CONFIG = Object.freeze({
   modelVersion: 'behavior-persistence-m1-v1',
   prior: 2,

@@ -9,7 +9,7 @@ export interface CompletionParameters {
   prune?: boolean;
 }
 
-/** First passage masses indexed by future day. Horizon tail remains unnormalized. */
+/** 将来の各日を添字として、その日に初めて必要DONE回数へ到達する確率を返す。上限日数より先の確率を除いて再正規化しない。 */
 export function completionPmf({ initialState, requiredFutureDone: n, horizonDays: h, a, b, prune = true }: CompletionParameters): Float64Array {
   const pmf = new Float64Array(h + 1);
   if (n === 0) { pmf[0] = 1; return pmf; }
@@ -23,7 +23,7 @@ export function completionPmf({ initialState, requiredFutureDone: n, horizonDays
   for (let day = 1; day <= h; day++) {
     nextDone.fill(0);
     nextSkipped.fill(0);
-    // Discard only counts which cannot reach n even if every remaining day is DONE.
+    // 残りの日をすべてDONEにしても必要回数nへ届かない状態だけを除く。小さな確率は切り捨てない。
     const low = prune ? Math.max(0, n - (h - day + 1)) : 0;
     const high = Math.min(n - 1, day - 1);
     for (let count = low; count <= high; count++) {
