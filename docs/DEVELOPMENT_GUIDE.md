@@ -480,6 +480,10 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 
 旧Web/API・Compose・Node/npmの起動手順は[履歴内の開発ガイド](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)に保管しています。次のProduct向けの起動コマンドと技術スタックは未定です。
 
+## Predictionの限定先行計算を確認する
+
+#71〜#73に記録した限定先行承認に沿った[packageの手順](../packages/prediction/README.md#ローカル検証)を使います。純粋計算本体・T-01〜T-15に対応するローカルテストと実性能を確認できます。終了コード0やFoundation成功をアプリ結合・正式受入の完了と扱いません。#70のworkspace・runtime・採択済みrunnerとの整合は[残条件](../packages/prediction/README.md#70後に合わせる点と残条件)に従います。#70のBLOCKEDと正式Hard依存は維持します。[検証CI](../packages/prediction/README.md#検証ci)は純粋Engineの型検査と45テストをPR時に実行し、Foundationとは別です。アプリの起動・DB・HTTP・UIは今回追加していません。
+
 ## 文書チェックで起きること
 
 `mise.toml`の`check`は`pwsh -NoProfile -File scripts/check-foundation.ps1`を呼びます。直接実行も同じ処理です。

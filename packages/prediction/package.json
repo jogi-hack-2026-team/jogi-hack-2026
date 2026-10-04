@@ -1,0 +1,13 @@
+{
+  "name": "@futureroi/prediction",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "node scripts/check.mjs typecheck",
+    "test": "node scripts/check.mjs test"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}

@@ -1,0 +1,100 @@
+# Prediction Engineの限定先行実装（Refs #71・#72・#73）
+
+**Supporting Doc / Not a Source of Truth.** 正式仕様は[Prediction Engine D-19〜D-22](../../docs/architecture.md#prediction-engine)と[Test Strategy T-01〜T-15](../../docs/architecture.md#test-strategy)。このpackageはDB・HTTP・UI・時計から独立した計算本体とローカルテストを持つ。アプリ結合・正式受入まで完了したものではない。純粋Engineの型検査・数値テストCIは[検証CI](#検証ci)を参照する。
+
+## 承認範囲と現在の状態
+
+2026-10-03の依頼者承認を[#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)・[#72](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72)・[#73](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73)の「承認済みの限定先行」へ記録した。独立ローカルBranchでEngine計算本体と関連テストを先行できる。正式なアプリへの組み込みは#70完了後で、#70のBLOCKED、FE／BEの依存、正式結合・レビュー・Merge・完了判定のHard依存は維持する。
+
+元の先行作業はmain `af001c6e797b9833a63234bd1646171ac8e8c542`を基点とした。今回の独立レビューbranchは最新main `e449b6cc78cd5261bcd0390f9883e9d37d6773e6`から作成し、2026-10-04の依頼者指示に沿ってcommit／push／通常PRへ出す。依頼者は2026-10-03T08:44ZにFE／BEを含むTypeScript／Nodeの基本構成合意を報告し、反映案は[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)にある。確認時は未Merge。このpackageでは技術Decisionやrootのpackage／workspace／runtime設定を変更していない。2026-10-04の依頼者指示で純粋Engineの検証CIを追加するが、製品の採用runtime・runnerを確定するものではない。質問由来prior／初期seedの追加案は取り込んでいない。
+
+## 計算の利用条件と処理
+
+[src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映したが、正式API結合済みではない。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
+
+1. [observations.ts](src/observations.ts)は整数のGregorian日付演算で入力を検証し、コピーを整列する。未来・重複・不正な日付や量は達成判定前に拒否する。隣接した記録だけを数え、欠けたUNKNOWN日を跨がない。実績は初期量＋全DONEの実量で、今日の量も1回だけ含む。内部事実として最古記録日〜今日／昨日のordinal範囲・暦日数と有効記録件数を返す。ログ0では観測開始日を決められないため窓はnullで、初期進捗から開始日を推測しない。
+2. [predict.ts](src/predict.ts)は正式な優先順「入力エラー → 達成済み → 今日記録済み／データ不足」を適用し、各遷移へ既定prior=2を加えて事後分布を作る。達成済みのcompletionは`completed`、未達成で起点状態の遷移がない場合は`insufficient`。0日やnullで不足を隠さない。
+3. [recovery.ts](src/recovery.ts)はBeta-Geometricの中央値・80%分位点をBigIntの厳密な整数比で比較する。約分は計算量を抑えるためだけで、閾値への一致を保持する。中心計算へlgamma・乱数・epsilon・Hの打ち切りを使わない。
+4. [random.ts](src/random.ts)は採択済みseedFor／SplitMix32／Box–Muller／Marsaglia–Tsangの順序でa、続けてbを抽選する。[config.ts](src/config.ts)の既定値はmodelVersion=`behavior-persistence-m1-v1`、prior=2、K=200、H=1095、seed=20261012。
+5. [completion.ts](src/completion.ts)は各抽選について将来DONE回数0から初到達日の確率を計算し、等重みに混合する。到達不能な状態だけを除き、微小な確率を切り捨てず、H以後の尾を再正規化しない。累積確率は仕様のepsilon=1e-12で判定する。今日未記録なら1回の仮のsessionを実績と分けて引き、今日記録済みなら実績を増やさずCURRENT_STATEから始める。必要回数がHを超える場合は両分位点null、今日の仮実行で届く場合は0日。
+
+数量・posterior形状はNumberのsafe integer範囲を確認し、厳密性を失う入力は拒否する。configは正の整数prior／K／H、uint32 seed、実装済みmodelVersionを検証する。これは計算の技術的な入力境界で、Productの新しい上限やAPIのエラーコードを採択したものではない。数値部品は内部用で、外部入力は`predict`の検証を通す。
+
+## metadata・公開エラーの契約
+
+2026-10-04に、集計の具体定義とエラーの種類・理由・場所を区別する契約について、採用理由を説明したうえで依頼者が承認した。[正本](../../docs/architecture.md#集計metadataと計算エラー)へ反映した。M1、既存観測窓、数値計算、HTTP／DB応答の範囲は変えていない。
+
+- `observedDays`：最古の明示ログ日から、今日記録済みなら今日／未記録なら昨日まで、両端を含む暦日数。UNKNOWN日も含む。`recordedDays`：その窓の一意な明示DONE／SKIPPED数。ログなしは観測起点も明示記録もないため0／0。初期進捗、Goal作成日、記録開始日から観測期間を推測しない。metadataは不足判定や遷移数へ影響させない。
+- [errors.ts](src/errors.ts)の既存`PredictionInputError`／`PredictionConfigError`を公開exportする。RangeError派生classの`reason`と凍結した`path`で分類する。pathは入力・設定項目、または導出値の場所（`UNSAFE_POSTERIOR`ならposterior以下）。messageの文面を契約にせず、入力実値・HTTP statusCode・公開response code・DB変換を含めない。未知の例外を握りつぶさない。`UNSAFE_POSTERIOR`のmessageは`prior + transition count`がposterior shapeのsafe integer範囲を超えたことを説明する。prior単独の大きさだけで失敗と断定せず、reasonと導出値pathは維持する。4種類の隣接遷移について、最大safe integerの境界は受理し、1だけ超える場合は対応するpathで拒否する回帰ケースを確認する。
+
+完了分位点は既存仕様どおり明日が1日目。未記録の今日の仮実行で届く場合は0日、H日以内に分位点へ届かなければnull。insufficient／completedを0日へ変換しない。[result-contract.test.mjs](tests/result-contract.test.mjs)で公開Result・空履歴・暦日境界・metadataだけの変化・公開class・訂正再計算を検証する。型検査では必須metadataがない内部計算の型を完全Resultへ代入できない負例と、実際の`predict`が完全Result型に適合する正例を維持する。
+
+## ローカル検証
+
+導入済みNode、TypeScript compiler、PowerShell 7を使う。既存compilerのパスを渡す方法はinstall・ネットワーク・Secret・DB不要。Node標準`node:test`は限定先行packageのrunnerで、Vitest／fast-checkや製品runtime版を採択したものではない。CI用のTypeScript 5.8.3だけをdevDependenciesに固定し、package内のpackage-lock.jsonを追加した。実行時dependencies・engines・root workspaceは追加していない。
+
+PowerShellでrepoのルートから実行する。`<existing-compiler>`は導入済み`typescript/bin/tsc`の実パス。
+
+```powershell
+node packages/prediction/scripts/check.mjs typecheck --tsc '<existing-compiler>'
+node packages/prediction/scripts/check.mjs test --tsc '<existing-compiler>'
+node packages/prediction/examples/recalculate.mjs
+node packages/prediction/scripts/benchmark.mjs
+pwsh -NoProfile -File scripts/check-foundation.ps1
+```
+
+package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm test -- --tsc '<existing-compiler>'`も同じ入口を使う。compilerを解決できる場合だけ`--tsc`を省略でき、不在なら明示的に失敗して自動installしない。testは型検査後にgitignore対象のdistへ出力し、全`tests/*.test.mjs`を実行する。benchmarkはtestでコンパイルした実際の`predict`を使い、環境・全入力・各条件の1回目と5回の追加計測・結果をJSONで出す。T-14必須の3条件で500ms以上の計測があれば非0で終了する。`--include-midpoint`を追加すると548回を情報用に測るが、性能要件は増やさない。代表入力と開発機での計測であり、全入力・混合負荷・配備先の最悪性能を保証しない。FoundationはEngineテストを実行しない。
+
+| 対応する正式テスト | 実在する確認 |
+| --- | --- |
+| T-01、T-04、T-07〜T-09、T-11〜T-13 | [predict.test.mjs](tests/predict.test.mjs)：UNKNOWN、日付境界、中心の独立性、決定性、不変入力、今日量、状態優先、不足、未来・重複、単調性、CURRENT_STATEの独立閉形式 |
+| T-02、T-03、T-05、T-15（中心） | [recovery.test.mjs](tests/recovery.test.mjs)：独立した整数階乗比、alpha=2閉形式、境界、単調性、beta=10000、unsafe形状和、固定seedのBeta→Geometric MC。MC許容差は既存テストの基準で、CI追加時に変更していない |
+| T-06、T-10 | [completion.test.mjs](tests/completion.test.mjs)：2100入力条件を独立した整数全経路で照合し、到達不能刈り込みの有無を比較。同じtheta条件の畳み込み、微小確率P50=3、閾値一致、P50あり／P80 nullを確認 |
+| T-15（乱数） | [random.test.mjs](tests/random.test.mjs)：正式vector、乱数消費順、Gamma／Betaの平均・分散、uniformの開区間 |
+| T-14 | [benchmark.mjs](scripts/benchmark.mjs)：実Engine・K=200／H=1095、必要120／400／1095回。Windows・Node v22.15.1・Intel i7-1360Pで各500ms未満を確認。代表入力はposterior a=(14,7)、b=(7,9)。[2026-10-04の全入力・CPU/メモリ・各6回の計測](verification/benchmark-node22.json)を保存。採用runtime・配備機での結果ではない。548回は情報用で追加ゲートではない |
+| package基盤 | [scaffold.test.mjs](tests/scaffold.test.mjs)、[type-contracts.ts](tests/type-contracts.ts)、[fixtures.ts](tests/fixtures.ts)：依存境界、状態型の負例、既知fixture。テキスト依存監査は補助で、全面的な静的解析を保証しない |
+| metadata／公開errorの契約 | [observations.test.mjs](tests/observations.test.mjs)、[result-contract.test.mjs](tests/result-contract.test.mjs)：空履歴・今日・昨日・UNKNOWN・逆順・初期進捗・達成済み・暦日境界の公開値。未来／重複は結果を返さず、入力／設定／導出値pathを分類。HTTP応答への結合は未完了 |
+
+テスト期待値は正本の固定例と独立オラクルに基づく。過去の準備branch（`dcc6440`／`f29e24d`）やmainの実験を本体へ丸ごとコピーせず、lgamma参照値を現在の中心計算のオラクルとして流用していない。テスト成功をAPI／UI結合、公開環境、正式なIssue受入の成功と扱わない。
+
+## 検証CI
+
+[prediction.yml](../../.github/workflows/prediction.yml)は、`packages/prediction/**`またはこのworkflowが変わるPR、mainへのpush、手動実行を対象にする。Foundation CIは別に維持する。PRではGitHubのmerge用commitをcheckoutして基底branchとの組み合わせを検証する。同じPR／branchの古い実行は取り消し、各jobは10分で打ち切る。read-only permissions・checkout credentials非保持で、Secret・DB・`pull_request_target`は使わない。fork PRも同じ構成で、GitHub側の実行承認が必要な場合はその制限に従う。
+
+Ubuntu runnerで、Node 22.15.1とNode 24系（`24.x`）のmatrixを使い、TypeScript 5.8.3を固定する。Node 24系は採用候補での回帰検出を目的に追加し、24.xが解決した実版は各Actionsログで確認する。一方の失敗でももう一方の検証結果を得るためfail-fastは無効にする。これらは検証版で、製品runtimeの最終採択ではない。package内のlockfileには公式npm registryの配布先とintegrityを含め、`npm ci --include=dev --ignore-scripts --no-audit --no-fund`で検証依存だけをinstallする。lifecycle scriptsとcacheは使わない。
+
+同じ手順をローカルで再現する場合は、repoの`packages/prediction`内で次を実行する。初回installには公式npm registryへの接続が必要で、Secret・DBは不要。
+
+```sh
+npm ci --include=dev --ignore-scripts --no-audit --no-fund
+npm run typecheck
+npm test
+```
+
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの45テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。性能benchmarkはCIで実行せず、既存T-14のローカル計測と採用runtime／配備先での再確認を分ける。required checksやbranch protectionは変更しない。
+
+## 補完・訂正後の再計算例
+
+[recalculate.mjs](examples/recalculate.mjs)は実行可能な例で、コンパイル済みdistを使って5種類の入力と実際の`PredictionResult`をJSONで出力する。上のtestコマンドを先に実行する。`ERR_MODULE_NOT_FOUND`ならdistが未生成なのでtestを実行し直す。
+
+呼び出し元は、保存済みの一意な日付のログ全体を渡す。補完は行の追加、訂正は該当日の行を置き換えた新しい入力で`predict`を再実行する。同じ日の新旧行を両方渡すと重複エラーになる。Engineは前回結果や保存処理を持たず、毎回その入力から全量再計算する。`today`は例で固定しており、現在時計を読まない。
+
+例のGoalはtotal=100、initialProgress=20、sessionAmount=10、today=2026-10-10。8日のUNKNOWNを挟む元履歴から、既定K=200／H=1095／seed=20261012で次の結果を得る（Windows／Node22で実行）。
+
+| 入力の変更 | actualDone | nDD / nDS / nSD / nSS | completion |
+| --- | --- | --- | --- |
+| UNKNOWNのまま | 60 | 1 / 1 / 1 / 1 | TODAY_DONE: P50=5日、P80=8日 |
+| 8日にDONE・実量15を補完 | 75 | 3 / 1 / 1 / 1 | TODAY_DONE: P50=3日、P80=5日 |
+| 8日をSKIPPEDへ訂正 | 60 | 1 / 2 / 2 / 1 | TODAY_DONE: P50=6日、P80=8日 |
+| 元履歴に今日DONE・実量3を追加 | 63 | 2 / 1 / 1 / 1 | CURRENT_STATE: P50=7日、P80=10日 |
+| 元履歴に今日DONE・実量40を追加 | 100 | 2 / 1 / 1 / 1 | completed |
+
+TODAY_DONEは未記録の今日を1回実行した仮定からの将来日数、CURRENT_STATEは今日の実績を加算済みの状態からの将来日数。`available`で分位点がnullならH日以内にその確率へ到達していない。`insufficient`は有効な遷移起点が不足し、`completed`は実績で既に達成している。これらを0日へ置き換えない。出力には上記契約の日数metadataも含む。
+
+[recalculation.test.mjs](tests/recalculation.test.mjs)は補完・訂正で両側の隣接ペアが変わること、今日量を二重加算しないこと、sessionAmount変更で過去実量を変えないこと、達成から未達への再計算を検証する。加えて固定seedの120履歴を、UNKNOWNも含む暦日列を直接走査する独立オラクルと照合する。入力を深くfreezeし、別seedの呼び出しを挟んでも再現することと、拒否した重複入力が次回を汚さないことを確認する。これはローカルの再現可能なケース群であり、fast-checkの採択や網羅性の保証ではない。
+
+## #70後に合わせる点と残条件
+
+#70が用意する同名workspace packageへ整合させ、二重packageを作らない。TypeScript版・module方式、採用runtime、採用runnerと依存／lockfile、統一コマンド、CIを#70に合わせる。正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
+
+今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・45テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。
