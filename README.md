@@ -12,7 +12,8 @@
 | DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
 | DECIDED | 2026-09-30にProductを「Future ROI」（今日サボると、ゴールは何日遠ざかる？）に決定し、要件・MVP Scopeを確定した。[Product Spec](docs/product-spec.md#現行状態2026-09-30) |
 | DECIDED | 予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
-| 候補（技術選定確定待ち） | 技術スタック（TypeScript、React＋Vite、Fastify、PostgreSQL、Better Auth）と公開先（Cloud Run＋Neon）。Issue #84（PR #85）で第一候補を最小検証済み（条件付きで採用可能）で、チームの採択待ち。[Architecture D-23](docs/architecture.md#d-23)、[検証状況](docs/architecture.md#第一候補の検証状況84--85) |
+| DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、依頼者によるDiscord上のリアクションでFE・BEの了承を得たとの報告に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。版・追加ツール・API細則は未確定 |
+| 条件付き第一候補 | Better Auth＋Cloud Run＋Neonは検証・運用条件付き。[D-24](docs/architecture.md#d-24)／[D-25](docs/architecture.md#d-25)。最終採択・公開受入、一般公開、アカウント・課金作成の許可ではない |
 | 未実装 | Product機能・Prediction Engine・DB・公開環境のコードはまだない。旧Web/API・Compose構成の復元は実装Issueで行う |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
@@ -35,7 +36,7 @@
 
 ## 開発基盤のセットアップと確認
 
-GitとPowerShell 7を使います。文書・設定チェックの手順は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。アプリの技術スタックは[Architecture](docs/architecture.md#technology-stack)に候補を記録しています（技術選定確定待ち）。起動構成は確定後に復元します。
+GitとPowerShell 7を使います。文書・設定チェックの手順は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。基本構成の採用と認証・公開先の残条件は[Architecture](docs/architecture.md#technology-stack)で確認します。起動構成の復元・版固定・動作確認は実装Issueで行い、まだ完了していません。
 
 導入済みの環境では、リポジトリのルートで `mise run --skip-tools check` を実行します。文書・設定を検査し、成功時は `PASS:` が表示されます。
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。

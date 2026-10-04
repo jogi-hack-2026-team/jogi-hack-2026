@@ -2,6 +2,14 @@
 
 Supporting Doc / Not a Source of Truth。未採択の選択肢と確認案。正式仕様は[Product Spec](product-spec.md)と[Architecture](architecture.md)、技術採択は[#84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)で確認する。本書を保存・レビューしてもAPI・Product・予測Decisionを採択変更しない。以下のテストは提案で、未実行。
 
+## 先に確認すること
+
+- API：成功時に返すデータ項目（DTO）とHTTP status、PATCH（一部更新）の省略・null・空body、一覧の今日状態を決める必要がある。
+- 記録：昨日は未記録の補完だけか、既存記録も変更できるかが文書間で一致していない。下の選択肢と再送・同時補完・日跨ぎの確認案で比べる。
+- 予測・表示：観測日数の数え方、入力／設定エラー、記録済みの文言、完了目安の片側だけ未到達（null）になる表示を確認する。
+
+いずれも未採択。基本構成の合意とは分け、チーム判断後に正本と既存Issueへ合意分だけ反映する。DONE量のサーバー補完、SKIPPED入力amount禁止／保存NULL、D-19〜D-22は維持する。
+
 ## 現行規則と候補の境界
 
 - R-01のメール・パスワード登録／ログイン／ログアウト、本人だけの操作と、業務APIの401・他人404・入力422は現行規則。Better Auth・Cookie・認証経路・DBセッションはD-24の候補。
