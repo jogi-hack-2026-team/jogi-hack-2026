@@ -1,0 +1,46 @@
+{
+  "name": "@jogi/architecture-verification",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Supporting Artifact / Not a Source of Truth. Issue #84: minimal verification of the first-candidate stack.",
+  "engines": {
+    "node": "24.21.0"
+  },
+  "scripts": {
+    "node:version": "node -v",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "web:build": "vite build --config web/vite.config.ts",
+    "start": "node src/server.ts",
+    "verify:auth-db": "node verify/v1-auth-db.ts",
+    "verify:rate-limit": "node verify/v1-rate-limit.ts",
+    "verify:mixed-load": "node verify/v2-mixed-load.ts",
+    "verify:single-process": "node verify/v3-single-process.ts",
+    "verify:fixed": "node verify/v5-fixed-regression.ts",
+    "verify:restore-revoke": "node verify/restore-revoke.ts",
+    "start:browser": "PORT=3220 BASE_URL=http://localhost:3220 SPIKE_WEB_DIST=web-dist SPIKE_PG_NAME=browser SPIKE_PG_FRESH=1 SPIKE_SIGNUP_MAX=50 node src/server.ts"
+  },
+  "dependencies": {
+    "@fastify/static": "10.1.5",
+    "@fastify/type-provider-typebox": "6.1.0",
+    "@sinclair/typebox": "0.34.52",
+    "better-auth": "1.7.7",
+    "fastify": "5.12.5",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-router": "1.170.40",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.11.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "embedded-postgres": "18.4.0-beta.17",
+    "node": "24.21.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.9.0",
+    "vite": "8.3.1"
+  }
+}
