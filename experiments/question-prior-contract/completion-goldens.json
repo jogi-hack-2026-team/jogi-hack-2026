@@ -351,8 +351,18 @@
   ],
   "historicalComparison": {
     "entry": "original internal numeric-snapshot candidate before the question-prior adapter",
-    "scope": "gateDifferenceIds, priorErrorDifference and producerReportedTests below retain the original verification snapshot; they are not current adapter gaps",
-    "latestLocalAdapter": "2026-10-05 producer logs/manifest report 13 gates connected, raw/source/mapping validation added, 18 cases and 9 goldens unchanged; 61 package tests and 3 oracle tests pass. Uncommitted/unpublished at that verification snapshot; public predict/API/UI unchanged."
+    "scope": "gateDifferenceIds, priorErrorDifference and producerReportedTests below retain the original verification snapshot; they are not current adapter gaps"
+  },
+  "publishedCandidateEvidence": {
+    "pr": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119",
+    "head": "32a76cfefc193d7ddb82c74a764588a8cd04848e",
+    "candidateStatus": "13 gates connected, raw/source/mapping validation added; 18 cases and 9 goldens unchanged. Public predict contract maintained; D-26 adoption and API/DB/UI integration incomplete.",
+    "nodeCi": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37323944883",
+    "verifiedNodePassCounts": "61 package tests and 3 oracle tests for each of Node 22 and 24; typecheck pass",
+    "dockerCi": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37323944974",
+    "verifiedDockerPassCount": 61,
+    "foundationCi": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37323945326",
+    "verificationScope": "Public CI logs and producer numeric evidence checked; candidate tests not rerun by this proposal replayer. Candidate unmerged and not adopted."
   },
   "gateDifferenceIds": [
     "F03",
