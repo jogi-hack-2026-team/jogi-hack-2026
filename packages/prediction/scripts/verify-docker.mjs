@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // hostのenv・DB・時計を計算へ渡さず、既存の検証入口を順番に実行する。
@@ -24,5 +24,11 @@ run(['node_modules/typescript/bin/tsc', '--version']);
 run(['scripts/check.mjs', 'typecheck']);
 run(['scripts/check.mjs', 'test']);
 run(['examples/recalculate.mjs'], 'connection.json');
+// 30日fixtureが統合されたcheckoutでは実入力・結果も保存する。未統合時は明示する。
+if (existsSync(new URL('../examples/demo-inputs.mjs', import.meta.url))) {
+  run(['examples/demo-inputs.mjs'], 'demo-inputs.json');
+} else {
+  console.log('30日fixtureはこのcheckoutに未統合。11接続例だけを検証しました。');
+}
 run(['scripts/benchmark.mjs'], 't14.json');
 console.log('PASS: 型検査・数値テスト・接続例・実Engine T-14');

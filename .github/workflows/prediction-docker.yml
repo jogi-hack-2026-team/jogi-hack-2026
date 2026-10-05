@@ -46,6 +46,9 @@ jobs:
           test "$exit_code" = 0
           test -s prediction-docker-evidence/connection.json
           test -s prediction-docker-evidence/t14.json
+          if test -f packages/prediction/examples/demo-inputs.mjs; then
+            test -s prediction-docker-evidence/demo-inputs.json
+          fi
       - name: Retain Docker input and measurement evidence
         if: ${{ always() && steps.run.outputs.container_id != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
