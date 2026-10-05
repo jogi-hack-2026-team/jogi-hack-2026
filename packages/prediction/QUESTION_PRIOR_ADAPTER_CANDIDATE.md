@@ -36,7 +36,7 @@ pathはコピーしてfreezeする。全3選択肢のsnapshotを検証し、未�
 
 ## 確認済みと残る採択
 
-[5 adapterテスト](tests/question-prior-adapter-candidate.test.mjs)で18共通例、13件の状態／不足理由の具体期待値、材料判定、raw／mapping不正、未来日付、訂正／解除、凍結入力、出力コピー、seed再実行を確認する。従来56テストを保持し、package全体は61テスト。独立CDFオラクル3テストと[再現手順](../../experiments/question-prior-engine-candidate/README.md)は別に実行する。9例のDP goldenと全200サンプル、閾値前後CDFは従来実験と同一。候補CIの結果はPRの同HEAD Actionsで別に確認する。
+[5 adapterテスト](tests/question-prior-adapter-candidate.test.mjs)で18共通例、13件の状態／不足理由の具体期待値、材料判定、raw／mapping不正、未来日付、訂正／解除、凍結入力、出力コピー、seed再実行を確認する。従来56テストとadapter 5件を保持し、下記handoff 3件を加えてpackage全体は64テスト。独立CDFオラクル3テストと[再現手順](../../experiments/question-prior-engine-candidate/README.md)は別に実行する。9例のDP goldenと全200サンプル、閾値前後CDFは従来実験と同一。候補CIの結果はPRの同HEAD Actionsで別に確認する。
 
 候補内の13接続差とshape分類は具体実装で解消した。残る判断はD-26の写像・強度・補完・gate・共有enum／versionの正式採択、保存context／revision／訂正責任、公開Engine/API DTOとエラー／HTTP変換、採用workspace／runtime／runnerとの整合。保存・HTTP・UIの10統合仕様は実行していない。任意の非対称shapeの性能や校正精度へこの結果を一般化しない。具体契約の採択と別メンバーのレビュー前にMergeしない。
 
@@ -74,8 +74,18 @@ Engineが数値を一度計算し、BEが同じGoal・ログ・設定量・単�
 
 **入口の提案（未採択）：** 候補の接続では、有効回答の有無でEngine入口を分岐せず、解決済みraw＋mappingを常にadapterへ一度渡す案を推奨する。全18入力×null／UNKNOWNでprogress・todayStatus・observations・posterior・coreMetric・completionが公開predictと一致する回帰を追加した。未回答でも出所とconditionalPlanを同じ候補結果から返せるため、BEの予測呼出しを二度に増やす必要がない。公開predictは既存利用者の互換入口として維持する。
 
-PR118の7節3「数値回答なしなら公開predict」とは異なる接続案であり、現時点では提案のまま扱う。常時adapterへ渡すための有効なmapping snapshotの解決はBEの責任案。既存Goalに保存mappingがない場合のversion付与・互換解決は採択時に明記し、testsの写像をProductionから読み込んだり、現行versionへ黙って差し替えたりしない。正式なAPIレスポンスの形は未採択で、常時呼出し案だけでは統合済みにならない。
+PR118 HEAD `b7400757f1ee7c7beeb37640f7ad9582d770b121`の7節3も常時adapterの接続案へ同期済みであり、現時点では両PRとも未採択の提案として扱う。常時adapterへ渡すための有効なmapping snapshotの解決はBEの責任案。既存Goalに保存mappingがない場合のversion付与・互換解決は採択時に明記し、testsの写像をProductionから読み込んだり、現行versionへ黙って差し替えたりしない。正式なAPIレスポンスの形は未採択で、常時呼出し案だけでは統合済みにならない。
 
 **現行mappingの共有案（未採択）：** D-26採択後、version付きの選択肢→Beta値を純粋な共有定義の一か所へ置き、BEの初回保存とEngineのsnapshot検証が同じ定義を参照する案を推奨する。配置候補はprediction package内の独立moduleだが、正式export・enum・数値・強度・version更新方法はBE／Engineの採択で決める。BEは採択済みの現行定義からGoalへsnapshotを保存し、Engineは保存された値を使う。既存snapshotを最新定義で上書きしない。現候補にProduction定数を追加せず、fixtureは再現用だけに保つ。
 
 **worker受け渡し：** BE実測ではpostMessage(error)で候補kind/reason/pathが落ち、未捕捉errorイベントでもinstanceof分類を維持できない。worker内でname／kind／reason／pathをplain objectへ詰め替える対応はBE #77へ引き継ぐ。候補classを今回変更せず、正式wire形式・HTTP変換はBE側で採択する。Engineのメッセージ文字列を解析して分類する方式にしない。
+
+## 解決済みsnapshotとworkerの接続テスト例
+
+[3 handoffテスト](tests/question-prior-handoff.test.mjs)は、[保存snapshotの固定例](tests/examples/question-prior-handoff.mjs)と[一回限りのworker例](tests/examples/question-prior-worker-copy.mjs)を使い、実候補adapterを呼ぶ。通常のpackage testコマンドに含まれ、Node matrixとDockerでも実行する。
+
+- F09／F15で保存raw＋初期mappingを選び、別の現行mappingや前回posteriorを変更しても結果が変わらないことを確認する。同じ解決済みsnapshotのunit／sessionAmountを付加し、conditionalPlanを値のコピーと名称変更だけでPlanへ渡す固定例も確認する。
+- worker内で既知classを判別し、name／reason／pathと候補classのkindをplain objectへコピーする。回答不足、mapping選択肢不足、非正shape、未来ログの4例で分類が維持され、生のError転送ではkind／reason／pathが失われることを確認する。コピーにはmessage／stackを含めない。
+- 未知のTypeErrorはworker失敗として呼出し側へ伝わり、入力不正や成功値へ変換しない。
+
+固定例はBEがcontextを解決済みで、設定量がPredictionInputと一致するという前提を置く。recordStartDateは例の付帯値で、Engineへ渡さず、日付意味や開始日policyを決めない。context／revision／所有権の検証、保存resolver、API route、worker poolは実装していない。rawErrorとsourcePathFrozenは比較用テスト診断だけで実API項目ではない。plain objectの形も正式wire DTOとして採択せず、BE #77の実装・HTTP変換へ引き継ぐ。PR118の保存・HTTP・UIの10統合仕様を実行済みとは扱わない。

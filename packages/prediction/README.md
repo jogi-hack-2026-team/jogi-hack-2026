@@ -10,7 +10,7 @@
 
 ## 計算の利用条件と処理
 
-2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストを加えてローカル61テストを実行する。独立CDFオラクル3テストは別コマンドで実行する。正式公開された47テストのCIと区別する。D-26の写像・強度・表示・APIを採択済みとは扱わない。
+2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストとsnapshot／worker接続例の3テストを加えてローカル64テストを実行する。独立CDFオラクル3テストは別コマンドで実行する。正式公開された47テストのCIと区別する。D-26の写像・強度・表示・APIを採択済みとは扱わない。
 
 [src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映したが、正式API結合済みではない。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
 
@@ -73,7 +73,7 @@ npm run typecheck
 npm test
 ```
 
-型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストに内部候補9件を加え、PR118候補adapterの5件も含め、このbranchでは61テストを実行する（候補も同じPR CIで確認する）。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストに内部候補9件を加え、PR118候補adapterの5件とsnapshot／worker接続例3件も含め、このbranchでは64テストを実行する（候補も同じPR CIで確認する）。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
 
 ## 補完・訂正後の再計算例
 
