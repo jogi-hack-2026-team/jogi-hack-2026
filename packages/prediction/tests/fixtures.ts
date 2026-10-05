@@ -1,13 +1,13 @@
 import type { PredictionInput, TransitionCounts, CoreMetric } from '../src/index.js';
 
-// Fixed references, not a second source of truth. See README for provenance.
+// 正本に基づく固定参照値。別の仕様正本にはしない。根拠はREADMEを参照。
 export const recoveryExamples = [
   { name: 'three resumptions in ten skip-origin transitions', alpha: 5, beta: 9, g50: 2 },
   { name: 'inclusive 50 percent boundary', alpha: 5, beta: 5, g50: 1 },
   { name: 'prior boundaries', alpha: 2, beta: 2, g50: 1, g80: 3 },
 ] as const;
 
-// Calendar slots are explicit: missing 10-08 must break both adjacent pairs.
+// 暦日を明示した例。欠けた10/8の前後はどちらも隣接ペアに数えない。
 export const unknownGapInput: PredictionInput = {
   goal: { totalRequired: 100, initialProgress: 20, sessionAmount: 10 },
   today: '2026-10-10',
@@ -22,8 +22,8 @@ export const unknownGapInput: PredictionInput = {
 };
 export const unknownGapExpected: TransitionCounts = { nDD: 1, nDS: 1, nSD: 1, nSS: 1 };
 
-// Same Goal unit. Today's 3 is already in actualDone=7; adding sessionAmount again gives 17.
-// Both origin states have a transition. CURRENT_STATE starts at futureDoneCount=0.
+// 量はGoalと同じ単位。今日の実量3はactualDone=7に加算済みで、sessionAmountを再加算すると誤って17になる。
+// DONEとSKIPPEDの両起点に遷移がある。CURRENT_STATEの将来DONE回数は0から開始する。
 export const todayDoneInput: PredictionInput = {
   goal: { totalRequired: 20, initialProgress: 2, sessionAmount: 10 },
   today: '2026-10-03',
@@ -38,7 +38,7 @@ export const todayDoneExpected = {
   coreMetric: { status: 'not_applicable', reason: 'TODAY_RECORDED' } satisfies CoreMetric,
 } as const;
 
-// Architecture T-10 / PR86 regression shared by #72 and #73 tests.
+// Architecture T-10 / PR86の回帰例。#72・#73のテストで共用する。
 export const dpBoundaryExample = {
   initialState: 'DONE', requiredFutureDone: 1, horizonDays: 10,
   samples: [{ a: 0.9999999995, b: 0.5 }, { a: 1e-10, b: 1e-10 }],

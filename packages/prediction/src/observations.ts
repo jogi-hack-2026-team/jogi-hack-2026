@@ -1,7 +1,7 @@
 import type { PredictionInput, TransitionCounts } from './types.js';
 import { PredictionInputError } from './errors.js';
 
-// Gregorian day arithmetic checks adjacency without UTC parsing or ambient timezone rules.
+// Gregorian暦の日数を整数で計算して隣接日を判定する。UTCへの変換や実行環境のtimezoneに依存させない。
 function ordinal(localDate: string, path: readonly (string | number)[]): number {
   if (typeof localDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
     throw new PredictionInputError('INVALID_LOCAL_DATE', path, 'Expected a YYYY-MM-DD calendar date');
@@ -31,8 +31,8 @@ export function observe(input: PredictionInput): {
   counts: TransitionCounts;
   actualDone: number;
   todayStatus: 'DONE' | 'SKIPPED' | 'UNRECORDED';
-  // Facts about Architecture step1's window, used by the adopted Result metadata.
-  // Empty logs cannot supply an observation origin; initialProgress supplies no date.
+  // Architectureのstep1で使う観測窓の事実を、採択済みResultの日数metadataへ渡す。
+  // ログが空なら観測開始日を特定できない。初期進捗だけから日付を推測しない。
   observationWindow: { startOrdinal: number; endOrdinal: number; calendarSlots: number } | null;
   recordedLogCount: number;
 } {
@@ -69,7 +69,7 @@ export function observe(input: PredictionInput): {
   for (let index = 1; index < logs.length; index++) {
     const before = logs[index - 1]!;
     const after = logs[index]!;
-    // Missing calendar slots are UNKNOWN. Never join their surrounding recorded days.
+    // 記録のない暦日はUNKNOWN。欠けた日を跨いで前後の記録を隣接ペアにしない。
     if (after.day !== before.day + 1) continue;
     if (before.status === 'DONE') {
       if (after.status === 'DONE') counts.nDD++;

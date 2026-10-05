@@ -1,5 +1,5 @@
-// Run from the repository root after scripts/check.mjs test has compiled dist.
-// This demonstrates the internal calculation; it is not the complete HTTP DTO.
+// scripts/check.mjs test で dist を生成してから、リポジトリのルートで実行する。
+// Engine内部の計算例。HTTPで送受信するデータ全体の形式を定めるものではない。
 import { pathToFileURL } from 'node:url';
 import { predict, DEFAULT_CONFIG } from '../dist/src/index.js';
 
@@ -19,7 +19,7 @@ export const cases = [
   { name: 'empty-history', input: { goal, today: '2026-10-10', logs: [] } },
   { name: 'done-origin-only', input: { goal, today: '2026-10-10', logs: [log(8, 'DONE'), log(9, 'DONE')] } },
   { name: 'skip-origin-only', input: { goal, today: '2026-10-10', logs: [log(8, 'SKIPPED'), log(9, 'SKIPPED')] } },
-  // 60 actually done, plus one hypothetical session; future need is H+1.
+  // 実績60に今日の仮の1回を加えても、将来の必要回数は計算上限Hより1回多い。
   { name: 'available-null', input: { goal: { ...goal,
     totalRequired: 60 + (DEFAULT_CONFIG.horizonDays + 2) * goal.sessionAmount },
     today: '2026-10-10', logs: original } },

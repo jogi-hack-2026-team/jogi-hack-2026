@@ -9,7 +9,7 @@ const log = (day, status = 'DONE') => ({ localDate: `2026-10-${String(day).padSt
   status, amount: status === 'DONE' ? 1 : null });
 
 test('Result contract: calendar days include UNKNOWN and explicit counts end at today or yesterday', () => {
-  // Expected numbers are fixed calendar examples, not derived by observe().
+  // 期待値は固定した暦日の例から求め、observe()を呼んで作らない。
   for (const [logs, observedDays, recordedDays] of [
     [[], 0, 0], [[log(10)], 1, 1], [[log(10, 'SKIPPED')], 1, 1],
     [[log(9)], 1, 1], [[log(3)], 7, 1], [[log(3), log(10)], 8, 2],
@@ -93,7 +93,7 @@ test('Error contract: public classes classify input/config/derived paths without
 });
 
 test('Config error: unsafe posterior identifies prior plus transition count without rejecting safe boundary shapes', () => {
-  // Completed inputs isolate validation from sampling with enormous shapes.
+  // 達成済みの入力を使い、巨大な形状パラメータの乱数抽選を行わず入力検証だけを確認する。
   const input = { goal: { ...goal, initialProgress: goal.totalRequired }, today, logs: [] };
   const max = Number.MAX_SAFE_INTEGER;
   assert.equal(predict(input, { ...config, prior: max }).completion.status, 'completed');
@@ -110,7 +110,7 @@ test('Config error: unsafe posterior identifies prior plus transition count with
       assert.equal(error.reason, 'UNSAFE_POSTERIOR');
       assert.deepEqual(error.path, ['posterior', parameter, shape]);
       assert.ok(Object.isFrozen(error.path));
-      // Diagnostic wording is informative; reason/path remain the stable contract.
+      // messageは原因の説明に使う。安定した分類の契約はreason/pathで維持する。
       assert.match(error.message, /prior.*transition count.*exact integer range/i);
       assert.equal(error.message.includes(String(max)), false);
       return true;

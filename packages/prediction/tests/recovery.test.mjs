@@ -9,7 +9,7 @@ function factorial(n) {
   return result;
 }
 
-// Independent integer Beta-function formula, rather than the production recurrence.
+// 本体の漸化式を流用せず、整数によるBeta関数の独立した式で照合する。
 function oracle(alpha, beta) {
   const result = {};
   for (let t = 1; !result.g80; t++) {
@@ -35,7 +35,7 @@ test('T-02 factorial oracle covers normalization and minimal quantiles', () => {
       const actual = recoveryQuantiles(alpha, beta);
       assert.deepEqual(actual, oracle(alpha, beta), `alpha=${alpha}, beta=${beta}`);
       assert.ok(actual.g50 >= 1 && actual.g80 >= actual.g50);
-      // The summed PMF telescopes to 1 minus this independently computed tail.
+      // 確率質量の和は、隣り合う項が打ち消し合って「1 − 独立に求めた尾の確率」になる。
       let mass = 0;
       const survival = t => Number(factorial(beta + t - 1) * factorial(alpha + beta - 1)) /
         Number(factorial(beta - 1) * factorial(alpha + beta + t - 1));
@@ -78,7 +78,7 @@ test('T-15 safe shapes retain exact arithmetic when their sum is unsafe', () => 
   assert.equal(recoveryQuantiles(max, max).g50, 1);
   assert.equal(recoveryQuantiles(max - 1, max).g50, 2);
   assert.deepEqual(recoveryQuantiles(max, 2), { g50: 1, g80: 1 });
-  // A floating ratio rounds a survival strictly above the median boundary to 0.5.
+  // 浮動小数の比では、中央値の境界より厳密に大きい生存確率が0.5へ丸められてしまう例。
   assert.equal((max - 1) / ((max - 2) + (max - 1)), 0.5);
   assert.equal(recoveryQuantiles(max - 2, max - 1).g50, 2);
 });
@@ -100,12 +100,12 @@ test('T-05 posterior Beta then Geometric Monte Carlo supports exact quantiles', 
     }).sort((a, b) => a - b);
     const exact = recoveryQuantiles(alpha, betaShape);
     for (const [key, probability] of [['g50', 0.5], ['g80', 0.8]]) {
-      // Discrete exact-threshold fixtures can straddle adjacent days under sampling noise.
+      // 離散分布の閾値に一致する固定例は、抽選誤差によって隣の日へずれることがある。
       const empirical = samples[Math.ceil(probability * count) - 1];
       assert.ok(Math.abs(empirical - exact[key]) <= 1, `${alpha},${betaShape}: ${key}`);
       const below = samples.filter(t => t < exact[key]).length / count;
       const through = samples.filter(t => t <= exact[key]).length / count;
-      // 0.008 is over five worst-case binomial standard errors at N=100000.
+      // 許容差0.008は、N=100000の二項分布で最大となる標準誤差の5倍より大きい。
       assert.ok(below <= probability + 0.008);
       assert.ok(through >= probability - 0.008);
     }

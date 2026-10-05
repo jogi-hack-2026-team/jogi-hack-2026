@@ -18,7 +18,7 @@ export function recoveryQuantiles(alpha: number, beta: number): { g50: number; g
     const offset = BigInt(t) - 1n;
     numerator *= b + offset;
     denominator *= a + b + offset;
-    // Reduction keeps exact survival comparisons small without shifting inclusive boundaries.
+    // 約分して整数の桁数を抑える。生存確率の厳密な比較と、閾値への一致を含む境界は変えない。
     const divisor = gcd(numerator, denominator);
     numerator /= divisor;
     denominator /= divisor;

@@ -7,7 +7,7 @@ function close(actual, expected, epsilon = 1e-12) {
   actual.forEach((value, i) => assert.ok(Math.abs(value - expected[i]) < epsilon, `day ${i}: ${value} vs ${expected[i]}`));
 }
 
-// Enumerate all binary paths independently using integer weights / 4^H.
+// 2状態の全経路を独立に列挙し、整数の重み / 4^H で確率を計算する。
 function rationalPaths(initialState, n, h, aQuarter, bQuarter) {
   const weights = Array(h + 1).fill(0n);
   for (let bits = 0; bits < 2 ** h; bits++) {
@@ -32,7 +32,7 @@ test('DP agrees with exhaustive rational paths, with and without unreachable pru
     const unpruned = completionPmf({ ...args, prune: false });
     close(pruned, expected);
     close(unpruned, expected);
-    // These dyadic probabilities are exact; pruning must preserve both masses and quantiles.
+    // 2の累乗を分母に持つ確率なので厳密に表せる。到達不能な状態の除去後も各確率と分位点が一致することを確認する。
     assert.deepEqual(pruned, unpruned);
     const firstReached = q => {
       let cdf = 0;
@@ -55,7 +55,7 @@ test('T10 partial horizon retains an available median and null 80% tail', () => 
 test('T06 skip first passage is conditional convolution for the same posterior draw', () => {
   for (const [a, b] of [[0.85, 0.15], [0.2, 0.7], [1, 0.3]]) {
     const args = { requiredFutureDone: 4, horizonDays: 30, a, b };
-    // First resumed DONE already supplies one of the four required future DONEs.
+    // 再開した最初のDONEも、必要な将来DONE4回のうち1回として数える。
     const done = completionPmf({ ...args, initialState: 'DONE', requiredFutureDone: 3 });
     const expected = Array(31).fill(0);
     for (let day = 1; day <= 30; day++) for (let gap = 1; gap <= day; gap++) expected[day] += b * (1 - b) ** (gap - 1) * done[day - gap];

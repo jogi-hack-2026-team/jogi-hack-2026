@@ -15,7 +15,7 @@ function validateConfig(config: PredictionConfig): void {
   if (!Number.isInteger(config.seed) || config.seed < 0 || config.seed > 0xffffffff) {
     throw new PredictionConfigError('INVALID_SEED', ['seed'], 'seed must be uint32');
   }
-  // Changing a label alone must not claim a different model implementation.
+  // ラベルだけを変更して別モデルを実装した扱いにしない。
   if (config.modelVersion !== DEFAULT_CONFIG.modelVersion) {
     throw new PredictionConfigError('UNSUPPORTED_MODEL', ['modelVersion'], 'Unsupported modelVersion');
   }
@@ -57,13 +57,13 @@ export function predict(input: PredictionInput, config: PredictionConfig = DEFAU
       completion = { status: 'insufficient', reason: 'NO_SKIP_ORIGIN_TRANSITION' };
     } else {
       const scenario = todayStatus === 'UNRECORDED' ? 'TODAY_DONE' : 'CURRENT_STATE';
-      // Recorded today amounts are already in actualDone. Count only future DONEs in DP.
+      // 今日の記録量はactualDoneに加算済み。DPでは将来のDONE回数だけを数え、今日を二重加算しない。
       const remaining = input.goal.totalRequired - actualDone -
         (todayStatus === 'UNRECORDED' ? input.goal.sessionAmount : 0);
       let quantiles: { p50Days: number | null; p80Days: number | null };
       if (remaining <= 0) quantiles = { p50Days: 0, p80Days: 0 };
       else {
-        // Keep the integer session count explicit through the division.
+        // 割り算でも必要なsession回数を整数として扱うことを明示する。
         const amount = BigInt(input.goal.sessionAmount);
         const requiredFutureDone = Number((BigInt(remaining) + amount - 1n) / amount);
         quantiles = requiredFutureDone > config.horizonDays
@@ -77,8 +77,8 @@ export function predict(input: PredictionInput, config: PredictionConfig = DEFAU
   return {
     modelVersion: config.modelVersion, today: input.today, todayStatus,
     progress: { done: actualDone, total: input.goal.totalRequired, completed },
-    // Describe step1's actual window without changing transition eligibility.
-    // Only an empty history has no observation origin and therefore zero calendar slots.
+    // step1の実際の観測窓を説明する。遷移を数える条件は変えない。
+    // 空の履歴だけは観測開始日がなく、そのため観測窓の暦日数も0になる。
     observations: { ...counts, effectiveTransitions: counts.nDD + counts.nDS + counts.nSD + counts.nSS,
       observedDays: observationWindow?.calendarSlots ?? 0, recordedDays: recordedLogCount },
     posterior, coreMetric, completion,
