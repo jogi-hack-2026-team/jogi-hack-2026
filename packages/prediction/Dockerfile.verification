@@ -1,0 +1,16 @@
+# CIで検証済みのNode版。製品runtimeや配備用imageの採択ではない。
+FROM docker.io/library/node:22.15.1-bookworm-slim@sha256:ec318fe0dc46b56bcc1ca42a202738aeb4f3e347a7b4dd9f9f1df12ea7aa385a
+
+WORKDIR /work/prediction
+RUN chown node:node /work/prediction
+USER node
+COPY --chown=node:node package.json package-lock.json ./
+# lockの検証依存だけを取得し、lifecycle scriptsは実行しない。
+RUN npm ci --include=dev --ignore-scripts --no-audit --no-fund
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node src/ ./src/
+COPY --chown=node:node tests/ ./tests/
+COPY --chown=node:node scripts/ ./scripts/
+COPY --chown=node:node examples/ ./examples/
+
+CMD ["node", "scripts/verify-docker.mjs"]

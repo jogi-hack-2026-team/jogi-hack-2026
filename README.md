@@ -42,6 +42,8 @@ GitとPowerShell 7を使います。文書・設定チェックの手順は[開�
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
 
+Prediction単体は[Docker検証手順](packages/prediction/DOCKER.md)で、hostにNodeを追加せず型検査・テスト・接続例・T-14を実行できます。Secret・DBは不要です。製品全体の起動構成やruntimeの採択とは分けます。
+
 `check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。旧アプリを調べる場合だけ[履歴内の手順](archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照してください。次のProduct向け起動・型検査・ビルド・テストは技術採択後に定めます。
 
 ## 最初に読む順番

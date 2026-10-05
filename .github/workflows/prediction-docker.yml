@@ -1,0 +1,59 @@
+name: Prediction Engine Docker
+
+on:
+  pull_request:
+    paths:
+      - 'packages/prediction/**'
+      - '.github/workflows/prediction-docker.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/prediction/**'
+      - '.github/workflows/prediction-docker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prediction-docker-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    name: Docker build and Engine verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build isolated Engine verification image
+        run: docker build --file packages/prediction/Dockerfile.verification --tag prediction-verification:${{ github.run_id }}-${{ github.run_attempt }} packages/prediction
+      - name: Run Engine checks without network or host mounts
+        id: run
+        run: |
+          container=$(docker create --name prediction-verification-${{ github.run_id }}-${{ github.run_attempt }} --network none --cap-drop ALL --security-opt no-new-privileges prediction-verification:${{ github.run_id }}-${{ github.run_attempt }})
+          echo "container_id=$container" >> "$GITHUB_OUTPUT"
+          # 検証失敗でもJSONを取得した後に非0を返す。
+          start_status=0
+          docker start --attach "$container" || start_status=$?
+          state=$(docker inspect --format '{{.State.Status}}' "$container")
+          test "$state" = exited
+          exit_code=$(docker inspect --format '{{.State.ExitCode}}' "$container")
+          docker cp "$container:/tmp/prediction-verification" ./prediction-docker-evidence
+          test "$start_status" = 0
+          test "$exit_code" = 0
+          test -s prediction-docker-evidence/connection.json
+          test -s prediction-docker-evidence/t14.json
+      - name: Retain Docker input and measurement evidence
+        if: ${{ always() && steps.run.outputs.container_id != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: prediction-docker-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: prediction-docker-evidence/*.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove only this stopped verification container
+        if: ${{ always() && steps.run.outputs.container_id != '' }}
+        run: docker rm '${{ steps.run.outputs.container_id }}'

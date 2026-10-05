@@ -1,0 +1,19 @@
+# packageをcontextにし、検証で使うファイルだけを送る。
+**
+!package.json
+!package-lock.json
+!tsconfig.json
+!src/
+!src/*.ts
+!tests/
+!tests/*.ts
+!tests/*.mjs
+!scripts/
+!scripts/*.mjs
+!examples/
+!examples/*.mjs
+
+# 許可したディレクトリ内にもローカル環境値・生成物を入れない。
+**/.env*
+**/node_modules
+**/dist
