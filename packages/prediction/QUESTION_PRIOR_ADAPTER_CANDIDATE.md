@@ -67,3 +67,15 @@ Engineが数値を一度計算し、BEが同じGoal・ログ・設定量・単�
 - 固定例はc3bd5efをbaselineとして保持。最新PR118の入力・数学・状態が変わったら、変更理由とgolden差をレビューして別commitで追従する。文言／API／UIだけの提案変更ではEngine fixtureを黙って変更しない。
 - 正式入口への昇格／置換は今は決めない。D-26と#70の採択契約に合わせ、公開legacy互換・保存snapshot・workerでのerror受け渡しを確認して別の統合変更にする。候補成功だけで昇格しない。
 - [候補benchmark](scripts/benchmark-goal-prior-candidate.mjs)に質問だけでDPへ入る120／400／1095回の情報用ケースを追加した。全入力・強度の性能保証や新ゲートにはしない。
+
+## BEレビューの追加確認と入口・mappingの提案
+
+[BEレビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119#pullrequestreview-5417166192)は2bea188に対するCOMMENTEDで、候補範囲のBlockingなしとFE修正3件の確認を記録した。正式Approve、D-26採択、最終HEADの受入とは区別する。
+
+**入口の提案（未採択）：** 候補の接続では、有効回答の有無でEngine入口を分岐せず、解決済みraw＋mappingを常にadapterへ一度渡す案を推奨する。全18入力×null／UNKNOWNでprogress・todayStatus・observations・posterior・coreMetric・completionが公開predictと一致する回帰を追加した。未回答でも出所とconditionalPlanを同じ候補結果から返せるため、BEの予測呼出しを二度に増やす必要がない。公開predictは既存利用者の互換入口として維持する。
+
+PR118の7節3「数値回答なしなら公開predict」とは異なる接続案であり、現時点では提案のまま扱う。常時adapterへ渡すための有効なmapping snapshotの解決はBEの責任案。既存Goalに保存mappingがない場合のversion付与・互換解決は採択時に明記し、testsの写像をProductionから読み込んだり、現行versionへ黙って差し替えたりしない。正式なAPIレスポンスの形は未採択で、常時呼出し案だけでは統合済みにならない。
+
+**現行mappingの共有案（未採択）：** D-26採択後、version付きの選択肢→Beta値を純粋な共有定義の一か所へ置き、BEの初回保存とEngineのsnapshot検証が同じ定義を参照する案を推奨する。配置候補はprediction package内の独立moduleだが、正式export・enum・数値・強度・version更新方法はBE／Engineの採択で決める。BEは採択済みの現行定義からGoalへsnapshotを保存し、Engineは保存された値を使う。既存snapshotを最新定義で上書きしない。現候補にProduction定数を追加せず、fixtureは再現用だけに保つ。
+
+**worker受け渡し：** BE実測ではpostMessage(error)で候補kind/reason/pathが落ち、未捕捉errorイベントでもinstanceof分類を維持できない。worker内でname／kind／reason／pathをplain objectへ詰め替える対応はBE #77へ引き継ぐ。候補classを今回変更せず、正式wire形式・HTTP変換はBE側で採択する。Engineのメッセージ文字列を解析して分類する方式にしない。

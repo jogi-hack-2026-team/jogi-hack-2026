@@ -63,6 +63,15 @@ test('adapter candidate: missing/UNKNOWN are not MID; material is determined per
   assert.deepEqual(evaluate(byId('F09')).evidenceSource, { a: 'QUESTION', b: 'QUESTION_AND_RECORDS' });
   assert.deepEqual(evaluate(byId('F11')).observations.effectiveTransitions, 0);
   assert.deepEqual(evaluate(byId('F16')).completion, { status: 'completed' });
+  // 未回答でも候補を一度呼ぶ案の根拠。出所・回数以外の既存計算はlegacyと同じ。
+  for (const fixture of fixtures.calculationExamples) for (const raw of [null, 'UNKNOWN']) {
+    const input = request(fixture); input.answers = { a: raw, b: raw };
+    const candidate = evaluateQuestionPriorAdapterCandidate(input, fixture.config);
+    const legacy = publicEngine.predict(input.prediction, fixture.config);
+    for (const field of ['progress', 'todayStatus', 'observations', 'posterior', 'coreMetric', 'completion']) {
+      assert.deepEqual(candidate[field], legacy[field], `${fixture.id} ${raw} ${field}`);
+    }
+  }
   assert.deepEqual(evaluate(byId('F15')).conditionalPlan, { remainingAmount: 40, remainingSessions: 3, lastSessionAmount: 10 });
   assert.equal(evaluate(byId('F17')).conditionalPlan.remainingSessions, 1);
   assert.equal(evaluate(byId('F17')).completion.p50Days, 0);
