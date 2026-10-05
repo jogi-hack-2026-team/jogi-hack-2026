@@ -22,7 +22,7 @@ Pythonの再現確認はこの資料の数式整合と凍結値の読取り。�
 
 ## 完了DPの追加Evidence
 
-[completion-goldens.json](completion-goldens.json)はPR118元HEAD `c3bd5ef`の18例から得た、非自明9件の完了日数・事後分布・draw hash・CDF境界を凍結したもの。[verify-completion.mjs](verify-completion.mjs)は公開済みEngineのsampler／DPだけを使うため、未公開のprior候補ファイルを必要としない。[completion-replay-results.json](completion-replay-results.json)に実行結果を保存した。
+[completion-goldens.json](completion-goldens.json)はPR118元HEAD `c3bd5ef`の18例から得た、非自明9件の完了日数・事後分布・draw hash・CDF境界を凍結したもの。[verify-completion.mjs](verify-completion.mjs)はmainのsampler／DPだけを使い、PR119のprior候補ファイルを取り込まずに再現できる。[completion-replay-results.json](completion-replay-results.json)に実行結果を保存した。
 
 Node 22.15.1／Windows x64、TypeScript 5.8.3で再現を確認。コンパイラは既に導入したものを指定し、自動installしない。下の`$d26Compiler`を実在するTypeScript 5.8.3の`bin/tsc`へ置き換え、リポジトリrootから実行する（パス部分は置換が必要な例）。
 
