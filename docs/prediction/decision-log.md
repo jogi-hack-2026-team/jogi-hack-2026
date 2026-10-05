@@ -66,3 +66,18 @@ Supporting Doc。正式な状態と結論は[Architecture](../architecture.md#ar
 - **残る乱数**：完了の目安の事後サンプル（K=200）だけ。`splitmix32(hash(seed, m))`で抽選ごとに独立させ、seedを固定する。seedを変えるとP50が約±5日揺れるため、表示は週単位に丸める。
 - **Trade-offs**：CRN・Monte Carloを「技術的挑戦」として見せない。挑戦は「少ないデータでの誇張しない推定、閉形式の中心指標、厳密解によるテスト」。
 - **Evidence**：[DPとMonte Carloの比較](evidence.md#dpとmonte-carloの比較)。
+
+## PROPOSAL：Goal作成時の質問由来priorと条件付き計画
+
+2026-10-04 / **未採択**。初日にも判断材料を示す案を[詳細提案](question-prior-proposal.md)と[Evidence](evidence.md#質問由来priorの局所検証2026-10-04)で比較する。現行R-06/P-12、共通Beta(2,2)のD-20、中央値のD-21、既存DPのD-22は変更しない。
+
+- **Context**：記録0件では個人の再開・継続の予測を出せない。初日にも使える明確な前提の表示が欲しいという依頼者の要望。
+- **候補**：最小の条件付きdaily計画、同じ行動の経験に限る任意質問からa/b別strength4、人口データから学ぶ共有prior、LLMによるprior生成。
+- **推奨・理由**：条件付き計画を最小候補にし、質問priorは未校正の任意案に留める。質問を採るならstrength4をstrength8より先に検討する。誤回答の重みがs/(s+n)で薄まるため8は影響が長く残る。これは精度や最適強度の証明ではない。
+- **Trade-offs**：質問は初日にも個人の自己申告を反映できる可能性がある一方、回答・version・訂正・出所表示・API・不足状態の回帰が増える。本人の回答が実観測ではないことを説明する必要がある。共有prior・LLMには今回の行動で校正するデータがない。
+- **Invariants**：ActionLogは実際の記録のみ。初期BetaとinitialProgressを分離。D/S起点の実遷移だけで事後更新。UNKNOWNをまたがない。今日DONE仮定を実績へ書き込まない。raw訂正は両隣接遷移を再集計。BigInt整数閾値・α≥1・既存DP・H超null・微小確率を捨てない処理を保持。
+- **Non-goals**：性格・習慣強度の測定、非dailyへの換算、LLM予測、本番API/DB/UIの実装、Mustや既存Issueの無断拡張、校正効果の主張。
+- **採択条件・再検討**：ownerが初日表示とScope、質問・強度・出所、保存訂正・受入方法を決める。R-02/R-06/P-12/D-20/API/T-11/T-15の正式差分をレビューする。回答の誤読、校正悪化、既存Mustの遅延で再検討する。新しい正式ADR番号やDECIDED状態を与えない。
+- **Evidence**：[試作と再現](../../experiments/question-prior-proposal/README.md)、[元調査](../../experiments/question-prior-proposal/historical/REPORT.md)、[一次研究と支持範囲](../../experiments/question-prior-proposal/SOURCES.md)。数値整合性・実ユーザー精度・理解や行動への効果を区別する。
+
+元成果物はrepo外で準備した。今回の公開は独立Task [#107](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/107)で提案・実験だけを扱う。10/6は依頼者本人の目標で、チームの合意期限ではない。#84の技術選定・PR #105の競合解消へ追加しない。

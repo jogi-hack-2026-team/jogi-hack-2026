@@ -1,0 +1,8 @@
+{
+  "candidates": 18,
+  "sensitivityRows": 48,
+  "seedCases": 20,
+  "maxReferenceDpMs": 184.0662000000002,
+  "historicalChecks": 580,
+  "rawSha256": "913e51626fe6700150ddf3fd76e290bac6b09aeadfb5b8cbca49ecc13c10ecbf"
+}
