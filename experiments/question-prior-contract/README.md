@@ -20,6 +20,8 @@ Pythonの再現確認はこの資料の数式整合と凍結値の読取り。�
 
 FEレビュー5416592203で、I01の再送requestをexpectedRevision=6へ訂正した。6で送信→回答保存で7→ログ更新で8の後も、再送は元の6を保持する。I01〜I03は元のGoal revision案の仕様例で、HTTP実行済みではない。[契約提案の比較](../../docs/prediction/question-prior-contract-proposal.md#6-revisionと再送)にはLWWと回答専用revisionも残し、採択後に固定例を合わせる。計算18例・完了DP9件の凍結値はこの修正で変えない。
 
+BEレビュー5417166527への文書対応では、C案の最小構成を回答用tokenのみ＋FEの取得世代管理へ整理し、state revisionと別appliedRevisionを必須にしない。recordStartDateの#74／#76先行、同時PATCHのtransaction、内部mappingと最小公開block、常時adapter案・エラー判断先を[提案本文](../../docs/prediction/question-prior-contract-proposal.md#5-保存訂正の最小案)へ集約した。いずれも未採択。I01〜I03はA案の比較履歴として保持し、C案やHTTPの実テストへ読み替えない。この文書修正では固定例・生成コード・数値goldenを変更しない。
+
 固定例のconfigは現行Engineからの計算用参照値です。質問回答の初期BetaはmappingCandidateと各例のposteriorへ反映しており、config.prior=2を回答済み側の実際のpriorとして扱いません。新しい質問modeのmodelVersionや公開型を採択する資料ではありません。
 
 ## 完了DPの追加Evidence

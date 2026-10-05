@@ -35,7 +35,7 @@
 | --- | --- | --- |
 | 数日間の「やる／休む」を仮置きして比べる | [目的・例・現行Mustとの差・画面・計算・分担・受入条件案](prediction/action-scenarios-proposal.md) | 未採択。定型3例の既存DPへの還元、g50との前提差、表示の再検討案とレビュー報告を記録。実装・ユーザー検証・性能測定なし。Product/API/Prediction仕様・既存Issue依存・Ready/BLOCKEDは変更しない |
 | 同じ行動の経験質問からのa/b初期分布・条件付き計画 | [PROPOSAL詳細](prediction/question-prior-proposal.md)、[判断理由](prediction/decision-log.md#proposalgoal作成時の質問由来priorと条件付き計画)、[Evidence](prediction/evidence.md#質問由来priorの局所検証2026-10-04) | 未採択。純粋[試作・再現手順](../experiments/question-prior-proposal/README.md)と局所テストのみ。R-02/R-06/P-12/D-20/API/T-11/T-15の採択後差分を記載。正式Product/Architecture・本番FE/BE/Engine・既存Issue依存は変更しない |
-| 質問・保存・表示の共通契約案（D-26） | [Supporting提案](prediction/question-prior-contract-proposal.md)、[固定例・再現方法](../experiments/question-prior-contract/README.md) | 具体契約は未採択。R-11 Mustと分担の採択記録はPR115で分離。#107で数値／部分回答表示・保存訂正・UI受け渡しをレビューし、製品実装・正式Decisionを変更しない |
+| 質問・保存・表示の共通契約案（D-26） | [Supporting提案](prediction/question-prior-contract-proposal.md)、[固定例・再現方法](../experiments/question-prior-contract/README.md) | 具体契約は未採択。R-11 Mustと分担の採択記録はPR115で分離。#107で数値／表示・保存訂正・UI受け渡しをレビュー。BE確認に合わせ開始日先行・回答tokenのみのC案・同時PATCH・最小公開block・常時adapterを具体化。製品実装・正式Decisionは変更しない |
 
 ## 確認記録と残課題
 

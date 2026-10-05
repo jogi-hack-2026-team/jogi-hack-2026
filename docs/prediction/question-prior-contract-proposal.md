@@ -95,7 +95,7 @@ Q1は「取り組めた日の翌日も、続けて取り組むこと」、Q2は�
 
 - POSTでblock省略：回答なし。PATCHでblock省略：現在の回答を保持。
 - blockを送る場合はa／b両キー必須、各値は上記enumまたはnull。`questionPrior:null`は422候補。明示解除は`{a:null,b:null}`。blockを一体で更新し、片方のキー省略を曖昧なPATCHにしない。
-- BEがraw、固定mappingVersion、実際の初期Beta、回答時のunit／sessionAmount／recordStartDate、回答を適用したrevisionを同時保存する。mappingを将来変更しても保存済み回答を黙って新mappingへ置き換えない。継続的な履歴テーブルやEvent Sourcingは本案に追加しない。
+- BEがraw、固定mappingVersionとLOW／MID／HIGH全3選択肢のBeta、回答時のunit／sessionAmount／recordStartDateを内部snapshotへ同時保存する。adapterが使うa／b初期Betaはこのrawと保存mappingから解決し、別の事後分布を保存しない。競合tokenは採択する方式に合わせる。mappingを将来変更しても保存済み回答を黙って新mappingへ置き換えない。継続的な履歴テーブルやEvent Sourcingは本案に追加しない。
 - 古いGoalの回答なしはlegacy。missing schemaから回答や過去ActionLogを捏造しない。recordStartDateの取得／保存自体が未定義のため、既存Goalへの補完規則は#76の確認対象。createdAtを勝手に代用しない。
 - 許可済みのsessionAmount変更は既存の回答priorを解除し、新しい量では任意再回答。unit編集が採択された場合も同じ。unitの編集可否をこの案で新たに許可しない。実ログ・過去DONE量は保持。
 - 単なるtitle／totalRequired編集で確率を再推定しない。取り組む行動そのものを変えた際の黙った流用を避ける説明・手動解除が必要。同じ回答のまま別Goalへ自動コピーしない。
@@ -103,13 +103,17 @@ Q1は「取り組めた日の翌日も、続けて取り組むこと」、Q2は�
 
 **量変更と回答を同じPATCHに含める場合の追加案（未採択）**：sessionAmountが実際に変わるときは、`questionPrior`省略または`{a:null,b:null}`だけを許し、旧回答を解除する。LOW／MID／HIGH／UNKNOWNのいずれかを同時に送ったら422候補で、量も回答も書かない。黙って新回答を捨てず、新しい量への回答は量の保存・最新Goalの再取得後に別PATCHで行う。変更されないsessionAmountを再送しただけなら、この解除規則は発動しない。
 
-FEの編集フォームに「1回の量を変えると、初期質問の回答がリセットされます。保存後に任意で答え直せます」という警告を置く案。FEが警告と解除後のdraftを管理し、Kaito部品は渡された値とdisabledだけを描画する。確認ダイアログや新endpointは増やさない。BEのatomicな検証・保存、エラー形式と同時編集の扱いは採択待ち。
+FEの編集フォームに「1回の量を変えると、初期質問の回答がリセットされます。保存後に任意で答え直せます」という警告を置く案。FEが警告と解除後のdraftを管理し、Kaito部品は渡された値とdisabledだけを描画する。確認ダイアログや新endpointは増やさない。
+
+[BEレビュー5417166527](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/118#pullrequestreview-5417166527)を受け、**比較・解除・保存は1つのtransactionで行う案**を明記する。所有者条件を含むGoal行を固定して現在の量とtokenを読み、全入力・実際の量変更・同時回答・競合を検証してから、量・回答snapshot・回答用tokenを同じ更新で確定する。422／409候補では他のGoal項目も含め書き込みなし。検証とUPDATEの間に別PATCHが入る構成にはしない。行ロックまたは条件付きUPDATE、具体SQL・分離レベルはBEが実装時に選び、並列PATCHのDB検証を行う。
+
+**recordStartDateの先行依存（未採択）**：#74／#76で、作成時timezoneから算出した固定暦日をGoalへ1項目保持し、GETと記録検証へ共有する方式を先に具体化する案。これは[既存の開始日OPEN事項](../architecture.md#初期進捗と日々の記録の境界)の実装案で、回答snapshotを保存する前提となる。列名・migration・DTOは未採択で、timezone変更後も開始日を動かさない。既存Goalは作成時timezoneの復元可否・既存ログとの互換方針を先に確認し、現在timezoneや最古ログから黙って補完しない。
 
 ## 6. revisionと再送
 
 **競合方式はOPEN。** 元のGoal state revision案を以下の比較用に残す。FEレビューの指摘どおり、ログPUTでもstate revisionが増えるので、回答を変えていなくても古い編集は409になる。FEの#88のLWW提案を採択済みとして変更せず、回答専用revision案とも比較する。
 
-BEがGoalにstate revisionを持ち、保存が確定したGoal／ログ／回答変更ごとに原子的に更新する候補。ログPUTの既存置換規則は維持し、revisionは読み取りの整合tokenにも使う。回答snapshotの`appliedRevision`は最後に回答を変更した時点のrevisionなので、その後のログ変更で現在revisionより古くなることは正常。
+**A案だけの比較例**として、BEがGoalにstate revisionを持ち、保存が確定したGoal／ログ／回答変更ごとに原子的に更新する候補を残す。ログPUTの既存置換規則は維持する。回答snapshotの`appliedRevision`は最後に回答を変更した時点のrevisionなので、その後のログ変更で現在revisionより古くなることは正常。以下のJSON・I01〜I03はA案であり、C案にstate revisionを必須追加する要求ではない。
 
 ```json
 {
@@ -128,25 +132,31 @@ I01の再送例は、Goal revision **6**で送った回答が保存されて`app
 | --- | --- | --- |
 | A. 元のGoal state revision比較 | 異なる回答を古い編集画面から送ると409 | 全体snapshotの変更を検知できるが、回答と関係しない記録でも競合する |
 | B. FE提案のLWW＋保存後再取得 | 記録だけでは回答保存を拒否しない | 別タブの回答訂正を後の保存で上書きする。通信断・量変更との競合を別に確認する |
-| C. 回答専用revision比較（推奨候補） | ログだけでは回答のtokenを変えず、訂正を許す | BEに回答用tokenが必要。raw訂正・解除・量変更による無効化で更新し、ログ変更では更新しない。型・atomic処理は未採択 |
+| C. 回答専用revision比較（推奨候補） | ログだけでは回答のtokenを変えず、訂正を許す | Goal上の回答用tokenをraw訂正・解除・量変更で更新。MVPではstate revisionを別に持たず、取得の新旧はFEで管理する案。型・HTTP・atomic処理は未採択 |
 
-Cを選ぶ場合は、回答なし・解除後にもGoal上で回答用tokenを保持する案。`questionSnapshot=null`をtoken 0へ戻して、古い編集を再び通すことはしない。snapshotの`appliedRevision`はGoal stateへの適用履歴、回答用tokenは競合検知、state revisionは読取り結果の整合確認と役割を分ける。`expectedAnswerRevision`等の項目名・初期値・409／HTTP契約をここで採択せず、I01〜I03も採択方式に合わせて更新する。
+Cの最小案は**回答用tokenだけをGoalに持ち、state revisionと別のappliedRevisionを追加しない**。回答なし・解除後にもtokenを保持し、`questionSnapshot=null`をtoken 0へ戻して古い編集を再び通すことはしない。raw訂正・解除・sessionAmountの実変更（回答なしの場合も文脈変更）で単調に更新し、ログPUT・title／totalRequiredだけの編集・全項目一致のno-opでは更新しない。
 
-**編集フォームの取得元はGoal GETを推奨する案。** 最新raw・mapping/context・採択した競合tokenを同じ応答から受け取り、/todayの予測用revisionを編集tokenへ流用しない。/todayのstate revisionは古い予測応答の排除に使う。正確なGoal DTOはBE／FE確認待ち。
+回答blockまたはsessionAmountを送るPATCHは、Goal GETで得た回答用tokenを添える案。同じtransaction内で、送った全変更内容・mapping・contextが一致するno-opを先に確認し、異なる変更でtokenが古ければ409候補にする。no-opでは保存済みmappingを保持し、最新定義の再適用で新しい書き込みに変えない。tokenが一致すれば5節の量変更・解除を一度だけ保存する。unit編集を別途採択した場合も同じ文脈変更として扱う。`expectedAnswerRevision`等の名前・型・初期値は未採択で、tokenを再利用・巻き戻ししない境界もBEが確認する。回答に関係しないGoal編集全体の競合方式を、このtokenで採択しない。
 
-確定保存後の予測再取得失敗は「保存済み／再取得失敗」で、再保存しない。回答PATCHの通信断で保存結果不明ならGETを先に行い、同内容・contextを確認する。GETのstate revisionだけを自分の書き込み成功証拠にせず、別の回答なら本人の明示再送を待つ。
+**編集フォームの取得元はGoal GETを推奨する案。** FEは最新raw・unit／sessionAmount／recordStartDate・採択する回答用tokenを同じ応答から受け取る。内部mapping／初期Betaを編集フォームへ返す必要は現候補にはなく、/todayを編集tokenの取得元にしない。正確なGoal DTOはBE／FE確認待ち。
+
+確定保存後の予測再取得失敗は「保存済み／再取得失敗」で、再保存しない。回答PATCHの通信断で保存結果不明ならGETを先に行い、同内容・contextを確認する。現在値の一致やtokenだけを自分の書き込み成功証拠にせず、別の回答なら本人の明示再送を待つ。
 
 Goal作成POSTの通信断は、Goal IDが返っていない場合の再取得／重複作成対策が既存#76でOPEN。上の既存Goal PATCHのno-opをPOSTの冪等性と主張しない。操作IDや成功DTOを追加採択せず、初回Goal＋回答保存の接続前にBE／FEが具体化する必要がある。成功status／共通error envelopeも未採択。
 
+**エラー形式と409の判断先**：共通error envelope・項目path・POST／PATCHの成功statusは[#84の既存契約差分](../architecture.md#検証コードとの差分変更案未合意)と#76／#77でまとめて採択する。C案では競合409・全体書き込みなしを候補にし、FEはdraftを保持してGoal GETを再取得する。409を422のfieldErrorsへ混ぜず、勝手に最新tokenへ差し替えて再送しない。保存済みmapping破損はclientの回答不正と区別し、Engineのname／kind／reason／pathをBEで扱う。messageの文章から分類せず、HTTPへの変換は採択待ち。8節の仮fieldErrorsは共通envelopeではない。
+
 ## 7. APIとEngineの責任分界
 
-1. BEが所有者条件の下で、Goal・回答snapshot・全実ログ・state revisionを同じ整合したDB snapshotから読む。実際のtransaction／分離レベル／SQLはBE確認事項で、この案は読取り途中の混在を許さない要求を定める。
+1. BEが所有者条件の下で、Goal・回答snapshot・全実ログを同じ整合したDB snapshotから読む。C案ではstate revisionを追加しない。実際のtransaction／分離レベル／SQLはBE確認事項で、tokenの有無に関係なく読取り途中の混在を許さない。
 2. 時刻を一度捕捉し、そのGoal timezoneでtoday／yesterdayを一度計算。recordStartDateでログを絞る。Engine内に時計・timezone・DB・HTTPを渡さない。
-3. 有効numeric回答がない場合は公開`predict`のlegacy経路。ある場合だけa／b別の解決済み初期Betaと質問が材料になったことを示すprovenanceを純粋な候補経路へ渡す。raw enumやHTTP revisionはBE側の情報。
+3. **採択後の接続では、回答の有無によらず候補adapterを一度呼ぶ案を推奨する。** BEがraw両キー（未回答ならnull）と有効な保存mappingを解決して渡す。質問なしの計算はlegacyと同じで、出所とconditionalPlanも同じ候補結果から得る。公開`predict`は従来利用者の互換入口として保持し、HTTP tokenはEngineへ渡さない。
 4. Engineがobservations、prior＋全ログによるposterior、progress、中心／完了の状態を返す。質問modeの材料gateを採択した経路で判定し、FEが数字を無条件表示する方式にしない。
-5. BEがsnapshotとEngine observationsから出所、revision、回答情報をDTOへ結ぶ。APIが同じDTOの中で別時点のGoal／予測を混ぜない。
+5. BEがEngineの出所・conditionalPlanと同じsnapshotの表示contextをDTOへ結ぶ。rawと回答用tokenは編集用Goal GETへ渡し、APIが同じDTOの中で別時点のGoal／予測を混ぜない。
 
-**条件付き回数の受け渡し案（未採択・PR119修正と照合が必要）**：[FEのPR119レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119#pullrequestreview-5416882638)の対象HEAD `32a76cf`にはconditionalPlan出力がなく、実験側で計算していた。採択候補ではEngineが実際のprogress・totalRequired・sessionAmountから条件付き回数を一度算出し、BEが同じsnapshotのunit／sessionAmountと一緒に渡すことを推奨する。FEは残量÷設定量を再計算せず、PR120の`Plan`へ名前を合わせるだけにする。例：remainingSessions→sessions、lastSessionAmount→lastAmount。`Plan`に必要なremainingAmount・sessionAmount・unitも同じ予測contextに属する値を使う。実際のPR119出力名・含まれる項目と単位の責任は担当修正・BE確認後に合わせ、本案から実装済みや正式DTOへ昇格させない。
+**条件付き回数の受け渡し案（未採択）**：[FEのPR119レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119#pullrequestreview-5416882638)の対象HEAD `32a76cf`には出力がなかったが、[現在のPR119候補](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/f7a6c02ec402d3c74fae953cac769de06b31050b/packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md#条件付き計画とfebeへの責任境界)は`conditionalPlan={remainingAmount,remainingSessions,lastSessionAmount}`を実際のprogressから一度返す。BEは同じsnapshotのunit／sessionAmountを付加し、FEは残量÷設定量を再計算せずPR120の`Plan`へ名前を合わせる（remainingSessions→sessions、lastSessionAmount→lastAmount）。candidateの実装と正式DTO／API／UI接続の採択は分ける。
+
+常時adapter案は[PR119のBE対応案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/f7a6c02ec402d3c74fae953cac769de06b31050b/packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md#beレビューの追加確認と入口mappingの提案)と同じ方向。保存済みmappingはその値・versionを使い、現行版へ黙って置き換えない。保存snapshotがない未回答Goalには、採択済み現行mappingを計算呼出しだけに使い、過去の回答・snapshot・versionの保存履歴を捏造しない案を確認する。この未回答時の解決規則と既存Goal互換性は採択条件。採択後にversion付きmappingを純粋な共有定義1か所へ置き、BE初回保存とEngineが参照する案で、現候補にProduction定数はなく、testsのfixtureを本番から読まない。
 
 内部Engine入口名・export・validation reason/pathは担当レビューで揃える。candidate modeの結果で従来の`config.prior:2`を「今回使った初期分布」として返さず、実際のa／b初期Beta・versionを追跡できる形にする。公開legacyのconfig/resultは保持する。
 
@@ -158,34 +168,23 @@ Goal作成POSTの通信断は、Goal IDが返っていない場合の再取得�
 
 公開`predict`の既存契約は維持され、API／DB／UIへの正式接続、保存context／revision、正式な出所・version・error reason/pathとHTTPへの受け渡し、具体契約の採択は残る。保存／HTTP／UIの10統合例は未実行。任意の極端なBetaをAPIから渡さず、選択mappingと長いSKIPPED列の計算予算を正式接続前に確認する。
 
-既存`/today`の5項目は保ち、下記は追加する候補blockの責務例。正確な名前・required/nullable・成功DTO・schema versionはBE／FE確認前である。
+**BEレビューを受けた最小公開block案**：保存mappingVersion・initialPriors・raw snapshotはBE内部の再計算／訂正用に保持し、現在のPR120表示では使わないため`/today`へ追加しない。内部Resultに含まれることはHTTPへ全項目をコピーする理由にはならない。下記は表示に必要なcontext・出所・条件付き回数の責務例で、既存`/today`項目との整合、正確な名前・required/nullable・成功DTO・schema versionはBE／FE確認前である。
 
 ```ts
 type TodayR11AdditionsCandidate = {
   predictionContext: {
-    revision: number;
     recordStartDate: string;
-    questionSnapshot: {
-      raw: { a: Answer; b: Answer };
-      mappingVersion: string;
-      appliedRevision: number;
-      initialPriors: {
-        a: { alpha: number; beta: number };
-        b: { alpha: number; beta: number };
-      };
-      unit: "minutes" | "sessions";
-      sessionAmount: number;
-    } | null;
+    unit: "minutes" | "sessions";
+    sessionAmount: number;
   };
   predictionProvenance: {
-    mode: "LEGACY" | "QUESTION_PRIOR_CANDIDATE";
     a: Source; b: Source; // NONE / QUESTION / RECORDS / QUESTION_AND_RECORDS
   };
   conditionalPlan: {
     remainingAmount: number; remainingSessions: number; lastSessionAmount: number;
   };
 };
-// Answer = LOW | MID | HIGH | UNKNOWN | null。候補mode名を製品versionとしない。
+// Sourceは表示用enum候補。内部modeやmapping版を製品versionとして公開しない。
 ```
 
 既存`PredictionResult`全体の型をFEだけで上書きする案ではない。新modeの表現・現行不足reasonの維持／置換は#71〜#73と#77で具体型と回帰を確認する。HTTP 409、revision、上記追加blockは今回まだ採択しない。
@@ -220,7 +219,9 @@ Kaitoの新規部品の配置案は`apps/web/src/features/question-prior/*`。�
 
 共通ファイルを変更する前に対象・担当・順番をFEと記録する。通常はKaitoの新規部品＋FEの既存画面組み込みに分ける。同じファイルの変更が必要なら双方の意図と固定例を保って通常three-way解消し、双方が差分を再確認する。別担当の変更を上書き・forcepushしない。
 
-FEはuser／session generation／goalを取得keyに含め、mutation前の取得を取消・無効化し、既に受け取ったrevisionより古い応答を表示へ戻さない。logoutは取消とcache解除。日付はserver todayを使い、focus復帰時に再取得する。別タブでまだ観測していない将来の書き込みを完全検知できるとは主張しない。
+**C案のMVPではサーバstate revisionを必須にしない取得管理案**。FEはuser／session generation／goalを取得keyに含め、keyごとの取得世代とrequest順を持つ。mutation開始時に世代を進め、保存前のGETを取消または結果不採用にする。保存確定後は新世代でGoal／todayを再取得し、現在のkey・世代・最新requestに一致する応答だけを表示へ採用する。取消が間に合わず旧応答が後着しても表示を戻さない。保存不明／再取得失敗は別状態に保ち、Goal切替・logout時は無効化とcache解除を行う。
+
+日付はserver todayを使い、focus復帰時に再取得する。サーバの同一DB snapshotは別途必要で、FEの取得世代で代替しない。別タブでまだ観測していない書き込みの全順序を検知する方式ではない。保存後の後着GET・連続訂正・Goal切替の受入条件をこの管理で満たせない場合は、state revisionを追加する必要性をFE／BEが再検討する。実際のquery実装と受入は未確認で、取得管理案の採択をFEに求める。
 
 表示優先は、入力／通信エラー・最新取得待ちを扱う → 実績達成 → 今日記録済み → 起点別の材料判定。保存済み再取得失敗や保存不明時に古い予測を現在の値として見せない。Today記録済みは中心を出さず、完了のCURRENT_STATEは既存契約に従う。
 
@@ -262,6 +263,7 @@ RNG／Beta samplerは既存Engineと共有しており、別sampler・厳密な�
 
 | Issue | 保持する境界 |
 | --- | --- |
+| #74／#76 → 回答snapshot／#77 | 固定recordStartDateの保持・migration・Goal GET共有と既存Goal互換性を先に採択し、その値を回答snapshotとログ境界へ接続。#74のHard #70・#76のHard #75は維持 |
 | #71 | Hard #70。既存の純粋計算の限定先行範囲と、新contractの正式採択を区別 |
 | #72／#73 | Hard #71／#71・#72。Integration #70。候補のテストだけで正式受入としない |
 | #76／#77 | Hard #75／#76、#77はIntegration #72。Goal DTO・初回保存・訂正・snapshotと接続をBE確認 |
@@ -276,4 +278,5 @@ RNG／Beta samplerは既存Engineと共有しており、別sampler・厳密な�
 - [PR115のP-15](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/1c029c52646bfb8b95d6f5fecabdf599fc5efc81/docs/product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26と依頼者側の判断目標日](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/1c029c52646bfb8b95d6f5fecabdf599fc5efc81/docs/architecture.md#d-26)。PR115のScope記録と本契約案は別の変更。
 - [FEのMust・分担同意](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/115#pullrequestreview-5410233503)、[BEのMust・API引受](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/115#pullrequestreview-5409983506)。具体数値・API全体の同意ではない。
 - [FE #88のAPI／LWW提案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/88#issuecomment-5986523851)。LWW・追加field・error DTO・mock方針は未採択として比較。
+- [BEレビュー5417166527](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/118#pullrequestreview-5417166527)。方向への賛成と、開始日・revision・transaction・公開項目・入口・エラーの確認要求であり、D-26の採択やApproveではない。
 - [既存の質問prior提案](question-prior-proposal.md)。強さ4／8等の比較・実績と回答の分離を保持。本案も校正・予測精度の採択ではない。
