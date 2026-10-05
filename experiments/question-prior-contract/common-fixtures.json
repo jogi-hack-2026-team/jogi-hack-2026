@@ -242,7 +242,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 3,
+          "p80Days": 6
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -465,7 +466,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 4,
+          "p80Days": 5
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -552,7 +554,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 3,
+          "p80Days": 11
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -639,7 +642,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 2,
+          "p80Days": 4
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -726,7 +730,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 2,
+          "p80Days": 4
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -813,7 +818,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 2,
+          "p80Days": 3
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -900,7 +906,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 3,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 6,
+          "p80Days": 7
         },
         "conditionalPlan": {
           "remainingAmount": 60,
@@ -1077,7 +1084,8 @@
           "status": "available",
           "scenario": "TODAY_DONE",
           "requiredFutureDone": 2,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 4,
+          "p80Days": 5
         },
         "conditionalPlan": {
           "remainingAmount": 40,
@@ -1163,7 +1171,8 @@
           "status": "available",
           "scenario": "CURRENT_STATE",
           "requiredFutureDone": 1,
-          "quantileCheck": "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+          "p50Days": 2,
+          "p80Days": 2
         },
         "conditionalPlan": {
           "remainingAmount": 15,
@@ -1753,5 +1762,5 @@
       }
     }
   ],
-  "completionQuantiles": "Nontrivial DP/Monte Carlo numeric goldens intentionally pending adopted-runtime Engine verification. Status/source/posterior/core exact quantiles/zero and >H cases are specified."
+  "completionQuantiles": "Nine nontrivial completion-day goldens checked with existing Engine sampler/DP and independent conditional renewal CDF on Node22.15.1 Windows, seed20261012/K200/H1095. Formal gate/API/DB/UI/runtime adoption and calibration remain unverified."
 }

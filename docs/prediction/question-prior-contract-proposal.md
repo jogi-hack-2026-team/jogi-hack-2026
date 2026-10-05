@@ -124,7 +124,9 @@ Goal作成POSTの通信断は、Goal IDが返っていない場合の再取得�
 
 内部Engine入口名・export・validation reason/pathは担当レビューで揃える。candidate modeの結果で従来の`config.prior:2`を「今回使った初期分布」として返さず、実際のa／b初期Beta・versionを追跡できる形にする。公開legacyのconfig/resultは保持する。
 
-実Engineでの質問mapping・部分回答gate・API／UI接続は、この資料では検証していない。任意の極端なBetaをAPIから渡さず、選択mappingと長いSKIPPED列の計算予算を正式接続前に確認する。既存Engineの成功件数を本契約の受入件数へ転用しない。
+追加Evidenceでは、PR118の元HEAD `c3bd5ef`の18計算例を、Engine担当のローカル候補＋実験adapterで照合した。入力・実績・隣接ログ・事後分布・出所・中心の固定値が一致し、非自明な完了DP9例は共有samplerと独立な条件付きCDFで一致した。質問材料のgateは実験adapterで補った結果であり、候補本体のR-11対応完了ではない。
+
+候補本体には材料gateの状態／不足理由の差が13例（F03／04／05／06／07／08／09／10／11／14／15／17／18）残る。raw回答・a／b別出所enum・mapping/context/versionの正式受け渡しも未接続。N03の未来日付はPredictionInputErrorで一致したが、N04の不正priorは候補ではRangeError、提案はPredictionConfigError候補であり、class／reason／pathの採択と接続を要する。保存／HTTP／UIの10統合例は未実行。任意の極端なBetaをAPIから渡さず、選択mappingと長いSKIPPED列の計算予算を正式接続前に確認する。
 
 既存`/today`の5項目は保ち、下記は追加する候補blockの責務例。正確な名前・required/nullable・成功DTO・schema versionはBE／FE確認前である。
 
@@ -180,11 +182,30 @@ FEはuser／session generation／goalを取得keyに含め、mutation前の取�
 - [common-fixtures.json](../../experiments/question-prior-contract/common-fixtures.json)：計算18例、不正入力4例、保存／UI状態10例。ID F01〜F18、N01〜N04、I01〜I10を担当共通の確認対象にする候補。
 - [fixture-summary.md](../../experiments/question-prior-contract/fixture-summary.md)：起点別Beta・中心値・不足・実績・回数の比較。
 - [build-fixtures.py](../../experiments/question-prior-contract/build-fixtures.py)：標準ライブラリFractionを使う独立した厳密Beta-Geometric参照。隣接ログ・件数・実量・状態を照合した。
-- [validation.json](../../experiments/question-prior-contract/validation.json)：独立した数式確認PASS。実際のEngine／DB／API／UIテスト成功ではなく、校正・理解・精度も未検証。
+- [validation.json](../../experiments/question-prior-contract/validation.json)：Pythonの独立した数式確認PASS。完了DPの再現結果は下記へ分け、DB／API／UIの成功や校正・理解・精度の確認にはしない。
+- [completion-goldens.json](../../experiments/question-prior-contract/completion-goldens.json)、[再現スクリプト](../../experiments/question-prior-contract/verify-completion.mjs)、[再現結果](../../experiments/question-prior-contract/completion-replay-results.json)：公開済みの数学部品から同じ事後drawを生成し、9件のDPと独立な条件付きCDFを照合。[再現手順](../../experiments/question-prior-contract/README.md#完了dpの追加evidence)と[oracleテスト](../../experiments/question-prior-contract/completion-oracle.test.mjs)を参照。
 
 重点例はF01対F03（同じBeta、回答有無による表示差）、F04／F05（部分回答）、F09→F10（訂正・実遷移不変）、F11（UNKNOWNをまたがない）、F14（今日実量7）、F16（達成優先）、F17（仮実行0日と実績未達の分離）、F18（H超）。I01〜I03は同一再送／古い異なる訂正／有効訂正、I05〜I09は古い応答・logout・保存状態・日付snapshot。
 
-非自明な完了DPのp50／p80数値goldenは未算出。既存RNG・順序・seed・採用検証runtimeとEngine候補で追加確認する。数学参照は金額・時刻・DB操作を検証しない。不正例N03には完全なPredictionInputとconfigを置いた。N04の数値材料は完全だが、候補snapshot metadata・呼出し型・具体error reason/pathは担当の契約確認後に合わせる。API不正例は認証済み所有者という前提を明示した仕様例で、実際のHTTP呼出しではない。
+完了DPの固定値は次の9件で確認済み。Node 22.15.1／Windows x64、seed=20261012、K=200、H=1095の範囲。F17の0／0とF18のnull／nullは非自明9件へ含めない。
+
+| ID | 必要な将来DONE回数 | P50／P80（未来日数） |
+| --- | --- | --- |
+| F03 | 2 | 3／6 |
+| F06 | 2 | 4／5 |
+| F07 | 2 | 3／11 |
+| F08 | 2 | 2／4 |
+| F09 | 2 | 2／4 |
+| F10 | 2 | 2／3 |
+| F11 | 3 | 6／7 |
+| F13 | 2 | 4／5 |
+| F14 | 1 | 2／2 |
+
+独立なのは、同じa／b drawに条件付けた完了分布の計算法。状態DPとrenewal＋Binomial-tail CDFをHの全日で比較し、最大CDF差は`5.551115123125783e-16`、刈り込みあり／なしのPMF差は0、最小のP50／P80到達日が一致した。閾値前後のCDF・draw hashを保存。0／1確率・DONE／SKIPPED開始を全経路の整数重み列挙でも照合した。参照CDF許容誤差1e-11と、従来の分位点epsilon1e-12は別で、後者は変更しない。
+
+RNG／Beta samplerは既存Engineと共有しており、別sampler・厳密な事後積分・校正・予測精度の独立検証ではない。Engine担当の候補56テスト＋実験3テスト・型検査の成功はログで確認した担当検証。本PR側では、公開数学sourceをTypeScript 5.8.3で生成し、9件を再現する独立CDF実験3テストを実行した。元候補の56件をここで再実行したとは数えない。API／DB／UI接続、採用runtimeや選択priorの性能・混合負荷、質問理解は未検証であり、具体契約は未採択。
+
+数学参照は時刻・DB操作を検証しない。不正例N03は担当実験でPredictionInputErrorを確認。N04のsnapshot metadata・呼出し型・具体error reason/pathは候補との上記差を採択後に合わせる。API不正例は認証済み所有者という前提を明示した仕様例で、実際のHTTP呼出しではない。
 
 ## 10. Issue／PRと着手条件
 

@@ -1,0 +1,205 @@
+{
+  "status": "PASS: conditional DP replay only / Supporting proposal / not adopted",
+  "sourceProposalHead": "c3bd5efd2e447fb7a021ad7c27a61de2127dd33a",
+  "environment": {
+    "node": "v22.15.1",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "config": {
+    "samples": 200,
+    "horizonDays": 1095,
+    "seed": 20261012
+  },
+  "nontrivialCases": 9,
+  "cases": [
+    {
+      "id": "F03",
+      "p50Days": 3,
+      "p80Days": 6,
+      "drawSha256": "957a0ecc0bdc5ee18fd9f607b9b0941b31a699644564a700e00d1918075d9cb1",
+      "maxCdfError": 2.220446049250313e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 3,
+          "cdf": 0.5162521318402458,
+          "previousCdf": 0.30866587525891076
+        },
+        "0.8": {
+          "day": 6,
+          "cdf": 0.8477507350261002,
+          "previousCdf": 0.7861327998975424
+        }
+      }
+    },
+    {
+      "id": "F06",
+      "p50Days": 4,
+      "p80Days": 5,
+      "drawSha256": "4b6f3ecb0473efa2e3bd52bbb4a51483d1850f1a5a12979038d5e8470a58dff0",
+      "maxCdfError": 2.220446049250313e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 4,
+          "cdf": 0.732345266034869,
+          "previousCdf": 0.33144856405752837
+        },
+        "0.8": {
+          "day": 5,
+          "cdf": 0.8740362787005674,
+          "previousCdf": 0.732345266034869
+        }
+      }
+    },
+    {
+      "id": "F07",
+      "p50Days": 3,
+      "p80Days": 11,
+      "drawSha256": "25f2363a7fd5565cdae7628f860e532ab524da96909c69a7390ff0611c9056da",
+      "maxCdfError": 5.551115123125783e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 3,
+          "cdf": 0.5080092769190491,
+          "previousCdf": 0.4046909545691775
+        },
+        "0.8": {
+          "day": 11,
+          "cdf": 0.8162230610497093,
+          "previousCdf": 0.7996452711574343
+        }
+      }
+    },
+    {
+      "id": "F08",
+      "p50Days": 2,
+      "p80Days": 4,
+      "drawSha256": "31f25ee1ee5e0f38d6cf2b89a3d24686103f5a5c02dc08d5727e77112454daa1",
+      "maxCdfError": 3.3306690738754696e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 2,
+          "cdf": 0.5998995669835024,
+          "previousCdf": 0
+        },
+        "0.8": {
+          "day": 4,
+          "cdf": 0.8833725049994211,
+          "previousCdf": 0.7819031241201841
+        }
+      }
+    },
+    {
+      "id": "F09",
+      "p50Days": 2,
+      "p80Days": 4,
+      "drawSha256": "6048c6e68968596d761eac60984c0491546b397363d86e387272cf7756b98ee2",
+      "maxCdfError": 3.3306690738754696e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 2,
+          "cdf": 0.5998995669835024,
+          "previousCdf": 0
+        },
+        "0.8": {
+          "day": 4,
+          "cdf": 0.803166841524301,
+          "previousCdf": 0.721939874327571
+        }
+      }
+    },
+    {
+      "id": "F10",
+      "p50Days": 2,
+      "p80Days": 3,
+      "drawSha256": "d9df1b1eb62d42d8370e79bd40ed39e55c167a78adeb9486756f6196d8fc46d7",
+      "maxCdfError": 2.220446049250313e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 2,
+          "cdf": 0.5998995669835024,
+          "previousCdf": 0
+        },
+        "0.8": {
+          "day": 3,
+          "cdf": 0.8414959105577792,
+          "previousCdf": 0.5998995669835024
+        }
+      }
+    },
+    {
+      "id": "F11",
+      "p50Days": 6,
+      "p80Days": 7,
+      "drawSha256": "4b6f3ecb0473efa2e3bd52bbb4a51483d1850f1a5a12979038d5e8470a58dff0",
+      "maxCdfError": 3.3306690738754696e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 6,
+          "cdf": 0.6839303775863423,
+          "previousCdf": 0.372923422785751
+        },
+        "0.8": {
+          "day": 7,
+          "cdf": 0.827400325280563,
+          "previousCdf": 0.6839303775863423
+        }
+      }
+    },
+    {
+      "id": "F13",
+      "p50Days": 4,
+      "p80Days": 5,
+      "drawSha256": "3964c77a0b9ea314b240245e24578be864d29ab78a2fedfafdd73b1ce8dcb049",
+      "maxCdfError": 3.3306690738754696e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 4,
+          "cdf": 0.6952929868596107,
+          "previousCdf": 0.45586042515198577
+        },
+        "0.8": {
+          "day": 5,
+          "cdf": 0.821372949341267,
+          "previousCdf": 0.6952929868596107
+        }
+      }
+    },
+    {
+      "id": "F14",
+      "p50Days": 2,
+      "p80Days": 2,
+      "drawSha256": "d7b5f75978c4ed0a0fbc9bb8f0f7cfa85e5c5a1f00c29d9f398e04aaa49e5955",
+      "maxCdfError": 2.220446049250313e-16,
+      "maxPmfPruningDifference": 0,
+      "boundary": {
+        "0.5": {
+          "day": 2,
+          "cdf": 0.8527643307271132,
+          "previousCdf": 0.2514660792294579
+        },
+        "0.8": {
+          "day": 2,
+          "cdf": 0.8527643307271132,
+          "previousCdf": 0.2514660792294579
+        }
+      }
+    }
+  ],
+  "maxCdfError": 5.551115123125783e-16,
+  "independence": "Conditional completion distribution only. Existing Engine RNG/Beta sampler shared; no independent sampler or exact posterior integration.",
+  "remaining": [
+    "13 reported material-gate differences",
+    "raw/source/context metadata and N04 error contract",
+    "API/DB/UI integration and runtime adoption",
+    "calibration, prediction accuracy and user understanding"
+  ]
+}

@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 TODAY = "2026-10-05"
+COMPLETION_GOLDENS = {r["id"]:r for r in json.loads((ROOT/"completion-goldens.json").read_text(encoding="utf-8"))["cases"]}
 MAP = {"LOW": (1, 3), "MID": (2, 2), "HIGH": (3, 1)}
 DEFAULT = {"modelVersion": "behavior-persistence-m1-v1", "prior": 2,
            "samples": 200, "horizonDays": 1095, "seed": 20261012}
@@ -96,7 +97,9 @@ def evaluate(case):
             elif future_count > DEFAULT["horizonDays"]:
                 completion.update(p50Days=None, p80Days=None)
             else:
-                completion["quantileCheck"] = "Pending adopted-runtime Engine fixture: deterministic same input/config; 0<=p50<=p80<=H when finite; finite p80 implies finite p50."
+                golden = COMPLETION_GOLDENS[case["id"]]
+                assert future_count == golden["requiredFutureDone"] and posterior == golden["posterior"]
+                completion.update(p50Days=golden["p50Days"], p80Days=golden["p80Days"])
     return {"mode": "QUESTION_PRIOR_CANDIDATE" if any(qualified.values()) else "LEGACY",
             "todayStatus": today_status, "progress": {"done": actual, "total": goal["totalRequired"], "completed": completed},
             "observations": observations, "posterior": posterior,
@@ -160,15 +163,16 @@ integration = [
     {"id":"I10","case":"UI ownership and priority","expectedCandidate":{"stateOwner":"FE controller","KaitoComponentFetches":False,"priority":["transport/input failure","completed","today_recorded","origin eligibility"],"mutableSharedFormFilesOwner":"FE"}},
 ]
 
-payload={"status":"SUPPORTING PROPOSAL / NOT ADOPTED / NOT IMPLEMENTED","sourceMain":"725e2607198514254d42fb585d9a85e11ed7b89a","sourceAdoptionPrHead":"1c029c52646bfb8b95d6f5fecabdf599fc5efc81","mappingCandidate":{"version":"question-prior-s4-v1-candidate","strength":4,"values":{k:{"alpha":v[0],"beta":v[1]} for k,v in MAP.items()},"unknownAndMissing":"no qualifying prior; internal common Beta(2,2) is not a user answer"},"configUnchanged":DEFAULT,"calculationExamples":cases,"negativeExamples":negative,"integrationExamples":integration,"completionQuantiles":"Nontrivial DP/Monte Carlo numeric goldens intentionally pending adopted-runtime Engine verification. Status/source/posterior/core exact quantiles/zero and >H cases are specified."}
+payload={"status":"SUPPORTING PROPOSAL / NOT ADOPTED / NOT IMPLEMENTED","sourceMain":"725e2607198514254d42fb585d9a85e11ed7b89a","sourceAdoptionPrHead":"1c029c52646bfb8b95d6f5fecabdf599fc5efc81","mappingCandidate":{"version":"question-prior-s4-v1-candidate","strength":4,"values":{k:{"alpha":v[0],"beta":v[1]} for k,v in MAP.items()},"unknownAndMissing":"no qualifying prior; internal common Beta(2,2) is not a user answer"},"configUnchanged":DEFAULT,"calculationExamples":cases,"negativeExamples":negative,"integrationExamples":integration,"completionQuantiles":"Nine nontrivial completion-day goldens checked with existing Engine sampler/DP and independent conditional renewal CDF on Node22.15.1 Windows, seed20261012/K200/H1095. Formal gate/API/DB/UI/runtime adoption and calibration remain unverified."}
 (ROOT/"common-fixtures.json").write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8",newline="\n")
 rows=["| ID | 材料 | a事後 / b事後 | 中心 | 完了 | 実績 / 実遷移 | あと何回分 |","| --- | --- | --- | --- | --- | --- | --- |"]
 for c in cases:
     e=c["expected"];p=e["posterior"];core=e["coreMetric"]
     core_txt=f"g50={core['g50']}, g80={core['g80']}" if core["status"]=="available" else core.get("reason",core["status"])
     comp=e["completion"];comp_txt=comp["status"]+" "+comp.get("reason",comp.get("scenario",""))
+    if "p50Days" in comp: comp_txt += f" ({comp['p50Days']} / {comp['p80Days']}日)"
     rows.append(f"| {c['id']} | {c['answers']['a'] or '未回答'} / {c['answers']['b'] or '未回答'} | Beta({p['a']['alpha']},{p['a']['beta']}) / Beta({p['b']['alpha']},{p['b']['beta']}) | {core_txt} | {comp_txt.strip()} | {e['progress']['done']} / {e['observations']['effectiveTransitions']} | {e['conditionalPlan']['remainingSessions']} |")
-(ROOT/"fixture-summary.md").write_text("# 共通固定例（未採択案）\n\n"+"\n".join(rows)+"\n\n計算例18件、入力不正例4件、保存／UI統合例10件。実装のテスト成功件数ではありません。完了DPの非自明な日数goldenは未算出で、既存RNG・採用runtime・Engine拡張の検証で追加します。\n",encoding="utf-8",newline="\n")
-report={"calculation_examples":len(cases),"negative_specifications":len(negative),"integration_specifications":len(integration),"independent_math_check":"PASS: exact Fraction Beta-Geometric quantiles, actual adjacency/counts, metadata, amount and priority invariants","production_tests_run":False,"numeric_calibration_verified":False,"completion_dp_goldens_verified":False}
+(ROOT/"fixture-summary.md").write_text("# 共通固定例（未採択案）\n\n"+"\n".join(rows)+"\n\n計算例18件、入力不正例4件、保存／UI統合例10件。実装のテスト成功件数ではありません。非自明な完了DP9例はNode22.15.1／Windows／seed20261012／K200／H1095で条件付き独立CDFと一致。共有samplerの数値確認であり、材料gate・API／DB／UI接続・精度や採用runtimeの保証ではありません。再現はverify-completion.mjsとcompletion-replay-results.jsonを参照。\n",encoding="utf-8",newline="\n")
+report={"calculation_examples":len(cases),"negative_specifications":len(negative),"integration_specifications":len(integration),"independent_math_check":"PASS: exact Fraction Beta-Geometric quantiles, actual adjacency/counts, metadata, amount and priority invariants","production_tests_run":False,"numeric_calibration_verified":False,"completion_dp_goldens_available":9,"completion_dp_goldens_verification":"Node replay in completion-replay-results.json; Python checks reference values only"}
 (ROOT/"validation.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8",newline="\n")
 print(json.dumps(report,ensure_ascii=True,indent=2))
