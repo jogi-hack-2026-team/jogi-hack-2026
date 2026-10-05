@@ -6,6 +6,8 @@ Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの�
 
 旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
+2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しをmustへ追加)で質問由来の仮の見通しをMUSTへ追加した。機能Scopeの依頼者判断と、数値・保存・API・Engine契約の採択を分ける。[D-26](#d-26)はOPENで、以下の実績由来Engine契約・D-20の共通priorは現行実装の契約として保持する。新機能の実装は未完了。
+
 ## System構成
 
 Productと予測仕様から必要になる性質は「本人だけが記録を操作できる認証・記録と予測の整合・純粋な計算モジュール・決定的なテスト」。[D-23](#d-23)で、これを満たす基本構成として**1つのNodeアプリ（API＋静的配信）＋PostgreSQL** を採用し、コード上はモジュールで責務を分ける（モジュラーモノリス）。配備するサービスを増やさず、計算だけを切り離して検証・改善できる形を狙う。Microservices、Queue、Cache、ML frameworkは現時点で追加する根拠がない。下図のReact／Fastify／PostgreSQLはD-23の採用範囲、認証ライブラリ・テーブルは[D-24](#d-24)の条件付き第一候補。確定しているのは「Prediction EngineをUI・DB・HTTPから独立した純粋関数にする」という責務の分け方。[比較理由・弱点・増強の再検討条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)を参照。
@@ -216,6 +218,8 @@ APIが保存を確定した後、画面は記録・予測を再取得し、保�
 ## Prediction Engine
 
 モデル仕様の正本。理由と検証結果は[予測モデルの判断記録](prediction/decision-log.md)と[Evidence](prediction/evidence.md)。
+
+本節の型・既定値・不足判定・式・T-01〜T-15は現行の実績由来モードの契約。R-11の回答由来モードをこの入力へ暗黙に混ぜない。共通priorを回答済みの値と扱う変更、回答だけで不足判定を解除する変更、`a`／`b`別の初期分布・保存snapshotを渡す拡張は[D-26](#d-26)の採択後に契約と回帰テストを更新する。
 
 ### インターフェース
 
@@ -443,6 +447,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
 | D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
+| D-26 | 2026-10-05 | OPEN（機能ScopeはP-15でDECIDED） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
@@ -485,3 +490,19 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 ### D-25
 
 2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち）** / Cloud Run＋Neonを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。利用が少ない時間の計算資源を抑え、DBサーバー自体の管理を減らす狙い。[費用・代替案・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)を参照。単一SPA／APIコンテナとPostgreSQLはD-23の採用範囲だが、サービスの最終受入・一般公開・課金作成の許可ではない。#85のregion確認は2026-09-30の記録で、現在の提供地域と組合せは作成前に再確認する。予算・利用前提・担当・実Cloud／proxy／1 vCPU／休止後応答・費用は未確認。アカウント・課金・リソース作成は対象と費用を示した別承認後。旧比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)に保持する。
+
+### D-26
+
+2026-10-05 / **OPEN（実現方式、未実装）** / [R-11・P-15](product-spec.md#質問から始める見通しr-11)の質問由来の見通しを実現する契約を具体化する。現行Engineは共通の`config.prior = 2`と実績起点の不足判定を持ち、回答由来の分布・表示可否・出所の受け渡しを持たない。[PR #108の公開HEADの提案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/a4c383b1b2bc95e4a838727e5b7e4e28bb261ec0/docs/prediction/question-prior-proposal.md)はSupporting Artifactで、数値・型・保存案全体の採択や製品コードではない。
+
+| OPEN項目 | 影響と採択時に確認する内容 |
+| --- | --- |
+| 初期分布 | `a`と`b`それぞれの回答→分布の対応・強さ・不明時のfallback、入力検証。D-20の共通Beta(2,2)を残す範囲、T-11の不足判定との区別を明記する |
+| 計算と表示の接続 | 回答だけ・回答＋実績・実績のみの出所、中心／完了別の表示可能条件をFE/BE/Engineで共有する。既存の中央値・閉形式・DP・状態優先を変更する必要があれば個別に提案する |
+| Goal保存・訂正 | 生の回答と採用した分布の保存範囲、mapping／model／schemaの版、訂正revision、既存Goalの互換性、行動や量の編集時の扱いを決める。質問値をActionLogへ保存せず、初期量に加算しない |
+| API／Engine契約 | Goal作成・取得・編集、`/today`、Engine入力・出力でどの項目を共有するかを決める。HTTP・DBを純粋Engineへ混ぜず、所有者条件・422・同日上書きを維持する。snapshot整合は未決の読み取り方式と合わせて決める |
+| 受入・回帰 | 同じ回答snapshot＋同じ実ログからの再計算、UNKNOWNをまたがない更新、訂正／再送の二重加算防止、出所別不足表示を固定例で検証する。現行共通priorの回帰を残し、変更する期待値を採択根拠へ結ぶ |
+
+公開案には回答別Betaと実績による起点別更新、強さ4／8の比較がある。共通priorのまま待つ案・条件付き計画だけの案より入力・保存・表示・互換性の変更が多い。R-11は質問由来の見通しを要求するため、これらの小さい案だけでR-11完了とはしない。一方、具体値は校正された値ではなく、計算一致の検証から予測精度や行動促進効果を保証できない。
+
+人間の具体契約判断後、[既存Issueへの対応表](change-map.md#r-11の既存issueへの対応)に沿って契約・実装・共有回帰を更新する。APIや初期分布の新しい型は今回の文書PRで確定しない。PR #108の未公開修正を根拠にしない。入口・画面数・routesは#88の別レビューで扱う。

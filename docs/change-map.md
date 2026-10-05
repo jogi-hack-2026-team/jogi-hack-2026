@@ -13,8 +13,25 @@
 | Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と46テスト・実Engine T-14。[接続例](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
 | デモデータ（R-09） | [R-09](product-spec.md#requirementsmvp) | 未定（Demo Seedスクリプト） | デモ手順の通し確認 |
 | 公開（R-10） | [Deployment](architecture.md#deployment) | 未定 | 公開URLで主要Flow |
+| 質問由来の見通し（R-11） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[依頼者判断P-15](product-spec.md#p-15-質問由来の見通しをmustへ追加)、[実現方式D-26](architecture.md#d-26) | 未実装。#78・#81・#76・#77・#71・#72へ影響、#73で回帰共有。具体の数値・型・保存・表示契約はOPEN | [既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
+
+### R-11の既存Issueへの対応
+
+機能Scopeは依頼者がMUSTへ追加、実現方式はD-26でOPEN。提案公開・判断追跡は既存[#107](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/107)、公開案・レビューは[#108](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/108)に集約し、重複Issueを作らない。下表は影響と確認予定であり、既存Issueの担当・Hard依存・Ready/BLOCKED・元の完了チェックを自動変更しない。
+
+| 既存Issue | 追加機能による影響 | 具体契約の採択後に確認する内容 |
+| --- | --- | --- |
+| [#78 Goal UI](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/78) | 質問・不明／未回答・保存／訂正の入力 | 採択した回答値とAPIエラー、質問と初期量の分離。入口・画面構成は#88で別途判断 |
+| [#81 Today Decision](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/81) | 回答由来の仮の見通しと実績更新後の表示 | 出所・実績件数・不足状態・部分回答・記録済み／達成済みの優先、簡易ユーザー確認 |
+| [#76 Goal API](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/76) | 回答・初期分布の保存／取得／編集、既存Goal互換性 | 所有者条件・入力検証、mapping版・revision・変更時の方針、ActionLogへ変換しないこと |
+| [#77 ActionLog／Today API](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77) | 回答snapshot＋現在の実ログのEngine入力、出所・不足状態の返却 | Engineとの一致、今日／昨日の上書き後の再計算、二重加算防止、古い応答との整合 |
+| [#71 中心計算](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71) | `a`／`b`別の初期分布と実績起点の更新、中心の不足判定 | 回答は遷移数にしない、UNKNOWN隣接除外、現行共通priorとの互換性、中心の固定例 |
+| [#72 完了計算](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72) | 初期分布を使う完了DP、中心との統合、完了の不足判定 | 現行のDP・打切り・null・今日の仮実行と実量の分離、部分回答の採択条件 |
+| [#73 共有テスト](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73) | 新しい初期分布・更新・不足状態・互換性の回帰 | 採択値の固定例と独立計算の照合、同一snapshot＋ログの再現、既存T-01〜T-15の変更点と根拠 |
+
+まず質問・数値・表示条件と保存／API／Engineの共通契約を決め、固定例を共有する。その後、Engine #71→#72と共有テスト#73、BE #76→#77、FE #78・#81で契約に沿って実装・結合確認する。採択済み契約のmockによる先行は既存の許可範囲に従う。新しいHard依存・担当・期限をこの順序案から設定しない。既存Mustへの工数・日程の影響は担当間の確認待ち。
 
 ## 開発基盤と作業手順
 
