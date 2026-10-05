@@ -13,7 +13,7 @@ docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges f
 
 build対象は`packages/prediction`のみ。[専用ignore設定](Dockerfile.verification.dockerignore)で検証用ファイルだけを送る。[Dockerfile](Dockerfile.verification)は公式Node 22.15.1 bookworm-slimをmanifest digestで固定し、既存CIの検証版を再現する。製品runtimeの最終採択とは区別する。依存は既存package-lockに従い、lifecycle scriptsを無効にしてコンテナ内だけへinstallする。hostの`.env`、Git、node_modules、distは渡さず、volumeやポートも使わない。既存のDocker context・volumeは変更しない。
 
-[実行スクリプト](scripts/verify-docker.mjs)は版表示 → 型検査 → 全数値テスト → 11接続例 → 実Engine T-14の順に既存コマンドを呼ぶ。成功時は末尾に`PASS:`が出てexit 0となる。型検査・テスト・例・T-14の失敗は非0で終了する。出力JSONはコンテナ内の`/tmp/prediction-verification/connection.json`と`t14.json`へ保存する。`--rm`の通常実行では終了後にコンテナごと消える。
+[実行スクリプト](scripts/verify-docker.mjs)は版表示 → 型検査 → 全数値テスト → 11接続例 → 統合済みなら30日fixture → 実Engine T-14の順に既存コマンドを呼ぶ。成功時は末尾に`PASS:`が出てexit 0となる。型検査・テスト・例・T-14の失敗は非0で終了する。出力JSONはコンテナ内の`/tmp/prediction-verification/connection.json`と`t14.json`、30日fixtureがある場合は`demo-inputs.json`へ保存する。`--rm`の通常実行では終了後にコンテナごと消える。
 
 ## JSONを取り出す場合
 
@@ -50,13 +50,13 @@ try {
 
 T-14は既定K=200/H=1095・必要120/400/1095 DONEについて初回と追加5回をすべて500ms未満とする既存基準を使う。DockerのCPU割当・host負荷・仮想化・architectureによって所要時間が変わる。JSONには実Node版、Linux kernel、CPU/メモリ、全入力、6回の測定を残す。Docker Desktop上の成功を、採用配備先の1 vCPUや予測＋CRUD混合負荷の合格へ読み替えない。正式runtime・配置での再確認と#70 の統合は残る。
 
-PR #109 の30日fixtureは別変更としてレビュー中で、この検証設定へコピーしていない。現在のmainにある11例を使う。後で統合された追加例の検証手順はその時点で合わせる。
+[PR #109](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/109)の30日fixtureは、そのファイルがcheckoutに存在する場合に実行して`demo-inputs.json`へ保存する。未統合のcheckoutでは未統合とログへ明示し、11接続例を検証する。fixtureをこの設定へ複製せず、統合後は同じ入口から数値テストと追加例を実行できる。fixtureが存在して実行に失敗した場合は非0となり、成功扱いにしない。
 
 ## Docker検証CI
 
 [専用workflow](../../.github/workflows/prediction-docker.yml)はpackageまたはworkflow変更のPR・mainへのpush・手動実行で、同じbuildとコンテナ実行を行う。既存のNode matrix CIとは別で、採用runtime・Application CI・required checksを変更しない。Ubuntu検証runner、read-only権限、checkout認証非保持、10分上限を使い、Secret・host mount・ポートは渡さない。
 
-終了状態と2 JSONの存在を確認し、T-14失敗でも取得できたJSONを14日artifactに保存する。保存できない場合や検証非0はjobを失敗させる。後片付けはjobが新しく作ったコンテナID1個だけを対象とし、volumeや共有contextを変更しない。CIホストの計測も正式配備条件の代わりにはしない。
+終了状態と既存2 JSONの存在を確認する。30日fixtureのファイルがcheckoutにあれば、追加の`demo-inputs.json`も必須にする。T-14失敗でも取得できたJSONを14日artifactに保存する。保存できない場合や検証非0はjobを失敗させる。後片付けはjobが新しく作ったコンテナID1個だけを対象とし、volumeや共有contextを変更しない。CIホストの計測も正式配備条件の代わりにはしない。
 
 daemonへ接続できないときはDockerの起動・Linux container modeを利用者が確認する。設定変更・再install・context切替を検証スクリプトから自動実行しない。依存取得が失敗した場合はimage/公式registryへの接続を確認してbuildを再実行する。失敗をstubやskipで成功へ変換しない。
 
