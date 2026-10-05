@@ -4,7 +4,7 @@ import { recoveryQuantiles } from './recovery.js';
 import { samplePosterior } from './random.js';
 import { mixtureCompletionQuantiles } from './completion.js';
 import { PredictionConfigError } from './errors.js';
-import type { Completion, CoreMetric, PredictionResult, PredictionConfig, PredictionInput } from './types.js';
+import type { Completion, CoreMetric, PredictionResult, PredictionConfig, PredictionInput, Posterior } from './types.js';
 
 function validateConfig(config: PredictionConfig): void {
   for (const field of ['prior', 'samples', 'horizonDays'] as const) {
@@ -22,11 +22,25 @@ function validateConfig(config: PredictionConfig): void {
 }
 
 export function predict(input: PredictionInput, config: PredictionConfig = DEFAULT_CONFIG): PredictionResult {
+  const prior = { a: { alpha: config.prior, beta: config.prior },
+    b: { alpha: config.prior, beta: config.prior } };
+  const result = calculateWithPrior(input, config, prior);
+  return { ...result, config: { prior: config.prior, ...result.config } };
+}
+
+// Goal別priorの候補を同じ数値経路で検証する内部境界。index.tsには公開しない。
+// 共通priorを使ったと誤認させないよう、内部結果のconfigにはスカラーpriorを入れない。
+export type PriorCalculation = Omit<PredictionResult, 'config'> & {
+  config: Omit<PredictionResult['config'], 'prior'>;
+};
+
+export function calculateWithPrior(input: PredictionInput, config: PredictionConfig,
+  prior: Posterior): PriorCalculation {
   validateConfig(config);
   const { counts, actualDone, todayStatus, observationWindow, recordedLogCount } = observe(input);
   const posterior = {
-    a: { alpha: config.prior + counts.nDD, beta: config.prior + counts.nDS },
-    b: { alpha: config.prior + counts.nSD, beta: config.prior + counts.nSS },
+    a: { alpha: prior.a.alpha + counts.nDD, beta: prior.a.beta + counts.nDS },
+    b: { alpha: prior.b.alpha + counts.nSD, beta: prior.b.beta + counts.nSS },
   };
   for (const parameter of ['a', 'b'] as const) {
     for (const shape of ['alpha', 'beta'] as const) {
@@ -82,6 +96,6 @@ export function predict(input: PredictionInput, config: PredictionConfig = DEFAU
     observations: { ...counts, effectiveTransitions: counts.nDD + counts.nDS + counts.nSD + counts.nSS,
       observedDays: observationWindow?.calendarSlots ?? 0, recordedDays: recordedLogCount },
     posterior, coreMetric, completion,
-    config: { prior: config.prior, samples: config.samples, horizonDays: config.horizonDays, seed: config.seed },
+    config: { samples: config.samples, horizonDays: config.horizonDays, seed: config.seed },
   };
 }

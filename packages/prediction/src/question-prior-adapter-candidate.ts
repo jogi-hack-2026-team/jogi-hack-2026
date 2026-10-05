@@ -1,0 +1,119 @@
+import { DEFAULT_CONFIG } from './config.js';
+import { PredictionConfigError } from './errors.js';
+import { evaluateGoalPriorCandidate } from './goal-prior-candidate.js';
+import type { GoalPriorCandidate, GoalPriorCandidateConfig, GoalPriorCandidateResult } from './goal-prior-candidate.js';
+import { recoveryQuantiles } from './recovery.js';
+import { samplePosterior } from './random.js';
+import { mixtureCompletionQuantiles } from './completion.js';
+import type { Completion, PredictionInput } from './types.js';
+
+// PR118の未採択提案に依存する内部adapter。index.ts・公開predictへは追加しない。
+export type NumericAnswerCandidate = 'LOW' | 'MID' | 'HIGH';
+export type RawAnswerCandidate = NumericAnswerCandidate | 'UNKNOWN' | null;
+export type EvidenceSourceCandidate = 'NONE' | 'QUESTION' | 'RECORDS' | 'QUESTION_AND_RECORDS';
+export interface QuestionPriorMappingCandidate {
+  readonly version: string;
+  readonly values: Readonly<Record<NumericAnswerCandidate, { readonly alpha: number; readonly beta: number }>>;
+}
+export interface QuestionPriorAdapterInputCandidate {
+  readonly prediction: PredictionInput;
+  readonly answers: { readonly a: RawAnswerCandidate; readonly b: RawAnswerCandidate };
+  readonly mapping: QuestionPriorMappingCandidate;
+}
+export interface QuestionPriorAdapterResultCandidate extends GoalPriorCandidateResult {
+  readonly rawAnswers: QuestionPriorAdapterInputCandidate['answers'];
+  readonly mappingVersion: string;
+  readonly evidenceSource: { readonly a: EvidenceSourceCandidate; readonly b: EvidenceSourceCandidate };
+  readonly eligible: { readonly a: boolean; readonly b: boolean };
+}
+
+// raw/snapshotの構造不正をmessage解析なしで区別する候補分類。HTTPコードは外側で決める。
+export class QuestionPriorAdapterCandidateError extends TypeError {
+  readonly kind: 'input' | 'config';
+  readonly reason: 'INVALID_ANSWERS' | 'INVALID_ANSWER' | 'INVALID_MAPPING';
+  readonly path: readonly (string | number)[];
+  constructor(kind: 'input' | 'config', reason: QuestionPriorAdapterCandidateError['reason'],
+    path: readonly (string | number)[]) {
+    super(`Invalid question-prior candidate ${kind}`);
+    this.name = 'QuestionPriorAdapterCandidateError';
+    this.kind = kind; this.reason = reason; this.path = Object.freeze([...path]);
+  }
+}
+
+function resolve(input: QuestionPriorAdapterInputCandidate): {
+  prior: GoalPriorCandidate; numeric: { a: boolean; b: boolean }; answers: QuestionPriorAdapterInputCandidate['answers'];
+} {
+  if (!input || typeof input !== 'object' || !input.answers || typeof input.answers !== 'object' || Array.isArray(input.answers)) {
+    throw new QuestionPriorAdapterCandidateError('input', 'INVALID_ANSWERS', ['answers']);
+  }
+  const answers = input.answers;
+  for (const name of ['a', 'b'] as const) {
+    if (!Object.hasOwn(answers, name) || ![null, 'UNKNOWN', 'LOW', 'MID', 'HIGH'].includes(answers[name])) {
+      throw new QuestionPriorAdapterCandidateError('input', 'INVALID_ANSWER', ['answers', name]);
+    }
+  }
+  const mapping = input.mapping;
+  if (!mapping || typeof mapping !== 'object' || typeof mapping.version !== 'string' || !mapping.version.trim() ||
+    !mapping.values || typeof mapping.values !== 'object') {
+    throw new QuestionPriorAdapterCandidateError('config', 'INVALID_MAPPING', ['mapping']);
+  }
+  for (const answer of ['LOW', 'MID', 'HIGH'] as const) {
+    const value = mapping.values[answer];
+    if (!Object.hasOwn(mapping.values, answer) || !value || typeof value !== 'object') {
+      throw new QuestionPriorAdapterCandidateError('config', 'INVALID_MAPPING', ['mapping', 'values', answer]);
+    }
+    for (const shape of ['alpha', 'beta'] as const) {
+      // 保存mappingの破損を未回答fallbackに変換しない。既存整数/Gammaの計算境界を守る。
+      if (!Number.isSafeInteger(value[shape]) || value[shape] < 1) {
+        throw new PredictionConfigError('INVALID_INTEGER', ['mapping', 'values', answer, shape],
+          'Candidate prior shape must be a positive safe integer');
+      }
+    }
+  }
+  const make = (name: 'a' | 'b') => {
+    const answer = answers[name];
+    const numeric = answer !== null && answer !== 'UNKNOWN';
+    return { numeric, value: { ...(numeric ? mapping.values[answer] : { alpha: DEFAULT_CONFIG.prior, beta: DEFAULT_CONFIG.prior }),
+      source: numeric ? `PR118:${answer}` : 'internal-common-fallback',
+      version: numeric ? mapping.version : DEFAULT_CONFIG.modelVersion } };
+  };
+  const a = make('a'), b = make('b');
+  return { prior: { a: a.value, b: b.value }, numeric: { a: a.numeric, b: b.numeric },
+    answers: { a: answers.a, b: answers.b } };
+}
+
+export function evaluateQuestionPriorAdapterCandidate(input: QuestionPriorAdapterInputCandidate,
+  config: GoalPriorCandidateConfig = DEFAULT_CONFIG): QuestionPriorAdapterResultCandidate {
+  const { prior, numeric, answers } = resolve(input);
+  const baseline = evaluateGoalPriorCandidate(input.prediction, prior, config);
+  const origin = { a: baseline.observations.nDD + baseline.observations.nDS,
+    b: baseline.observations.nSD + baseline.observations.nSS };
+  const source = (name: 'a' | 'b'): EvidenceSourceCandidate => numeric[name]
+    ? (origin[name] > 0 ? 'QUESTION_AND_RECORDS' : 'QUESTION') : (origin[name] > 0 ? 'RECORDS' : 'NONE');
+  const evidenceSource = { a: source('a'), b: source('b') };
+  const eligible = { a: evidenceSource.a !== 'NONE', b: evidenceSource.b !== 'NONE' };
+  let coreMetric = baseline.coreMetric;
+  // 達成・今日記録済みを先に保持する。MIDとfallbackの同じ数値から材料の有無を推定しない。
+  if (!baseline.progress.completed && baseline.todayStatus === 'UNRECORDED' && eligible.b && coreMetric.status !== 'available') {
+    coreMetric = { status: 'available', ...recoveryQuantiles(baseline.posterior.b.alpha, baseline.posterior.b.beta) };
+  }
+  let completion: Completion;
+  if (baseline.progress.completed) completion = { status: 'completed' };
+  else if (!eligible.a) completion = { status: 'insufficient', reason: 'NO_DONE_ORIGIN_TRANSITION' };
+  else if (!eligible.b) completion = { status: 'insufficient', reason: 'NO_SKIP_ORIGIN_TRANSITION' };
+  else if (baseline.completion.status === 'available') completion = baseline.completion;
+  else {
+    const scenario = baseline.todayStatus === 'UNRECORDED' ? 'TODAY_DONE' : 'CURRENT_STATE';
+    // 今日のDONE実量はbaselineへ一度だけ加算済み。仮実行は未記録時にだけ残量から引く。
+    const remaining = input.prediction.goal.totalRequired - baseline.progress.done -
+      (baseline.todayStatus === 'UNRECORDED' ? input.prediction.goal.sessionAmount : 0);
+    const amount = BigInt(input.prediction.goal.sessionAmount);
+    const required = remaining <= 0 ? 0 : Number((BigInt(remaining) + amount - 1n) / amount);
+    const quantiles = required === 0 ? { p50Days: 0, p80Days: 0 } : required > config.horizonDays
+      ? { p50Days: null, p80Days: null } : mixtureCompletionQuantiles(
+        samplePosterior(baseline.posterior, config.samples, config.seed),
+        baseline.todayStatus === 'SKIPPED' ? 'SKIPPED' : 'DONE', required, config.horizonDays);
+    completion = { status: 'available', scenario, ...quantiles };
+  }
+  return { ...baseline, rawAnswers: answers, mappingVersion: input.mapping.version, evidenceSource, eligible, coreMetric, completion };
+}

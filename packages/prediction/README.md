@@ -6,9 +6,11 @@
 
 2026-10-03の依頼者承認を[#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)・[#72](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72)・[#73](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73)の「承認済みの限定先行」へ記録した。独立ローカルBranchでEngine計算本体と関連テストを先行できる。正式なアプリへの組み込みは#70完了後で、#70のBLOCKED、FE／BEの依存、正式結合・レビュー・Merge・完了判定のHard依存は維持する。
 
-元の先行作業はmain `af001c6e797b9833a63234bd1646171ac8e8c542`を基点とした。今回の独立レビューbranchは最新main `e449b6cc78cd5261bcd0390f9883e9d37d6773e6`から作成し、2026-10-04の依頼者指示に沿ってcommit／push／通常PRへ出す。依頼者は2026-10-03T08:44ZにFE／BEを含むTypeScript／Nodeの基本構成合意を報告し、反映案は[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)にある。確認時は未Merge。このpackageでは技術Decisionやrootのpackage／workspace／runtime設定を変更していない。2026-10-04の依頼者指示で純粋Engineの検証CIを追加するが、製品の採用runtime・runnerを確定するものではない。質問由来prior／初期seedの追加案は取り込んでいない。
+元の先行作業はmain `af001c6e797b9833a63234bd1646171ac8e8c542`を基点とした。今回の独立レビューbranchは最新main `e449b6cc78cd5261bcd0390f9883e9d37d6773e6`から作成し、2026-10-04の依頼者指示に沿ってcommit／push／通常PRへ出す。依頼者は2026-10-03T08:44ZにFE／BEを含むTypeScript／Nodeの基本構成合意を報告し、反映案は[PR #97](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/97)にある。確認時は未Merge。このpackageでは技術Decisionやrootのpackage／workspace／runtime設定を変更していない。2026-10-04の依頼者指示で純粋Engineの検証CIを追加するが、製品の採用runtime・runnerを確定するものではない。公開predictには質問由来prior／初期seedの追加案を取り込んでいない。内部候補の追加は次節と候補説明へ分ける。
 
 ## 計算の利用条件と処理
+
+2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストを加えてローカル61テストを実行する。独立CDFオラクル3テストは別コマンドで実行する。正式公開された47テストのCIと区別する。D-26の写像・強度・表示・APIを採択済みとは扱わない。
 
 [src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映したが、正式API結合済みではない。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
 
@@ -18,7 +20,7 @@
 4. [random.ts](src/random.ts)は採択済みseedFor／SplitMix32／Box–Muller／Marsaglia–Tsangの順序でa、続けてbを抽選する。[config.ts](src/config.ts)の既定値はmodelVersion=`behavior-persistence-m1-v1`、prior=2、K=200、H=1095、seed=20261012。
 5. [completion.ts](src/completion.ts)は各抽選について将来DONE回数0から初到達日の確率を計算し、等重みに混合する。到達不能な状態だけを除き、微小な確率を切り捨てず、H以後の尾を再正規化しない。累積確率は仕様のepsilon=1e-12で判定する。今日未記録なら1回の仮のsessionを実績と分けて引き、今日記録済みなら実績を増やさずCURRENT_STATEから始める。必要回数がHを超える場合は両分位点null、今日の仮実行で届く場合は0日。
 
-数量・posterior形状はNumberのsafe integer範囲を確認し、厳密性を失う入力は拒否する。configは正の整数prior／K／H、uint32 seed、実装済みmodelVersionを検証する。これは計算の技術的な入力境界で、Productの新しい上限やAPIのエラーコードを採択したものではない。数値部品は内部用で、外部入力は`predict`の検証を通す。
+数量・posterior形状はNumberのsafe integer範囲を確認し、厳密性を失う入力は拒否する。configは正の整数prior／K／H、uint32 seed、実装済みmodelVersionを検証する。これは計算の技術的な入力境界で、Productの新しい上限やAPIのエラーコードを採択したものではない。数値部品は内部用で、外部入力は`predict`の検証を通す。Goal別候補の内部型・検証範囲と極端な非対称priorの性能制約は[候補の説明](GOAL_PRIOR_CANDIDATE.md)を参照する。
 
 ## metadata・公開エラーの契約
 
@@ -59,7 +61,7 @@ package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm tes
 
 ## 検証CI
 
-[prediction.yml](../../.github/workflows/prediction.yml)は、`packages/prediction/**`またはこのworkflowが変わるPR、mainへのpush、手動実行を対象にする。Foundation CIは別に維持する。PRではGitHubのmerge用commitをcheckoutして基底branchとの組み合わせを検証する。同じPR／branchの古い実行は取り消し、各jobは10分で打ち切る。read-only permissions・checkout credentials非保持で、Secret・DB・`pull_request_target`は使わない。fork PRも同じ構成で、GitHub側の実行承認が必要な場合はその制限に従う。
+[prediction.yml](../../.github/workflows/prediction.yml)は、`packages/prediction/**`またはこのworkflowが変わるPR、mainへのpush、手動実行を対象にする。Foundation CIは別に維持する。PRではGitHubのmerge用commitをcheckoutして基底branchとの組み合わせを検証する。候補adapterの独立CDFオラクル3件と18例の再現JSONもNode matrixで確認し、実験フォルダの変更をCI対象に含める。同じPR／branchの古い実行は取り消し、各jobは10分で打ち切る。read-only permissions・checkout credentials非保持で、Secret・DB・`pull_request_target`は使わない。fork PRも同じ構成で、GitHub側の実行承認が必要な場合はその制限に従う。
 
 Ubuntu runnerで、Node 22.15.1とNode 24系（`24.x`）のmatrixを使い、TypeScript 5.8.3を固定する。Node 24系は採用候補での回帰検出を目的に追加し、24.xが解決した実版は各Actionsログで確認する。一方の失敗でももう一方の検証結果を得るためfail-fastは無効にする。これらは検証版で、製品runtimeの最終採択ではない。package内のlockfileには公式npm registryの配布先とintegrityを含め、`npm ci --include=dev --ignore-scripts --no-audit --no-fund`で検証依存だけをinstallする。lifecycle scriptsとcacheは使わない。
 
@@ -71,7 +73,7 @@ npm run typecheck
 npm test
 ```
 
-型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストに内部候補9件を加え、PR118候補adapterの5件も含め、このbranchでは61テストを実行する（候補も同じPR CIで確認する）。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
 
 ## 補完・訂正後の再計算例
 
