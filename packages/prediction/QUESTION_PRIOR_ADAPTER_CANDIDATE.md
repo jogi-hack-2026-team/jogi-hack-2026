@@ -44,7 +44,19 @@ pathはコピーしてfreezeする。全3選択肢のsnapshotを検証し、未�
 
 adapterは実績の残量から`conditionalPlan = { remainingAmount, remainingSessions, lastSessionAmount }`を返す。残量は`max(0, totalRequired − actualDone)`、回数は残量÷sessionAmountの切り上げ、最後の量は残量−(回数−1)×sessionAmount（回数0なら0）。100／60済み／1回15なら40・3・10。今日の仮実行は引かず、DONE実量はactualDoneへ一度だけ含める。達成済みは0・0・0、F17は日数0でも残回数1。これは設定量で続ける場合の量と回数で、予測日数ではない。
 
-Engineが数値を計算し、BEが採択するDTOへ渡し、FEがGoalの単位・文言・表示優先に合わせて描画する案。FEによる独自再計算を必要としない。F15でも値を返すが、どの状態で描画するか、既存Goal不足表示を置換するかはPR118／D-26の採択待ち。公開predictへconditionalPlanを追加しない。候補文書の式と共通固定例に合わせた接続であり、Product正本の未採択表示規則を確定しない。
+[PR118の調整案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/118#issuecomment-5997839152)と[PR120の候補Plan型](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/0d99ae7b5e2a16ca143efdab205bc5fd06e15bf8/experiments/question-prior-ui-candidate/src/presentation-types.ts)に対する受け渡し案を次の表に固定する。PR120の型をこのpackageへimport／コピーせず、正式共有DTOにも採択しない。
+
+| Engine／同じGoal snapshotの値 | PR120 Plan | 責任 |
+| --- | --- | --- |
+| conditionalPlan.remainingAmount | remainingAmount | Engineが実進捗から計算済み。BE／FEはコピー |
+| conditionalPlan.remainingSessions | sessions | FEのview生成で名前を変えるだけ |
+| conditionalPlan.lastSessionAmount | lastAmount | FEのview生成で名前を変えるだけ |
+| Engine入力goal.sessionAmountと同じ設定量 | sessionAmount | BEが同じ計算snapshotの値を付加。最新量を別取得して混ぜない |
+| Engineにはunit入力・出力なし | unit | BEが同じGoal snapshotの単位を付加。FEは採択する共有単位から候補Unitへ対応 |
+
+Engineが数値を一度計算し、BEが同じGoal・ログ・設定量・単位のsnapshotにまとめた応答を渡し、FEが名称とviewへ対応させる案。BE／FEで残量の差し引き・ceil・最後の量を再計算しない。新しいsnapshot ID／revision／API項目の形式はここでは決めない。PR120の候補Unitはminutes／sessionsだが、BEの共有enumからの変換と表示ラベルはD-26の確認対象で、Engineにunitを増やす判断ではない。
+
+例として残量40・回数3・最後10のEngine結果には、BEが同じsnapshotのsessionAmount=15とunitを付加し、FEが`{ remainingAmount: 40, sessions: 3, lastAmount: 10, sessionAmount: 15, unit }`へ値を移す。FEはエラー／再取得待ち・達成済み・今日記録済みの優先を先に解決する。達成済みの計画0／0／0を条件付き表示へ無理に渡さずcompleted viewへ進む。F15でも値を返すが、どの状態で描画するか、既存Goal不足表示を置換するかはPR118／D-26の採択待ち。公開predictへconditionalPlanを追加しない。候補文書の式と共通固定例に合わせた接続であり、Product正本の未採択表示規則を確定しない。
 
 ## レビュー質問・Optionalの扱い
 
