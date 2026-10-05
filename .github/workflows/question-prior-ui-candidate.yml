@@ -1,0 +1,45 @@
+name: Question prior UI candidate
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/question-prior-ui-candidate/**'
+      - 'experiments/architecture-verification/package*.json'
+      - 'packages/prediction/package*.json'
+      - '.github/workflows/question-prior-ui-candidate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/question-prior-ui-candidate/**'
+      - 'experiments/architecture-verification/package*.json'
+      - 'packages/prediction/package*.json'
+      - '.github/workflows/question-prior-ui-candidate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: question-ui-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    name: React candidate types, SSR and preview build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          # Verification host only, not the #70 production runtime decision.
+          node-version: '24.21.0'
+          package-manager-cache: false
+      - name: Install existing locked verification dependencies
+        run: |
+          npm ci --prefix packages/prediction --include=dev --ignore-scripts --no-audit --no-fund
+          npm ci --prefix experiments/architecture-verification --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Check isolated React candidate
+        run: node experiments/question-prior-ui-candidate/scripts/check.mjs

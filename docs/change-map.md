@@ -63,3 +63,7 @@
 表の実装予定は2026-09-30の仕様に基づく。Product機能、DB接続、外部Service、公開配置は未実装・未確認。
 
 #71〜#73の限定先行承認に沿った純粋Engineとテストを追加した。型・入口は[src](../packages/prediction/src/index.ts)、固定例は[fixtures.ts](../packages/prediction/tests/fixtures.ts)、補完・訂正の実行例は[再計算例](../packages/prediction/README.md#補完訂正後の再計算例)。[検証手順・残条件](../packages/prediction/README.md#70後に合わせる点と残条件)を確認する。predictは必須metadataを持つPredictionResultを返し、依頼者承認済みの日数集計と公開例外の[契約](../packages/prediction/README.md#metadata公開エラーの契約)を反映した。API結合や正式受入は未完了。純粋Engineの型検査・数値テストCIを追加した。合意反映案PR #97の統合、#70の基盤・採用runtime・runner・統一CIへの整合は残る。
+
+## R-11追加UIの独立候補
+
+[#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)の[質問・出所表示部品と受け渡し案](../experiments/question-prior-ui-candidate/README.md)はSupporting Artifact。Scope・分担の採択記録はPR115、具体契約提案はPR118、計算adapter候補はPR119で別に追跡する。正式Goal/Today、API/Engine結合は未確認で、#70 Hard・D-26未採択・既存Ready/blockedを変更しない。[src](../experiments/question-prior-ui-candidate/src/presentation-types.ts)・[最小slot例](../experiments/question-prior-ui-candidate/examples/slots.tsx)・[型/SSR/preview buildの再現](../experiments/question-prior-ui-candidate/scripts/check.mjs)・[検証記録](../experiments/question-prior-ui-candidate/VERIFICATION.md)から調査できる。root依存・workspaceは追加していない。
