@@ -11,7 +11,7 @@
 | 確定 | 開発期間：2026-09-19 ～ 2026-10-12 / コードフリーズ：2026-10-12 |
 | DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
 | DECIDED | 2026-09-30にProductを「Future ROI」（今日サボると、ゴールは何日遠ざかる？）に決定し、要件・MVP Scopeを確定した。[Product Spec](docs/product-spec.md#現行状態2026-09-30) |
-| 依頼者のMUST追加方針／チーム採択待ち | 質問から初期確率を置く → 仮の見通し → 実績更新の[R-11・P-15](docs/product-spec.md#p-15-質問由来の見通しのmust追加方針)について、[PR #115](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/115)でチーム採択を求める。現行MustはR-01〜R-10。依頼者方針を撤回せず、別の事前合意を着手条件にしない。具体値・表示・保存／API／Engine契約は[D-26でOPEN](docs/architecture.md#d-26)、未実装 |
+| DECIDED（Scope・分担） | 2026-10-05、[R-11のMust追加と責任分界をチーム採択](docs/product-spec.md#p-15-質問由来の見通しのmust追加方針)。MustはR-01〜R-11。KaitoはEngine・[追加質問UI／出所別表示 #117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)、BEは回答保存／API、FEは既存画面・追加UIの組み込み。数値・具体表示・保存編集／API／Engine契約・判断日は[D-26でOPEN](docs/architecture.md#d-26)、未実装。採択反映PR #115は未Merge |
 | DECIDED | 現行の実績由来の予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
 | DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。版・追加ツール・API細則は未確定 |
 | 条件付き第一候補 | Better Auth＋Cloud Run＋Neonは検証・運用条件付き。[D-24](docs/architecture.md#d-24)／[D-25](docs/architecture.md#d-25)。最終採択・公開受入、一般公開、アカウント・課金作成の許可ではない |
