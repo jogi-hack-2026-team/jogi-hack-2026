@@ -13,7 +13,7 @@
 | Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と46テスト・実Engine T-14。[接続例](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
 | デモデータ（R-09） | [R-09](product-spec.md#requirementsmvp) | 未定（Demo Seedスクリプト） | デモ手順の通し確認 |
 | 公開（R-10） | [Deployment](architecture.md#deployment) | 未定 | 公開URLで主要Flow |
-| 質問由来の見通し（R-11） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[依頼者判断P-15](product-spec.md#p-15-質問由来の見通しをmustへ追加)、[実現方式D-26](architecture.md#d-26) | 未実装。#78・#81・#76・#77・#71・#72へ影響、#73で回帰共有。具体の数値・型・保存・表示契約はOPEN | [既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
+| 質問由来の見通し（R-11） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問文のレビュー用たたき台・論点](product-spec.md#初期質問のレビュー用たたき台)、[依頼者判断P-15](product-spec.md#p-15-質問由来の見通しをmustへ追加)、[実現方式D-26](architecture.md#d-26) | 未実装。#78・#81・#76・#77・#71・#72へ影響、#73で回帰共有。具体の数値・型・保存・表示契約はOPEN | [既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
 
