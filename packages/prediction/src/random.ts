@@ -27,7 +27,7 @@ export function uniform(next: Uint32Source): number {
   return (next() + 0.5) / 4294967296;
 }
 
-// Each normal consumes two uniforms; do not cache the other Box-Muller value.
+// 正規乱数1個につき一様乱数を2個消費する。Box–Mullerのもう一方を保存して使い回すと既定の抽選順が変わる。
 function normal(next: Uint32Source): number {
   return Math.sqrt(-2 * Math.log(uniform(next))) * Math.cos(2 * Math.PI * uniform(next));
 }

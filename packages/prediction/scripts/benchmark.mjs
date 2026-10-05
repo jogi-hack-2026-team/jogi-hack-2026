@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks';
 import { cpus, totalmem, platform, release, arch } from 'node:os';
 import { predict, DEFAULT_CONFIG } from '../dist/src/index.js';
 
-// T-14 measures the real entry, including validation, observations, sampling and DP.
+// T-14では実際の入口を呼び、入力検証・観測集計・乱数抽選・DPを含めて計測する。
 const args = process.argv.slice(2);
 if (args.length > 1 || (args.length === 1 && args[0] !== '--include-midpoint')) {
   throw new Error('Usage: node scripts/benchmark.mjs [--include-midpoint]');
@@ -34,7 +34,7 @@ console.log(JSON.stringify({ criterion: 'T-14: each real predict call <500ms; no
   limitation: 'Measured representative inputs on this machine; not a worst-case or deployment guarantee. 548 is informational only.',
   environment: { node: process.version, platform: platform(), release: release(), arch: arch(),
     cpu: cpus()[0]?.model, logicalCpuCount: cpus().length, memoryGiB: totalmem() / 2 ** 30,
-    // Only public Actions provenance; no credentials or application env are read.
+    // Actionsの公開実行情報だけを記録し、認証情報やアプリ用の環境変数は読まない。
     ...(process.env.GITHUB_ACTIONS === 'true' ? { actions: {
       checkoutSha: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID,
       runAttempt: process.env.GITHUB_RUN_ATTEMPT, runnerOs: process.env.RUNNER_OS,

@@ -53,16 +53,19 @@ jobs:
         run: npm test
       - name: Generate Engine connection input and output examples
         run: node examples/recalculate.mjs > verification/connection-ci.json
+      - name: Generate synthetic 30-day Engine demo inputs and outputs
+        run: node examples/demo-inputs.mjs > verification/demo-inputs-ci.json
       - name: Measure real Engine T-14 on the verification runner
         id: t14
         # The existing <500ms criterion applies to every required call.
         # This runner is verification evidence, not a production host decision.
         run: node scripts/benchmark.mjs > verification/t14-ci.json
-      - name: Check both evidence files are present
+      - name: Check all evidence files are present
         if: ${{ always() && steps.t14.outcome != 'skipped' }}
         run: |
           test -s verification/t14-ci.json
           test -s verification/connection-ci.json
+          test -s verification/demo-inputs-ci.json
       - name: Retain T-14 evidence even when measurement fails
         if: ${{ always() && steps.t14.outcome != 'skipped' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -71,5 +74,6 @@ jobs:
           path: |
             packages/prediction/verification/t14-ci.json
             packages/prediction/verification/connection-ci.json
+            packages/prediction/verification/demo-inputs-ci.json
           if-no-files-found: error
           retention-days: 14

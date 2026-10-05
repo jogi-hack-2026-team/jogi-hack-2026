@@ -13,7 +13,7 @@
 | DECIDED | 2026-09-30にProductを「Future ROI」（今日サボると、ゴールは何日遠ざかる？）に決定し、要件・MVP Scopeを確定した。[Product Spec](docs/product-spec.md#現行状態2026-09-30) |
 | DECIDED（Scope・分担） | 2026-10-05、[R-11のMust追加と責任分界をチーム採択](docs/product-spec.md#p-15-質問由来の見通しのmust追加方針)。MustはR-01〜R-11。KaitoはEngine・[追加質問UI／出所別表示 #117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)、BEは回答保存／API、FEは既存画面・追加UIの組み込み。数値・具体表示・保存編集／API／Engine契約・判断日は[D-26でOPEN](docs/architecture.md#d-26)、未実装 |
 | DECIDED | 現行の実績由来の予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
-| DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。版・追加ツール・API細則は未確定 |
+| DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。2026-10-05に[npm workspacesと`pg`を追加採択](docs/architecture.md#2026-10-05の追加採択)。版・残りの追加ツール・API細則は未確定 |
 | 条件付き第一候補 | Better Auth＋Cloud Run＋Neonは検証・運用条件付き。[D-24](docs/architecture.md#d-24)／[D-25](docs/architecture.md#d-25)。最終採択・公開受入、一般公開、アカウント・課金作成の許可ではない |
 | 限定先行／結合待ち | #71〜#73の承認範囲の[Prediction計算本体・テスト](packages/prediction/README.md)は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。日数metadata・公開例外の契約も依頼者承認を反映。[純粋Engine検証CI](packages/prediction/README.md#検証ci)を追加。アプリ結合・採用基盤への整合・正式受入は未完了。Product画面・API・DB・公開環境は未実装。#70のBLOCKEDと正式Hard依存を維持する |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |

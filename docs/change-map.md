@@ -10,7 +10,7 @@
 | Goal（R-02） | [R-02](product-spec.md#requirementsmvp)、[Data Model](architecture.md#data-model)、[初期量と開始日の境界](architecture.md#初期進捗と日々の記録の境界) | `apps/api/src/goals/`、`apps/api/migrations/`（予定）。#76・#78、開始日の保存・共有と既存Goal互換性は未決 | APIテスト・[開始日等の受入条件](architecture.md#記録補完訂正の受入確認)（未実装・未検証） |
 | 記録・前日補完・訂正（R-03・R-04） | [R-03・R-04](product-spec.md#requirementsmvp)、[P-14の理由・分担と未決事項](product-spec.md#p-14-記録のルール)、[上書きと再計算](architecture.md#記録の上書きと予測の再計算) | `apps/api/src/logs/`、`apps/web/src/routes/`（予定）。#77・#79・#80、昨日の訂正導線は調整待ち | [受入条件・固定例](architecture.md#記録補完訂正の受入確認)（API・UIは未実装・未検証）。[初期量との境界方針は承認済み、開始日保存等はOPEN](architecture.md#初期進捗と日々の記録の境界) |
 | Today Decision（R-05〜R-08） | [表示仕様](product-spec.md#today-decision画面の表示仕様) | `apps/api/src/prediction/`、`apps/web/src/routes/` | APIテスト（`/today`）、E2E |
-| Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と46テスト・実Engine T-14。[接続例](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
+| Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と47テスト・実Engine T-14。[11境界例と30日合成2入力](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
 | デモデータ（R-09） | [R-09](product-spec.md#requirementsmvp) | 未定（Demo Seedスクリプト） | デモ手順の通し確認 |
 | 公開（R-10） | [Deployment](architecture.md#deployment) | 未定 | 公開URLで主要Flow |
 | 質問由来の見通し（R-11、Must採択済み） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[Scope・分担の採択P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 2026-10-05、PR #115でMust追加・分担を採択。追加UIは#117、Engine・BE・既存FEは既存Issueで追跡。未実装、具体値・型・保存・表示契約・判断日はOPEN | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
@@ -54,6 +54,7 @@
 | 提案 | 説明先 | 状態・確認範囲 |
 | --- | --- | --- |
 | 数日間の「やる／休む」を仮置きして比べる | [目的・例・現行Mustとの差・画面・計算・分担・受入条件案](prediction/action-scenarios-proposal.md) | 未採択。定型3例の既存DPへの還元、g50との前提差、表示の再検討案とレビュー報告を記録。実装・ユーザー検証・性能測定なし。Product/API/Prediction仕様・既存Issue依存・Ready/BLOCKEDは変更しない |
+| 同じ行動の経験質問からのa/b初期分布・条件付き計画 | [PROPOSAL詳細](prediction/question-prior-proposal.md)、[判断理由](prediction/decision-log.md#proposalgoal作成時の質問由来priorと条件付き計画)、[Evidence](prediction/evidence.md#質問由来priorの局所検証2026-10-04) | 未採択。純粋[試作・再現手順](../experiments/question-prior-proposal/README.md)と局所テストのみ。R-02/R-06/P-12/D-20/API/T-11/T-15の採択後差分を記載。正式Product/Architecture・本番FE/BE/Engine・既存Issue依存は変更しない |
 
 ## 確認記録と残課題
 

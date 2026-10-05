@@ -1,0 +1,19 @@
+# 実行結果（2026-10-04 UTC）
+
+Supporting Artifact / Not a Source of Truth。Windows11、Core i7-1360P、Node24.21.0、既存TypeScript7.0.2。`verify.ps1`により以下を実行しexit0で完了。ログとrawをこのフォルダに保存した。
+
+| 実行した確認 | 結果・根拠 |
+| --- | --- |
+| `node --test test/prototype.test.mjs` | 14群すべて成功、skipなし。[出力](prototype-test.out)。a/b独立mapping、無経験／不明plan、R06baseline、raw日付・UNKNOWN・起点、prior/raw訂正、amount・今日仮定、達成優先、non-daily、型に加えruntime拒否、exact g、strength感度、独立全経路／DP、決定性／単調性、580原本の整合性 |
+| `node <既存tsc> --noEmit -p tsconfig.json` | strict型検証成功。[出力](typecheck.out)は空（成功時無出力）。TypeScriptの実行だけでは型検証と扱わない |
+| `node analyze.mjs` | 18候補、48起点別感度ケース、20seedケース。[raw](analysis.json)と[出力](analysis.out)。K200/H1095/seed20261012。reference DPの6条件は各1warmup＋3回測定。各処理時間はrawに保存し、最大値は出力に記録。性能保証や実EngineのT-14ではない |
+| `node historical/reference/bgq-boundary-check.mjs` | 独立境界4＋α2閉形式398件成功。旧浮動小数点方法の15/722不一致は修正前手法を検出した結果。[出力](bgq-boundary.out) |
+| `node historical/reference/dp-truncation-check.mjs` | 微小確率例P50=3、独立式4000件と刈り込み600件成功、CDF最大誤差2.89e−15。[出力](dp-regression.out) |
+| `node results/reproduced-580/run.mjs` | 元ハーネス580チェック成功。元artifactは保存したまま、別copyのresultsに再実行。[出力](historical580-reproduced.out)、[再現raw](reproduced-580/results/raw.json) |
+| `node provenance-check.mjs <原調査dir>` | 全コピーのSHA原本一致、580のchecks一致、タイミング／環境の測定値を除いたraw全数値一致。[manifest](provenance.json) |
+
+580は当時と今回で同じハーネスの再実行であり、1160の異なる検証とは数えない。今回の14テスト群とも合算しない。全経路列挙はH8/need3/3draws×9candidate×2起点で独立したオラクル。既存DPソースは原raw記載SHA `3017f33948ea1527a589a913651c04009092f7c8c7ab4cbf876e78e189f28b20` と一致。
+
+rootの別レビュー担当が14群を再実行し、別に27checkの独立オラクルを実行した。DPとのPMF最大差8.67e−19、α1/2閉形式・raw訂正・gap・amount・達成優先・fallbackを確認。上位成果物のROOT_REVIEW_RESULTS.jsonとREVIEW.mdを参照。これは人間のGitHub Approveの代替ではない。
+
+未検証：自己申告mapping／強度の校正、実ユーザー精度・動機づけ・表示理解、本番FE/BE/Engine/API・DB・serializer・権限・timezone変換・編集競合、実EngineのT-14、Cloud負荷／性能、latest origin/Issue/PRとexact-head CI。GitHub接続停止のため公開と採択は未実施。

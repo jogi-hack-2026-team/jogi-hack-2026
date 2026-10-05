@@ -1,10 +1,10 @@
-// Calculation contracts from Architecture; transport validation is separate.
-// The caller supplies YYYY-MM-DD in the Goal timezone; the Engine never reads a clock.
+// Architectureに基づく計算用の契約。HTTP等の外部データ形式の検証とは分ける。
+// 呼び出し側がGoalのtimezoneでYYYY-MM-DDを渡す。Engineは現在時計を読まない。
 export type LocalDate = string;
 
 export interface PredictionInput {
   goal: { totalRequired: number; initialProgress: number; sessionAmount: number };
-  // Quantities use the Goal's unit; DONE uses the actual recorded amount, not sessionAmount.
+  // 量はGoalと同じ単位。DONEは実際の記録量を使い、sessionAmountへ置き換えない。
   logs: { localDate: LocalDate; status: 'DONE' | 'SKIPPED'; amount: number | null }[];
   today: LocalDate;
 }
@@ -21,8 +21,8 @@ export interface Posterior {
   b: { alpha: number; beta: number };
 }
 
-// Discriminants keep an unavailable value distinct from a measured zero-day delay.
-// g50/g80 are integer waiting days, compared exactly with BigInt.
+// statusで計算できない状態と、計算結果が0日の状態を区別する。
+// g50/g80は整数の待ち日数。分位点の閾値をBigIntで厳密に比較する。
 export type CoreMetric =
   | { status: 'available'; g50: number; g80: number }
   | { status: 'insufficient'; reason: 'NO_SKIP_ORIGIN_TRANSITION' }
@@ -42,7 +42,7 @@ export type Completion =
   | { status: 'insufficient'; reason: 'NO_DONE_ORIGIN_TRANSITION' | 'NO_SKIP_ORIGIN_TRANSITION' }
   | { status: 'completed' };
 
-// Calculation-only shape retained for numerical components and incomplete-result type checks.
+// 数値部品と、不完全なResultを拒否する型検査に使う内部計算用の型。
 export interface PredictionCalculation {
   modelVersion: string;
   today: LocalDate;
@@ -55,9 +55,9 @@ export interface PredictionCalculation {
   config: Omit<PredictionConfig, 'modelVersion'>;
 }
 
-// Adopted metadata describes the existing observation window:
-// observedDays counts step1's calendar slots (UNKNOWN included); recordedDays counts stored logs.
-// An empty history has neither an observation origin nor recorded logs, so both values are zero.
+// 採択済みmetadataは既存の観測窓を説明する。
+// observedDaysはstep1の暦日数（UNKNOWNを含む）、recordedDaysは保存された明示ログ件数。
+// 履歴が空なら観測開始日も明示ログもないため、両方0にする。
 export interface PredictionResult extends Omit<PredictionCalculation, 'observations'> {
   observations: PredictionCalculation['observations'] & { observedDays: number; recordedDays: number };
 }

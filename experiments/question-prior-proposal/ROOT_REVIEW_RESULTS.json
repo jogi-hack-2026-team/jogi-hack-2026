@@ -1,0 +1,19 @@
+{
+  "reviewDateUtc": "2026-10-04",
+  "nodeVersion": "24.21.0",
+  "prototypeTestRerun": {"tests":14,"pass":14,"fail":0,"durationMs":677.2746},
+  "independentReviewerChecks": {"checks":27,"pass":27,"maxPmfError":8.673617379884035e-19},
+  "repoHead": "af001c6e797b9833a63234bd1646171ac8e8c542",
+  "repoStatus": "?? .vscode/",
+  "remoteLatestChecked": false,
+  "githubPublicationCompleted": false,
+  "commands": [
+    "node --test test/prototype.test.mjs (cwd: repository-overlay/experiments/question-prior-proposal)",
+    "node ROOT_REVIEW_CHECKS.mjs (cwd: question-prior-proposal)"
+  ],
+  "limitations": [
+    "14 is the number of test groups, not a count added to historical580 individual assertions.",
+    "Historical580 provenance was rechecked; these results are not productionEngine/API/FE validation.",
+    "No user study, calibration result, motivational outcome, real-user accuracy or hosted CI is established."
+  ]
+}

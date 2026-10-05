@@ -1,0 +1,2116 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth; uncalibrated candidates; synthetic arithmetic only",
+  "environment": {
+    "timestamp": "2026-10-04T15:09:06.382Z",
+    "node": "v24.21.0",
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "K": 200,
+    "H": 1095,
+    "seed": 20261012
+  },
+  "historical": {
+    "sourceRepoHead": "af001c6e797b9833a63234bd1646171ac8e8c542",
+    "recordedChecks": 580,
+    "rawSha256": "913e51626fe6700150ddf3fd76e290bac6b09aeadfb5b8cbca49ecc13c10ecbf",
+    "notHumanValidation": true
+  },
+  "sourceHashes": {
+    "src/prototype.ts": "d72a316eb9d1fef1f447f71fab82aad74ffe11bd43f5ca16079e5de1f4e289c2",
+    "test/prototype.test.mjs": "81afc5a36af89eef8befe4e1edd5b903bca09f6f22b36ddc7eb0510ccd8ac6b4",
+    "test/type-contract.ts": "f50b3f10e6b962f1f479dca1ca21219147fde3b7ac0239a56e32687a400f70d4",
+    "reference/completion-dp.mjs": "3017f33948ea1527a589a913651c04009092f7c8c7ab4cbf876e78e189f28b20",
+    "analyze.mjs": "0af7c7e26e6d78b2f74dc457030f3b05fd3684b74c23129c4831c10e9ac6d512",
+    "historical/run.mjs": "d61b63df0d5741873605959cc3aa494c740bc90464b9fbf3cb789e7f52024fec",
+    "historical/REPORT.md": "d1644dd9df9611565c23f24990f13b3587e66495d5f933d5b1fa41f23ddb75fc",
+    "historical/README.md": "377eba0adc30826125ca4e0c28bbc795ecb33a0d020853ff919071f387d9c49b",
+    "historical/results/raw.json": "913e51626fe6700150ddf3fd76e290bac6b09aeadfb5b8cbca49ecc13c10ecbf",
+    "historical/results/summary.json": "5d469e21dbc91a43a5e30bfa970f1d5b98e5b9706cb9719abfc3b3de6977bdfa"
+  },
+  "candidates": [
+    {
+      "strength": 4,
+      "a": [
+        3,
+        1
+      ],
+      "b": [
+        3,
+        1
+      ],
+      "g50": 1,
+      "g80": 2,
+      "p50": 11,
+      "p80": 15,
+      "tailBeyondH": 1.1268763699945345e-16,
+      "meanWait": 1.5
+    },
+    {
+      "strength": 4,
+      "a": [
+        3,
+        1
+      ],
+      "b": [
+        2,
+        2
+      ],
+      "g50": 1,
+      "g80": 3,
+      "p50": 12,
+      "p80": 18,
+      "tailBeyondH": 2.053912595556537e-16,
+      "meanWait": 3
+    },
+    {
+      "strength": 4,
+      "a": [
+        3,
+        1
+      ],
+      "b": [
+        1,
+        3
+      ],
+      "g50": 3,
+      "g80": 12,
+      "p50": 15,
+      "p80": 35,
+      "tailBeyondH": 0.0039050674239618907,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "a": [
+        2,
+        2
+      ],
+      "b": [
+        3,
+        1
+      ],
+      "g50": 1,
+      "g80": 2,
+      "p50": 15,
+      "p80": 18,
+      "tailBeyondH": 1.4876988529977089e-16,
+      "meanWait": 1.5
+    },
+    {
+      "strength": 4,
+      "a": [
+        2,
+        2
+      ],
+      "b": [
+        2,
+        2
+      ],
+      "g50": 1,
+      "g80": 3,
+      "p50": 17,
+      "p80": 25,
+      "tailBeyondH": 2.5146551507759767e-16,
+      "meanWait": 3
+    },
+    {
+      "strength": 4,
+      "a": [
+        2,
+        2
+      ],
+      "b": [
+        1,
+        3
+      ],
+      "g50": 3,
+      "g80": 12,
+      "p50": 27,
+      "p80": 62,
+      "tailBeyondH": 0.009695812568227085,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "a": [
+        1,
+        3
+      ],
+      "b": [
+        3,
+        1
+      ],
+      "g50": 1,
+      "g80": 2,
+      "p50": 18,
+      "p80": 21,
+      "tailBeyondH": 2.070565940925916e-16,
+      "meanWait": 1.5
+    },
+    {
+      "strength": 4,
+      "a": [
+        1,
+        3
+      ],
+      "b": [
+        2,
+        2
+      ],
+      "g50": 1,
+      "g80": 3,
+      "p50": 22,
+      "p80": 31,
+      "tailBeyondH": 3.2585045772748325e-16,
+      "meanWait": 3
+    },
+    {
+      "strength": 4,
+      "a": [
+        1,
+        3
+      ],
+      "b": [
+        1,
+        3
+      ],
+      "g50": 3,
+      "g80": 12,
+      "p50": 39,
+      "p80": 91,
+      "tailBeyondH": 0.014867192039644173,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 8,
+      "a": [
+        6,
+        2
+      ],
+      "b": [
+        6,
+        2
+      ],
+      "g50": 1,
+      "g80": 2,
+      "p50": 11,
+      "p80": 14,
+      "tailBeyondH": 1.226796442210798e-16,
+      "meanWait": 1.4
+    },
+    {
+      "strength": 8,
+      "a": [
+        6,
+        2
+      ],
+      "b": [
+        4,
+        4
+      ],
+      "g50": 1,
+      "g80": 3,
+      "p50": 13,
+      "p80": 17,
+      "tailBeyondH": 1.632027846198979e-16,
+      "meanWait": 2.3333333333333335
+    },
+    {
+      "strength": 8,
+      "a": [
+        6,
+        2
+      ],
+      "b": [
+        2,
+        6
+      ],
+      "g50": 3,
+      "g80": 8,
+      "p50": 16,
+      "p80": 29,
+      "tailBeyondH": 4.703693985974588e-9,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "a": [
+        4,
+        4
+      ],
+      "b": [
+        6,
+        2
+      ],
+      "g50": 1,
+      "g80": 2,
+      "p50": 15,
+      "p80": 18,
+      "tailBeyondH": 1.521005543736464e-16,
+      "meanWait": 1.4
+    },
+    {
+      "strength": 8,
+      "a": [
+        4,
+        4
+      ],
+      "b": [
+        4,
+        4
+      ],
+      "g50": 1,
+      "g80": 3,
+      "p50": 17,
+      "p80": 23,
+      "tailBeyondH": 2.4424906541753426e-16,
+      "meanWait": 2.3333333333333335
+    },
+    {
+      "strength": 8,
+      "a": [
+        4,
+        4
+      ],
+      "b": [
+        2,
+        6
+      ],
+      "g50": 3,
+      "g80": 8,
+      "p50": 25,
+      "p80": 44,
+      "tailBeyondH": 3.756155101708458e-7,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "a": [
+        2,
+        6
+      ],
+      "b": [
+        6,
+        2
+      ],
+      "g50": 1,
+      "g80": 2,
+      "p50": 18,
+      "p80": 21,
+      "tailBeyondH": 1.926236947724645e-16,
+      "meanWait": 1.4
+    },
+    {
+      "strength": 8,
+      "a": [
+        2,
+        6
+      ],
+      "b": [
+        4,
+        4
+      ],
+      "g50": 1,
+      "g80": 3,
+      "p50": 22,
+      "p80": 28,
+      "tailBeyondH": 3.1863400806741974e-16,
+      "meanWait": 2.3333333333333335
+    },
+    {
+      "strength": 8,
+      "a": [
+        2,
+        6
+      ],
+      "b": [
+        2,
+        6
+      ],
+      "g50": 3,
+      "g80": 8,
+      "p50": 35,
+      "p80": 60,
+      "tailBeyondH": 0.000005803815380341914,
+      "meanWait": 7
+    }
+  ],
+  "sensitivity": [
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 0,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 0,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 0,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 1,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 1,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          4,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.8,
+      "meanA": 0.8,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 1,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 1,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          2
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.8,
+      "meanA": 0.6,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 1,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 1,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          2
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.8,
+      "meanA": 0.6,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 4,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 4,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          7,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.5,
+      "meanA": 0.875,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 4,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 4,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          5
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.5,
+      "meanA": 0.375,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 4,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 2,
+        "ds": 2,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          5,
+          3
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.5,
+      "meanA": 0.625,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 12,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 12,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          15,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.25,
+      "meanA": 0.9375,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 12,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 12,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          13
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.25,
+      "meanA": 0.1875,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "D",
+      "n": 12,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 6,
+        "ds": 6,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          9,
+          7
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 0.25,
+      "meanA": 0.5625,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 0,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 0,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 0,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          1
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 1,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 1,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          4,
+          1
+        ]
+      },
+      "priorWeight": 0.8,
+      "meanA": 0.75,
+      "meanB": 0.8,
+      "g50": 1,
+      "g80": 1
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 1,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 1
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          2
+        ]
+      },
+      "priorWeight": 0.8,
+      "meanA": 0.75,
+      "meanB": 0.6,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 1,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 1
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          2
+        ]
+      },
+      "priorWeight": 0.8,
+      "meanA": 0.75,
+      "meanB": 0.6,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 4,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 4,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          7,
+          1
+        ]
+      },
+      "priorWeight": 0.5,
+      "meanA": 0.75,
+      "meanB": 0.875,
+      "g50": 1,
+      "g80": 1
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 4,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 4
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          5
+        ]
+      },
+      "priorWeight": 0.5,
+      "meanA": 0.75,
+      "meanB": 0.375,
+      "g50": 2,
+      "g80": 5
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 4,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 2,
+        "ss": 2
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          5,
+          3
+        ]
+      },
+      "priorWeight": 0.5,
+      "meanA": 0.75,
+      "meanB": 0.625,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 12,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 12,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          15,
+          1
+        ]
+      },
+      "priorWeight": 0.25,
+      "meanA": 0.75,
+      "meanB": 0.9375,
+      "g50": 1,
+      "g80": 1
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 12,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 12
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          3,
+          13
+        ]
+      },
+      "priorWeight": 0.25,
+      "meanA": 0.75,
+      "meanB": 0.1875,
+      "g50": 4,
+      "g80": 10
+    },
+    {
+      "strength": 4,
+      "origin": "S",
+      "n": 12,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 6,
+        "ss": 6
+      },
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          9,
+          7
+        ]
+      },
+      "priorWeight": 0.25,
+      "meanA": 0.75,
+      "meanB": 0.5625,
+      "g50": 1,
+      "g80": 3
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 0,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 0,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 0,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 1,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 1,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          7,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.8888888888888888,
+      "meanA": 0.7777777777777778,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 1,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 1,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          3
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.8888888888888888,
+      "meanA": 0.6666666666666666,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 1,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 1,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          3
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.8888888888888888,
+      "meanA": 0.6666666666666666,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 4,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 4,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          10,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.6666666666666666,
+      "meanA": 0.8333333333333334,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 4,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 4,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          6
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.6666666666666666,
+      "meanA": 0.5,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 4,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 2,
+        "ds": 2,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          8,
+          4
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.6666666666666666,
+      "meanA": 0.6666666666666666,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 12,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 12,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          18,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.4,
+      "meanA": 0.9,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 12,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 12,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          14
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.4,
+      "meanA": 0.3,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "D",
+      "n": 12,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 6,
+        "ds": 6,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          12,
+          8
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 0.4,
+      "meanA": 0.6,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 0,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 0,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 0,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          2
+        ]
+      },
+      "priorWeight": 1,
+      "meanA": 0.75,
+      "meanB": 0.75,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 1,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 1,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          7,
+          2
+        ]
+      },
+      "priorWeight": 0.8888888888888888,
+      "meanA": 0.75,
+      "meanB": 0.7777777777777778,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 1,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 1
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          3
+        ]
+      },
+      "priorWeight": 0.8888888888888888,
+      "meanA": 0.75,
+      "meanB": 0.6666666666666666,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 1,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 1
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          3
+        ]
+      },
+      "priorWeight": 0.8888888888888888,
+      "meanA": 0.75,
+      "meanB": 0.6666666666666666,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 4,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 4,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          10,
+          2
+        ]
+      },
+      "priorWeight": 0.6666666666666666,
+      "meanA": 0.75,
+      "meanB": 0.8333333333333334,
+      "g50": 1,
+      "g80": 1
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 4,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 4
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          6
+        ]
+      },
+      "priorWeight": 0.6666666666666666,
+      "meanA": 0.75,
+      "meanB": 0.5,
+      "g50": 1,
+      "g80": 3
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 4,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 2,
+        "ss": 2
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          8,
+          4
+        ]
+      },
+      "priorWeight": 0.6666666666666666,
+      "meanA": 0.75,
+      "meanB": 0.6666666666666666,
+      "g50": 1,
+      "g80": 2
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 12,
+      "outcome": "success",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 12,
+        "ss": 0
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          18,
+          2
+        ]
+      },
+      "priorWeight": 0.4,
+      "meanA": 0.75,
+      "meanB": 0.9,
+      "g50": 1,
+      "g80": 1
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 12,
+      "outcome": "failure",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 12
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          6,
+          14
+        ]
+      },
+      "priorWeight": 0.4,
+      "meanA": 0.75,
+      "meanB": 0.3,
+      "g50": 2,
+      "g80": 6
+    },
+    {
+      "strength": 8,
+      "origin": "S",
+      "n": 12,
+      "outcome": "half",
+      "syntheticIndependentOriginCounts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 6,
+        "ss": 6
+      },
+      "posterior": {
+        "a": [
+          6,
+          2
+        ],
+        "b": [
+          12,
+          8
+        ]
+      },
+      "priorWeight": 0.4,
+      "meanA": 0.75,
+      "meanB": 0.6,
+      "g50": 1,
+      "g80": 2
+    }
+  ],
+  "sensitivityCaveat": "Independent origin stress inputs, never persisted as ActionLogs or treated as one observed chronology.",
+  "seedSensitivity": [
+    {
+      "strength": 4,
+      "need": 9,
+      "seed": 20261012,
+      "g50": 3,
+      "g80": 12,
+      "p50": 39,
+      "p80": 91,
+      "tailBeyondH": 0.014867192039644173,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 9,
+      "seed": 20261013,
+      "g50": 3,
+      "g80": 12,
+      "p50": 42,
+      "p80": 96,
+      "tailBeyondH": 0.027410493262326,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 9,
+      "seed": 20261014,
+      "g50": 3,
+      "g80": 12,
+      "p50": 43,
+      "p80": 118,
+      "tailBeyondH": 0.01818276454979497,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 9,
+      "seed": 20261015,
+      "g50": 3,
+      "g80": 12,
+      "p50": 43,
+      "p80": 124,
+      "tailBeyondH": 0.03353414837639,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 9,
+      "seed": 20261016,
+      "g50": 3,
+      "g80": 12,
+      "p50": 43,
+      "p80": 106,
+      "tailBeyondH": 0.024264421814556465,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 120,
+      "seed": 20261012,
+      "g50": 3,
+      "g80": 12,
+      "p50": 551,
+      "p80": null,
+      "tailBeyondH": 0.23229402129893637,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 120,
+      "seed": 20261013,
+      "g50": 3,
+      "g80": 12,
+      "p50": 580,
+      "p80": null,
+      "tailBeyondH": 0.24037693930370932,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 120,
+      "seed": 20261014,
+      "g50": 3,
+      "g80": 12,
+      "p50": 573,
+      "p80": null,
+      "tailBeyondH": 0.29249626334062173,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 120,
+      "seed": 20261015,
+      "g50": 3,
+      "g80": 12,
+      "p50": 624,
+      "p80": null,
+      "tailBeyondH": 0.2719223442836826,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 4,
+      "need": 120,
+      "seed": 20261016,
+      "g50": 3,
+      "g80": 12,
+      "p50": 604,
+      "p80": null,
+      "tailBeyondH": 0.25580596509784,
+      "meanWait": "Infinity (not displayed)"
+    },
+    {
+      "strength": 8,
+      "need": 9,
+      "seed": 20261012,
+      "g50": 3,
+      "g80": 8,
+      "p50": 35,
+      "p80": 60,
+      "tailBeyondH": 0.000005803815380341914,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 9,
+      "seed": 20261013,
+      "g50": 3,
+      "g80": 8,
+      "p50": 39,
+      "p80": 69,
+      "tailBeyondH": 0.0002904208421610159,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 9,
+      "seed": 20261014,
+      "g50": 3,
+      "g80": 8,
+      "p50": 39,
+      "p80": 71,
+      "tailBeyondH": 2.9716528772705243e-8,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 9,
+      "seed": 20261015,
+      "g50": 3,
+      "g80": 8,
+      "p50": 40,
+      "p80": 78,
+      "tailBeyondH": 0.002253558734844363,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 9,
+      "seed": 20261016,
+      "g50": 3,
+      "g80": 8,
+      "p50": 38,
+      "p80": 65,
+      "tailBeyondH": 0.0002735916580183303,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 120,
+      "seed": 20261012,
+      "g50": 3,
+      "g80": 8,
+      "p50": 485,
+      "p80": 765,
+      "tailBeyondH": 0.09243777860815355,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 120,
+      "seed": 20261013,
+      "g50": 3,
+      "g80": 8,
+      "p50": 534,
+      "p80": 892,
+      "tailBeyondH": 0.14148763334546227,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 120,
+      "seed": 20261014,
+      "g50": 3,
+      "g80": 8,
+      "p50": 522,
+      "p80": 947,
+      "tailBeyondH": 0.1527032180971722,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 120,
+      "seed": 20261015,
+      "g50": 3,
+      "g80": 8,
+      "p50": 558,
+      "p80": 1048,
+      "tailBeyondH": 0.19072939181945373,
+      "meanWait": 7
+    },
+    {
+      "strength": 8,
+      "need": 120,
+      "seed": 20261016,
+      "g50": 3,
+      "g80": 8,
+      "p50": 528,
+      "p80": 845,
+      "tailBeyondH": 0.10687893809506327,
+      "meanWait": 7
+    }
+  ],
+  "timings": [
+    {
+      "strength": 4,
+      "need": 120,
+      "ms": [
+        71.24109999999996,
+        73.55819999999994,
+        76.19299999999998
+      ],
+      "measuredPart": "reference DP only",
+      "oneWarmup": true
+    },
+    {
+      "strength": 4,
+      "need": 400,
+      "ms": [
+        153.88239999999996,
+        170.19139999999993,
+        156.5619999999999
+      ],
+      "measuredPart": "reference DP only",
+      "oneWarmup": true
+    },
+    {
+      "strength": 4,
+      "need": 1095,
+      "ms": [
+        11.807800000000043,
+        10.574100000000271,
+        9.915399999999863
+      ],
+      "measuredPart": "reference DP only",
+      "oneWarmup": true
+    },
+    {
+      "strength": 8,
+      "need": 120,
+      "ms": [
+        70.47620000000006,
+        73.07099999999991,
+        72.14919999999984
+      ],
+      "measuredPart": "reference DP only",
+      "oneWarmup": true
+    },
+    {
+      "strength": 8,
+      "need": 400,
+      "ms": [
+        158.94320000000016,
+        157.19010000000026,
+        184.0662000000002
+      ],
+      "measuredPart": "reference DP only",
+      "oneWarmup": true
+    },
+    {
+      "strength": 8,
+      "need": 1095,
+      "ms": [
+        10.806300000000192,
+        10.768000000000029,
+        11.543700000000172
+      ],
+      "measuredPart": "reference DP only",
+      "oneWarmup": true
+    }
+  ],
+  "persistedExample": {
+    "schemaVersion": 1,
+    "mappingVersion": "same-action-s4-v1",
+    "revision": 1,
+    "actionSpec": "same-action:10-minutes:daily:v1",
+    "answers": {
+      "experience": "same_action",
+      "afterDone": "often",
+      "afterSkip": "rarely"
+    },
+    "a": [
+      3,
+      1
+    ],
+    "b": [
+      1,
+      3
+    ],
+    "sourceA": "questionnaire",
+    "sourceB": "questionnaire"
+  },
+  "examples": {
+    "questionnaireOnly": {
+      "counts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "actualDone": 0,
+      "todayStatus": "UNRECORDED",
+      "projectedDone": 10,
+      "requiredFutureDone": 9,
+      "posterior": {
+        "a": [
+          3,
+          1
+        ],
+        "b": [
+          1,
+          3
+        ]
+      },
+      "provenance": {
+        "a": {
+          "initialSource": "questionnaire",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "QUESTIONNAIRE_ONLY"
+        },
+        "b": {
+          "initialSource": "questionnaire",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "QUESTIONNAIRE_ONLY"
+        }
+      },
+      "diagnostics": [],
+      "core": {
+        "status": "available",
+        "g50": 3,
+        "g80": 12,
+        "basis": {
+          "initialSource": "questionnaire",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "QUESTIONNAIRE_ONLY"
+        }
+      },
+      "completion": {
+        "status": "available",
+        "p50Days": 15,
+        "p80Days": 35,
+        "scenario": "TODAY_DONE",
+        "basisA": {
+          "initialSource": "questionnaire",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "QUESTIONNAIRE_ONLY"
+        },
+        "basisB": {
+          "initialSource": "questionnaire",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "QUESTIONNAIRE_ONLY"
+        }
+      },
+      "plan": null
+    },
+    "unknown": {
+      "counts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "actualDone": 0,
+      "todayStatus": "UNRECORDED",
+      "projectedDone": 10,
+      "requiredFutureDone": 9,
+      "posterior": {
+        "a": [
+          2,
+          2
+        ],
+        "b": [
+          2,
+          2
+        ]
+      },
+      "provenance": {
+        "a": {
+          "initialSource": "common",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "COMMON_ONLY"
+        },
+        "b": {
+          "initialSource": "common",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "COMMON_ONLY"
+        }
+      },
+      "diagnostics": [
+        "ANSWERS_IGNORED_WITHOUT_SAME_ACTION_EXPERIENCE"
+      ],
+      "core": {
+        "status": "conditional_plan",
+        "reason": "NO_SKIP_BASIS"
+      },
+      "completion": {
+        "status": "conditional_plan",
+        "reason": "MISSING_ORIGIN_BASIS"
+      },
+      "plan": {
+        "status": "conditional_plan",
+        "remainingSessions": 10,
+        "daysFromToday": 9,
+        "assumption": "FROM_TODAY_DAILY_ONE_SESSION"
+      }
+    },
+    "baseline": {
+      "counts": {
+        "dd": 0,
+        "ds": 0,
+        "sd": 0,
+        "ss": 0
+      },
+      "actualDone": 0,
+      "todayStatus": "UNRECORDED",
+      "projectedDone": 10,
+      "requiredFutureDone": 9,
+      "posterior": {
+        "a": [
+          2,
+          2
+        ],
+        "b": [
+          2,
+          2
+        ]
+      },
+      "provenance": {
+        "a": {
+          "initialSource": "common",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "COMMON_ONLY"
+        },
+        "b": {
+          "initialSource": "common",
+          "observations": 0,
+          "priorWeight": 1,
+          "label": "COMMON_ONLY"
+        }
+      },
+      "diagnostics": [],
+      "core": {
+        "status": "insufficient",
+        "reason": "NO_SKIP_ORIGIN_TRANSITION"
+      },
+      "completion": {
+        "status": "insufficient",
+        "reason": "NO_DONE_ORIGIN_TRANSITION"
+      },
+      "plan": null
+    }
+  }
+}
