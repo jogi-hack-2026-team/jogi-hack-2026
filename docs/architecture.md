@@ -6,7 +6,7 @@ Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの�
 
 旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
-2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しをmustへ追加)で質問由来の仮の見通しをMUSTへ追加した。機能Scopeの依頼者判断と、数値・保存・API・Engine契約の採択を分ける。[D-26](#d-26)はOPENで、以下の実績由来Engine契約・D-20の共通priorは現行実装の契約として保持する。新機能の実装は未完了。
+2026-10-05、依頼者は[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMUST追加を指示し、PR #115をチーム採択の場とする。チーム採択は未完了。数値・保存・API・Engine契約の[D-26](#d-26)もOPENで、以下の実績由来Engine契約・D-20の共通priorは現行契約として保持する。新機能の実装は未完了。
 
 ## System構成
 
@@ -441,13 +441,13 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-17 | 2026-09-29 | DECIDED | [旧音楽案向け設計の適用終了](#d-17-音楽案に依存したarchitectureの適用終了) |
 | D-18 | 2026-09-30 → 2026-10-03 | SUPERSEDED by D-23（基本構成の未定状態） | [旧開発スタックの一時退避](#d-18-旧開発スタックの一時退避)は履歴として保持。復元・検証は未完了 |
 | D-19 | 2026-09-30 | DECIDED | [予測モデルにM1（2状態Bayesian Markov）を採用、M0・M2は不採用](#d-19)（ADR-001） |
-| D-20 | 2026-09-30 | DECIDED | [事前分布をBeta(2,2)とする](#d-20)（ADR-002） |
+| D-20 | 2026-09-30 | DECIDED（現行の共通prior。回答由来案はD-26でOPEN） | [事前分布をBeta(2,2)とする範囲と変更案](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
 | D-23 | 2026-09-30 → 2026-10-03 | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23) |
 | D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
-| D-26 | 2026-10-05 | OPEN（機能ScopeはP-15でDECIDED） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
+| D-26 | 2026-10-05 | OPEN（依頼者MUST方針、機能のチーム採択もPR #115で確認） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
@@ -470,6 +470,8 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 ### D-20
 
 2026-09-30 / **DECIDED（依頼者判断）** / ADR-002。a・bとも事前分布をBeta(2,2)とする。合成ユーザー・14〜60日分の記録・今回の評価指標の範囲で、Beta(0.5,0.5) / Beta(1,1) / Beta(2,2)を比べ、少ないデータでの誇張・誤差・不安定さを最も抑えたEngineering Prior。実ユーザーデータから推定した事前分布ではない。[詳細](prediction/decision-log.md#adr-002-事前分布beta22)。
+
+現行の実績由来モードにこの共通priorを適用する。R-11の回答別初期分布案は[D-26](#d-26)で採択待ちであり、質問回答だけの計算・不明時の共通prior・既存Goal互換性の適用範囲を決めてから、置き換える部分を本項と索引へ反映する。現時点でD-20全体を廃止・置換せず、比較結果を質問の数値校正へ転用しない。
 
 ### D-21
 

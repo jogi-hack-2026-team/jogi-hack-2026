@@ -13,13 +13,13 @@
 | Prediction Engine（限定先行、正式結合待ち） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と46テスト・実Engine T-14。[接続例](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。採用基盤への整合は#70後 |
 | デモデータ（R-09） | [R-09](product-spec.md#requirementsmvp) | 未定（Demo Seedスクリプト） | デモ手順の通し確認 |
 | 公開（R-10） | [Deployment](architecture.md#deployment) | 未定 | 公開URLで主要Flow |
-| 質問由来の見通し（R-11） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問文のレビュー用たたき台・論点](product-spec.md#初期質問のレビュー用たたき台)、[依頼者判断P-15](product-spec.md#p-15-質問由来の見通しをmustへ追加)、[実現方式D-26](architecture.md#d-26) | 未実装。#78・#81・#76・#77・#71・#72へ影響、#73で回帰共有。具体の数値・型・保存・表示契約はOPEN | [既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
+| 質問由来の見通し（R-11、採択案） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[依頼者MUST方針P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 依頼者MUST追加方針、PR #115でチーム採択待ち。未実装。既存7 Issueへ影響し、具体値・型・保存・表示契約はOPEN | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
 
 ### R-11の既存Issueへの対応
 
-機能Scopeは依頼者がMUSTへ追加、実現方式はD-26でOPEN。提案公開・判断追跡は既存[#107](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/107)、公開案・レビューは[#108](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/108)に集約し、重複Issueを作らない。下表は影響と確認予定であり、既存Issueの担当・Hard依存・Ready/BLOCKED・元の完了チェックを自動変更しない。
+依頼者のMUST追加方針を維持し、機能Scope・受入・担当案のチーム採択は[PR #115](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/115)で求める。実現方式はD-26でOPEN。判断と公開結果は既存[#107](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/107)、試作・数値根拠は[#108](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/108)へ追跡し、別の事前合意Issueを作らない。下表は影響と確認予定であり、既存Issueの担当・Hard依存・Ready/BLOCKED・元の完了チェックを自動変更しない。
 
 | 既存Issue | 追加機能による影響 | 具体契約の採択後に確認する内容 |
 | --- | --- | --- |
