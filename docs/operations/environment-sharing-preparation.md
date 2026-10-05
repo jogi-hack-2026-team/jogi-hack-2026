@@ -25,7 +25,7 @@ mise run --skip-tools check:staged
 | `BETTER_AUTH_SECRET` | Better Authの採択・実装後にAPIが使うSecret。#75で生成・更新・読込の条件を確定する | Secret。例には空欄だけを置く。今回生成しない |
 | `BETTER_AUTH_URL` | Better Authの採択・実装後に使う公開base URL。ローカル/staging/productionのorigin整合を確認する | Secretそのものではないが環境ごとに設定する。未作成のURLを成功例として埋めない |
 
-候補技術名と既存Deploymentの記載に合わせた準備であり、新しい必須変数・起動時検証・FE公開prefixを採択していない。アプリ実装側が確定した項目だけを追加し、用途・利用側・必須条件・例・読込手順を同じ変更で更新する。
+候補技術名と既存Deploymentの記載に合わせた準備であり、新しい必須変数・起動時検証・FE公開prefixを採択していない。現時点でFE専用に必要な環境変数はない。アプリ実装側が確定した項目だけを追加し、用途・利用側・必須条件・例・読込手順を同じ変更で更新する。
 
 ## 安全な共有手順の案
 
