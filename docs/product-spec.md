@@ -4,7 +4,7 @@
 
 **Productは「Future ROI」。** 2026-09-30の依頼者決定で、Problem・Target User・Core Value・MVP要件・Must / Should / Couldを本書に確定した（[P-11](#p-11-future-roiの採用とcoreの境界)〜[P-14](#p-14-記録のルール)）。Product機能は未実装であり、実ユーザーでの需要・効果は未検証。予測方式と技術構成は[Architecture](architecture.md#現行状態2026-09-30)を正本とする。
 
-2026-10-05、[PR #115の公開レビューに基づきR-11のMust追加と分担を採択](#p-15-質問由来の見通しのmust追加方針)した。現行MVPのMustはR-01〜R-11とPrediction Engineのテスト。KaitoがEngine・追加質問UI／出所別表示、BEが回答保存／API、FEが既存画面・追加UIの組み込みを担う。数値・強さ・具体表示条件・保存編集／API契約・判断日は[D-26でOPEN](architecture.md#d-26)で、機能実装は未完了。文書反映のPRは未Merge。Scope採択を実装着手・完了・期限決定の証拠にしない。
+2026-10-05、[PR #115の公開レビューに基づきR-11のMust追加と分担を採択](#p-15-質問由来の見通しのmust追加方針)した。現行MVPのMustはR-01〜R-11とPrediction Engineのテスト。KaitoがEngine・追加質問UI／出所別表示、BEが回答保存／API、FEが既存画面・追加UIの組み込みを担う。数値・強さ・具体表示条件・保存編集／API契約・判断日は[D-26でOPEN](architecture.md#d-26)で、機能実装は未完了。Scope採択を実装着手・完了・期限決定の証拠にしない。
 
 旧音楽探索案は[P-10](#p-10-音楽探索案の廃止)で廃止した。旧案の要件・Scopeは[旧Product Spec](../archive/music-exploration/docs/product-spec.md)に履歴として保管し、現行へ持ち越さない。
 

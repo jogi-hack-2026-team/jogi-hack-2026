@@ -6,7 +6,7 @@ Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの�
 
 旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
-2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMust追加と分担をPR #115でチーム採択した。数値・保存編集・API／Engine・表示の具体契約と判断日は[D-26](#d-26)でOPEN。以下の実績由来Engine契約・D-20の共通priorは具体方式の判断まで現行契約として保持する。機能実装と採択文書のmain反映は未完了。
+2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMust追加と分担をPR #115でチーム採択した。数値・保存編集・API／Engine・表示の具体契約と判断日は[D-26](#d-26)でOPEN。以下の実績由来Engine契約・D-20の共通priorは具体方式の判断まで現行契約として保持する。機能実装は未完了。
 
 ## System構成
 
