@@ -97,8 +97,9 @@ export function replayGoldens() {
     config: evidence.config, nontrivialCases: cases.length, cases,
     maxCdfError: Math.max(...cases.map(c => c.maxCdfError)),
     independence: evidence.independence,
-    remaining: ['13 reported material-gate differences', 'raw/source/context metadata and N04 error contract',
-      'API/DB/UI integration and runtime adoption', 'calibration, prediction accuracy and user understanding'],
+    remaining: ['public Engine/API adoption of gate/source/version/error contracts; latest local adapter progress is not exercised here',
+      'saved context/revision and API/DB/UI integration', 'runtime adoption and selected-prior performance',
+      'calibration, prediction accuracy and user understanding'],
   };
 }
 

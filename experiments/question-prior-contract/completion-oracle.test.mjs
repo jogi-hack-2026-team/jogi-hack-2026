@@ -30,7 +30,7 @@ test('nine frozen completion-day goldens match the shared sampler/DP and indepen
   assert.ok(replay.maxCdfError < 1e-11);
 });
 
-test('zero/horizon cases remain separate from nine nontrivial goldens and reported integration gaps remain explicit', () => {
+test('zero/horizon cases remain separate from nine nontrivial goldens and original numeric-entry comparisons remain historical', () => {
   const fixture = JSON.parse(readFileSync(new URL('./common-fixtures.json', import.meta.url), 'utf8'));
   for (const id of ['F17', 'F18']) {
     const c = fixture.calculationExamples.find(c => c.id === id);

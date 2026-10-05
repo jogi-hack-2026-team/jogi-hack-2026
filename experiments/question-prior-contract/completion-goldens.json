@@ -349,6 +349,11 @@
       }
     }
   ],
+  "historicalComparison": {
+    "entry": "original internal numeric-snapshot candidate before the question-prior adapter",
+    "scope": "gateDifferenceIds, priorErrorDifference and producerReportedTests below retain the original verification snapshot; they are not current adapter gaps",
+    "latestLocalAdapter": "2026-10-05 producer logs/manifest report 13 gates connected, raw/source/mapping validation added, 18 cases and 9 goldens unchanged; 61 package tests and 3 oracle tests pass. Uncommitted/unpublished at that verification snapshot; public predict/API/UI unchanged."
+  },
   "gateDifferenceIds": [
     "F03",
     "F04",

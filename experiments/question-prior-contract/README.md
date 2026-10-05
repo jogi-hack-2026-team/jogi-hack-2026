@@ -33,8 +33,10 @@ node experiments/question-prior-contract/verify-completion.mjs
 node --test experiments/question-prior-contract/completion-oracle.test.mjs
 ```
 
-コンパイラ呼出しで既存sourceからignoredなdistを生成する。再現スクリプトは共有RNGの全200drawのhashを確認し、9件のP50／P80、H=1095全日のDP／独立CDF一致、刈り込みあり／なしを確認して結果JSONを更新する。テストは独立CDF対整数重み列挙、9件の固定値、0／H超と残る接続差の3件。失敗は非0で終了する。別runtimeのdraw hash不一致を、対応済み／同一goldenとは扱わない。
+コンパイラ呼出しで既存sourceからignoredなdistを生成する。再現スクリプトは共有RNGの全200drawのhashを確認し、9件のP50／P80、H=1095全日のDP／独立CDF一致、刈り込みあり／なしを確認して結果JSONを更新する。テストは独立CDF対整数重み列挙、9件の固定値、0／H超と旧入口の比較履歴の3件。失敗は非0で終了する。別runtimeのdraw hash不一致を、対応済み／同一goldenとは扱わない。
 
 F03=3／6日、F07=3／11日、F14=2／2日。最大CDF差は約5.6e-16。独立なのは条件付き分布の計算法で、RNG／Beta samplerは共有する。参照CDF許容誤差1e-11はProductionの分位点epsilon1e-12と別で、後者は変更しない。校正・予測精度、別runtimeやT-14全条件を保証しない。
 
-Engine担当のローカル候補＋実験adapterでは18例の観測・実績・事後・中心等を照合した。ただし候補本体の材料gateには13例の状態／不足理由差が残り、raw回答・出所metadataも正式接続前。N04の不正priorは候補ではRangeError、提案はPredictionConfigError候補という差がある。保存／HTTP／UIの10統合例・revision／409・Goal作成再送は未実行。具体契約・本番配線は未採択。
+元のnumeric-snapshot候補＋実験adapterでは18例の観測・実績・事後・中心等を照合した。この元比較の材料gate13件・N04 RangeErrorは旧numeric入口の履歴としてJSONに残す。2026-10-05の最新担当ログ・manifestでは、新しい内部adapterがraw回答・保存済みmapping・a／b別出所とgateを接続し、13件を解消した。18例・完了DP9件は元の値に一致し、不正mapping形状はPredictionConfigError／INVALID_INTEGER／mapping配下のpathへ分類された。候補61＋独立CDF3テスト・型検査の成功はログ確認した担当検証で、本PRで61件を実行した件数や公開CIの成功には数えない。
+
+最新検証記録時点のadapterは未公開・未commitで、公開`predict`・API／DB／UIは変わらない。この再現スクリプトも新adapterを呼ばず、公開済みの数学部品だけを検証する。保存context／revision、出所・version・errorの正式公開契約、保存／HTTP／UIの10統合例・409・Goal作成再送は接続前。具体契約・本番配線は未採択。

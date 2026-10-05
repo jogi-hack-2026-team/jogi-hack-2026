@@ -124,9 +124,13 @@ Goal作成POSTの通信断は、Goal IDが返っていない場合の再取得�
 
 内部Engine入口名・export・validation reason/pathは担当レビューで揃える。candidate modeの結果で従来の`config.prior:2`を「今回使った初期分布」として返さず、実際のa／b初期Beta・versionを追跡できる形にする。公開legacyのconfig/resultは保持する。
 
-追加Evidenceでは、PR118の元HEAD `c3bd5ef`の18計算例を、Engine担当のローカル候補＋実験adapterで照合した。入力・実績・隣接ログ・事後分布・出所・中心の固定値が一致し、非自明な完了DP9例は共有samplerと独立な条件付きCDFで一致した。質問材料のgateは実験adapterで補った結果であり、候補本体のR-11対応完了ではない。
+元の追加Evidenceでは、PR118の元HEAD `c3bd5ef`の18計算例を、Engine担当のローカルnumeric-snapshot候補＋実験adapterで照合した。入力・実績・隣接ログ・事後分布・出所・中心の固定値が一致し、非自明な完了DP9例は共有samplerと独立な条件付きCDFで一致した。この時点の質問材料gateは実験adapterで補っていた。
 
-候補本体には材料gateの状態／不足理由の差が13例（F03／04／05／06／07／08／09／10／11／14／15／17／18）残る。raw回答・a／b別出所enum・mapping/context/versionの正式受け渡しも未接続。N03の未来日付はPredictionInputErrorで一致したが、N04の不正priorは候補ではRangeError、提案はPredictionConfigError候補であり、class／reason／pathの採択と接続を要する。保存／HTTP／UIの10統合例は未実行。任意の極端なBetaをAPIから渡さず、選択mappingと長いSKIPPED列の計算予算を正式接続前に確認する。
+その元比較で、旧numeric-snapshot入口と提案には材料gateの状態／不足理由の差が13例（F03／04／05／06／07／08／09／10／11／14／15／17／18）あった。N03の未来日付はPredictionInputErrorで一致し、N04の不正priorは旧入口のRangeErrorと提案のPredictionConfigError候補に差があった。凍結Evidenceの13件・RangeErrorはこの旧入口の比較履歴であり、以下の新adapterの未解消件数ではない。
+
+2026-10-05の最新ローカル検証記録では、新しい内部`evaluateQuestionPriorAdapterCandidate`がraw回答とcallerの保存済みmappingを受け、a／b別出所・材料gateを接続して13件の差を解消した。18例と完了DP9件は元の数値・draw hash・CDF境界に一致した。不正なmapping形状はPredictionConfigError／INVALID_INTEGER／mapping配下のpathへ分類され、旧numeric入口のRangeErrorは維持される。型検査・候補61テスト・独立CDF実験3テストの成功を担当ログとmanifestで確認したもので、本PR側で61件を再実行した結果ではない。この記録時点の新adapterは未公開・未commitで、正式CIは未実行。
+
+公開`predict`・API／DB／UIは変更されておらず、保存context／revision、正式な出所・version・error reason/pathとHTTPへの受け渡し、具体契約の採択は残る。保存／HTTP／UIの10統合例は未実行。任意の極端なBetaをAPIから渡さず、選択mappingと長いSKIPPED列の計算予算を正式接続前に確認する。
 
 既存`/today`の5項目は保ち、下記は追加する候補blockの責務例。正確な名前・required/nullable・成功DTO・schema versionはBE／FE確認前である。
 
@@ -203,9 +207,9 @@ FEはuser／session generation／goalを取得keyに含め、mutation前の取�
 
 独立なのは、同じa／b drawに条件付けた完了分布の計算法。状態DPとrenewal＋Binomial-tail CDFをHの全日で比較し、最大CDF差は`5.551115123125783e-16`、刈り込みあり／なしのPMF差は0、最小のP50／P80到達日が一致した。閾値前後のCDF・draw hashを保存。0／1確率・DONE／SKIPPED開始を全経路の整数重み列挙でも照合した。参照CDF許容誤差1e-11と、従来の分位点epsilon1e-12は別で、後者は変更しない。
 
-RNG／Beta samplerは既存Engineと共有しており、別sampler・厳密な事後積分・校正・予測精度の独立検証ではない。Engine担当の候補56テスト＋実験3テスト・型検査の成功はログで確認した担当検証。本PR側では、公開数学sourceをTypeScript 5.8.3で生成し、9件を再現する独立CDF実験3テストを実行した。元候補の56件をここで再実行したとは数えない。API／DB／UI接続、採用runtimeや選択priorの性能・混合負荷、質問理解は未検証であり、具体契約は未採択。
+RNG／Beta samplerは既存Engineと共有しており、別sampler・厳密な事後積分・校正・予測精度の独立検証ではない。Engine担当の元候補56テスト＋実験3テスト・型検査、さらに新adapterの61テスト＋実験3テストの成功はログで確認した担当検証で、重複件数を合算しない。本PR側では、公開数学sourceをTypeScript 5.8.3で生成し、9件を再現する独立CDF実験3テストを実行した。候補の56／61件をここで再実行したとは数えない。API／DB／UI接続、採用runtimeや選択priorの性能・混合負荷、質問理解は未検証であり、具体契約は未採択。
 
-数学参照は時刻・DB操作を検証しない。不正例N03は担当実験でPredictionInputErrorを確認。N04のsnapshot metadata・呼出し型・具体error reason/pathは候補との上記差を採択後に合わせる。API不正例は認証済み所有者という前提を明示した仕様例で、実際のHTTP呼出しではない。
+数学参照は時刻・DB操作を検証しない。不正例N03は担当実験でPredictionInputErrorを確認。N04は上記の旧入口と新adapterを区別し、snapshot metadata・公開呼出し型・具体error reason/path／HTTPは採択後に合わせる。API不正例は認証済み所有者という前提を明示した仕様例で、実際のHTTP呼出しではない。
 
 ## 10. Issue／PRと着手条件
 
