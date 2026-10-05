@@ -24,8 +24,8 @@ test('Demo handoff: two 30-day synthetic inputs isolate resumption patterns with
     assert.equal(result.observations.recordedDays, 30);
     assert.equal(result.todayStatus, 'UNRECORDED');
     assert.deepEqual(result.progress, { done: 15, total: 60, completed: false });
-    // Fast b~Beta(16,2): first-day CDF=16/18, above both thresholds.
-    // Slow b~Beta(2,16): tail=16*17/((16+t)*(17+t)); minimal crossings are 7/21.
+    // fastのb~Beta(16,2)：1日目の累積確率16/18が50%・80%の両閾値を超える。
+    // slowのb~Beta(2,16)：尾の確率16*17/((16+t)*(17+t))から、最初の到達日は7日・21日。
     assert.deepEqual(result.coreMetric, { status: 'available', g50: row.g50, g80: row.g80 });
     assert.equal(result.completion.status, 'available');
     assert.equal(result.completion.scenario, 'TODAY_DONE');
@@ -33,7 +33,7 @@ test('Demo handoff: two 30-day synthetic inputs isolate resumption patterns with
     assert.equal(typeof result.completion.p80Days, 'number');
     assert.deepEqual(result.config, { prior: 2, samples: 200, horizonDays: 1095, seed: 20261012 });
     assert.equal(result.modelVersion, DEFAULT_CONFIG.modelVersion);
-    // This is an internal input round trip, not an adopted HTTP DTO.
+    // 内部入力をJSONへ変換して戻したときの再現性を確認する。HTTP DTOの採択ではない。
     assert.deepEqual(predict(JSON.parse(JSON.stringify(input))), result);
     return result;
   });

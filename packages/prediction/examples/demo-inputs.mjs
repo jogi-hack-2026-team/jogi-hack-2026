@@ -1,5 +1,5 @@
-// Synthetic pure Engine inputs for #90 -> #82 handoff, not database seed data.
-// Both have 30 recorded days, 15 actual DONEs and an unrecorded fixed today.
+// #90から#82へ渡す純粋Engine用の合成入力。DB seedやデモ人物像そのものではない。
+// どちらも30日分の記録・実績DONE15回で、固定した今日は未記録。
 import { pathToFileURL } from 'node:url';
 import { predict } from '../dist/src/index.js';
 

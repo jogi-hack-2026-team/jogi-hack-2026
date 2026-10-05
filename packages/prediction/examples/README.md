@@ -50,6 +50,8 @@ todayは2026-10-01固定、記録は2026-09-01〜09-30の30日。両Goalともto
 | fast-resumption | DONE・SKIPPEDを交互に15組 | 0 / 15 / 14 / 0 | 1日 / 1日 |
 | slow-resumption | DONE15日、その後SKIPPED15日 | 14 / 1 / 0 / 14 | 7日 / 21日 |
 
+交互の履歴は、同じ実績量で再開指標の差を確認する数値fixtureであり、「続けて取り組み、休んでもすぐ戻る人物」の完成したデモデータではない。#82で実際の人物像に合う履歴を用意するときは、連続DONEも含めて見せ方を確認する。このPRでは固定入力・遷移数・数値期待値を変更しない。
+
 どちらもDONE起点・SKIPPED起点の遷移があり、実績15・available/TODAY_DONEの完了の目安を出す。スクリプトは全入力と実PredictionResultをJSONへ出し、2ケースで完了P50/P80が異なることも[fixtureテスト](../tests/demo-inputs.test.mjs)で確認する。入力JSONの往復で結果が一致する確認は内部入力の再現性であり、HTTP応答schemaを採択するものではない。
 
 CIはNodeごとにこのJSONを`demo-inputs-ci.json`として既存証跡artifactへ保存する。固定の過去日付で再現する例であり、実デモの日付を現在へ揃える方法、Goal timezoneの設定、初期化・認証・永続化・再実行でデモだけ戻す処理は#82側の既存条件に従って別途用意する。このfixture追加だけで#82受入を完了扱いにしない。
