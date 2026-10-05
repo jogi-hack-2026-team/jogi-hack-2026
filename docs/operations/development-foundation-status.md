@@ -6,6 +6,8 @@
 
 当時の導入・検証結果、外部操作の承認待ち、チーム環境の未確認事項は[旧基盤状態の全文](../../archive/music-exploration/docs/operations/development-foundation-status.md)に保管しました。当時の成功を現行構成の動作確認と扱いません。
 
+#70向けの[mise・環境設定共有の準備案](environment-sharing-preparation.md)には、現在の共通タスク、空の設定例と共有前の確認項目をまとめた。Secret管理方式・runtimeを採択したものではなく、Engine単体検証には環境値を渡さない。
+
 ## 現在の未決定事項
 
 - 採用基本構成の版・追加ツールと、認証／公開先の最終採択・検証・運用条件（[D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)）。
