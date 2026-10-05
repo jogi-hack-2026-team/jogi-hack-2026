@@ -1596,7 +1596,7 @@
         }
       },
       "request": {
-        "expectedRevision": 7,
+        "expectedRevision": 6,
         "questionPrior": {
           "a": "HIGH",
           "b": "HIGH"
@@ -1607,7 +1607,8 @@
         "revision": 8,
         "answerAppliedRevision": 7,
         "writes": 0
-      }
+      },
+      "note": "Original request expected revision 6; answer save advanced Goal/applied revision to 7; a later log save advanced Goal revision to 8. Retry keeps the original expected revision 6. Baseline Goal-revision proposal only; concurrency mechanism is not adopted."
     },
     {
       "id": "I02",
