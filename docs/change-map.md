@@ -1,6 +1,6 @@
 # 仕様・実装・確認方法の対応表
 
-現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**Prediction純粋計算の限定先行実装はmain統合済みだが、アプリ機能は未結合。** 下表の予定パスは[Architecture](architecture.md#repository構成)の候補構成に基づく。実在するPredictionと未実装のアプリを分けて記載する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
+現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**Prediction純粋計算の限定先行実装はmain統合済みだが、アプリ機能は未結合。** 下表の予定パスと[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)は[Repository構成](architecture.md#repository構成)から確認する。実在するPredictionと未実装のアプリを分けて記載する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
 
 ## アプリの仕様と実装
 
@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | Issue・Branch・PR・レビュー | [CONTRIBUTING](../CONTRIBUTING.md)、[Future ROIのIssue運用](DEVELOPMENT_GUIDE.md#future-roiのissue運用) | GitHubで階層、最新Issue・PR、着手条件と完了証拠を確認。AIの入口は[AGENTS](../AGENTS.md#16-issue)・[Claude向け指示](../CLAUDE.md) |
 | 文書・設定チェック | [開発ガイド](DEVELOPMENT_GUIDE.md#文書チェックで起きること) | [mise設定](../mise.toml) → [check-foundation.ps1](../scripts/check-foundation.ps1)。`pwsh -NoProfile -File scripts/check-foundation.ps1` |
-| アプリの起動構成（npm workspaces・Compose・Application CI） | [D-23](architecture.md#d-23)の候補（技術選定確定待ち）。確定後、現行の場所への復元をI-01で行う | 復元前は[旧構成](../archive/music-exploration/package.json)・[旧Compose](../archive/music-exploration/compose.yaml)が履歴として残る |
+| アプリの起動構成（workspace・Compose・Application CI） | [D-23](architecture.md#d-23)の基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録。版・追加ツール・復元と動作確認はI-01の着手条件に従う | 復元前は[旧構成](../archive/music-exploration/package.json)・[旧Compose](../archive/music-exploration/compose.yaml)が履歴として残る |
 | 公開先と外部設定 | [D-25](architecture.md#d-25)、[基盤状態](operations/development-foundation-status.md) | アカウント・課金の作成は承認後 |
 | 再利用資産 | [再利用資産](operations/reuse-handoff.md) | 実装Issueで採否を記録 |
 | 技術選定の最小検証・選定理由（[Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)） | Supporting Artifact。第一候補を採択前に実測した記録で、採択・Productの実装ではない。[検証報告](../experiments/architecture-verification/REPORT.md)、[比較記録と技術ごとの理由・弱点・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)。正式な状態と要約は[Technology Stack](architecture.md#technology-stack)、実装時の対策は[検証状況](architecture.md#第一候補の検証状況84--85) | [検証コードと再実行手順](../experiments/architecture-verification/README.md)。専用のpackageで `npm run verify:*`。#85ではT-14未実施。その後の[予測試作の単体計測](prediction/evidence.md#dpとmonte-carloの比較)と、上表の純粋Engine検証を区別する。候補の追加検証は[2026-10-02追加報告](../experiments/architecture-verification/FOLLOWUP-2026-10-02.md)・[候補の再実行手順](../experiments/architecture-verification/candidate-1.7.7/README.md)・[Linux試験記録](../experiments/architecture-verification/LINUX-2026-10-02.md)。保存済みLinux記録ではbuild/認証成功、修正前SIGTERM失敗・承認済み最小hook後v6/v7正常終了。採用環境のT-14・候補コンテナ内の実Engine混合負荷・実クラウド・費用は未実測 |
@@ -37,7 +37,7 @@
 
 ## 確認記録と残課題
 
-業務API・昨日補完・Engine集計／エラー・表示の判断事項は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日訂正は依頼者承認済みでmain反映待ち、#103のmetadata・公開エラー契約と純粋Engineはmain統合済み。残る未採択のAPI・表示案とは分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
+業務API・昨日補完・Engine集計／エラー・表示の判断事項は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日補完／訂正方針、#103のmetadata・公開エラー契約と純粋Engineはmain統合済み。未決の具体保存・DTO・再送／競合方式や表示案とは分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
 
 表の実装予定は2026-09-30の仕様に基づく。Product機能、DB接続、外部Service、公開配置は未実装・未確認。
 
