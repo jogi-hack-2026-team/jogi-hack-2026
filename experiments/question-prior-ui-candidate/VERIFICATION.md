@@ -2,7 +2,7 @@
 
 **Supporting Artifact / Not a Source of Truth。2026-10-05の独立候補の検証。**
 
-対象はこのディレクトリのTSX、slot例、固定状態のReact preview。正式FE画面・API・Engine・保存revision・D-26採択の検証ではない。数値例は表示用で、予測精度や計算goldenの根拠にしない。
+対象はこのディレクトリのTSX、slot例、固定状態のReact previewと、別checkoutの候補Engineからのローカル表示接続。正式FE画面・API・本番Engine・保存revision・D-26採択の検証ではない。表示例は予測精度の根拠にしない。
 
 ## 自動検証
 
@@ -13,6 +13,26 @@ READMEの `scripts/check.mjs` をWindows x64、Node22.15.1で実行し、strict�
 | strict + 8つの型拒否例 | 任意回答の語彙、出所不足のestimate禁止、記録済みcore比較禁止、CURRENT_STATE制約、slot propsを検証 |
 | React SSR 15件 | 全25組の回答、任意fieldset、instance間のID/name分離、error参照、save状態、4種の出所、条件付き回数、実績、達成済み、再取得失敗・保存不明、無効payload拒否を検証 |
 | Vite build | 実際のTSXと最小previewをbundle。生成物はignored `.qa/` のみ |
+
+## 実Engineからのローカル接続
+
+PR120候補`0d99ae7`を基点に、PR119の`f7a6c02ec402d3c74fae953cac769de06b31050b`とPR118の`c73efae7697df8d0d9d62c99c8b115766ee5f293`を独立したdetached checkoutで参照した。共有`common-fixtures.json`のSHA-256（Git blobと同じLFへ正規化）は`ba7820aeee75d6c2e02fa8c3510fc63c9cef2a524918c5e6077abd6921b4ac47`。候補コードや共有18例を本ディレクトリへ複製していない。
+
+終了前に最新PR118 `b7400757f1ee7c7beeb37640f7ad9582d770b121`の差分と本文を再確認した。変更は保存・取得のSupporting文書3ファイルだけで、公開共有fixtureは上のcheckoutとLF正規化後byte一致。conditionalPlanの改名・同じsnapshotのcontext付加という接続案とも整合する。回答用token・FE取得世代管理・最小HTTP blockの更新案は採択や今回の実装へ含めない。
+
+READMEの接続checkをWindows x64/Node22.15.1と上記既存lockで実行し、Engineの元のNodeNext型検証、実Engine型→表示型のstrict受け渡し、24/24テストが成功した。18例は実Engineを毎回実行し、PR118の期待値と照合してから表示view・実React SSRへ渡した。部品checkもstrict・15/15 SSR・Vite buildが成功した。Node24.21.0の候補CIにも固定checkoutの接続checkと結果artifactを追加した。対象HEADのActions結果はPRで確認し、設定の追加だけを実行成功とは扱わない。
+
+公開前にPR119最新`783ebb443f0d441ca17cce61109b5da12504ee34`も確認した。追加はsnapshot／workerのテスト例と文書で、計算sourceは変更なし。この接続CIは上で検証した`f7a6c02`を維持し、別PRのhandoffテストやworker検証を今回の24件へ合算しない。
+
+| 接続の確認 | 結果 |
+| --- | --- |
+| 未回答・UNKNOWN・片方回答・MID | 同じprior数値でも材料gateを区別。条件付き回数は実Engine値を改名し、日数として表示しない |
+| 回答訂正・解除 | 同じ全実ログから再計算し、core・出所が変わっても実績量と実観測件数は増えない |
+| 達成・今日記録済み | 実績達成を優先。記録済みはcore比較なし。F14の実績7/22、F15の記録済み材料不足を表示 |
+| 仮実行0日・長いhorizon | F17は実績15/16のまま仮定0日を表示。F18はnullを保ち、formatterを呼ばず、条件付き回数を第三の指標へ追加しない |
+| 接続の境界 | `unit`/設定量はローカルcontext。週ラベルは明示したsynthetic formatter。保存・HTTP・DB・revision/freshnessは実行しない |
+
+生成された`.qa/connection/report.json`は実Engine出力、表示view、HTMLと検証対象hashを含むローカル証跡。保存成功、正式API契約、ブラウザでの数値更新を示すものではない。型を回避したTODAY_DONE/CURRENT_STATEの逆転、出所不足、無効context、未達成にcompletedを渡す場合は接続例でも拒否する。
 
 ## 実DOMで確認した範囲
 
@@ -38,4 +58,4 @@ READMEの `scripts/check.mjs` をWindows x64、Node22.15.1で実行し、strict�
 
 候補の担当境界、read-only表示、任意回答、出所、実績を増やさないこと、未採択の扱い、アクセシビリティ、依存変更の有無を確認した。JavaScript側から型を回避した場合も、記録済みにTODAY_DONE完了比較を渡すと拒否する実行時guardを追加し、SSRで確認した。この候補の範囲で未解決のBlocking/Should-Fixはない。
 
-NVDA等による読み上げ、タッチ端末、本番FEでの親draft/save/error/freshness/優先resolver、422契約、API保存・再取得、Engine/PR119との数値整合、D-26/PR118採択は未確認。#70 Hard、#117 DoR/blockedとClose条件は解消していない。FEレビューと契約採択後に正式配置・統合を別途判断し、この候補だけでmergeや本番配線をしない。
+NVDA等による読み上げ、タッチ端末、本番FEでの親draft/save/error/freshness/優先resolver、422契約、API保存・再取得、実snapshotのcontext整合、週ラベル、D-26/PR118採択は未確認。#70 Hard、#117 DoR/blockedとClose条件は解消していない。FEレビューと契約採択後に正式配置・統合を別途判断し、この候補だけでmergeや本番配線をしない。

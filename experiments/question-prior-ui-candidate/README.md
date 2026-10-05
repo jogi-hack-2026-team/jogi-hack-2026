@@ -35,7 +35,7 @@
 
 画面の複製、新しいchart、共通schema、フォームframework、状態管理libraryを追加する代案は、FEの既存担当や未採択契約と重なるため採りません。別の固定HTML版も増やさず、唯一のindex.htmlはReact mount用です。大きな固定例JSONや内部引き継ぎ資料は追加しません。
 
-trade-offとして親の正しいstate/値・API validationに依存します。失敗・古い結果を新しい結果として渡さない責任はFEです。部品の確認は実API、権限、再送、保存revision、Engine結合、#81の3〜5人確認の代替になりません。正式props/DTO・質問文・数値・出所version・不足条件が採択された時と、FE基盤ができた時に本候補を照合し、必要な差分だけを正式配置します。仕様の正本は[Product Spec](../../docs/product-spec.md)と[Architecture](../../docs/architecture.md)で、今回変更しません。
+trade-offとして親の正しいstate/値・API validationに依存します。失敗・古い結果を新しい結果として渡さない責任はFEです。部品の確認は実API、権限、再送、保存revision、本番Engine結合、#81の3〜5人確認の代替になりません。正式props/DTO・質問文・数値・出所version・不足条件が採択された時と、FE基盤ができた時に本候補を照合し、必要な差分だけを正式配置します。仕様の正本は[Product Spec](../../docs/product-spec.md)と[Architecture](../../docs/architecture.md)で、今回変更しません。
 
 ## 再現手順
 
@@ -55,6 +55,20 @@ serveが出す`http://127.0.0.1:<port>/`を通常ブラウザで開きます。�
 Missing existing verification dependenciesは上記install不足、型検証失敗は候補/負例の不一致、Vite build失敗はその出力を確認します。依存manifestやrootを変更して回避せず、修正後に同じcheckを再実行します。
 
 確認環境はWindows x64/Node22.15.1/npm10.9.2、既存lockのTypeScript5.8.3、React/React DOMと型19.3.0、Vite8.3.1です。既存experimentのenginesは24.21.0のためNode22 installではEBADENGINE warningがあります。候補CIはNode24.21.0を使います。これらの版は本番runtime採択を示しません。
+
+## Engine候補からのローカル接続確認
+
+[engine-view.ts](examples/engine-view.ts)は、別checkoutのPR119実Engine出力から表示候補へ渡すFE所有の接続例です。`conditionalPlan`の値をそのまま表示用`Plan`へ改名し、BEが同じsnapshotから付ける案の`unit`/`sessionAmount`をcontextとして受けます。UIで切上げや予測日数を再計算しません。週・timezoneのラベルはFEのcallbackに委ねます。保存済みGoalや採択済みHTTP DTOとして扱わず、正式なfreshness/error resolverも追加しません。
+
+既存依存を準備して上のcheckを実行後、独立したPR119・PR118 checkoutのパスを指定します。照合したcommitとfixture hashは[検証記録](VERIFICATION.md)に記載しています。
+
+```sh
+node experiments/question-prior-ui-candidate/scripts/check-connection.mjs --engine-root "../engine-pr119" --fixtures "../contract-pr118/experiments/question-prior-contract/common-fixtures.json"
+```
+
+[接続check](scripts/check-connection.mjs)は既存compilerでEngineの元の型設定を検証し、ignored `.qa/connection/`へだけemitします。実Engine型と表示例のstrictな受け渡し、[共有18例と追加状態のReact SSRテスト](tests/engine-connection.test.cjs)を実行し、成功時はTAP結果と要約、同ディレクトリの`report.json`へ実出力・view・HTMLを記録します。Engine HEAD/fixture hashが変わった場合は停止するため、新しい提案を確認してから固定対象を更新します。Engine checkoutへの書込、依存追加、HTTP、DB、保存のfixtureはありません。
+
+候補CIはNode24.21.0で部品checkと接続checkを実行します。PR119 `f7a6c02`とPR118 `b740075`をcommit SHAでcheckoutし、Engine HEADとLF正規化後fixture hashを照合します。成功時の`report.json`は14日間のActions artifactです。ここでのSSRラベルは`表示fixture:N日`で、実際の週ラベル・ブラウザmount・予測精度の検証ではありません。正式配置と保存・取得はFE/BEとの契約合意後に結合します。
 
 ## ブラウザでの再現チェック
 

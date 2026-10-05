@@ -67,3 +67,5 @@
 ## R-11追加UIの独立候補
 
 [#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)の[質問・出所表示部品と受け渡し案](../experiments/question-prior-ui-candidate/README.md)はSupporting Artifact。Scope・分担の採択記録はPR115、具体契約提案はPR118、計算adapter候補はPR119で別に追跡する。正式Goal/Today、API/Engine結合は未確認で、#70 Hard・D-26未採択・既存Ready/blockedを変更しない。[src](../experiments/question-prior-ui-candidate/src/presentation-types.ts)・[最小slot例](../experiments/question-prior-ui-candidate/examples/slots.tsx)・[型/SSR/preview buildの再現](../experiments/question-prior-ui-candidate/scripts/check.mjs)・[検証記録](../experiments/question-prior-ui-candidate/VERIFICATION.md)から調査できる。root依存・workspaceは追加していない。
+
+別checkoutのPR119実出力を渡す[FE所有の表示接続例](../experiments/question-prior-ui-candidate/examples/engine-view.ts)と[ローカル接続check](../experiments/question-prior-ui-candidate/scripts/check-connection.mjs)を追加。未採択のPR118共有18例・追加状態を実Engine→表示view→React SSRで確認した範囲と、保存・本番結合の未確認範囲は上の検証記録で分ける。
