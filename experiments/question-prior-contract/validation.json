@@ -1,0 +1,9 @@
+{
+  "calculation_examples": 18,
+  "negative_specifications": 4,
+  "integration_specifications": 10,
+  "independent_math_check": "PASS: exact Fraction Beta-Geometric quantiles, actual adjacency/counts, metadata, amount and priority invariants",
+  "production_tests_run": false,
+  "numeric_calibration_verified": false,
+  "completion_dp_goldens_verified": false
+}
