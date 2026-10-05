@@ -66,7 +66,7 @@ Missing existing verification dependenciesは上記install不足、型検証失�
 node experiments/question-prior-ui-candidate/scripts/check-connection.mjs --engine-root "../engine-pr119" --fixtures "../contract-pr118/experiments/question-prior-contract/common-fixtures.json"
 ```
 
-[接続check](scripts/check-connection.mjs)は既存compilerでEngineの元の型設定を検証し、ignored `.qa/connection/`へだけemitします。実Engine型と表示例のstrictな受け渡し、[共有18例と追加状態のReact SSRテスト](tests/engine-connection.test.cjs)を実行し、成功時はTAP結果と要約、同ディレクトリの`report.json`へ実出力・view・HTMLを記録します。Engine HEAD/fixture hashが変わった場合は停止するため、新しい提案を確認してから固定対象を更新します。Engine checkoutへの書込、依存追加、HTTP、DB、保存のfixtureはありません。
+[接続check](scripts/check-connection.mjs)は既存compilerでEngineの元の型設定を検証し、ignored `.qa/connection/`へだけemitします。実Engine型と表示例のstrictな受け渡し、[共有18例と追加状態のReact SSRテスト](tests/engine-connection.test.cjs)を実行し、Nodeの版に依存しないTAP reporterを明示します。成功時はTAP結果と要約、同ディレクトリの`report.json`へ実出力・view・HTMLを記録します。Engine HEAD/fixture hashが変わった場合は停止するため、新しい提案を確認してから固定対象を更新します。Engine checkoutへの書込、依存追加、HTTP、DB、保存のfixtureはありません。
 
 候補CIはNode24.21.0で部品checkと接続checkを実行します。PR119 `f7a6c02`とPR118 `b740075`をcommit SHAでcheckoutし、Engine HEADとLF正規化後fixture hashを照合します。成功時の`report.json`は14日間のActions artifactです。ここでのSSRラベルは`表示fixture:N日`で、実際の週ラベル・ブラウザmount・予測精度の検証ではありません。正式配置と保存・取得はFE/BEとの契約合意後に結合します。
 

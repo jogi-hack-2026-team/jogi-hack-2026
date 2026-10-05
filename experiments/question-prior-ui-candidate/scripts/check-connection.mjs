@@ -44,7 +44,8 @@ if(fixturesSha256!=='ba7820aeee75d6c2e02fa8c3510fc63c9cef2a524918c5e6077abd6921b
 if(document.calculationExamples?.length!==18)throw new Error('Expected the PR118 shared 18 cases.');
 const env={...process.env,NODE_PATH:dependencies,UI_CANDIDATE_BUILD:cjs,UI_ENGINE_BUILD:engineBuild,
   UI_CONNECTION_FIXTURES:fixtureFile,UI_CONNECTION_EVIDENCE:join(qa,'results.json')};
-const output=run(process.execPath,['--test','tests/engine-connection.test.cjs'],env);
+// Node 24 may default to the spec reporter; evidence counting requires TAP.
+const output=run(process.execPath,['--test','--test-reporter=tap','tests/engine-connection.test.cjs'],env);
 process.stdout.write(output);
 const connectionTests=Number(output.match(/^# tests (\d+)$/m)?.[1]);
 if(!Number.isSafeInteger(connectionTests) || connectionTests<1)throw new Error('Missing Node test summary.');
