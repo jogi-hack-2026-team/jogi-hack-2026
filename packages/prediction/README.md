@@ -71,7 +71,7 @@ npm run typecheck
 npm test
 ```
 
-型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの46テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSONと接続例JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストを検証する。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
 
 ## 補完・訂正後の再計算例
 
@@ -97,4 +97,4 @@ TODAY_DONEは未記録の今日を1回実行した仮定からの将来日数、
 
 #70が用意する同名workspace packageへ整合させ、二重packageを作らない。TypeScript版・module方式、採用runtime、採用runnerと依存／lockfile、統一コマンド、CIを#70に合わせる。今回のT-14 CIは検証用Node/ホストの結果として記録し、正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
 
-今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・46テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。
+今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・47テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。
