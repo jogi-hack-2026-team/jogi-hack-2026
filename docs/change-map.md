@@ -23,15 +23,19 @@
 
 | 既存Issue | 追加機能による影響 | 具体契約の採択後に確認する内容 |
 | --- | --- | --- |
-| [#78 Goal UI](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/78) | 質問・不明／未回答・保存／訂正の入力 | 採択した回答値とAPIエラー、質問と初期量の分離。入口・画面構成は#88で別途判断 |
-| [#81 Today Decision](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/81) | 回答由来の仮の見通しと実績更新後の表示 | 出所・実績件数・不足状態・部分回答・記録済み／達成済みの優先、簡易ユーザー確認 |
+| [#78 Goal UI](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/78) | 既存Goal画面とKaitoが担う追加質問UIの接続 | FEの既存画面担当を維持し、回答・エラー・訂正の受け渡しを確認。質問と初期量を分け、入口・画面構成は#88で別途判断 |
+| [#81 Today Decision](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/81) | 既存Today画面とKaitoが担う出所別表示の接続 | FEと状態別表示・実績件数・不足状態・部分回答・記録済み／達成済みの優先を確認。既存の簡易ユーザー確認を移管しない |
 | [#76 Goal API](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/76) | 回答・初期分布の保存／取得／編集、既存Goal互換性 | 所有者条件・入力検証、mapping版・revision・変更時の方針、ActionLogへ変換しないこと |
 | [#77 ActionLog／Today API](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77) | 回答snapshot＋現在の実ログのEngine入力、出所・不足状態の返却 | Engineとの一致、今日／昨日の上書き後の再計算、二重加算防止、古い応答との整合 |
 | [#71 中心計算](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71) | `a`／`b`別の初期分布と実績起点の更新、中心の不足判定 | 回答は遷移数にしない、UNKNOWN隣接除外、現行共通priorとの互換性、中心の固定例 |
 | [#72 完了計算](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72) | 初期分布を使う完了DP、中心との統合、完了の不足判定 | 現行のDP・打切り・null・今日の仮実行と実量の分離、部分回答の採択条件 |
 | [#73 共有テスト](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73) | 新しい初期分布・更新・不足状態・互換性の回帰 | 採択値の固定例と独立計算の照合、同一snapshot＋ログの再現、既存T-01〜T-15の変更点と根拠 |
 
-まず質問・数値・表示条件と保存／API／Engineの共通契約を決め、固定例を共有する。その後、Engine #71→#72と共有テスト#73、BE #76→#77、FE #78・#81で契約に沿って実装・結合確認する。採択済み契約のmockによる先行は既存の許可範囲に従う。新しいHard依存・担当・期限をこの順序案から設定しない。既存Mustへの工数・日程の影響は担当間の確認待ち。
+追加実装の追跡案は、Engineを既存#71〜#73（ネイティブ親#90）、BEの表明範囲を既存#76・#77（親#89）で扱い、同じ実装を新Issueへ複製しないこと。質問回答に伴うschema変更が必要なら#74との境界をBEへ確認し、別のschema実装を並行起票しない。
+
+追加UIだけは「R-11：初期質問と出所別表示の追加部品」という実装Issue候補を1件、ネイティブSub-issueとして#88の配下に置く案とする。担当案はKaito。Goal CRUD・既存Today画面・日々の記録・昨日補完・#81の既存ユーザー確認は含めず、#78〜#81の実装を複製しない。R-11 Scope／D-26採択をReady条件とし、既存FEと同様のHard #70、Integration #78・#81との画面接続、#76・#77のAPI、#72のEngine結果との照合をIssue案へ明記する。現在の既存Issue本文のHard／Integrationを置き換えず、mockによる先行は採択済み契約と既存の許可範囲に限る。候補は未起票・未登録であり、#107は提案公開Taskのまま、このUI実装の親にはしない。
+
+まず質問・数値・表示条件と保存／API／Engineの共通契約、固定例、担当・判断日を本PRで決める。その後、KaitoのEngine #71→#72・共有テスト#73と追加UI、BEの#76→#77、FEの#78・#81との接続を契約に沿って実装・結合確認する。[BE本人の引受](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/115#pullrequestreview-5409983506)以外の分担変更・工数・期限は合意前の案。IssueのAssignee・Project Scope／Status、ネイティブ親子・依存は今回変更していない。
 
 ## 開発基盤と作業手順
 
