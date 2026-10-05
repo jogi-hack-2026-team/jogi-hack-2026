@@ -15,7 +15,7 @@ test('adapter candidate: all 18 PR118 examples connect raw input through posteri
   for (const fixture of fixtures.calculationExamples) {
     const input = request(fixture), before = structuredClone(input);
     const result = evaluateQuestionPriorAdapterCandidate(input, fixture.config);
-    for (const field of ['todayStatus', 'progress', 'observations', 'posterior', 'evidenceSource', 'eligible', 'coreMetric']) {
+    for (const field of ['todayStatus', 'progress', 'observations', 'posterior', 'evidenceSource', 'eligible', 'coreMetric', 'conditionalPlan']) {
       assert.deepEqual(result[field], fixture.expected[field], `${fixture.id} ${field}`);
     }
     for (const field of ['status', 'reason', 'scenario', 'p50Days', 'p80Days']) {
@@ -63,6 +63,20 @@ test('adapter candidate: missing/UNKNOWN are not MID; material is determined per
   assert.deepEqual(evaluate(byId('F09')).evidenceSource, { a: 'QUESTION', b: 'QUESTION_AND_RECORDS' });
   assert.deepEqual(evaluate(byId('F11')).observations.effectiveTransitions, 0);
   assert.deepEqual(evaluate(byId('F16')).completion, { status: 'completed' });
+  assert.deepEqual(evaluate(byId('F15')).conditionalPlan, { remainingAmount: 40, remainingSessions: 3, lastSessionAmount: 10 });
+  assert.equal(evaluate(byId('F17')).conditionalPlan.remainingSessions, 1);
+  assert.equal(evaluate(byId('F17')).completion.p50Days, 0);
+  for (const [goal, expected] of [
+    [{ totalRequired: 100, initialProgress: 60, sessionAmount: 15 }, { remainingAmount: 40, remainingSessions: 3, lastSessionAmount: 10 }],
+    [{ totalRequired: 100, initialProgress: 110, sessionAmount: 15 }, { remainingAmount: 0, remainingSessions: 0, lastSessionAmount: 0 }],
+    [{ totalRequired: Number.MAX_SAFE_INTEGER, initialProgress: 0, sessionAmount: Number.MAX_SAFE_INTEGER - 1 },
+      { remainingAmount: Number.MAX_SAFE_INTEGER, remainingSessions: 2, lastSessionAmount: 1 }],
+  ]) {
+    const input = request(byId('F01')); input.prediction.goal = goal;
+    const result = evaluateQuestionPriorAdapterCandidate(input);
+    assert.deepEqual(result.conditionalPlan, expected);
+    assert.equal('conditionalPlan' in publicEngine.predict(input.prediction), false);
+  }
 });
 
 test('adapter candidate: raw/mapping/real-log failures are classified without success fallback or HTTP decisions', () => {

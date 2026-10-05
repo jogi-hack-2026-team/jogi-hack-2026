@@ -1,8 +1,7 @@
 import { DEFAULT_CONFIG } from './config.js';
 import { observe } from './observations.js';
 import { recoveryQuantiles } from './recovery.js';
-import { samplePosterior } from './random.js';
-import { mixtureCompletionQuantiles } from './completion.js';
+import { completionFromValidatedState } from './completion-scenario.js';
 import { PredictionConfigError } from './errors.js';
 import type { Completion, CoreMetric, PredictionResult, PredictionConfig, PredictionInput, Posterior } from './types.js';
 
@@ -70,22 +69,7 @@ export function calculateWithPrior(input: PredictionInput, config: PredictionCon
     } else if (counts.nSD + counts.nSS === 0) {
       completion = { status: 'insufficient', reason: 'NO_SKIP_ORIGIN_TRANSITION' };
     } else {
-      const scenario = todayStatus === 'UNRECORDED' ? 'TODAY_DONE' : 'CURRENT_STATE';
-      // 今日の記録量はactualDoneに加算済み。DPでは将来のDONE回数だけを数え、今日を二重加算しない。
-      const remaining = input.goal.totalRequired - actualDone -
-        (todayStatus === 'UNRECORDED' ? input.goal.sessionAmount : 0);
-      let quantiles: { p50Days: number | null; p80Days: number | null };
-      if (remaining <= 0) quantiles = { p50Days: 0, p80Days: 0 };
-      else {
-        // 割り算でも必要なsession回数を整数として扱うことを明示する。
-        const amount = BigInt(input.goal.sessionAmount);
-        const requiredFutureDone = Number((BigInt(remaining) + amount - 1n) / amount);
-        quantiles = requiredFutureDone > config.horizonDays
-          ? { p50Days: null, p80Days: null }
-          : mixtureCompletionQuantiles(samplePosterior(posterior, config.samples, config.seed),
-            todayStatus === 'SKIPPED' ? 'SKIPPED' : 'DONE', requiredFutureDone, config.horizonDays);
-      }
-      completion = { status: 'available', scenario, ...quantiles };
+      completion = completionFromValidatedState(input.goal, actualDone, todayStatus, posterior, config);
     }
   }
   return {

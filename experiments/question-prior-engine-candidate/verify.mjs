@@ -69,10 +69,7 @@ export function verifyFixtureSet(document) {
       if (Object.hasOwn(expected.completion, field)) assert.deepEqual(result.completion[field], expected.completion[field], `${fixture.id} ${field}`);
     }
     if (Object.hasOwn(expected.completion, 'requiredFutureDone')) assert.equal(requiredFutureDone, expected.completion.requiredFutureDone);
-    const remainingAmount = Math.max(0, fixture.input.goal.totalRequired - result.progress.done);
-    const sessions = Number((BigInt(remainingAmount) + BigInt(fixture.input.goal.sessionAmount) - 1n) / BigInt(fixture.input.goal.sessionAmount));
-    assert.deepEqual({ remainingAmount, remainingSessions: sessions,
-      lastSessionAmount: sessions === 0 ? 0 : remainingAmount - (sessions - 1) * fixture.input.goal.sessionAmount }, expected.conditionalPlan);
+    assert.deepEqual(result.conditionalPlan, expected.conditionalPlan, `${fixture.id} actual adapter conditionalPlan`);
     let oracle = null;
     if (draws.length) {
       const h = fixture.config.horizonDays, initialState = result.todayStatus === 'SKIPPED' ? 'SKIPPED' : 'DONE';
@@ -108,7 +105,7 @@ export function verifyFixtureSet(document) {
     cases.push({ id: fixture.id, answers: fixture.answers, input: fixture.input, config: fixture.config,
       priorSnapshot: result.priorSnapshot, posterior: result.posterior, observations: result.observations,
       progress: result.progress, evidenceSource: result.evidenceSource, eligible: result.eligible,
-      coreMetric: result.coreMetric, completion: result.completion, requiredFutureDone, oracle,
+      coreMetric: result.coreMetric, completion: result.completion, conditionalPlan: result.conditionalPlan, requiredFutureDone, oracle,
       drawSha256: draws.length ? createHash('sha256').update(JSON.stringify(draws)).digest('hex') : null,
       draws, baselineGate: { coreMetric: baseline.coreMetric, completion: baseline.completion },
       baselineGateDiffers: JSON.stringify(baseline.coreMetric) !== JSON.stringify(result.coreMetric) ||

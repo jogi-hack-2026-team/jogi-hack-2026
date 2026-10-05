@@ -100,3 +100,9 @@ const partialRaw: QuestionPriorAdapterInputCandidate['answers'] = { a: null };
 // @ts-expect-error 数値結果が同じでもsource付き候補Resultは既存公開Resultではない。
 const adapterAsPublic: PredictionResult = adapterResult;
 void wrongRaw; void partialRaw; void adapterAsPublic;
+const conditionalSessions: number = adapterResult.conditionalPlan.remainingSessions;
+// @ts-expect-error 条件付き計画も候補結果のreadonly値として渡す。
+adapterResult.conditionalPlan.lastSessionAmount = 0;
+// @ts-expect-error 公開predictの確定DTOへ候補の回数計画を追加しない。
+void publicResult.conditionalPlan;
+void conditionalSessions;

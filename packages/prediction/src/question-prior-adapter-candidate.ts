@@ -3,8 +3,7 @@ import { PredictionConfigError } from './errors.js';
 import { evaluateGoalPriorCandidate } from './goal-prior-candidate.js';
 import type { GoalPriorCandidate, GoalPriorCandidateConfig, GoalPriorCandidateResult } from './goal-prior-candidate.js';
 import { recoveryQuantiles } from './recovery.js';
-import { samplePosterior } from './random.js';
-import { mixtureCompletionQuantiles } from './completion.js';
+import { completionFromValidatedState } from './completion-scenario.js';
 import type { Completion, PredictionInput } from './types.js';
 
 // PR118の未採択提案に依存する内部adapter。index.ts・公開predictへは追加しない。
@@ -25,6 +24,11 @@ export interface QuestionPriorAdapterResultCandidate extends GoalPriorCandidateR
   readonly mappingVersion: string;
   readonly evidenceSource: { readonly a: EvidenceSourceCandidate; readonly b: EvidenceSourceCandidate };
   readonly eligible: { readonly a: boolean; readonly b: boolean };
+  readonly conditionalPlan: {
+    readonly remainingAmount: number;
+    readonly remainingSessions: number;
+    readonly lastSessionAmount: number;
+  };
 }
 
 // raw/snapshotの構造不正をmessage解析なしで区別する候補分類。HTTPコードは外側で決める。
@@ -102,18 +106,14 @@ export function evaluateQuestionPriorAdapterCandidate(input: QuestionPriorAdapte
   else if (!eligible.a) completion = { status: 'insufficient', reason: 'NO_DONE_ORIGIN_TRANSITION' };
   else if (!eligible.b) completion = { status: 'insufficient', reason: 'NO_SKIP_ORIGIN_TRANSITION' };
   else if (baseline.completion.status === 'available') completion = baseline.completion;
-  else {
-    const scenario = baseline.todayStatus === 'UNRECORDED' ? 'TODAY_DONE' : 'CURRENT_STATE';
-    // 今日のDONE実量はbaselineへ一度だけ加算済み。仮実行は未記録時にだけ残量から引く。
-    const remaining = input.prediction.goal.totalRequired - baseline.progress.done -
-      (baseline.todayStatus === 'UNRECORDED' ? input.prediction.goal.sessionAmount : 0);
-    const amount = BigInt(input.prediction.goal.sessionAmount);
-    const required = remaining <= 0 ? 0 : Number((BigInt(remaining) + amount - 1n) / amount);
-    const quantiles = required === 0 ? { p50Days: 0, p80Days: 0 } : required > config.horizonDays
-      ? { p50Days: null, p80Days: null } : mixtureCompletionQuantiles(
-        samplePosterior(baseline.posterior, config.samples, config.seed),
-        baseline.todayStatus === 'SKIPPED' ? 'SKIPPED' : 'DONE', required, config.horizonDays);
-    completion = { status: 'available', scenario, ...quantiles };
-  }
-  return { ...baseline, rawAnswers: answers, mappingVersion: input.mapping.version, evidenceSource, eligible, coreMetric, completion };
+  else completion = completionFromValidatedState(input.prediction.goal, baseline.progress.done,
+    baseline.todayStatus, baseline.posterior, config);
+  // 設定量で続ける場合の回数であり予測日数ではない。今日の仮実行を実績から引かない。
+  const remainingAmount = Math.max(0, input.prediction.goal.totalRequired - baseline.progress.done);
+  const remaining = BigInt(remainingAmount), amount = BigInt(input.prediction.goal.sessionAmount);
+  const sessions = (remaining + amount - 1n) / amount;
+  const conditionalPlan = { remainingAmount, remainingSessions: Number(sessions),
+    lastSessionAmount: sessions === 0n ? 0 : Number(remaining - (sessions - 1n) * amount) };
+  return { ...baseline, rawAnswers: answers, mappingVersion: input.mapping.version, evidenceSource, eligible,
+    coreMetric, completion, conditionalPlan };
 }

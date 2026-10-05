@@ -2,7 +2,7 @@
 
 **Supporting Artifact / Not a Source of Truth。D-26の採択済み契約ではない。** Refs #71・#72・#73・#117・PR #115。今回の指示に基づく純粋コアの限定先行であり、#70のBLOCKED・正式Hard・各Issueの完了条件は維持する。
 
-R-11の機能Scopeと分担はPR #115で採択記録中だが、質問から数値への写像・強度・部分回答／不明の補完・表示条件・保存編集・APIは未採択。この候補は、外側で用意した初期分布と実ログを同じ計算経路で検証するためだけの実装で、質問回答の解釈やUI／APIの配線は行わない。
+R-11の機能Scopeと分担はPR #115でProduct正本へ反映済みだが、質問から数値への写像・強度・部分回答／不明の補完・表示条件・保存編集・APIは未採択。この候補は、外側で用意した初期分布と実ログを同じ計算経路で検証するためだけの実装で、質問回答の解釈やUI／APIの配線は行わない。
 
 ## 内部境界と互換性
 
@@ -22,7 +22,7 @@ R-11の機能Scopeと分担はPR #115で採択記録中だが、質問から数�
 
 継続時は56テストの既存構成を保ち、未回答の既存入口（共通prior=2・実績起点の不足）と不完全な候補snapshotの拒否、snapshot A→B→A／既存入口への復帰、凍結した入力・snapshot・config、seed=0/1/uint32最大の再現性、a/bのalpha/betaそれぞれの最大安全整数と遷移加算のoverflow pathを追加照合した。未回答・片方回答の自動補完や回答解除の保存/APIは採択していない。source/versionは抽選列に混ぜず、候補の入れ替え後に以前の結果・乱数状態を持ち越さないことを確認する。
 
-`scripts/check.mjs test`でdist生成後、package内で`node scripts/benchmark-goal-prior-candidate.mjs`を実行すると、合成priorに対するrequiredFutureDone=120/400/1095・K=200・H=1095各6回の入力・出力・実環境・全測定をJSONで出す。既存500ms基準の超過はexit 1で、判定を弱めない。既存`node scripts/benchmark.mjs`も変更せず確認する。開発機での代表入力測定であり、採用環境・混合負荷・全ての候補分布の性能保証ではない。
+`scripts/check.mjs test`でdist生成後、package内で`node scripts/benchmark-goal-prior-candidate.mjs`を実行すると、合成priorに対するrequiredFutureDone=120/400/1095・K=200・H=1095各6回の入力・出力・実環境・全測定をJSONで出す。質問材料だけでadapterのDPへ入る同3条件もadapterCasesとして情報用に測る。既存500ms基準の超過はexit 1で、判定を弱めない。既存`node scripts/benchmark.mjs`も変更せず確認する。開発機での代表入力測定であり、採用環境・混合負荷・全ての候補分布の性能保証ではない。
 
 ## 正式統合前に決めること
 
@@ -31,4 +31,4 @@ R-11の機能Scopeと分担はPR #115で採択記録中だが、質問から数�
 - shapeの有効範囲と計算予算。安全整数でも極端に非対称な分布では現行の逐次BigInt分位点計算が長時間になるため、今回の代表入力測定を任意の強度へ一般化しない。
 - #70の採用workspace／runtime／runner整合、Human Review、採用環境のT-14とAPI／FE結合。#117のHardとReadyは解除しない。
 
-正式値の採択や表示gate変更はこの候補の成功から推定しない。PR #115の並行文書更新へ新たな採択内容を混ぜず、候補の説明と実コードへの入口だけを[package README](README.md)と[変更対応表](../../docs/change-map.md)へ置く。
+正式値の採択や表示gate変更はこの候補の成功から推定しない。正本文書へ新たな採択内容を混ぜず、候補の説明と実コードへの入口だけを[package README](README.md)と[変更対応表](../../docs/change-map.md)へ置く。

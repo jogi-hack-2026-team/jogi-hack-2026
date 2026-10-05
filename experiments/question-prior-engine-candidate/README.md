@@ -8,7 +8,7 @@
 
 [固定例](../../packages/prediction/tests/fixtures-pr118.json)は指定PR HEADのJSONを変更せず保管したもの。[verify.mjs](verify.mjs)は固定例の`mappingCandidate`を保存済みsnapshotとして型付き候補adapterへ渡す。提案のLOW/MID/HIGHを数値へ変換し、UNKNOWN/nullは共通Beta(2,2)へ補っても有効回答にはしない。a/bの質問・実遷移の材料と出所を独立に導出する。出所enumはこの実験での照合値であり、正式APIやUIラベルではない。
 
-実際の`evaluateQuestionPriorAdapterCandidate`を使い、raw回答から観測・実績・posterior・出所・材料gate・中心・完了までの出力を確認する。実験内へgate実装を複製しない。中心は既存BigInt、完了は既存の事後抽選とDPを呼ぶ。質問回答をログ件数・実績量へ足さず、今日DONE量や達成／記録済み優先を保つ。13例で元の数値入口の状態／不足理由と提案が異なる。候補adapterの5テスト内で13例の具体的な期待値を固定し、差を解消した。これは候補adapterの接続確認であり、正式入口の提案対応や採択完了ではない。
+実際の`evaluateQuestionPriorAdapterCandidate`を使い、raw回答から観測・実績・posterior・出所・材料gate・中心・完了・conditionalPlanまでの出力を確認する。実験内へgate実装を複製しない。中心は既存BigInt、完了は既存の事後抽選とDPを呼ぶ。質問回答をログ件数・実績量へ足さず、今日DONE量や達成／記録済み優先を保つ。13例で元の数値入口の状態／不足理由と提案が異なる。候補adapterの5テスト内で13例の具体的な期待値を固定し、差を解消した。これは候補adapterの接続確認であり、正式入口の提案対応や採択完了ではない。
 
 ## 独立オラクルと支持範囲
 
@@ -45,3 +45,7 @@ pwsh -NoProfile -File scripts/check-foundation.ps1
 CLIはinput・posterior・出所・状態差分・日数golden・全200サンプル／hash・閾値前後CDF・実環境をJSONで出す。オラクルとの差や固定例の不一致は非0で終了する。候補adapterのraw→snapshot・部分回答補完・材料gate・source/version・エラー分類はローカル接続済み。正式採択後に保存context／mappingVersionの生成責任、公開DTO・エラー／HTTP変換と正式Engine入口を人間の合意に沿って整合する。
 
 PR118の追加Evidence HEAD `c120eb12b773a02db8332f0fd26e3fb7d29fe0f4`では、同じ9例の日数goldenが共通例へ追記された。入力・写像・状態契約は変わっていないことを差分で確認した。このbranchの固定例は元HEADを保持し、goldenはoracle.test.mjsの明示期待値でも確認する。固定例はpackage単独のDocker検証でも読めるようtests配下へ一度だけ置く。
+
+conditionalPlanの照合は入力から作り直さず、実adapterの結果を固定例と比較する。計画には今日の仮sessionを足し引きしない。候補エラーやVM、正式入口への統合方針は[責任境界とレビュー回答](../../packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md#レビュー質問optionalの扱い)へ集約する。
+
+FEレビュー対応時にPR118 HEAD `6f1e40fc4861d238ecd63bcfd25c3acd77ffe16b`も読み取り、18例の入力・写像・中心／材料状態・conditionalPlanがbaselineと同じことを確認した。固定例の採択・追従は候補説明の手順で行う。
