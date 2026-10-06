@@ -20,6 +20,7 @@ import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
 import { toForecastView } from './forecast-view.ts';
+import { showYesterdayPrompt } from './yesterday-later.ts';
 import '../../ui/tokens.css';
 import './today.css';
 
@@ -33,14 +34,23 @@ const fetchPolicy = {
   refetchOnWindowFocus: (query: { state: { status: string } }) => query.state.status !== 'error',
 } as const;
 
-/** Today Decision 画面（R-05〜R-08）。/goals/$goalId */
+/**
+ * Today Decision 画面（R-05〜R-08）。/goals/$goalId
+ * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
+ * 「後で答える」や開発用の案内を別の Goal へ持ち越さない。
+ */
 export function TodayPage({ goalId }: { goalId: string }) {
+  return <TodayScreen key={goalId} goalId={goalId} />;
+}
+
+function TodayScreen({ goalId }: { goalId: string }) {
   const goalQuery = useQuery({ queryKey: ['goal', goalId], queryFn: () => goalsApi.getGoal(goalId), ...fetchPolicy });
   const todayQuery = useQuery({ queryKey: ['today', goalId], queryFn: () => goalsApi.getToday(goalId), ...fetchPolicy });
   const logsQuery = useQuery({ queryKey: ['logs', goalId], queryFn: () => goalsApi.listLogs(goalId), ...fetchPolicy });
   // 保存の動き（#79・#80）は限定先行の範囲外。押したことが分かるよう、開発用の案内だけを出す。
   const [devNotice, setDevNotice] = useState<string | null>(null);
-  const [yesterdayLater, setYesterdayLater] = useState(false);
+  // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
+  const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
   const notConnected = () => setDevNotice(todayCopy.saveNotConnected);
 
   if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound goalId={goalId} />;
@@ -66,8 +76,8 @@ export function TodayPage({ goalId }: { goalId: string }) {
         // Goal のメニュー（編集・削除）は #78 で追加する
       />
       <MockBanner currentGoalId={goalId} />
-      {today?.yesterdayMissing && !yesterdayLater ? (
-        <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLater(true)} />
+      {today && showYesterdayPrompt(today, yesterdayLaterFor) ? (
+        <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLaterFor(today.yesterday)} />
       ) : null}
 
       {goalQuery.isPending || todayQuery.isPending || logsQuery.isPending ? (
