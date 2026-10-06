@@ -1,4 +1,4 @@
-import type { BetterAuthOptions } from 'better-auth';
+import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import type { Pool } from 'pg';
 
 // 認証テーブルの形を決めるBetter Authの設定。migration（db:migrate:auth）と実行時の認証設定が
@@ -12,3 +12,39 @@ export function authSchemaOptions(pool: Pool) {
     rateLimit: { enabled: true, storage: 'database', window: 60, max: 100 },
   } satisfies BetterAuthOptions;
 }
+
+// Fastify側が信頼できるclient IPを1つだけ入れて渡すheader。client送信分はbridgeで必ず上書きする。
+export const TRUSTED_IP_HEADER = 'x-futureroi-client-ip';
+
+export type AuthSettings = {
+  pool: Pool;
+  secret: string;
+  /** 公開base URL。Cookieの`Secure`はこのURLのschemeで決まる。 */
+  baseURL: string;
+  /** baseURL以外に認証endpointへの要求を許すorigin（開発時のViteなど）。 */
+  trustedOrigins?: string[];
+  /** 1 IPあたり60秒の試行上限。 */
+  signInMax: number;
+  signUpMax: number;
+};
+
+export function createAuth(s: AuthSettings) {
+  const schema = authSchemaOptions(s.pool);
+  return betterAuth({
+    ...schema,
+    secret: s.secret,
+    baseURL: s.baseURL,
+    basePath: '/api/auth',
+    trustedOrigins: [s.baseURL, ...(s.trustedOrigins ?? [])],
+    rateLimit: {
+      ...schema.rateLimit,
+      customRules: {
+        '/sign-in/email': { window: 60, max: s.signInMax },
+        '/sign-up/email': { window: 60, max: s.signUpMax },
+      },
+    },
+    advanced: { ipAddress: { ipAddressHeaders: [TRUSTED_IP_HEADER] } },
+  });
+}
+
+export type Auth = ReturnType<typeof createAuth>;

@@ -1,3 +1,7 @@
+import { randomBytes } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
 export type ApiConfig = {
   host: string;
   port: number;
@@ -5,6 +9,17 @@ export type ApiConfig = {
   webDist: string | undefined;
   logLevel: string;
   shutdownTimeoutMs: number;
+};
+
+export type AuthConfig = {
+  secret: string;
+  baseURL: string;
+  /** baseURL以外に許すorigin（開発時のVite等）。本番では空。 */
+  trustedOrigins: string[];
+  /** 信頼するproxyのhop数。client IP（回数制限の鍵）の決定に使う。 */
+  trustProxyHops: number;
+  signInMax: number;
+  signUpMax: number;
 };
 
 function integer(name: string, raw: string | undefined, fallback: number, min: number, max: number): number {
@@ -29,5 +44,62 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     webDist: env.WEB_DIST || undefined,
     logLevel: env.LOG_LEVEL || 'info',
     shutdownTimeoutMs: integer('SHUTDOWN_TIMEOUT_MS', env.SHUTDOWN_TIMEOUT_MS, 10_000, 1_000, 120_000),
+  };
+}
+
+const MIN_SECRET_LENGTH = 32;
+
+// 開発専用: BETTER_AUTH_SECRET未設定なら apps/api/.local/auth-secret（Git除外）に1度だけ生成して使い回す。
+function localDevelopmentSecret(): string {
+  const file = fileURLToPath(new URL('../.local/auth-secret', import.meta.url));
+  if (!existsSync(file)) {
+    mkdirSync(fileURLToPath(new URL('../.local/', import.meta.url)), { recursive: true });
+    writeFileSync(file, randomBytes(32).toString('base64url'), { mode: 0o600 });
+  }
+  return readFileSync(file, 'utf8').trim();
+}
+
+// 認証の設定。本番（NODE_ENV=production）ではSecretと公開HTTPS base URLを必須にする。
+export function loadAuthConfig(env: NodeJS.ProcessEnv, api: Pick<ApiConfig, 'port'>): AuthConfig {
+  const production = env.NODE_ENV === 'production';
+  let secret = env.BETTER_AUTH_SECRET || '';
+  if (!secret) {
+    if (production) throw new Error('環境変数 BETTER_AUTH_SECRET が未設定です（本番では必須）。');
+    secret = localDevelopmentSecret();
+  }
+  if (secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(`環境変数 BETTER_AUTH_SECRET は ${MIN_SECRET_LENGTH} 文字以上にしてください。`);
+  }
+
+  let baseURL = env.BETTER_AUTH_URL || '';
+  if (!baseURL) {
+    if (production) throw new Error('環境変数 BETTER_AUTH_URL が未設定です（本番では公開URLが必須）。');
+    baseURL = `http://127.0.0.1:${api.port}`;
+  }
+  let origin: string;
+  try {
+    origin = new URL(baseURL).origin;
+  } catch {
+    throw new Error('環境変数 BETTER_AUTH_URL はURLの形式で指定してください。');
+  }
+  if (production && !origin.startsWith('https://') && env.BETTER_AUTH_ALLOW_HTTP !== '1') {
+    throw new Error('本番の BETTER_AUTH_URL はhttpsにしてください（Cookieの Secure 属性に必要）。ローカルのコンテナ確認だけ BETTER_AUTH_ALLOW_HTTP=1 で許可できます。');
+  }
+
+  const extra = (env.AUTH_TRUSTED_ORIGINS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => new URL(s).origin);
+  // 開発時はViteのdev server（/apiをproxy）と、localhost／127.0.0.1の表記違いも同じアプリとして扱う。
+  const developmentOrigins = production ? [] : [`http://localhost:${api.port}`, 'http://127.0.0.1:5173', 'http://localhost:5173'];
+
+  return {
+    secret,
+    baseURL: origin,
+    trustedOrigins: [...new Set([...developmentOrigins, ...extra].filter((o) => o !== origin))],
+    trustProxyHops: integer('TRUST_PROXY_HOPS', env.TRUST_PROXY_HOPS, 0, 0, 10),
+    signInMax: integer('AUTH_SIGN_IN_MAX', env.AUTH_SIGN_IN_MAX, 5, 1, 1_000),
+    signUpMax: integer('AUTH_SIGN_UP_MAX', env.AUTH_SIGN_UP_MAX, 5, 1, 1_000),
   };
 }

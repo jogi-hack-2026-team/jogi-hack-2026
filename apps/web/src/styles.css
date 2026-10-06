@@ -12,3 +12,18 @@ main {
 nav a {
   margin-right: 0.75rem;
 }
+
+form label {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+form input {
+  font: inherit;
+  padding: 0.25rem 0.5rem;
+}
+
+[role='alert']:empty {
+  display: none;
+}

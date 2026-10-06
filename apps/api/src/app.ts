@@ -3,8 +3,11 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import { resolve, sep } from 'node:path';
 import type { Pool } from 'pg';
+import { registerAuthBridge } from './auth/bridge.ts';
+import type { Auth } from './auth/options.ts';
 import { Health } from './contracts/index.ts';
 import { errorBody } from './http/errors.ts';
+import { registerApiGuards } from './http/guards.ts';
 
 export type AppOptions = {
   pool: Pool;
@@ -13,6 +16,16 @@ export type AppOptions = {
   /** false でログを止める（テスト用）。 */
   logger?: boolean;
   logLevel?: string;
+  /** 認証。未指定なら`/api/auth/*`と保護hookを登録しない（配信・healthだけのテスト用）。 */
+  auth?: {
+    instance: Auth;
+    /** `/api/auth/*`のbase URL（Cookie属性とURL組み立てに使う）。 */
+    baseURL: string;
+    /** 状態を変える`/api/*`要求に許すOrigin。 */
+    allowedOrigins: readonly string[];
+    /** 信頼するproxyのhop数。0なら直接接続のpeerをclient IPとする。 */
+    trustProxyHops: number;
+  };
 };
 
 type PgError = FastifyError & { code?: string };
@@ -31,6 +44,8 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
           },
     // 契約違反を黙って受理しない: 未知の項目を削らず、型を変換せず、違反をすべて報告する。
     ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: true } },
+    // 信頼するhop数ぶんだけX-Forwarded-Forを遡ってclient IPを決める（回数制限の鍵）。
+    trustProxy: o.auth && o.auth.trustProxyHops > 0 ? (_address: string, hop: number) => hop < o.auth!.trustProxyHops : false,
   });
 
   // 終了処理中に完了した応答がkeep-alive接続を維持しないようにし、処理中の要求を完了させてから閉じる。
@@ -66,6 +81,11 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
     request.log.error(error);
     return reply.code(500).send(errorBody('INTERNAL', 'Internal error.'));
   });
+
+  if (o.auth) {
+    registerApiGuards(app, o.auth.instance, o.auth.allowedOrigins);
+    registerAuthBridge(app, o.auth.instance, o.auth.baseURL);
+  }
 
   // Type Providerはpluginごとに適用する（Fastifyのカプセル化により外側の指定は継承されない）。
   await app.register(async (instance) => {

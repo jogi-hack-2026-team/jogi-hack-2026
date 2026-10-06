@@ -18,7 +18,7 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 | --- | --- | --- |
 | 担当者・所要時間・説明順 | 未定 | 説明担当と操作担当で通し練習 |
 | 使用URL・対象Release SHA | 未定 | 別メンバーの端末から到達 |
-| Demo Account | メール＋パスワード認証（[R-01](../product-spec.md#requirementsmvp)）。アカウントは未作成 | 利用権限を確認。資格情報は承認済みの手段で共有 |
+| Demo Account | メール＋パスワード認証（[R-01](../product-spec.md#requirementsmvp)、#75でローカル実装済み）。公開環境のアカウントは未作成 | 利用権限を確認。資格情報は承認済みの手段で共有。認証の試行上限（既定: 1接続元60秒に5回）はデモ会場の共有回線に合わせて`AUTH_SIGN_IN_MAX`で調整する |
 | Demo Data・初期状態への戻し方 | 再開が早いGoalと遅いGoalの合成記録（[R-09](../product-spec.md#requirementsmvp)）。スクリプトは未作成 | 開発データと分け、手順を再実行できる |
 | 操作手順・期待結果 | [Core User Flow](../product-spec.md#core-user-flow)。期待結果は実装後に記入 | 主要Flowを順番どおりに再現 |
 | 通信・アプリのAPI（`/api`）障害時の説明 | 未確認（アプリ実装後に確認） | タイムアウト・エラー表示と代替デモを事前確認。MVPにない外部APIの採用を前提にしない |
