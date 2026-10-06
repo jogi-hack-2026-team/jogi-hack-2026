@@ -1,6 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState, type FormEvent } from 'react';
 import { authClient, describeAuthError, retryAfterSeconds } from '../auth/client.ts';
+import { runAuthAction } from '../auth/action.ts';
 
 type Props = { mode: 'login' | 'register'; redirectTo: string };
 
@@ -27,10 +28,10 @@ export function AuthForm({ mode, redirectTo }: Props) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || remaining > 0) return;
     const form = new FormData(event.currentTarget);
     const email = String(form.get('email') ?? '').trim();
     const password = String(form.get('password') ?? '');
-    setBusy(true);
     setError(null);
     let limited = false;
     const fetchOptions = {
@@ -42,16 +43,16 @@ export function AuthForm({ mode, redirectTo }: Props) {
         }
       },
     };
-    const result =
-      mode === 'register'
-        ? await authClient.signUp.email({ email, password, name: email.split('@')[0] || email }, fetchOptions)
-        : await authClient.signIn.email({ email, password }, fetchOptions);
-    setBusy(false);
-    if (result.error) {
-      if (!limited) setError(describeAuthError(result.error.code, result.error.message));
-      return;
-    }
-    await navigate({ to: redirectTo });
+    await runAuthAction(
+      () => mode === 'register'
+        ? authClient.signUp.email({ email, password, name: email.split('@')[0] || email }, fetchOptions)
+        : authClient.signIn.email({ email, password }, fetchOptions),
+      {
+        setBusy,
+        onError: (failure) => { if (!limited) setError(describeAuthError(failure.code, failure.message)); },
+        onSuccess: () => navigate({ to: redirectTo }),
+      },
+    );
   }
 
   const title = mode === 'register' ? '登録' : 'ログイン';

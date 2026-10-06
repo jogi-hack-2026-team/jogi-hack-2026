@@ -7,6 +7,8 @@ import test from 'node:test';
 import pg from 'pg';
 import { migrate, migrateApp } from '../src/db/migrate.ts';
 import { createAuthPool } from '../src/db/pool.ts';
+import { getMigrations } from 'better-auth/db/migration';
+import { authSchemaOptions } from '../src/auth/options.ts';
 import { createTestDatabase } from './helpers/database.ts';
 
 const publicTables = async (pool: pg.Pool) =>
@@ -30,6 +32,33 @@ async function insertUser(pool: pg.Pool, id: string) {
 
 const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone)
                     values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo') returning id`;
+
+test('認証table作成後のindex中断をrollbackし、再実行で全field indexまで揃う', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  await db.pool.query(`create function interrupt_auth_index() returns event_trigger language plpgsql as $$
+    begin
+      if to_regclass('public."user"') is not null then
+        raise exception 'index interrupted after table creation';
+      end if;
+    end $$;
+    create event trigger interrupt_auth_index on ddl_command_start
+    when tag in ('CREATE INDEX') execute function interrupt_auth_index();`);
+  await assert.rejects(migrate(db.pool, 'auth'), /index interrupted after table creation/);
+  assert.deepEqual(await publicTables(db.pool), [], 'all auth DDL is rolled back');
+  await db.pool.query('drop event trigger interrupt_auth_index; drop function interrupt_auth_index()');
+  await migrate(db.pool, 'auth');
+  const retry = await getMigrations(authSchemaOptions(db.pool));
+  assert.deepEqual(retry.toBeCreated, []);
+  assert.deepEqual(retry.toBeAdded, []);
+  assert.deepEqual(retry.toBeAddedIndexes, []);
+  const indexes = (await db.pool.query<{ indexname: string; indexdef: string }>("select indexname, indexdef from pg_indexes where schemaname = 'public'")).rows;
+  for (const [name, column] of [['session_userId_idx', '"userId"'], ['account_userId_idx', '"userId"'], ['verification_identifier_idx', 'identifier']]) {
+    const index = indexes.find(row => row.indexname === name);
+    assert.ok(index, `field index ${name} exists after retry`);
+    assert.ok(index.indexdef.includes(`(${column})`), `field index ${name} targets ${column}`);
+  }
+});
 
 test('空のDBへ db:migrate（認証→アプリ）が通り、2回目は差分なし', async (t) => {
   const db = await createTestDatabase();

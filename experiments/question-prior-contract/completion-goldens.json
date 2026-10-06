@@ -1,0 +1,394 @@
+{
+  "status": "Supporting proposal evidence / not adopted / not production integration",
+  "sourceProposalHead": "c3bd5efd2e447fb7a021ad7c27a61de2127dd33a",
+  "sourceFixtureSha256": "95ce56f4812eee9f81e14e681fccf0dbdbf6267eee8d711107703515ffc0c483",
+  "environment": {
+    "node": "v22.15.1",
+    "platform": "win32",
+    "arch": "x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P"
+  },
+  "config": {
+    "samples": 200,
+    "horizonDays": 1095,
+    "seed": 20261012
+  },
+  "independence": "Conditional completion distribution only. Existing Engine RNG/Beta sampler shared; no independent sampler or exact posterior integration.",
+  "cases": [
+    {
+      "id": "F03",
+      "posterior": {
+        "a": {
+          "alpha": 2,
+          "beta": 2
+        },
+        "b": {
+          "alpha": 2,
+          "beta": 2
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 3,
+      "p80Days": 6,
+      "drawSha256": "957a0ecc0bdc5ee18fd9f607b9b0941b31a699644564a700e00d1918075d9cb1",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 3,
+        "p80Days": 6,
+        "maxCdfError": 2.220446049250313e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 3,
+            "cdf": 0.5162521318402458,
+            "previousCdf": 0.30866587525891076
+          },
+          "0.8": {
+            "day": 6,
+            "cdf": 0.8477507350261002,
+            "previousCdf": 0.7861327998975424
+          }
+        }
+      }
+    },
+    {
+      "id": "F06",
+      "posterior": {
+        "a": {
+          "alpha": 1,
+          "beta": 3
+        },
+        "b": {
+          "alpha": 3,
+          "beta": 1
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 4,
+      "p80Days": 5,
+      "drawSha256": "4b6f3ecb0473efa2e3bd52bbb4a51483d1850f1a5a12979038d5e8470a58dff0",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 4,
+        "p80Days": 5,
+        "maxCdfError": 2.220446049250313e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 4,
+            "cdf": 0.732345266034869,
+            "previousCdf": 0.33144856405752837
+          },
+          "0.8": {
+            "day": 5,
+            "cdf": 0.8740362787005674,
+            "previousCdf": 0.732345266034869
+          }
+        }
+      }
+    },
+    {
+      "id": "F07",
+      "posterior": {
+        "a": {
+          "alpha": 3,
+          "beta": 2
+        },
+        "b": {
+          "alpha": 1,
+          "beta": 3
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 3,
+      "p80Days": 11,
+      "drawSha256": "25f2363a7fd5565cdae7628f860e532ab524da96909c69a7390ff0611c9056da",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 3,
+        "p80Days": 11,
+        "maxCdfError": 5.551115123125783e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 3,
+            "cdf": 0.5080092769190491,
+            "previousCdf": 0.4046909545691775
+          },
+          "0.8": {
+            "day": 11,
+            "cdf": 0.8162230610497093,
+            "previousCdf": 0.7996452711574343
+          }
+        }
+      }
+    },
+    {
+      "id": "F08",
+      "posterior": {
+        "a": {
+          "alpha": 3,
+          "beta": 1
+        },
+        "b": {
+          "alpha": 3,
+          "beta": 2
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 2,
+      "p80Days": 4,
+      "drawSha256": "31f25ee1ee5e0f38d6cf2b89a3d24686103f5a5c02dc08d5727e77112454daa1",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 2,
+        "p80Days": 4,
+        "maxCdfError": 3.3306690738754696e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 2,
+            "cdf": 0.5998995669835024,
+            "previousCdf": 0
+          },
+          "0.8": {
+            "day": 4,
+            "cdf": 0.8833725049994211,
+            "previousCdf": 0.7819031241201841
+          }
+        }
+      }
+    },
+    {
+      "id": "F09",
+      "posterior": {
+        "a": {
+          "alpha": 3,
+          "beta": 1
+        },
+        "b": {
+          "alpha": 2,
+          "beta": 3
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 2,
+      "p80Days": 4,
+      "drawSha256": "6048c6e68968596d761eac60984c0491546b397363d86e387272cf7756b98ee2",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 2,
+        "p80Days": 4,
+        "maxCdfError": 3.3306690738754696e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 2,
+            "cdf": 0.5998995669835024,
+            "previousCdf": 0
+          },
+          "0.8": {
+            "day": 4,
+            "cdf": 0.803166841524301,
+            "previousCdf": 0.721939874327571
+          }
+        }
+      }
+    },
+    {
+      "id": "F10",
+      "posterior": {
+        "a": {
+          "alpha": 3,
+          "beta": 1
+        },
+        "b": {
+          "alpha": 4,
+          "beta": 1
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 2,
+      "p80Days": 3,
+      "drawSha256": "d9df1b1eb62d42d8370e79bd40ed39e55c167a78adeb9486756f6196d8fc46d7",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 2,
+        "p80Days": 3,
+        "maxCdfError": 2.220446049250313e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 2,
+            "cdf": 0.5998995669835024,
+            "previousCdf": 0
+          },
+          "0.8": {
+            "day": 3,
+            "cdf": 0.8414959105577792,
+            "previousCdf": 0.5998995669835024
+          }
+        }
+      }
+    },
+    {
+      "id": "F11",
+      "posterior": {
+        "a": {
+          "alpha": 1,
+          "beta": 3
+        },
+        "b": {
+          "alpha": 3,
+          "beta": 1
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 3,
+      "p50Days": 6,
+      "p80Days": 7,
+      "drawSha256": "4b6f3ecb0473efa2e3bd52bbb4a51483d1850f1a5a12979038d5e8470a58dff0",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 6,
+        "p80Days": 7,
+        "maxCdfError": 3.3306690738754696e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 6,
+            "cdf": 0.6839303775863423,
+            "previousCdf": 0.372923422785751
+          },
+          "0.8": {
+            "day": 7,
+            "cdf": 0.827400325280563,
+            "previousCdf": 0.6839303775863423
+          }
+        }
+      }
+    },
+    {
+      "id": "F13",
+      "posterior": {
+        "a": {
+          "alpha": 2,
+          "beta": 3
+        },
+        "b": {
+          "alpha": 3,
+          "beta": 2
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 2,
+      "p50Days": 4,
+      "p80Days": 5,
+      "drawSha256": "3964c77a0b9ea314b240245e24578be864d29ab78a2fedfafdd73b1ce8dcb049",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 4,
+        "p80Days": 5,
+        "maxCdfError": 3.3306690738754696e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 4,
+            "cdf": 0.6952929868596107,
+            "previousCdf": 0.45586042515198577
+          },
+          "0.8": {
+            "day": 5,
+            "cdf": 0.821372949341267,
+            "previousCdf": 0.6952929868596107
+          }
+        }
+      }
+    },
+    {
+      "id": "F14",
+      "posterior": {
+        "a": {
+          "alpha": 1,
+          "beta": 3
+        },
+        "b": {
+          "alpha": 4,
+          "beta": 1
+        }
+      },
+      "initialState": "DONE",
+      "requiredFutureDone": 1,
+      "p50Days": 2,
+      "p80Days": 2,
+      "drawSha256": "d7b5f75978c4ed0a0fbc9bb8f0f7cfa85e5c5a1f00c29d9f398e04aaa49e5955",
+      "oracle": {
+        "method": "conditional renewal + binomial-tail CDF, no state DP",
+        "p50Days": 2,
+        "p80Days": 2,
+        "maxCdfError": 2.220446049250313e-16,
+        "maxPmfPruningDifference": 0,
+        "boundary": {
+          "0.5": {
+            "day": 2,
+            "cdf": 0.8527643307271132,
+            "previousCdf": 0.2514660792294579
+          },
+          "0.8": {
+            "day": 2,
+            "cdf": 0.8527643307271132,
+            "previousCdf": 0.2514660792294579
+          }
+        }
+      }
+    }
+  ],
+  "historicalComparison": {
+    "entry": "original internal numeric-snapshot candidate before the question-prior adapter",
+    "scope": "gateDifferenceIds, priorErrorDifference and producerReportedTests below retain the original verification snapshot; they are not current adapter gaps"
+  },
+  "publishedCandidateEvidence": {
+    "pr": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119",
+    "head": "32a76cfefc193d7ddb82c74a764588a8cd04848e",
+    "candidateStatus": "13 gates connected, raw/source/mapping validation added; 18 cases and 9 goldens unchanged. Public predict contract maintained; D-26 adoption and API/DB/UI integration incomplete.",
+    "nodeCi": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37323944883",
+    "verifiedNodePassCounts": "61 package tests and 3 oracle tests for each of Node 22 and 24; typecheck pass",
+    "dockerCi": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37323944974",
+    "verifiedDockerPassCount": 61,
+    "foundationCi": "https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37323945326",
+    "verificationScope": "Public CI logs and producer numeric evidence checked; candidate tests not rerun by this proposal replayer. Candidate unmerged and not adopted."
+  },
+  "gateDifferenceIds": [
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F14",
+    "F15",
+    "F17",
+    "F18"
+  ],
+  "priorErrorDifference": {
+    "id": "N04",
+    "actual": "RangeError",
+    "proposed": "PredictionConfigError"
+  },
+  "producerReportedTests": {
+    "engineCandidate": 56,
+    "experimentalAdapterOracle": 3
+  },
+  "integrationSpecificationsNotExecuted": 10,
+  "referenceCdfTolerance": 1e-11,
+  "productionQuantileEpsilonUnchanged": 1e-12
+}

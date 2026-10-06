@@ -21,8 +21,21 @@ const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 
 // 固定版のライブラリから直接getMigrationsを呼ぶ（CLIの`@latest`取得を避ける。#84 F-9）。2回目以降は差分なしで何もしない。
 export async function migrateAuth(pool: Pool): Promise<AuthMigrationResult> {
-  const { toBeCreated, toBeAdded, runMigrations } = await getMigrations(authSchemaOptions(pool));
-  await runMigrations();
+  const { toBeCreated, toBeAdded, compileMigrations } = await getMigrations(authSchemaOptions(pool));
+  // 固定版が生成するDDLを同じ接続のtransactionで適用する。index失敗でも部分schemaを残さない。
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    try {
+      await client.query(await compileMigrations());
+      await client.query('commit');
+    } catch (error) {
+      await client.query('rollback');
+      throw error;
+    }
+  } finally {
+    client.release();
+  }
   return { tablesCreated: toBeCreated.map((t) => t.table), columnsAdded: toBeAdded.map((t) => t.table) };
 }
 
