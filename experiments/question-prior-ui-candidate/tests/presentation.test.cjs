@@ -70,6 +70,8 @@ test('record-only completion does not imply a question answer',()=>{
 test('a null horizon has an explicit display and no invented finite week',()=>{
   const html=forecast({...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Days:null,p80Days:null,p50Label:null,p80Label:null}});
   assert.match(html,/3年以上先/);assert.doesNotMatch(html,/undefined|null/);
+  assert.match(html,/>3年以上先<\/p>/);
+  assert.match(html,/10回中8回の完了の目安も3年以上先です。/);
 });
 test('actual completion and recorded-day states exclude core comparison',()=>{
   const done=forecast(views.completed);assert.match(done,/目標を達成/);assert.match(done,/100／100分/);assert.doesNotMatch(done,/data-r11-aux|約3日/);
@@ -131,4 +133,50 @@ test('raw completion days preserve zero/null and reject misleading labels or qua
   const view={...partial,completion};assertForecastPresentation(view);assert.equal(view.completion.p50Days,0);assert.match(forecast(view),/同じ週のラベル/);assert.match(forecast(view),/まだ実際の記録・達成には反映されていません/);
   for(const changes of [{p50Days:undefined},{p50Days:NaN},{p50Days:-1},{p80Days:1.5},{p80Days:Infinity},{p50Days:15},{p50Days:null},{p80Label:null},{scenario:'CURRENT_STATE'}])assert.throws(()=>assertForecastPresentation({...partial,completion:{...completion,...changes}}),TypeError);
   const beyond={...partial,completion:{...completion,p50Days:null,p80Days:null,p50Label:null,p80Label:null}};assertForecastPresentation(beyond);assert.match(forecast(beyond),/3年以上先/);
+});
+
+test('finite p50 and out-of-horizon p80 keep the finite label without implying both are beyond horizon',()=>{
+  const completion={kind:'estimate',sources:{a:'QUESTION',b:'RECORDS'},p50Days:7,p80Days:null,p50Label:'表示fixture:7日',p80Label:null};
+  for(const view of [
+    {...partial,completion:{...completion,scenario:'TODAY_DONE'}},
+    {...views.recorded,completion:{...completion,scenario:'CURRENT_STATE'}},
+  ]){
+    assertForecastPresentation(view);
+    const html=forecast(view);assert.match(html,/>表示fixture:7日<\/p>/);
+    assert.match(html,/10回中8回の完了の目安は3年以上先です。/);
+    assert.doesNotMatch(html,/目安も3年以上先/);
+    assert.equal(view.completion.p50Days,7);assert.equal(view.completion.p80Days,null);
+  }
+});
+
+test('same-day quantiles retain the hypothetical condition and do not claim actual achievement',()=>{
+  const view={...partial,progress:{done:15,total:16,unit:'minutes'},completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Days:0,p80Days:0,p50Label:'表示fixture:今日',p80Label:'表示fixture:今日'}};
+  assertForecastPresentation(view);const html=forecast(view);
+  assert.match(html,/10回中8回の完了の目安：表示fixture:今日/);
+  assert.match(html,/15／16分/);assert.match(html,/まだ実際の記録・達成には反映されていません/);
+  assert.doesNotMatch(html,/3年以上先|目標を達成しました/);
+});
+
+test('insufficiency and conditional counts do not acquire a horizon estimate',()=>{
+  for(const view of [views['records-missing'],views['records-partial'],views['records-recorded'],partial]){
+    assertForecastPresentation(view);
+    const html=forecast(view);assert.doesNotMatch(html,/10回中8回|3年以上先/);
+  }
+  for(const completion of [
+    {kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'RECORDS'},p50Days:Infinity,p80Days:null,p50Label:'A',p80Label:null},
+    {kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'RECORDS'},p50Days:null,p80Days:7,p50Label:null,p80Label:'B'},
+  ]){
+    const view={...partial,completion};
+    assert.throws(()=>assertForecastPresentation(view),TypeError);assert.throws(()=>forecast(view),TypeError);
+  }
+});
+
+test('conditional plans require a nonblank reason through both the shared guard and renderer',()=>{
+  assertForecastPresentation(partial);
+  assert.match(forecast(partial),/これは日数の予測ではありません/);
+  for(const reason of ['', '   ', '\n\t', null, 42]){
+    const view={...partial,completion:{...partial.completion,reason}};
+    assert.throws(()=>assertForecastPresentation(view),TypeError);
+    assert.throws(()=>forecast(view),TypeError);
+  }
 });

@@ -56,14 +56,18 @@
 | `PriorForecast.tsx` | `sourceLabel(Source)`、`sourceNote(SufficientSource)`、`assertForecastPresentation(unknown)`をnamed export。NONEは不足のラベルであり、estimate注釈には使えない |
 | 実行時検証 | B renderer側でも`assertForecastPresentation(view)`を予測Boundaryの内側で呼ぶ。実績量／実観測件数／Plan／source／scenario／日数・ラベルnull整合を確認。API検証・出所決定・freshness・状態優先のresolverはFEが別に持つ |
 | 完了の日数 | estimateの`p50Days`／`p80Days`は新しい必須項目。`engine-view.ts`は元Engine値をそのまま保持。0日とnullを維持し、週ラベルをparseしたり、補間点・履歴・分布・新指標を生成しない |
+| 一部だけ期間外の完了見通し | p50有限／p80=nullは有効。Engineは各quantileの閾値を独立に判定するため、p50のラベルを残し、p80だけ「10回中8回の完了の目安は3年以上先です。」と表示。両方nullのときだけ「目安も3年以上先です。」を使う。B rendererにもこの分岐を引き継ぎ、nullを有限値で埋めたり有効な入力を拒否したりしない |
+| 条件付き回数の理由 | `conditional.reason`は空文字・空白だけを共有guardと参照rendererで拒否。残量／設定量の条件付き回数と、日数予測ではないことを保ち、API型や計算を変更しない |
 | `QuestionPriorFields.tsx` | `externalHeadingId`を指定すると内部h2を省き、その既存の可視見出しを`aria-labelledby`で参照。親がIDの一意性・実在・表示を保証。省略時は従来の内部h2。help/error/radioのuseId関係は保持 |
 | `question-prior.css` | `.r11-qp`用の`--r11-qp-accent`／`focus`／`border`／`separator`／`source-background`／`source-text`／`error-background`／`error-text`／`notice-background`／`notice-text`。変数未指定は元の色をfallback。FEが実トークンの意味と対応を確認して親で指定する |
 
 P-12の補助実績は`nSD + nSS`回中`nSD`回を保持します。0件は実績なしを表示し、回答を件数へ加えません。補助指標数、3指標の追加削除、P-12の削除、R-11のScope、D-26の具体契約は変更していません。
 
+正式FEへ取り込む際の表示形式はProduct SpecのP-12を正とし、この候補文言で上書きしません。一部だけ期間外になる場合の意味、0/nullの保持、共有guardはB rendererへ引き継いでください。
+
 取り込み対象は従来の`src/`4ファイルと`examples/engine-view.ts`の5つですが、今回**すべてに差分があり、旧`7b0debd`とGit blob同一ではありません**。取得元はこの調整を含むPR120のHEADを返信で固定し、FEの取り込みPRで元5パス→配置先・変更理由・担当を記録してください。`features/today/forecast-view.ts`へ置く例では、型importを`../prior/presentation-types`へ変えます。正式配置後はFE側を単一の保守元とし、候補の同期コピーは増やしません。
 
-引き継ぐ検証は型負例11件・部品20件・固定Engine接続24件。これらを正式配置とimportに合わせて移し、さらにB rendererで不足／0日／null／実観測0件／R-07／R-08、guard fallbackと記録操作の維持、Goal切替・有効再取得での復帰を確認してください。[今回の実DOM記録](VERIFICATION.md#c対応の再検証2026-10-06)は独立previewの結果で、B rendererや正式FEの成功には流用しません。
+引き継ぐ検証は型負例11件・部品24件・固定Engine接続24件。これらを正式配置とimportに合わせて移し、さらにB rendererで不足／0日／null／実観測0件／R-07／R-08、guard fallbackと記録操作の維持、Goal切替・有効再取得での復帰を確認してください。[今回の実DOM記録](VERIFICATION.md#c対応の再検証2026-10-06)は独立previewの結果で、B rendererや正式FEの成功には流用しません。
 
 ### 既存の設計意図と残る条件
 
@@ -84,7 +88,7 @@ node experiments/question-prior-ui-candidate/scripts/check.mjs
 node experiments/question-prior-ui-candidate/scripts/serve.mjs
 ```
 
-checkはstrict型検証（[11の型負例](tests/type-contracts.tsx)を含む）、[20件のReact SSRテスト](tests/presentation.test.cjs)、隔離previewのVite buildを順に実行します。成功時は最後に`PASS: strict candidate types, SSR tests and isolated React preview build.`と表示します。生成物とホストごとの型参照は`.qa/`に置き、Git管理しません。個人パスをソースへ固定しません。
+checkはstrict型検証（[11の型負例](tests/type-contracts.tsx)を含む）、[24件のReact SSRテスト](tests/presentation.test.cjs)、隔離previewのVite buildを順に実行します。成功時は最後に`PASS: strict candidate types, SSR tests and isolated React preview build.`と表示します。生成物とホストごとの型参照は`.qa/`に置き、Git管理しません。個人パスをソースへ固定しません。
 
 serveが出す`http://127.0.0.1:<port>/`を通常ブラウザで開きます。候補previewの静的GET/HEADだけを配信し、directory listing/APIはありません。外部公開・auth・DB・API接続はなく、CSPのconnect-srcはnoneです。終える時は通常interactive terminalで`stop`、またはCtrl+Cを使います。ブラウザのfile URLはこのpreview手順では使いません。
 

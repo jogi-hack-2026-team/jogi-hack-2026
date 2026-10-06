@@ -4,6 +4,22 @@
 
 対象はこのディレクトリのTSX、slot例、固定状態のReact previewと、別checkoutの候補Engineからのローカル表示接続。正式FE画面・API・本番Engine・保存revision・D-26採択の検証ではない。表示例は予測精度の根拠にしない。
 
+## p50有限／p80期間外のレビュー修正（2026-10-06）
+
+[Naokiレビュー5430680820](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/120#pullrequestreview-5430680820)のShould Fixを、`e9599f2`へ追加した回帰テストの失敗で再現しました。原因はp80のnullだけで「も3年以上先」と決めていたことです。p50有限／p80=nullではp50のラベルを残して「目安は3年以上先」、両方nullでは「目安も3年以上先」と表示します。有効な一部期間外の入力を拒否する修正にはしていません。Optionalの空文字・空白だけの`conditional.reason`も既存guardで拒否します。
+
+| 今回実行した確認 | 結果・範囲 |
+| --- | --- |
+| strict・exact optional・型負例11件／React SSR 24件／Vite build | 成功。旧20件を維持し、p50有限／p80=null（TODAY_DONE・CURRENT_STATE）、仮定0日、不足と条件付き回数、非空の理由を4件追加。両方nullの既存assertionも強化 |
+| 固定Engine接続24件 | 成功。Engine pin `f7a6c02`とLF正規化fixture hash `ba7820…4ac47`を維持。mainの新しいEngineの検証へ読み替えない |
+| 敵対的セルフレビュー | 正常6状態は値を変更せず表示。不正16入力は共有guardと参照rendererの両方で拒否。NaN／Infinity／負数／小数／unsafe integer／quantile逆転／null・label不整合／出所不足／scenario逆転／空理由を含む |
+| Chrome154.0.8037.98での今回の表示確認 | 専用headless／CDPで実部品のSSR HTMLの6状態を1280／320pxで確認。横はみ出しなし、console警告・error／未捕捉例外なし。Playwright CLIは利用できず、React mountや操作・B renderer・正式FE／API／DBは今回の確認対象外 |
+| Foundation・差分空白検査 | 112 text files／1241 local links／7 ignore casesで成功。候補の型・SSR・buildとは別に確認 |
+
+B rendererへの意味の引き継ぎをREADMEに記載しました。正式FEの表示形式はProduct SpecのP-12が正で、候補の文言を正式仕様へ昇格させません。参照rendererの全文コピーや図・補助指標の追加、API／Engine／表示型の拡張、D-26採択は行っていません。差分は表示・SSR・README・本記録の4ファイルです。正式仕様・配置・参照先を変更していないため、Product Spec／Architecture／change-mapの更新は不要です。
+
+この候補修正で未解決のBlocking／Should Fixはありません。Human Review、正式B rendererの検証、R-11の保存・結合、D-26と#70／#117／#88の条件は残ります。以下の(c)対応の実DOM操作や画像は`e9599f2`時点の履歴で、今回の新しい操作結果として扱いません。
+
 ## (c)対応の再検証（2026-10-06）
 
 FE相談6016619430と依頼者の(c)＋必要な部品調整の承認に基づき、PR120 `6f08c52`から候補を更新しました。共通表示型のR-06不足・元の完了日数、公開source helper／共有guard、外部見出しID、scoped CSS変数を確認する変更です。P-12の実績、R-07／R-08、未保存draft・実績への非加算を維持しています。候補5ファイルはすべて変更され、旧`7b0debd`と同一ではありません。取得HEADは変更後のPR返信で固定します。

@@ -46,7 +46,7 @@ function assertCompletion(completion: unknown): asserts completion is Completion
   if (completion.kind === "conditional") {
     const p = completion.plan;
     assertObject(p);
-    if (!integer(p.sessions, 1) || !finite(p.remainingAmount, 0) || p.remainingAmount <= 0 || !finite(p.sessionAmount, 0) || p.sessionAmount <= 0 || !finite(p.lastAmount, 0) || p.lastAmount <= 0 || p.lastAmount > p.sessionAmount || (p.unit !== "minutes" && p.unit !== "sessions") || typeof completion.reason !== "string") throw new TypeError("Invalid conditional plan.");
+    if (!integer(p.sessions, 1) || !finite(p.remainingAmount, 0) || p.remainingAmount <= 0 || !finite(p.sessionAmount, 0) || p.sessionAmount <= 0 || !finite(p.lastAmount, 0) || p.lastAmount <= 0 || p.lastAmount > p.sessionAmount || (p.unit !== "minutes" && p.unit !== "sessions") || typeof completion.reason !== "string" || !completion.reason.trim()) throw new TypeError("Invalid conditional plan.");
     return;
   }
   if (completion.kind !== "estimate" || (completion.scenario !== "TODAY_DONE" && completion.scenario !== "CURRENT_STATE")) throw new TypeError("Invalid completion presentation.");
@@ -103,11 +103,16 @@ function Completion({ completion }: { completion: CompletionPresentation }) {
     return <section data-r11-aux="completion"><h3>設定量で行う場合の残り</h3><p className="r11-qp-value">あと{p.sessions}回分</p><p>残り{p.remainingAmount}{unit}。1回{p.sessionAmount}{unit}の設定量で行う場合。最後に必要な量は{p.lastAmount}{unit}です。これは日数の予測ではありません。</p><p>{completion.reason}</p></section>;
   }
   const hasQuestion = completion.sources.a !== "RECORDS" || completion.sources.b !== "RECORDS";
+  const p80Text = completion.p80Label === null
+    ? completion.p50Label === null
+      ? "10回中8回の完了の目安も3年以上先です。"
+      : "10回中8回の完了の目安は3年以上先です。"
+    : `10回中8回の完了の目安：${completion.p80Label}`;
   return (
     <section data-r11-aux="completion">
       <h3>{completion.scenario === "TODAY_DONE" ? "今日やった場合の完了の目安" : "現在の状態からの完了の目安"}</h3>
       <p className="r11-qp-value">{completion.p50Label ?? "3年以上先"}</p>
-      <p>{completion.p80Label === null ? "10回中8回の完了の目安も3年以上先です。" : `10回中8回の完了の目安：${completion.p80Label}`}</p>
+      <p>{p80Text}</p>
       <p>取り組めた日の翌日：{sourceLabel(completion.sources.a)}／休んだ日の翌日：{sourceLabel(completion.sources.b)}</p>
       <p>{hasQuestion && "初期の回答は仮定です。"}将来を保証するものではありません。</p>
       {completion.scenario === "TODAY_DONE" && <p>今日やった場合の仮定です。まだ実際の記録・達成には反映されていません。</p>}
