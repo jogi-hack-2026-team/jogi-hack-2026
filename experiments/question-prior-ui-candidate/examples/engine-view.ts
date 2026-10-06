@@ -61,6 +61,7 @@ export function engineViewExample(result: EngineDisplayCandidate, context: Displ
       const label = (days: number | null) => days === null ? null : context.formatCompletionDays(days, value.scenario);
       completion = { kind: "estimate", scenario: value.scenario,
         sources: { a: sufficient(result.evidenceSource.a), b: sufficient(result.evidenceSource.b) },
+        p50Days: value.p50Days, p80Days: value.p80Days,
         p50Label: label(value.p50Days), p80Label: label(value.p80Days) };
       break;
     }

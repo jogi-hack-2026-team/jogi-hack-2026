@@ -7,7 +7,7 @@ const { renderToStaticMarkup }=require('react-dom/server');
 const build=process.env.UI_CANDIDATE_BUILD;
 if(!build)throw new Error('Use scripts/check.mjs to compile this candidate first.');
 const { QuestionPriorFields }=require(join(build,'src/QuestionPriorFields.js'));
-const { PriorForecast }=require(join(build,'src/PriorForecast.js'));
+const { PriorForecast, sourceLabel, sourceNote, assertForecastPresentation }=require(join(build,'src/PriorForecast.js'));
 const { GoalQuestionSlotExample }=require(join(build,'examples/slots.js'));
 const { partial, conditional, views }=require(join(build,'examples/views.js'));
 const fields=props=>renderToStaticMarkup(React.createElement(QuestionPriorFields,{value:{a:null,b:null},onChange:()=>{},...props}));
@@ -59,16 +59,16 @@ test('core provenance uses the exact question/mixed/record-only note',()=>{
   }
 });
 test('completion labels and per-origin sources come from the parent without date computation',()=>{
-  const completion={kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'QUESTION_AND_RECORDS'},p50Label:'表示確認用の週A',p80Label:'表示確認用の週B'};
+  const completion={kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'QUESTION_AND_RECORDS'},p50Days:7,p80Days:14,p50Label:'表示確認用の週A',p80Label:'表示確認用の週B'};
   const html=forecast({...partial,completion});assert.match(html,/表示確認用の週A/);assert.match(html,/表示確認用の週B/);
   assert.match(html,/取り組めた日の翌日：実績／休んだ日の翌日：回答＋実績/);assert.match(html,/まだ実際の記録・達成には反映されていません/);
 });
 test('record-only completion does not imply a question answer',()=>{
-  const html=forecast({...partial,core:{kind:'estimate',days:3,source:'RECORDS'},completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'RECORDS'},p50Label:'表示用A',p80Label:'表示用B'}});
+  const html=forecast({...partial,core:{kind:'estimate',days:3,source:'RECORDS'},completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'RECORDS'},p50Days:7,p80Days:14,p50Label:'表示用A',p80Label:'表示用B'}});
   assert.doesNotMatch(html,/初期の回答は仮定/);assert.match(html,/翌日：実績／/);
 });
 test('a null horizon has an explicit display and no invented finite week',()=>{
-  const html=forecast({...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Label:null,p80Label:null}});
+  const html=forecast({...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Days:null,p80Days:null,p50Label:null,p80Label:null}});
   assert.match(html,/3年以上先/);assert.doesNotMatch(html,/undefined|null/);
 });
 test('actual completion and recorded-day states exclude core comparison',()=>{
@@ -76,7 +76,7 @@ test('actual completion and recorded-day states exclude core comparison',()=>{
   const recorded=forecast(views.recorded);assert.match(recorded,/今日は記録済み/);assert.doesNotMatch(recorded,/ゴールが遠ざかる日数/);
 });
 test('recorded-day CURRENT_STATE completion excludes the hypothetical Today heading',()=>{
-  const html=forecast({...views.recorded,completion:{kind:'estimate',scenario:'CURRENT_STATE',sources:{a:'RECORDS',b:'QUESTION'},p50Label:'表示用A',p80Label:'表示用B'}});
+  const html=forecast({...views.recorded,completion:{kind:'estimate',scenario:'CURRENT_STATE',sources:{a:'RECORDS',b:'QUESTION'},p50Days:7,p80Days:14,p50Label:'表示用A',p80Label:'表示用B'}});
   assert.match(html,/現在の状態から/);assert.doesNotMatch(html,/今日やった場合/);
 });
 test('loading, failed refresh and unknown save do not retain stale numbers',()=>{
@@ -88,10 +88,47 @@ test('unresolved or invalid presentation values cannot silently become estimates
     {...partial,core:{kind:'estimate',days:NaN,source:'QUESTION'}},
     {...partial,resumed:{success:2,total:1}},
     {...partial,completion:{kind:'fixture-pending'}},
-    {...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'NONE',b:'QUESTION'},p50Label:'A',p80Label:'B'}},
-    {...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Label:null,p80Label:'B'}},
+    {...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'NONE',b:'QUESTION'},p50Days:7,p80Days:14,p50Label:'A',p80Label:'B'}},
+    {...partial,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Days:null,p80Days:14,p50Label:null,p80Label:'B'}},
     {...partial,completion:{...conditional,plan:{...conditional.plan,lastAmount:16}}},
-    {...views.recorded,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Label:'A',p80Label:'B'}},
+    {...views.recorded,completion:{kind:'estimate',scenario:'TODAY_DONE',sources:{a:'QUESTION',b:'QUESTION'},p50Days:7,p80Days:14,p50Label:'A',p80Label:'B'}},
     {kind:'toString'},
   ])assert.throws(()=>forecast(view),TypeError);
+});
+
+test('source helpers are public and NONE cannot supply an estimate note',()=>{
+  assert.deepEqual(['NONE','QUESTION','QUESTION_AND_RECORDS','RECORDS'].map(sourceLabel),['不足','回答','回答＋実績','実績']);
+  for(const source of ['QUESTION','QUESTION_AND_RECORDS','RECORDS'])assert.match(sourceNote(source),/将来を保証/);
+  for(const source of ['NONE','toString',undefined])assert.throws(()=>sourceNote(source),TypeError);
+  assert.throws(()=>sourceLabel('toString'),TypeError);
+});
+
+test('an external heading replaces only the internal h2 and preserves all references',()=>{
+  const html=renderToStaticMarkup(React.createElement('details',{open:true},React.createElement('summary',{id:'goal-heading'},'任意の質問'),React.createElement(QuestionPriorFields,{value:{a:'MID',b:'UNKNOWN'},onChange:()=>{},externalHeadingId:'goal-heading',fieldErrors:{b:'確認してください'}})));
+  assert.doesNotMatch(html,/<h2/);assert.match(html,/aria-labelledby="goal-heading"/);assert.deepEqual(checked(html),['MID','UNKNOWN']);
+  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
+  for(const ref of html.matchAll(/aria-(?:labelledby|describedby)="([^"]+)"/g))for(const id of ref[1].split(' '))assert.ok(ids.includes(id));
+  assert.match(fields({}),/<h2/);
+  for(const externalHeadingId of ['', 'two ids',null,42])assert.throws(()=>fields({externalHeadingId}),TypeError);
+});
+
+test('R-06 record-only insufficiency carries resolved text without a conditional Plan',()=>{
+  const missing=forecast(views['records-missing']);
+  assert.match(missing,/まだ「休んだ翌日」の記録がありません/);assert.match(missing,/「やった翌日」と「休んだ翌日」の記録がそれぞれたまると/);
+  assert.doesNotMatch(missing,/あと\d+回分|回答に基づく|0回中0回|約\d+日/);
+  const partial=forecast(views['records-partial']);assert.match(partial,/約3日/);assert.match(partial,/2回中1回/);assert.match(partial,/完了の目安を表示します/);assert.doesNotMatch(partial,/あと\d+回分/);
+  const recorded=forecast(views['records-recorded']);assert.match(recorded,/今日は記録済み/);assert.match(recorded,/完了の目安を表示します/);assert.doesNotMatch(recorded,/ゴールが遠ざかる|今日やった場合/);
+});
+
+test('shared guard protects a separate renderer without mounting PriorForecast',()=>{
+  const render=view=>{assertForecastPresentation(view);return view.kind==='forecast'?view.resumed.total:null;};
+  assert.equal(render(views['records-partial']),2);
+  for(const view of [null,{}, {...partial,progress:{...partial.progress,done:Infinity}}, {...partial,resumed:{success:1,total:0}}, {...partial,core:{kind:'estimate',days:2,source:'NONE'}}, {...partial,completion:{...conditional,plan:{...conditional.plan,sessions:0}}}, {...partial,completion:{kind:'insufficient',message:''}}, {...partial,core:{kind:'invalid'}}, {...partial,core:{kind:'insufficient',message:42}}])assert.throws(()=>render(view),TypeError);
+});
+
+test('raw completion days preserve zero/null and reject misleading labels or quantiles',()=>{
+  const completion={kind:'estimate',scenario:'TODAY_DONE',sources:{a:'RECORDS',b:'RECORDS'},p50Days:0,p80Days:14,p50Label:'同じ週のラベル',p80Label:'別の表示文言'};
+  const view={...partial,completion};assertForecastPresentation(view);assert.equal(view.completion.p50Days,0);assert.match(forecast(view),/同じ週のラベル/);assert.match(forecast(view),/まだ実際の記録・達成には反映されていません/);
+  for(const changes of [{p50Days:undefined},{p50Days:NaN},{p50Days:-1},{p80Days:1.5},{p80Days:Infinity},{p50Days:15},{p50Days:null},{p80Label:null},{scenario:'CURRENT_STATE'}])assert.throws(()=>assertForecastPresentation({...partial,completion:{...completion,...changes}}),TypeError);
+  const beyond={...partial,completion:{...completion,p50Days:null,p80Days:null,p50Label:null,p80Label:null}};assertForecastPresentation(beyond);assert.match(forecast(beyond),/3年以上先/);
 });

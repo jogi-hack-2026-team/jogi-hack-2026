@@ -12,15 +12,18 @@ export interface Plan {
   readonly sessionAmount: number; readonly lastAmount: number; readonly unit: Unit;
 }
 export type CorePresentation =
-  | { readonly kind: "insufficient" }
+  | { readonly kind: "insufficient"; readonly message?: string }
   | { readonly kind: "estimate"; readonly days: number; readonly source: SufficientSource };
 export type CompletionPresentation =
+  | { readonly kind: "insufficient"; readonly message: string }
   | { readonly kind: "conditional"; readonly plan: Plan; readonly reason: string }
   | { readonly kind: "estimate"; readonly scenario: "TODAY_DONE" | "CURRENT_STATE";
       readonly sources: Readonly<Record<Origin, SufficientSource>>;
+      // Keep Engine days for display geometry; never parse them from formatted week labels.
+      readonly p50Days: number | null; readonly p80Days: number | null;
       readonly p50Label: string | null; readonly p80Label: string | null };
 export type CurrentStateCompletionPresentation =
-  | Extract<CompletionPresentation, { kind: "conditional" }>
+  | Extract<CompletionPresentation, { kind: "conditional" | "insufficient" }>
   | (Omit<Extract<CompletionPresentation, { kind: "estimate" }>, "scenario"> & { readonly scenario: "CURRENT_STATE" });
 export type ForecastPresentation =
   | { readonly kind: "loading" | "saved-refresh-failed" | "save-unknown" }
@@ -36,6 +39,8 @@ export interface QuestionPriorFieldsProps {
   readonly disabled?: boolean;
   readonly fieldErrors?: Readonly<Partial<Record<Origin, string>>>;
   readonly className?: string;
+  // Parent must render this visible heading. Its presence suppresses only the internal h2.
+  readonly externalHeadingId?: string;
 }
 export interface PriorForecastProps { readonly view: ForecastPresentation; readonly className?: string }
 // Example FE-owned state, never a mutation implementation.

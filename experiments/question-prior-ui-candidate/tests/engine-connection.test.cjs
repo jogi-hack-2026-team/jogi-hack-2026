@@ -44,7 +44,10 @@ for(const fixture of document.calculationExamples)test(`${fixture.id}: real Engi
       assert.equal(view.completion.kind,'estimate');assert.deepEqual(view.completion.sources,expected.evidenceSource);
       const completion=result.completion;
       assert.deepEqual(calls,[completion.p50Days,completion.p80Days].filter(x=>x!==null).map(days=>({days,scenario:completion.scenario})));
-      for(const key of ['p50','p80'])assert.equal(view.completion[`${key}Label`],completion[`${key}Days`]===null?null:`表示fixture:${completion[`${key}Days`]}日`);
+      for(const key of ['p50','p80']){
+        assert.equal(view.completion[`${key}Days`],completion[`${key}Days`]);
+        assert.equal(view.completion[`${key}Label`],completion[`${key}Days`]===null?null:`表示fixture:${completion[`${key}Days`]}日`);
+      }
       assert.doesNotMatch(html,/あと\d+回分/); // Plan must not become a third auxiliary indicator.
     }
   }

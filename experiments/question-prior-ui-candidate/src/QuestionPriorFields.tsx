@@ -15,13 +15,16 @@ const questions: Readonly<Record<Origin, string>> = {
 };
 const origins: readonly Origin[] = ["a", "b"];
 
-export function QuestionPriorFields({ value, onChange, disabled = false, fieldErrors = {}, className }: QuestionPriorFieldsProps) {
+export function QuestionPriorFields({ value, onChange, disabled = false, fieldErrors = {}, className, externalHeadingId }: QuestionPriorFieldsProps) {
+  if (externalHeadingId !== undefined && (typeof externalHeadingId !== "string" || !/^\S+$/.test(externalHeadingId))) {
+    throw new TypeError("externalHeadingId must identify one existing visible heading.");
+  }
   // A stable per-instance prefix also separates two copies for the same Goal.
   const id = useId();
   const helpId = `${id}-help`;
   return (
-    <section className={["r11-qp", className].filter(Boolean).join(" ")} aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`}>最初の見通しを調整する（任意）</h2>
+    <section className={["r11-qp", className].filter(Boolean).join(" ")} aria-labelledby={externalHeadingId ?? `${id}-title`}>
+      {externalHeadingId === undefined && <h2 id={`${id}-title`}>最初の見通しを調整する（任意）</h2>}
       <p id={helpId}>記録開始前の、今回に近い行動・量・生活状況を思い出して選んでください。これからの意欲や理想ではなく、過去の取り組み方を答えてください。少量でも取り組めた日を含みます。答えられなくても大丈夫です。各問を回答しないまま進められます。</p>
       {origins.map(origin => {
         const error = fieldErrors[origin];

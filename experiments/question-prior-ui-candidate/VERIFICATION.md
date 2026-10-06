@@ -1,10 +1,32 @@
 # #117 React候補の検証記録
 
-**Supporting Artifact / Not a Source of Truth。2026-10-05の独立候補の検証。**
+**Supporting Artifact / Not a Source of Truth。2026-10-05〜06の独立候補の検証。**
 
 対象はこのディレクトリのTSX、slot例、固定状態のReact previewと、別checkoutの候補Engineからのローカル表示接続。正式FE画面・API・本番Engine・保存revision・D-26採択の検証ではない。表示例は予測精度の根拠にしない。
 
-## 自動検証
+## (c)対応の再検証（2026-10-06）
+
+FE相談6016619430と依頼者の(c)＋必要な部品調整の承認に基づき、PR120 `6f08c52`から候補を更新しました。共通表示型のR-06不足・元の完了日数、公開source helper／共有guard、外部見出しID、scoped CSS変数を確認する変更です。P-12の実績、R-07／R-08、未保存draft・実績への非加算を維持しています。候補5ファイルはすべて変更され、旧`7b0debd`と同一ではありません。取得HEADは変更後のPR返信で固定します。
+
+| 今回実行した確認 | 結果・範囲 |
+| --- | --- |
+| strict・exact optional・型負例11件 | 成功。既存8例に、NONE注釈禁止・Planなし不足・ラベルだけの完了estimate禁止を追加 |
+| React SSR 20／20 | 成功。既存15件を継承し、helper公開、外部見出し参照、R-06不足、rendererから独立したguard、0/null日数とラベルの整合を追加 |
+| 固定Engine接続24／24 | 成功。pin `f7a6c02`と同じLF正規化fixture hashを維持。元のp50Days／p80Daysをそのまま渡すassertionを追加。nullではformatterを呼ばず、仮0日は実績達成へ加算しない |
+| 独立previewのVite build | 成功。依存・root workspaceの新設なし。Windows x64／Node22.15.1、TypeScript5.8.3／React・React DOM19.3.0／Vite8.3.1 |
+| 実DOM・Chrome154.0.8037.98 | 専用headless Chrome／CDPで8確認が成功。Playwright CLIが利用できず既存Chromeを使用。実API／DB・保存・FEのB rendererは起動していない |
+| 現行Resultの直接渡しの型負例 | compilerのみでTS2345を確認。最新main `3166e14`とローカルの`PredictionResult`型blob同一を照合し、候補inputの`evidenceSource`／`conditionalPlan`欠落を拒否。実行・SSR件数へ合算しない |
+| Foundation・差分空白検査 | 112 text files／1241 local links／7 ignore casesで成功。アプリ全体のbuild・E2E成功ではない |
+
+実DOMで、マウス・矢印・Space・Tab／Shift+Tab、保存中disabled／失敗後のdraft保持、可視の外部summary見出しと折りたたみ、2インスタンスのID/name/error/help参照を確認しました。fallback色と検証用の別tokenでaccent／source／error／focusのcomputed styleも確認しました。検証用tokenはFEの実値ではありません。
+
+R-06の両不足文言、中心だけ表示可能な状態と実観測2回中1回、記録済みの非比較不足、達成、保存結果不明／再取得失敗を確認しました。不正countsのguard例外は予測用のQA Boundaryだけをfallbackし、外の質問操作は継続でき、表示状態変更によるBoundary再作成で復帰しました。意図的なguard例外に由来するconsole error 1件を観測し、他のRuntime console警告／errorや未捕捉例外はありませんでした。正式FEのGoal切替／再取得controllerの確認ではありません。
+
+1280／390／320pxで横はみ出しなし、選択labelは48px以上でした。[今回のdesktop](screenshots/fe-seam-desktop.png)と[今回の320px](screenshots/fe-seam-mobile.png)はR-06中心のみ表示と外部見出しを描く独立QAです。左の未保存回答から右を計算・保存した画像ではなく、B案の図やデザインとの一致も示しません。検証ブラウザは終了し、previewのlisten終了も確認しました。
+
+残条件はB rendererへの引き継ぎ、FE実tokenの照合、実週ラベル、正式API／回答保存／同一snapshotのcontext／freshness、NVDA・タッチ端末、#81ユーザー確認、D-26採択と#70／#117の着手・完了条件です。Product Spec／Architecture／change-mapの正本は更新不要：正式仕様・配置・APIを変更せず、既存候補の参照先を維持したためです。READMEと本記録をコード・テストに合わせて更新しました。
+
+## 2026-10-05の自動検証（履歴）
 
 READMEの `scripts/check.mjs` をWindows x64、Node22.15.1で実行し、strict型検証、15/15のReact SSRテスト、Vite preview buildが成功した。既存lockのTypeScript5.8.3、React/React DOMと型19.3.0、Vite8.3.1を使用した。既存experimentのNode24.21.0指定に対するNode22のinstall警告は発生したが、候補のcheckは成功した。追加CIはNode24.21.0で同じcheckを実行する。
 
@@ -34,7 +56,7 @@ READMEの接続checkをWindows x64/Node22.15.1と上記既存lockで実行し、
 
 生成された`.qa/connection/report.json`は実Engine出力、表示view、HTMLと検証対象hashを含むローカル証跡。保存成功、正式API契約、ブラウザでの数値更新を示すものではない。型を回避したTODAY_DONE/CURRENT_STATEの逆転、出所不足、無効context、未達成にcompletedを渡す場合は接続例でも拒否する。
 
-## 基盤のoptional propsとBE境界の再確認（2026-10-06）
+## 6f08c52でのoptional propsとBE境界の再確認（履歴）
 
 PR122 `54b59e3`の`exactOptionalPropertyTypes: true`で、旧`GoalQuestionSlotExample`が`disabled?: boolean`へ明示的な`undefined`を渡し得るTS2375を再現しました。`saving || questionProps.disabled === true`でbooleanへ正規化する1式修正と、候補の検証設定への同flag追加を行いました。propsの語彙、5コピー対象、保存処理、API／Engine出力型は変更しません。
 
@@ -44,7 +66,7 @@ main `dc668fb`の`PredictionResult`とBEの暫定方針を読み合わせ、cand
 
 上の`783ebb4`時点の計算source同一という記録は当時の確認です。現在のPR119 `918d10e`は共有DPのsource変更を含み、同じ記述を最新HEADへ適用しません。この候補CIのEngine pinは既検証の`f7a6c02`のまま保持し、別PRの変更やテストを今回の検証件数へ合算しません。
 
-## 実DOMで確認した範囲
+## 2026-10-05の実DOMで確認した範囲（履歴）
 
 公開配置と同じTSXをビルドし、通常の127.0.0.1 HTTPでReact mountした。以下はブラウザ操作とDOM観測による確認で、自動SSRテストとは区別する。
 
@@ -64,7 +86,7 @@ main `dc668fb`の`PredictionResult`とBEの暫定方針を読み合わせ、cand
 
 スクリーンショットは[desktop](screenshots/desktop.jpg)と[mobile](screenshots/mobile.jpg)の2枚のみ。desktopは全体、mobileはキーボードfocusを含む選択欄と出所表示の一部を示す。未保存draftと右側の固定例が一致する保存・計算結果であるとは扱わない。検証用serverは終了し、ブラウザのviewport変更を解除した。
 
-## セルフレビューと残り
+## 2026-10-05のセルフレビューと残り（履歴）
 
 候補の担当境界、read-only表示、任意回答、出所、実績を増やさないこと、未採択の扱い、アクセシビリティ、依存変更の有無を確認した。JavaScript側から型を回避した場合も、記録済みにTODAY_DONE完了比較を渡すと拒否する実行時guardを追加し、SSRで確認した。この候補の範囲で未解決のBlocking/Should-Fixはない。
 
