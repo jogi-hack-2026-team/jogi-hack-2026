@@ -522,7 +522,7 @@ npm test
 npm run build
 ```
 
-`npm test`はAPIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）とEngineの47テストを実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。
+`npm test`は[Webの共通エラー回帰](../apps/web/tests/client.test.mjs)、APIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）と[Engineの数値・候補回帰](../packages/prediction/README.md#検証ci)を実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。
 
 `.env`を自動で読むのは`npm run dev:api`だけです。`npm test`とビルド済みサーバーはシェルの環境変数だけを見るため、次のように使い分けます。
 
@@ -547,7 +547,7 @@ stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件�
 
 ## Predictionの限定先行計算を確認する
 
-#71〜#73に記録した限定先行承認に沿った[packageの手順](../packages/prediction/README.md#ローカル検証)を使います。純粋計算本体・T-01〜T-15に対応するローカルテストと実性能を確認できます。終了コード0やFoundation成功をアプリ結合・正式受入の完了と扱いません。#70でroot workspaceとlockfileへ統合し、`npm run typecheck --workspace=@futureroi/prediction`等でも同じ検証を実行できます（[残条件](../packages/prediction/README.md#70後に合わせる点と残条件)）。[検証CI](../packages/prediction/README.md#検証ci)は純粋Engineの型検査と47テストをPR時に実行し、Foundationとは別です。アプリの起動・DB・HTTP・UIは今回追加していません。
+#71〜#73に記録した限定先行承認に沿った[packageの手順](../packages/prediction/README.md#ローカル検証)を使います。純粋計算本体・T-01〜T-15に対応するローカルテストと実性能を確認できます。終了コード0やFoundation成功をアプリ結合・正式受入の完了と扱いません。#70でroot workspaceとlockfileへ統合し、`npm run typecheck --workspace=@futureroi/prediction`等でも同じ検証を実行できます（[残条件](../packages/prediction/README.md#70後に合わせる点と残条件)）。[検証CI](../packages/prediction/README.md#検証ci)は純粋Engineの型検査・数値／候補回帰と独立CDF oracleをPR時に実行し、Foundationとは別です。このEngine検証はアプリの起動・DB・HTTP・UIを実行しません。
 
 ## 文書チェックで起きること
 

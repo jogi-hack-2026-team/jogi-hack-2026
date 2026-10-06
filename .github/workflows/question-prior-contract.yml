@@ -1,0 +1,60 @@
+name: Question Prior Contract Evidence
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/question-prior-contract/**'
+      - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/question-prior-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/question-prior-contract/**'
+      - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/question-prior-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: question-prior-contract-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  fixtures:
+    name: Frozen input keys and conditional oracle
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          # Match the frozen Windows/Node evidence; this is not runtime adoption.
+          node-version: '22.15.1'
+          package-manager-cache: false
+      - name: Check generator rejection and unchanged fixture values
+        run: |
+          python --version
+          python -B -m unittest discover -s experiments/question-prior-contract -p test_golden_inputs.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python experiments/question-prior-contract/build-fixtures.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- experiments/question-prior-contract/common-fixtures.json experiments/question-prior-contract/fixture-summary.md experiments/question-prior-contract/validation.json experiments/question-prior-contract/completion-goldens.json
+      - name: Install locked compiler and compile existing math source
+        run: |
+          npm ci --workspace=@futureroi/prediction --include=dev --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm exec --no -- tsc --project packages/prediction/tsconfig.json
+      - name: Check raw input keys and nine conditional DP goldens
+        run: node --test experiments/question-prior-contract/completion-oracle.test.mjs

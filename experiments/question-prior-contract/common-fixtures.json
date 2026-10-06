@@ -1,0 +1,1767 @@
+{
+  "status": "SUPPORTING PROPOSAL / NOT ADOPTED / NOT IMPLEMENTED",
+  "sourceMain": "725e2607198514254d42fb585d9a85e11ed7b89a",
+  "sourceAdoptionPrHead": "1c029c52646bfb8b95d6f5fecabdf599fc5efc81",
+  "mappingCandidate": {
+    "version": "question-prior-s4-v1-candidate",
+    "strength": 4,
+    "values": {
+      "LOW": {
+        "alpha": 1,
+        "beta": 3
+      },
+      "MID": {
+        "alpha": 2,
+        "beta": 2
+      },
+      "HIGH": {
+        "alpha": 3,
+        "beta": 1
+      }
+    },
+    "unknownAndMissing": "no qualifying prior; internal common Beta(2,2) is not a user answer"
+  },
+  "configUnchanged": {
+    "modelVersion": "behavior-persistence-m1-v1",
+    "prior": 2,
+    "samples": 200,
+    "horizonDays": 1095,
+    "seed": 20261012
+  },
+  "calculationExamples": [
+    {
+      "id": "F01",
+      "note": "未回答。共通Beta(2,2)は本人回答として表示しない。",
+      "answers": {
+        "a": null,
+        "b": null
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "LEGACY",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "NONE",
+          "b": "NONE"
+        },
+        "eligible": {
+          "a": false,
+          "b": false
+        },
+        "coreMetric": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_DONE_ORIGIN_TRANSITION"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F02",
+      "note": "両方不明。欠測を50%へ変換しない。",
+      "answers": {
+        "a": "UNKNOWN",
+        "b": "UNKNOWN"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "LEGACY",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "NONE",
+          "b": "NONE"
+        },
+        "eligible": {
+          "a": false,
+          "b": false
+        },
+        "coreMetric": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_DONE_ORIGIN_TRANSITION"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F03",
+      "note": "両方MID。数値がF01と同じでも明示回答の有無で表示可能条件が異なる。",
+      "answers": {
+        "a": "MID",
+        "b": "MID"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 3,
+          "p80Days": 6
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F04",
+      "note": "Q2だけLOW。中心は回答由来、完了は不足・あと3回分。",
+      "answers": {
+        "a": null,
+        "b": "LOW"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 1,
+            "beta": 3
+          }
+        },
+        "evidenceSource": {
+          "a": "NONE",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": false,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 3,
+          "g80": 12
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_DONE_ORIGIN_TRANSITION"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F05",
+      "note": "Q1だけHIGH。中心も完了もbの材料不足。",
+      "answers": {
+        "a": "HIGH",
+        "b": null
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 1
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "NONE"
+        },
+        "eligible": {
+          "a": true,
+          "b": false
+        },
+        "coreMetric": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F06",
+      "note": "a LOW/b HIGH。中心はbだけを使う。",
+      "answers": {
+        "a": "LOW",
+        "b": "HIGH"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 1,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 1
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 2
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 4,
+          "p80Days": 5
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F07",
+      "note": "aは実績DD、bは質問LOW。回答＋実績の混在。",
+      "answers": {
+        "a": null,
+        "b": "LOW"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 30,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 15
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 1,
+            "beta": 3
+          }
+        },
+        "evidenceSource": {
+          "a": "RECORDS",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 3,
+          "g80": 12
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 3,
+          "p80Days": 11
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F08",
+      "note": "aは質問HIGH、bは実績SD。",
+      "answers": {
+        "a": "HIGH",
+        "b": null
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 45,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 1,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 1
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "RECORDS"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 2
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 2,
+          "p80Days": 4
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F09",
+      "note": "a HIGH/b LOWにSD1回を加える。",
+      "answers": {
+        "a": "HIGH",
+        "b": "LOW"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 45,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 1,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 1
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 3
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION_AND_RECORDS"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 2,
+          "g80": 5
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 2,
+          "p80Days": 4
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F10",
+      "note": "F09の当初b回答をHIGHへ訂正。実ログを2回加算しない。",
+      "answers": {
+        "a": "HIGH",
+        "b": "HIGH"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 45,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 1,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 1
+          },
+          "b": {
+            "alpha": 4,
+            "beta": 1
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION_AND_RECORDS"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 1
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 2,
+          "p80Days": 3
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F11",
+      "note": "UNKNOWNをまたぐ2ログ。記録2件でも遷移0、出所は質問のみ。",
+      "answers": {
+        "a": "LOW",
+        "b": "HIGH"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 30,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-01",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-03",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 40,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 4,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 1,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 1
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 2
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 3,
+          "p50Days": 6,
+          "p80Days": 7
+        },
+        "conditionalPlan": {
+          "remainingAmount": 60,
+          "remainingSessions": 4,
+          "lastSessionAmount": 15
+        }
+      }
+    },
+    {
+      "id": "F12",
+      "note": "回答なしの実績SD1回。既存中心と不足条件を維持。",
+      "answers": {
+        "a": null,
+        "b": null
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 45,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "LEGACY",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 1,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "NONE",
+          "b": "RECORDS"
+        },
+        "eligible": {
+          "a": false,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 2
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_DONE_ORIGIN_TRANSITION"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F13",
+      "note": "不明回答＋DS/SD実績。完全にlegacyと同じ計算。",
+      "answers": {
+        "a": "UNKNOWN",
+        "b": "UNKNOWN"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 30,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-02",
+            "status": "DONE",
+            "amount": 15
+          },
+          {
+            "localDate": "2026-10-03",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "LEGACY",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 0,
+          "effectiveTransitions": 2,
+          "observedDays": 3,
+          "recordedDays": 3
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "RECORDS",
+          "b": "RECORDS"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 2
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 2,
+          "p50Days": 4,
+          "p80Days": 5
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F14",
+      "note": "今日DONE量7。sessionAmount15へ書き換えず、中心比較を出さない。",
+      "answers": {
+        "a": "LOW",
+        "b": "HIGH"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 22,
+          "initialProgress": 0,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-04",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "DONE",
+            "amount": 7
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "DONE",
+        "progress": {
+          "done": 7,
+          "total": 22,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 1,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 1,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 4,
+            "beta": 1
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION_AND_RECORDS"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "not_applicable",
+          "reason": "TODAY_RECORDED"
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "CURRENT_STATE",
+          "requiredFutureDone": 1,
+          "p50Days": 2,
+          "p80Days": 2
+        },
+        "conditionalPlan": {
+          "remainingAmount": 15,
+          "remainingSessions": 1,
+          "lastSessionAmount": 15
+        }
+      }
+    },
+    {
+      "id": "F15",
+      "note": "今日SKIPPEDのみ。質問があってもTODAY_RECORDED優先。",
+      "answers": {
+        "a": "HIGH",
+        "b": "UNKNOWN"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "SKIPPED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 1,
+          "recordedDays": 1
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 1
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "NONE"
+        },
+        "eligible": {
+          "a": true,
+          "b": false
+        },
+        "coreMetric": {
+          "status": "not_applicable",
+          "reason": "TODAY_RECORDED"
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 40,
+          "remainingSessions": 3,
+          "lastSessionAmount": 10
+        }
+      }
+    },
+    {
+      "id": "F16",
+      "note": "実績達成済み。質問・不足・今日記録状態より達成優先。",
+      "answers": {
+        "a": "LOW",
+        "b": "LOW"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 100,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 100,
+          "total": 100,
+          "completed": true
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 1,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 1,
+            "beta": 3
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "not_applicable",
+          "reason": "COMPLETED"
+        },
+        "completion": {
+          "status": "completed"
+        },
+        "conditionalPlan": {
+          "remainingAmount": 0,
+          "remainingSessions": 0,
+          "lastSessionAmount": 0
+        }
+      }
+    },
+    {
+      "id": "F17",
+      "note": "残量1。今日やった仮定の完了0日でも実績は15のまま。",
+      "answers": {
+        "a": "MID",
+        "b": "MID"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 16,
+          "initialProgress": 15,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 15,
+          "total": 16,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 0,
+          "p50Days": 0,
+          "p80Days": 0
+        },
+        "conditionalPlan": {
+          "remainingAmount": 1,
+          "remainingSessions": 1,
+          "lastSessionAmount": 1
+        }
+      }
+    },
+    {
+      "id": "F18",
+      "note": "Hを超える必要回数。片方の分位点を有限と偽らない。",
+      "answers": {
+        "a": "HIGH",
+        "b": "HIGH"
+      },
+      "input": {
+        "goal": {
+          "totalRequired": 4000,
+          "initialProgress": 0,
+          "sessionAmount": 1
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "mode": "QUESTION_PRIOR_CANDIDATE",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 0,
+          "total": 4000,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 1
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 1
+          }
+        },
+        "evidenceSource": {
+          "a": "QUESTION",
+          "b": "QUESTION"
+        },
+        "eligible": {
+          "a": true,
+          "b": true
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 2
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "requiredFutureDone": 3999,
+          "p50Days": null,
+          "p80Days": null
+        },
+        "conditionalPlan": {
+          "remainingAmount": 4000,
+          "remainingSessions": 4000,
+          "lastSessionAmount": 1
+        }
+      }
+    }
+  ],
+  "negativeExamples": [
+    {
+      "id": "N01",
+      "method": "PATCH",
+      "path": "/api/goals/fixture-goal-01",
+      "actor": "authenticated owner",
+      "request": {
+        "expectedRevision": 7,
+        "questionPrior": {
+          "a": "CERTAIN",
+          "b": "LOW"
+        }
+      },
+      "expected": {
+        "layer": "API structure validation",
+        "statusCandidate": 422,
+        "engineCalled": false,
+        "saved": false
+      }
+    },
+    {
+      "id": "N02",
+      "method": "PATCH",
+      "path": "/api/goals/fixture-goal-01",
+      "actor": "authenticated owner",
+      "request": {
+        "expectedRevision": 7,
+        "questionPrior": null
+      },
+      "expected": {
+        "layer": "API structure validation",
+        "statusCandidate": 422,
+        "engineCalled": false,
+        "saved": false
+      },
+      "note": "clear requires explicit {a:null,b:null}; PATCH field omitted means keep."
+    },
+    {
+      "id": "N03",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [
+          {
+            "localDate": "2026-10-06",
+            "status": "DONE",
+            "amount": 15
+          }
+        ],
+        "today": "2026-10-05"
+      },
+      "config": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "prior": 2,
+        "samples": 200,
+        "horizonDays": 1095,
+        "seed": 20261012
+      },
+      "expected": {
+        "layer": "Engine",
+        "errorClass": "PredictionInputError",
+        "saved": false
+      }
+    },
+    {
+      "id": "N04",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 60,
+          "sessionAmount": 15
+        },
+        "logs": [],
+        "today": "2026-10-05"
+      },
+      "resolvedPrior": {
+        "a": {
+          "alpha": 2,
+          "beta": 2
+        },
+        "b": {
+          "alpha": 0,
+          "beta": 4
+        }
+      },
+      "expected": {
+        "layer": "Engine prior validation",
+        "errorClassCandidate": "PredictionConfigError",
+        "fallbackToSuccess": false
+      },
+      "note": "Complete numeric test material; exact snapshot metadata, signature, reason/path await Engine review."
+    }
+  ],
+  "integrationExamples": [
+    {
+      "id": "I01",
+      "case": "same answer retry",
+      "given": {
+        "currentGoalRevision": 8,
+        "answerAppliedRevision": 7,
+        "answers": {
+          "a": "HIGH",
+          "b": "HIGH"
+        }
+      },
+      "request": {
+        "expectedRevision": 6,
+        "questionPrior": {
+          "a": "HIGH",
+          "b": "HIGH"
+        }
+      },
+      "expectedCandidate": {
+        "result": "same-value no-op after auth/context/mapping check",
+        "revision": 8,
+        "answerAppliedRevision": 7,
+        "writes": 0
+      },
+      "note": "Original request expected revision 6; answer save advanced Goal/applied revision to 7; a later log save advanced Goal revision to 8. Retry keeps the original expected revision 6. Baseline Goal-revision proposal only; concurrency mechanism is not adopted."
+    },
+    {
+      "id": "I02",
+      "case": "different stale correction",
+      "given": {
+        "currentGoalRevision": 8,
+        "answers": {
+          "a": "HIGH",
+          "b": "HIGH"
+        }
+      },
+      "request": {
+        "expectedRevision": 7,
+        "questionPrior": {
+          "a": "HIGH",
+          "b": "LOW"
+        }
+      },
+      "expectedCandidate": {
+        "status": 409,
+        "writes": 0,
+        "recalculate": false,
+        "ui": "refetch; keep draft separate; explicit resubmit required"
+      }
+    },
+    {
+      "id": "I03",
+      "case": "valid correction",
+      "given": {
+        "currentGoalRevision": 7,
+        "answers": {
+          "a": "HIGH",
+          "b": "LOW"
+        }
+      },
+      "request": {
+        "expectedRevision": 7,
+        "questionPrior": {
+          "a": "HIGH",
+          "b": "HIGH"
+        }
+      },
+      "expectedCandidate": {
+        "goalRevision": 8,
+        "answerAppliedRevision": 8,
+        "rawLogsUnchanged": true,
+        "fixedCalculation": "F09 -> F10"
+      }
+    },
+    {
+      "id": "I04",
+      "case": "allowed action amount/unit edit",
+      "given": {
+        "sessionAmount": 15,
+        "activeAnswerContext": {
+          "sessionAmount": 15
+        }
+      },
+      "request": {
+        "sessionAmount": 30
+      },
+      "expectedCandidate": {
+        "priorInvalidated": true,
+        "historicalDoneAmountsUnchanged": true,
+        "logsDeleted": false,
+        "newAnswerRequiredForQuestionMode": true,
+        "stateRevisionIncremented": true
+      }
+    },
+    {
+      "id": "I05",
+      "case": "late prediction response",
+      "given": {
+        "acceptedRevision": 9,
+        "sessionGeneration": 2
+      },
+      "response": {
+        "context": {
+          "revision": 8
+        },
+        "sessionGeneration": 2
+      },
+      "expectedCandidate": {
+        "accepted": false,
+        "newerPredictionOverwritten": false
+      }
+    },
+    {
+      "id": "I06",
+      "case": "logout / other user generation",
+      "given": {
+        "sessionGeneration": 3
+      },
+      "response": {
+        "context": {
+          "revision": 99
+        },
+        "sessionGeneration": 2
+      },
+      "expectedCandidate": {
+        "accepted": false,
+        "cachePopulated": false
+      }
+    },
+    {
+      "id": "I07",
+      "case": "save success / prediction refetch fails",
+      "expectedCandidate": {
+        "saveStatus": "saved",
+        "forecastStatus": "refresh_failed",
+        "automaticWriteRetry": false,
+        "oldForecastLabel": "not current",
+        "action": "refetch only"
+      }
+    },
+    {
+      "id": "I08",
+      "case": "network disconnect / save unknown",
+      "expectedCandidate": {
+        "saveStatus": "unknown",
+        "automaticWriteRetry": false,
+        "action": "read latest answers/context/revision first; if different, require explicit resubmit"
+      }
+    },
+    {
+      "id": "I09",
+      "case": "one captured time / local date",
+      "given": {
+        "goalTimezone": "Asia/Tokyo",
+        "capturedUtc": "2026-10-04T14:59:59Z"
+      },
+      "expectedCandidate": {
+        "today": "2026-10-04",
+        "yesterday": "2026-10-03",
+        "readAllPredictionInputsFromOneSnapshot": true,
+        "deriveTodayAgainMidCalculation": false
+      }
+    },
+    {
+      "id": "I10",
+      "case": "UI ownership and priority",
+      "expectedCandidate": {
+        "stateOwner": "FE controller",
+        "KaitoComponentFetches": false,
+        "priority": [
+          "transport/input failure",
+          "completed",
+          "today_recorded",
+          "origin eligibility"
+        ],
+        "mutableSharedFormFilesOwner": "FE"
+      }
+    }
+  ],
+  "completionQuantiles": "Nine nontrivial completion-day goldens checked with existing Engine sampler/DP and independent conditional renewal CDF on Node22.15.1 Windows, seed20261012/K200/H1095. Formal gate/API/DB/UI/runtime adoption and calibration remain unverified."
+}
