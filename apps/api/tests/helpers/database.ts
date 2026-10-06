@@ -67,6 +67,15 @@ async function adminConnection(): Promise<AdminConnection> {
   return startEmbedded();
 }
 
+async function waitForNoBackends(adminPool: pg.Pool, name: string): Promise<void> {
+  const deadline = Date.now() + 2_000;
+  while (Date.now() < deadline) {
+    const r = await adminPool.query<{ n: number }>('select count(*)::int as n from pg_stat_activity where datname = $1', [name]);
+    if ((r.rows[0]?.n ?? 0) === 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
 export async function createTestDatabase(): Promise<TestDatabase> {
   const admin = await adminConnection();
   const name = `t_${randomBytes(6).toString('hex')}`;
@@ -81,6 +90,10 @@ export async function createTestDatabase(): Promise<TestDatabase> {
     pool,
     close: async () => {
       await pool.end();
+      // clientがsocketを閉じた直後でも、サーバー側のbackendは（特にportをproxyするCIのservice containerでは）
+      // 数ms残ることがある。その状態で強制dropすると、閉じかけのclientへ「terminating connection」が届き、
+      // 次のテストの失敗として現れる。backendが消えるのを待ってからdropし、残る場合だけforceを使う。
+      await waitForNoBackends(adminPool, name);
       await adminPool.query(`drop database "${name}" with (force)`);
       await adminPool.end();
       await admin.stop();

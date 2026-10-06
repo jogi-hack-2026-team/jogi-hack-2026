@@ -2,7 +2,7 @@
 # 単一コンテナのsmoke test。CI（.github/workflows/application.yml）とDockerがある端末で使う。
 # 必要な環境変数: IMAGE（build済みimage）、DATABASE_URL（コンテナからhost networkで到達できる接続先）。
 # 確認: migration、health、SPAの深いURL、存在しないAPI・対象外methodのJSON 404、assetのcache、
-#       登録→セッション→ログアウト→古いCookieは401（複数Set-Cookieの転送を含む）、SIGTERMで10秒以内にexit 0。
+#       登録→セッション→ログアウト→古いCookieは401（複数Set-Cookieの転送を含む）、未ログインの/api/*は401、SIGTERMで10秒以内にexit 0。
 # 認証のSecret・URLは確認用の合成値（本番の値を渡さない）。httpのbase URLは BETTER_AUTH_ALLOW_HTTP=1 で許可する。
 set -eu
 
@@ -48,9 +48,10 @@ status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$base/heal
 curl --silent "$base/health" | grep -q '<div id="root">' || fail "deep URL did not return the SPA"
 curl --silent --head "$base/health" | grep -qi 'cache-control: no-cache' || fail "index.html must not be cached"
 
+# 未ログインの /api/* は（routeの有無によらず）401。routeがないpathの404はログイン後に確認する
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$base/api/nope")
-[ "$status" = "404" ] || fail "unknown API status $status"
-curl --silent "$base/api/nope" | grep -q '"NOT_FOUND"' || fail "unknown API must be JSON 404"
+[ "$status" = "401" ] || fail "anonymous unknown API status $status"
+curl --silent "$base/api/nope" | grep -q '"UNAUTHENTICATED"' || fail "anonymous unknown API must be JSON 401"
 
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --request POST "$base/goals")
 [ "$status" = "404" ] || fail "POST to a page status $status"
@@ -73,6 +74,7 @@ grep -q 'session_token' "$jar" || fail "session cookie was not set"
 curl --silent --cookie "$jar" "$base/api/auth/get-session" | grep -q "\"email\":\"$email\"" || fail "get-session did not return the user"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" "$base/api/goals")
 [ "$status" = "404" ] || fail "authenticated /api/goals status $status (expected 404: protected but no route yet)"
+curl --silent --cookie "$jar" "$base/api/nope" | grep -q '"NOT_FOUND"' || fail "authenticated unknown API must be JSON 404"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$base/api/goals")
 [ "$status" = "401" ] || fail "anonymous /api/goals status $status"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" \
