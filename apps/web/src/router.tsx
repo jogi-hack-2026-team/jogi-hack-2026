@@ -3,6 +3,7 @@ import { authClient } from './auth/client.ts';
 import { AuthForm } from './routes/AuthForm.tsx';
 import { HealthPage } from './routes/HealthPage.tsx';
 import { Home } from './routes/Home.tsx';
+import { TodayPage } from './features/today/TodayPage.tsx';
 
 function Layout() {
   const session = authClient.useSession();
@@ -76,7 +77,17 @@ const registerRoute = createRoute({
 
 const healthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/health', component: HealthPage });
 
-export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute, loginRoute, registerRoute, healthRoute]) });
+// Today Decision（#81）。いまは仮APIで表示する（限定先行。実APIとの結合は#70の基盤が揃ってから）。
+const todayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/goals/$goalId',
+  component: function TodayRoute() {
+    const { goalId } = todayRoute.useParams();
+    return <TodayPage goalId={goalId} />;
+  },
+});
+
+export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute, loginRoute, registerRoute, healthRoute, todayRoute]) });
 
 declare module '@tanstack/react-router' {
   interface Register {

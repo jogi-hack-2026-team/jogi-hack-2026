@@ -1,0 +1,26 @@
+.fr-actionbar {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  padding: var(--fr-space-4) var(--fr-space-5) var(--fr-space-7);
+  background: var(--fr-surface);
+  box-shadow: var(--fr-shadow-sticky);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}
+.fr-actionbar__note {
+  font-size: var(--fr-fs-help);
+  color: var(--fr-ink-2);
+  text-align: center;
+}
+.fr-actionbar__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fr-space-3);
+}
+.fr-actionbar__single {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}

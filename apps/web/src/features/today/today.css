@@ -1,0 +1,265 @@
+/* Today Decision 画面のレイアウト。色・大きさは tokens.css の値だけを使う。 */
+.fr-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 calc(-1 * var(--fr-space-4));
+}
+.fr-today__top {
+  padding: var(--fr-space-2) var(--fr-gutter) var(--fr-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-4);
+}
+.fr-today__pad {
+  padding: 0 var(--fr-gutter) var(--fr-gutter);
+}
+.fr-today__question {
+  font-size: var(--fr-fs-question);
+  font-weight: 700;
+  line-height: 1.55;
+}
+.fr-today__summary {
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+  color: var(--fr-ink-2);
+}
+
+/* 中心の数字（右寄せ） */
+.fr-core {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--fr-space-1);
+}
+.fr-core__label {
+  font-size: var(--fr-fs-help);
+  color: var(--fr-ink-2);
+}
+.fr-core__value {
+  font-size: var(--fr-fs-metric);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.fr-core__value small {
+  font-size: var(--fr-fs-metric-unit);
+  margin: 0 2px;
+}
+
+/* 補助指標1 */
+.fr-resumed {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--fr-space-3);
+  font-size: var(--fr-fs-body);
+  padding-top: var(--fr-space-1);
+  border-top: 1px solid var(--fr-line);
+}
+.fr-resumed strong {
+  font-size: var(--fr-fs-section);
+  white-space: nowrap;
+}
+
+/* 計算の根拠 */
+.fr-why {
+  border-top: 1px solid var(--fr-grid);
+  border-bottom: 1px solid var(--fr-grid);
+}
+.fr-why summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-2);
+  font-size: var(--fr-fs-body);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.fr-why summary::-webkit-details-marker {
+  display: none;
+}
+.fr-why summary svg {
+  transition: transform 0.2s;
+}
+.fr-why[open] summary svg {
+  transform: rotate(180deg);
+}
+.fr-why__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+  padding: 0 0 var(--fr-space-4);
+  font-size: var(--fr-fs-help);
+  line-height: 1.85;
+  color: var(--fr-ink-2);
+}
+
+/* これからの見通し */
+.fr-outlook__title {
+  font-size: var(--fr-fs-question);
+  font-weight: 700;
+}
+.fr-outlook__estimate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fr-outlook__label {
+  font-size: var(--fr-fs-body);
+  font-weight: 500;
+  color: var(--fr-ink-2);
+}
+.fr-outlook__p50 {
+  font-size: var(--fr-fs-estimate);
+  font-weight: 700;
+  line-height: 1.45;
+}
+.fr-outlook__p80 {
+  font-size: var(--fr-fs-body);
+  color: var(--fr-ink-2);
+}
+.fr-note {
+  font-size: var(--fr-fs-help);
+  line-height: var(--fr-lh-body);
+  color: var(--fr-ink-2);
+}
+
+/* これまでの積み上げ */
+.fr-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fr-progress__percent {
+  font-size: var(--fr-fs-achieved);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--fr-rec);
+  font-variant-numeric: tabular-nums;
+}
+.fr-progress__percent small {
+  font-size: var(--fr-fs-metric-unit);
+  margin-left: 2px;
+}
+.fr-progress__amount {
+  font-size: var(--fr-fs-button);
+  font-weight: 500;
+  color: var(--fr-ink-2);
+}
+
+/* 図（色はトークン） */
+.fr-chart {
+  display: block;
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+  overflow: visible;
+}
+.fr-chart__axis {
+  stroke: var(--fr-ink-2);
+  stroke-width: 1.2;
+}
+.fr-chart__grid {
+  stroke: var(--fr-grid);
+  stroke-width: 1;
+}
+.fr-chart__target {
+  stroke: var(--fr-ink-2);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+.fr-chart__today {
+  stroke: var(--fr-ink);
+  stroke-width: 2;
+}
+.fr-chart__text {
+  font-size: var(--fr-fs-axis);
+  fill: var(--fr-ink-2);
+  font-family: inherit;
+}
+.fr-chart__text--strong {
+  fill: var(--fr-ink);
+  font-weight: 700;
+}
+.fr-chart__marker-line {
+  stroke: var(--fr-dot);
+  stroke-width: 2;
+}
+.fr-chart__dot {
+  fill: var(--fr-dot);
+  stroke: var(--fr-dot);
+  stroke-width: 2.4;
+}
+.fr-chart__dot--open {
+  fill: var(--fr-surface);
+}
+.fr-chart__area {
+  fill: var(--fr-rec-soft);
+}
+.fr-chart__line {
+  fill: none;
+  stroke: var(--fr-rec);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.fr-chart__now {
+  fill: var(--fr-rec);
+  stroke: var(--fr-surface);
+  stroke-width: 2;
+}
+
+/* 今日は記録済み・達成済み */
+.fr-recorded {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-3);
+  flex-wrap: wrap;
+}
+.fr-recorded__value {
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-3);
+}
+.fr-recorded__amount {
+  font-size: var(--fr-fs-estimate);
+  font-weight: 700;
+}
+.fr-achieved {
+  align-items: center;
+  text-align: center;
+  padding-top: var(--fr-space-8);
+}
+.fr-achieved__emblem {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--fr-rec-soft);
+  color: var(--fr-rec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 読み込み中・開発用の案内 */
+.fr-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-2);
+  color: var(--fr-ink-2);
+  font-size: var(--fr-fs-body);
+}
+.fr-dev-notice {
+  margin: 0 var(--fr-gutter) var(--fr-space-3);
+  padding: var(--fr-space-2) var(--fr-space-3);
+  border: 1px dashed var(--fr-warn);
+  border-radius: var(--fr-radius-button);
+  color: var(--fr-warn);
+  font-size: var(--fr-fs-caption);
+}

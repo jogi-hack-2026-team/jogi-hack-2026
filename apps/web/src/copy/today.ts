@@ -1,0 +1,60 @@
+// Today Decision 画面の文言。Product Spec「Today Decision画面の表示仕様」の固定文言をここに集める。
+// 文言を変えるときは、このファイルだけを直す（仕様の文言を変える場合は P-12 の改訂として記録する）。
+
+export const todayCopy = {
+  question: '今日サボると、ゴールは何日遠ざかる？',
+  coreLabel: 'ゴールが遠ざかる日数（目安）',
+  /** 中心指標の注釈（Product Spec の固定文言）。 */
+  coreNote:
+    'あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。',
+  /** 中心の数字のすぐ下に出す要約1行（デザイン案B）。全文は「計算の根拠」に置く。 */
+  coreSummary: 'あなたの記録から推定した目安です。将来を保証するものではありません。',
+  whyTitle: '計算の根拠',
+  resumedLabel: '休んだ翌日にやれたのは',
+  resumed: (success: number, total: number) => `${total}回中${success}回`,
+  completionLabelTodayDone: '今日やった場合の完了の目安',
+  completionLabelCurrent: '現在の状態からの完了の目安',
+  completionP50: (week: string) => `${week}ごろ`,
+  completionP80: (week: string) => `10回中8回は${week}まで`,
+  completionP80Over3Years: '10回中8回は3年以上先',
+  /** 補助指標2の注釈（Product Spec の固定文言）。 */
+  completionNote: '完了の目安は、同じ記録から推定した継続傾向でシミュレーションした見込みです。',
+  axisNote: '日付は、その週の月曜日で表しています。',
+  insufficientCore: 'まだ「休んだ翌日」の記録がありません。記録がたまると、あなたの再開傾向から推定します。',
+  insufficientCompletion: '「やった翌日」と「休んだ翌日」の記録がそれぞれたまると、完了の目安を表示します。',
+  over3Years: '3年以上先',
+  progressLabel: 'これまでの積み上げ',
+  progressHelp: (initial: number, unitLabel: string) =>
+    initial > 0 ? `記録した累計（記録開始日の前日までの${initial.toLocaleString('ja-JP')}${unitLabel}を含む）` : '記録した累計',
+  outlookLabel: 'これからの見通し',
+  outlookTitle: (total: number, unitLabel: string) => `${total.toLocaleString('ja-JP')}${unitLabel}に届くのは？`,
+  recordedTitle: '今日は記録済みです',
+  recordedDone: 'やった',
+  recordedRest: '休んだ',
+  changeRecord: '記録を変更',
+  achievedTitle: '決めた総量に届きました',
+  achievedBody: '自分で決めた量を積み重ねてきました。ここまでの記録はそのまま残ります。',
+  choiceDone: 'やった',
+  choiceRest: '今日は休む',
+  yesterdayQuestion: '昨日はどうでしたか？',
+  yesterdayDone: 'やった',
+  yesterdayRest: '休んだ',
+  yesterdayLater: '後で答える',
+  loading: '最新の見通しを確認しています。',
+  networkErrorTitle: '見込みを読み込めませんでした',
+  networkError: '通信に失敗しました。記録が足りないという意味ではありません。通信状態を確認して、もう一度お試しください。',
+  calcErrorTitle: '見込みを計算できませんでした',
+  calcError:
+    'これまでの記録はそのまま残っています。記録が足りないという意味ではありません。時間をおいて、もう一度お試しください。今日の記録はこのまま付けられます。',
+  renderErrorTitle: '見通しを表示できません',
+  renderError: '表示に使うデータに問題がありました。今日の記録はこのまま付けられます。',
+  reload: '再読み込み',
+  notFoundTitle: 'Goalが見つかりません',
+  notFoundPanel: 'このGoalは開けません',
+  notFound: '削除されたか、このアカウントでは開けないGoalです。Goal一覧から開き直してください。',
+  backToGoals: 'Goal一覧へ戻る',
+  /** 仮APIでは保存しないため、押したときに出す開発用の案内。 */
+  saveNotConnected: '記録の保存は #79・#80 で接続します（いまは仮のデータです）。',
+} as const;
+
+export const unitLabel = (unit: 'minutes' | 'sessions') => (unit === 'minutes' ? '分' : '回');

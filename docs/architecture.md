@@ -43,7 +43,7 @@ interfaceは差替えやテストに必要な境界だけに置く。大がか�
 package.json            npm workspaces（apps/web, apps/api, packages/prediction。2026-10-05に管理方式を採択、#70で導入）
 packages/prediction/    src/{index,types,predict,observations,recovery,completion,random,config,errors}.ts, tests/, examples/
 apps/api/               src/{server,app,config}.ts, src/{contracts,db,http}/, tests/（#70）。src/{auth,goals,logs,prediction}/, migrations/ は#74以降
-apps/web/               src/{main,router}.tsx, src/routes/, src/api/（#70。起動確認画面のみ）
+apps/web/               src/{main,router}.tsx, src/routes/, src/api/（#70。起動確認画面）。src/ui/（デザイントークン・共通部品）、src/features/（画面ごとの部品）、src/copy/（画面の文言）、src/api/goals-api.ts と src/api/mock/（仮API）は#81の限定先行（[ui/README](../apps/web/src/ui/README.md)）
 compose.yaml            ローカル開発用PostgreSQL（db）。--profile app で単一コンテナも起動
 Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 ```
