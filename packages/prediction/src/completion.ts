@@ -20,9 +20,17 @@ export function completionPmf({ initialState, requiredFutureDone: n, horizonDays
   let nextSkipped = new Float64Array(n);
   if (initialState === 'DONE') done[0] = 1;
   else skipped[0] = 1;
+  // n=hかつprune時はlow=high=day-1。次の日に読むDONE[day]は下の遷移で上書きする。
+  // SKIPPED[day]には届かないため0にし、それより前のセルは今後読まない。
+  const deadlineOnly = prune && n === h;
   for (let day = 1; day <= h; day++) {
-    nextDone.fill(0);
-    nextSkipped.fill(0);
+    if (deadlineOnly) {
+      nextDone[0] = 0;
+      if (day < n) nextSkipped[day] = 0;
+    } else {
+      nextDone.fill(0);
+      nextSkipped.fill(0);
+    }
     // 残りの日をすべてDONEにしても必要回数nへ届かない状態だけを除く。小さな確率は切り捨てない。
     const low = prune ? Math.max(0, n - (h - day + 1)) : 0;
     const high = Math.min(n - 1, day - 1);

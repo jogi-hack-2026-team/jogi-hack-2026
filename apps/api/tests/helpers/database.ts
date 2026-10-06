@@ -1,7 +1,7 @@
 // テスト用PostgreSQL。DATABASE_URLがあればその管理用接続を使い、なければembedded-postgresの
 // ローカルクラスタ（apps/api/.local、Git除外）を起動する。テストファイルごとに専用databaseを作り、終了時に削除する。
 import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,8 +33,11 @@ async function freePort(): Promise<number> {
 async function startEmbedded(): Promise<AdminConnection> {
   const { default: EmbeddedPostgres } = await import('embedded-postgres');
   mkdirSync(localDir, { recursive: true });
-  const dataDir = join(localDir, 'pg-test');
-  const credentialFile = join(localDir, 'pg-test.json');
+  // Windowsの停止後のworkerが旧data dirを保持していても、新しいテストのschemaを混ぜない。
+  // 既存clusterは削除・再利用しない。失敗したclusterの証跡も.localに保持する。
+  const runDir = mkdtempSync(join(localDir, 'pg-test-'));
+  const dataDir = join(runDir, 'data');
+  const credentialFile = join(runDir, 'credential.json');
   const isNew = !existsSync(join(dataDir, 'PG_VERSION'));
   let credential: { user: string; password: string };
   if (isNew) {
@@ -51,7 +54,7 @@ async function startEmbedded(): Promise<AdminConnection> {
     port,
     persistent: true,
     onLog: () => {},
-    onError: () => {},
+    onError: (message) => console.error(String(message).replaceAll(credential.password, '[redacted]')),
   });
   if (isNew) await server.initialise();
   await server.start();

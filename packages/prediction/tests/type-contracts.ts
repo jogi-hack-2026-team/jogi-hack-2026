@@ -63,3 +63,46 @@ function classifiedError(error: unknown): readonly (string | number)[] | undefin
 void publicCalendarDays;
 void publicRecordedDays;
 void classifiedError;
+
+// D-26未採択の候補は内部importに隔離し、公開Engine契約への昇格を型でも防ぐ。
+import * as publicEngine from '../src/index.js';
+import { evaluateGoalPriorCandidate } from '../src/goal-prior-candidate.js';
+import type { GoalPriorCandidate } from '../src/goal-prior-candidate.js';
+const candidatePrior: GoalPriorCandidate = {
+  a: { alpha: 3, beta: 7, source: 'synthetic-test', version: 'fixture-v1' },
+  b: { alpha: 5, beta: 11, source: 'synthetic-test', version: 'fixture-v1' },
+};
+const candidateResult = evaluateGoalPriorCandidate(input, candidatePrior);
+// @ts-expect-error 候補入口はindex.tsの公開APIに含めない。
+void publicEngine.evaluateGoalPriorCandidate;
+// @ts-expect-error 候補結果は共通スカラーpriorを説明する既存Resultと別の型。
+const prematurePublicResult: PredictionResult = candidateResult;
+// @ts-expect-error priorは過去の結果へ加算せず、readonlyの元snapshotとして受け取る。
+candidatePrior.a.alpha = 9;
+// @ts-expect-error aとbの双方を明示する。部分回答の補完規則はD-26で採択する。
+const partialCandidate: GoalPriorCandidate = { a: candidatePrior.a };
+void prematurePublicResult;
+void partialCandidate;
+// @ts-expect-error 候補の初期分布をconfig.priorとsnapshotで二重指定する公開契約にはしない。
+evaluateGoalPriorCandidate(input, candidatePrior, { modelVersion: 'behavior-persistence-m1-v1', samples: 200, horizonDays: 1095, seed: 20261012, prior: 2 });
+
+import { evaluateQuestionPriorAdapterCandidate } from '../src/question-prior-adapter-candidate.js';
+import type { QuestionPriorAdapterInputCandidate } from '../src/question-prior-adapter-candidate.js';
+const adapterInput: QuestionPriorAdapterInputCandidate = { prediction: input, answers: { a: null, b: 'UNKNOWN' },
+  mapping: { version: 'candidate-only', values: { LOW: { alpha: 1, beta: 3 }, MID: { alpha: 2, beta: 2 }, HIGH: { alpha: 3, beta: 1 } } } };
+const adapterResult = evaluateQuestionPriorAdapterCandidate(adapterInput);
+// @ts-expect-error この候補入口を公開indexの確定APIへ追加しない。
+void publicEngine.evaluateQuestionPriorAdapterCandidate;
+// @ts-expect-error rawの未定義文字列を数値回答へ推測しない。
+const wrongRaw: QuestionPriorAdapterInputCandidate['answers'] = { a: 'CERTAIN', b: null };
+// @ts-expect-error 片キー省略をPATCHの保持/削除へ推測しない。外側で両キーを解決する。
+const partialRaw: QuestionPriorAdapterInputCandidate['answers'] = { a: null };
+// @ts-expect-error 数値結果が同じでもsource付き候補Resultは既存公開Resultではない。
+const adapterAsPublic: PredictionResult = adapterResult;
+void wrongRaw; void partialRaw; void adapterAsPublic;
+const conditionalSessions: number = adapterResult.conditionalPlan.remainingSessions;
+// @ts-expect-error 条件付き計画も候補結果のreadonly値として渡す。
+adapterResult.conditionalPlan.lastSessionAmount = 0;
+// @ts-expect-error 公開predictの確定DTOへ候補の回数計画を追加しない。
+void publicResult.conditionalPlan;
+void conditionalSessions;
