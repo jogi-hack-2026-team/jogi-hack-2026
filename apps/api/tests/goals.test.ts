@@ -24,6 +24,22 @@ test('localDateIn / isValidTimeZone: timezoneの暦日とIANA名の判定', () =
   for (const tz of ['', 'Tokyo', 'JST', 'Japan', 'Asia/Tokio', '+09:00', 'GMT+9', 'Asia/Tokyo/', 'Asia/Tokyo; drop table goal']) assert.ok(!isValidTimeZone(tz), tz);
 });
 
+test('percent-encodeしたURLで共通hookを通らなくても、Goal routeは認証なしを401で止める', async (t) => {
+  const { db, stack } = await setup(t, { now: () => NOW });
+  const a = await signedInClient(stack.app, 'enc');
+  await a.call('POST', '/api/goals', validGoal);
+  for (const [method, url, payload] of [
+    ['GET', '/%61pi/goals', undefined],
+    ['POST', '/%61pi/goals', JSON.stringify(validGoal)],
+    ['GET', `/api/go%61ls`, undefined],
+  ] as const) {
+    const res = await stack.app.inject({ method, url, headers: { origin: 'http://evil.example', 'content-type': 'application/json' }, ...(payload ? { payload } : {}) });
+    assert.equal(res.statusCode, 401, `${method} ${url}`);
+    assert.equal(res.json().error.code, 'UNAUTHENTICATED');
+  }
+  assert.equal((await db.pool.query('select count(*)::int as n from goal')).rows[0]?.n, 1, 'no goal created without a session');
+});
+
 test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの今日、初期量の既定は0', async (t) => {
   const { stack } = await setup(t, { now: () => NOW });
   const a = await signedInClient(stack.app, 'a');
