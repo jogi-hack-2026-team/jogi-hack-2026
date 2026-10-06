@@ -11,7 +11,7 @@ R-11のMust追加と担当分担の公開採択記録は[PR115](https://github.c
 | 項目 | 推奨案 | 了承後にも必要な確認 |
 | --- | --- | --- |
 | 1. 質問と見通し | 任意2問。LOW／MID／HIGHを25／50／75%の平均、Beta(1,3)／(2,2)／(3,1)、強さ4へ対応。不明と未回答は数値回答にしない。中心はbの材料、完了はa・b両方の材料を要求。不足時は条件付きの「あと何回分」 | FEの文言・表示理解、Engineの選択値の回帰・性能。数値は暫定的なEngineering Priorで、校正・最適性は未実証 |
-| 2. 保存と訂正 | BEがraw回答とmapping/context snapshotを保存。元snapshot＋実ログから全量再計算。競合方式は元のGoal revision案・FEのLWW案・回答専用revision案を比較。同一内容の再送は書き込みなし。量変更と再回答は分ける案 | BE／FEのDTO、DB snapshot方式、競合・Goal作成の通信断契約。下記の比較・同時PATCH案は未採択 |
+| 2. 保存と訂正 | 作成後の訂正・解除・後日回答を残し、BEがraw回答とmapping/context snapshotを保存。元snapshot＋実ログから全量再計算。回答専用revision比較を推奨し、Goal全体revision・LWW・POST限定と比較。同版・同内容は書き込みなし、古い版は409から始める案。量変更と再回答は分ける | BE／FEのDTO、DB snapshot方式、競合・Goal作成の通信断契約。下記の比較・同時PATCH案は未採択 |
 | 3. UIの受け渡しと追跡 | PR120のKaito候補は質問入力と予測パネルの描画、FEは画面本体・フォーム／Today・API接続・状態判定とview生成。共通固定例で接続し、#107と既存実装Issueで追う | 予測パネルを受け渡す範囲・文言・共有ファイル担当、BE／Engineの共通例、各IssueのDoR。判断・実装期限を推測しない |
 
 「1〜3で進める」という方針判断と、具体のHTTP型・FE／BE本人の採択を分ける。本案はPR115と分けたSupporting提案であり、具体値・HTTP型の採択ではない。
@@ -134,9 +134,31 @@ I01の再送例は、Goal revision **6**で送った回答が保存されて`app
 | B. FE提案のLWW＋保存後再取得 | 記録だけでは回答保存を拒否しない | 別タブの回答訂正を後の保存で上書きする。通信断・量変更との競合を別に確認する |
 | C. 回答専用revision比較（推奨候補） | ログだけでは回答のtokenを変えず、訂正を許す | Goal上の回答用tokenをraw訂正・解除・量変更で更新。MVPではstate revisionを別に持たず、取得の新旧はFEで管理する案。型・HTTP・atomic処理は未採択 |
 
+### 推奨をC案に保つ理由（2026-10-06、未採択）
+
+依頼者の指示に基づき、**質問を後から訂正・解除できる範囲を残し、回答文脈専用revision＋DBでの原子的な版比較を推奨する**。[FE再レビュー5422067095](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/118#pullrequestreview-5422067095)のPOST限定／LWW案との比較記録であり、FE／BE双方によるC案の採択や実測工数の報告ではない。
+
+- LWW＋保存後再取得では、2つの編集画面が同じ版を読み、先の訂正を古い後着PATCHが上書きしてから再取得できてしまう。再取得は表示の更新であり、失われた訂正を復元しない。C案はその古い書き込み自体を拒否する。
+- POST限定は誤回答の修正・解除、未回答Goalへの後日追加、量変更後の再回答を失う。訂正UIを省いても、許可済み量変更時に古い回答priorを無効化する処理は残る。今回は機能を作成時だけへ縮める推奨に変更しない。
+- C案は回答／量の文脈だけを守るので、ログPUTはtokenを変えず、A案のように記録のたびGoal全体revisionを更新しない。別instanceの要求も同じDB行で判定する。全体state revision、アプリ側の分散lock、履歴テーブル、自動mergeを回答競合のために追加しない。
+- 必要な追加処理は回答用tokenの保持・GETへの受け渡し・PATCH時の版比較と更新、409時のdraft保持と本人の再保存。量変更時のprior解除・同時PATCHのtransaction・所有者検査・FE取得世代管理はそれぞれ保持する。DB並列試験・API接続の実装量や所要時間は未実測で、今日中の完成を保証しない。
+
 Cの最小案は**回答用tokenだけをGoalに持ち、state revisionと別のappliedRevisionを追加しない**。回答なし・解除後にもtokenを保持し、`questionSnapshot=null`をtoken 0へ戻して古い編集を再び通すことはしない。raw訂正・解除・sessionAmountの実変更（回答なしの場合も文脈変更）で単調に更新し、ログPUT・title／totalRequiredだけの編集・全項目一致のno-opでは更新しない。
 
-回答blockまたはsessionAmountを送るPATCHは、Goal GETで得た回答用tokenを添える案。同じtransaction内で、送った全変更内容・mapping・contextが一致するno-opを先に確認し、異なる変更でtokenが古ければ409候補にする。no-opでは保存済みmappingを保持し、最新定義の再適用で新しい書き込みに変えない。tokenが一致すれば5節の量変更・解除を一度だけ保存する。unit編集を別途採択した場合も同じ文脈変更として扱う。`expectedAnswerRevision`等の名前・型・初期値は未採択で、tokenを再利用・巻き戻ししない境界もBEが確認する。回答に関係しないGoal編集全体の競合方式を、このtokenで採択しない。
+回答blockまたはsessionAmountを送るPATCHは、Goal GETで得た回答用tokenをJSONの`expectedAnswerRevision`で添え、不一致は409・PATCH全体を書き込みなしとする案を推奨する。次はC案のrequest例で、型・初期値・安全な上限・共通error envelopeは採択待ち。
+
+```json
+{
+  "expectedAnswerRevision": 7,
+  "questionPrior": {"a": "HIGH", "b": "HIGH"}
+}
+```
+
+所有者・入力を検査した上で、同じtransaction内の版比較を先に行う保守的な案。**古いtokenは同内容でも409**とし、tokenが一致して送った全変更内容・保存mapping・contextも一致する場合だけno-opにする。no-opでは保存済みmappingを保持し、最新定義の再適用で新しい書き込みに変えない。異なる内容なら5節の量変更・解除を一度だけ保存する。古い同内容再送を成功扱いにする最適化は、通信断・途中の訂正／解除・量変更を区別する方針が決まるまで入れない。上のI01〜I03はA案の比較履歴であり、このC案の再送規則とは別。unit編集を別途採択した場合も同じ文脈変更として扱う。回答に関係しないGoal編集全体の競合方式を、このtokenで採択しない。
+
+**公式根拠と適用範囲（2026-10-06に確認）**：[PostgreSQL 18のRead Committed](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)では、通常SELECTと後続SELECTの間に他transactionのcommitが見える一方、競合UPDATEは待機後に更新済み行へWHERE条件を再評価する。これを根拠に、所有者条件付きの行lock下で比較・検証・保存するか、owner・id・回答revisionを条件にしたUPDATEで原子的に判定する案とする。単にtransactionへ入れたSELECT→無条件UPDATEでは版比較を守れない。量・snapshot・tokenの同時確定、0行更新の404／競合の区別、分離レベルはBEが具体化・並列検証する。
+
+[RFC 9110 §13.1.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.1)はIf-Matchで選択representationの強いETag比較を行い、失敗時に変更を適用しない仕組みを定義する。[§15.5.10の409](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.10)と[§15.5.13の412](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.13)を区別し、今回のJSON業務tokenは409候補、将来If-Matchを採用するなら不一致は412とする案。回答tokenをGoal全体のETagに流用せず、対象representationとその全変更を正しく定義する。[Google AIP-154](https://google.aip.dev/154)も更新前の鮮度比較と不一致拒否を示すが、Googleのetag／ABORTED規則を本案がそのまま実装したとはしない。これらはC案を推す設計上の根拠で、当アプリの競合処理の実測ではない。
 
 **編集フォームの取得元はGoal GETを推奨する案。** FEは最新raw・unit／sessionAmount／recordStartDate・採択する回答用tokenを同じ応答から受け取る。内部mapping／初期Betaを編集フォームへ返す必要は現候補にはなく、/todayを編集tokenの取得元にしない。正確なGoal DTOはBE／FE確認待ち。
 
@@ -155,6 +177,8 @@ Goal作成POSTの通信断は、Goal IDが返っていない場合の再取得�
 5. BEがEngineの出所・conditionalPlanと同じsnapshotの表示contextをDTOへ結ぶ。rawと回答用tokenは編集用Goal GETへ渡し、APIが同じDTOの中で別時点のGoal／予測を混ぜない。
 
 **条件付き回数の受け渡し案（未採択）**：[FEのPR119レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119#pullrequestreview-5416882638)の対象HEAD `32a76cf`には出力がなかったが、[現在のPR119候補](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/f7a6c02ec402d3c74fae953cac769de06b31050b/packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md#条件付き計画とfebeへの責任境界)は`conditionalPlan={remainingAmount,remainingSessions,lastSessionAmount}`を実際のprogressから一度返す。BEは同じsnapshotのunit／sessionAmountを付加し、FEは残量÷設定量を再計算せずPR120の`Plan`へ名前を合わせる（remainingSessions→sessions、lastSessionAmount→lastAmount）。candidateの実装と正式DTO／API／UI接続の採択は分ける。
+
+FE再レビューのnull質問について、[PR119 `783ebb4`のEngine候補](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/783ebb443f0d441ca17cce61109b5da12504ee34/packages/prediction/src/question-prior-adapter-candidate.ts)は全状態で非nullのconditionalPlanを返し、実績達成時は残量／回数／最後量が0。[PR120 `7b0debd`の接続例](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/7b0debd483e1a4f26953c9dd5df69a63f29ef3cd/experiments/question-prior-ui-candidate/examples/engine-view.ts)は`progress.completed`を先に分岐し、達成viewへ0回Planを渡さない。未達成の`completion.status=insufficient`だけをconditional viewへコピーし、availableでは完了estimateを表示する。表示専用HTTP blockは**不足時だけ非null、それ以外null**を候補にするが、HTTP DTOの採択・実API接続は未完了であり、Engineの全状態非null型を変更する記録ではない。
 
 常時adapter案は[PR119のBE対応案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/f7a6c02ec402d3c74fae953cac769de06b31050b/packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md#beレビューの追加確認と入口mappingの提案)と同じ方向。保存済みmappingはその値・versionを使い、現行版へ黙って置き換えない。保存snapshotがない未回答Goalには、採択済み現行mappingを計算呼出しだけに使い、過去の回答・snapshot・versionの保存履歴を捏造しない案を確認する。この未回答時の解決規則と既存Goal互換性は採択条件。採択後にversion付きmappingを純粋な共有定義1か所へ置き、BE初回保存とEngineが参照する案で、現候補にProduction定数はなく、testsのfixtureを本番から読まない。
 
@@ -182,7 +206,7 @@ type TodayR11AdditionsCandidate = {
   };
   conditionalPlan: {
     remainingAmount: number; remainingSessions: number; lastSessionAmount: number;
-  };
+  } | null; // 表示専用HTTP blockの未採択案。内部Engine結果とは別。
 };
 // Sourceは表示用enum候補。内部modeやmapping版を製品versionとして公開しない。
 ```
@@ -269,6 +293,8 @@ RNG／Beta samplerは既存Engineと共有しており、別sampler・厳密な�
 | #76／#77 | Hard #75／#76、#77はIntegration #72。Goal DTO・初回保存・訂正・snapshotと接続をBE確認 |
 | #78／#81 | Hard #70、Integration #75・#76／#72・#77。mock先行の許可を一般化しない |
 | #117 | Hard #70。D-26・props・状態所有者・共有ファイルのDoR未確定。Integration #78／#81／#76／#77／#72 |
+
+依頼者から**FEのモック先行は許可済み**との指示を受けている。これは依頼者による先行許可の記録で、C案・HTTP DTOのチーム採択や他Issueの依存変更ではない。本PRでは別IssueのHard／Statusを変更せず、本API接続後の保存・競合・取得管理・表示の確認を残す。
 
 具体契約・FE／BE／Engine本人のレビュー後、承認範囲だけを正式文書と実装Issueへ反映する。Ready／BLOCKED／Hard・実装期限を自動変更しない。判断目標日2026-10-05（JST）は依頼者側の目標であり、他担当の返答確約ではない。
 
