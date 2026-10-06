@@ -522,7 +522,16 @@ npm test
 npm run build
 ```
 
-`npm test`はAPIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）とEngineの47テストを実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。ビルド済みの構成を1プロセスで確認するには`WEB_DIST=apps/web/dist node apps/api/dist/server.js`を使います。
+`npm test`はAPIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）とEngineの47テストを実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。
+
+`.env`を自動で読むのは`npm run dev:api`だけです。`npm test`とビルド済みサーバーはシェルの環境変数だけを見るため、次のように使い分けます。
+
+| 用途 | sh（macOS / Linux / Git Bash） | PowerShell |
+| --- | --- | --- |
+| ComposeのDBでテストする（未設定なら`embedded-postgres`へ切り替わる） | `DATABASE_URL='postgres://…' npm test` | `$env:DATABASE_URL='postgres://…'; npm test` |
+| ビルド済みの構成を1プロセスで確認する（`.env`を読み込む） | `WEB_DIST=apps/web/dist node --env-file=.env apps/api/dist/server.js` | `$env:WEB_DIST='apps/web/dist'; node --env-file=.env apps/api/dist/server.js` |
+
+本番・コンテナでは`.env`を使わず、環境変数を直接注入します（`DATABASE_URL`未設定ならexit 1）。passwordに記号を含める場合の書き方は[.env.example](../.env.example)を参照してください。
 
 [Application CI](../.github/workflows/application.yml)はPRとmainへのpushで、install・typecheck・test（PostgreSQL service）・buildと、コンテナのbuild・起動・route確認・SIGTERM終了（[smoke test](../scripts/smoke-container.sh)）を実行します。CIとDockerfileの`npm ci --ignore-scripts`はlifecycle scriptsを実行しない設定で、lockfile内でinstall scriptを持つのは開発用の`embedded-postgres`等だけです。Dockerがある端末では`docker compose --profile app up --build`で同じコンテナを起動し、`IMAGE=... DATABASE_URL=... ./scripts/smoke-container.sh`で同じ確認ができます。
 
@@ -530,6 +539,7 @@ npm run build
 
 - 環境変数は`DATABASE_URL`（必須）、`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`（任意）。`DATABASE_URL`が未設定なら起動せず、値はログへ出しません。コンテナ内の既定は`HOST=0.0.0.0`・`PORT=8080`・`WEB_DIST=/app/apps/web/dist`。
 - `SIGTERM`で新規接続を止め、処理中の要求を完了し、DB接続を返してからexit 0。`SHUTDOWN_TIMEOUT_MS`（既定10000）を超えたらexit 1。
+- DB接続は接続確立・クエリ応答・文の実行をそれぞれ5秒で打ち切り、期限切れの接続は再利用しません。idle中の接続がDB側から切れてもプロセスは終了せず、警告ログを残して次の要求で再接続します。
 - 存在しないAPIと対象外methodはJSONの404、画面のURLはindex.html（`cache-control: no-cache`）、`/assets/`はhash付きのため長期キャッシュ。
 - ログはpinoのJSON。Cookie・Authorization・Set-Cookieはredactし、リクエストbodyは出力しません。
 
