@@ -1,0 +1,144 @@
+import type { Pool, PoolClient } from 'pg';
+import type { Goal, GoalCreate, GoalPatch, TodayStatus } from '../contracts/goal.ts';
+import { localDateIn } from './local-date.ts';
+
+// GoalのSQL。所有者条件（user_id）を全ての読み書きに付け、他人のGoalは「存在しない」として扱う。
+// 日付（date型）はpgがDateへ変換して端末のtimezoneに依存するため、SQL側でtextにして受け取る。
+
+type Queryable = Pick<Pool, 'query'> | PoolClient;
+
+type GoalRow = {
+  id: string;
+  title: string;
+  unit: Goal['unit'];
+  total_required: number;
+  session_amount: number;
+  initial_progress: number;
+  timezone: string;
+  record_start_date: string;
+  has_logs: boolean;
+};
+
+const GOAL_COLUMNS = `g.id, g.title, g.unit, g.total_required, g.session_amount, g.initial_progress, g.timezone,
+  g.record_start_date::text as record_start_date,
+  exists (select 1 from action_log l where l.goal_id = g.id) as has_logs`;
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** uuidでない文字列はDBへ渡さず「存在しない」として扱う（型キャストの500を避ける）。 */
+export const isGoalId = (value: string): boolean => UUID.test(value);
+
+async function todayStatuses(db: Queryable, pairs: { goalId: string; today: string }[]): Promise<Map<string, TodayStatus>> {
+  const statuses = new Map<string, TodayStatus>();
+  if (pairs.length === 0) return statuses;
+  // Goalごとに「今日」が違う（timezoneが違う）ため、(goal_id, local_date)の組で引く。
+  const rows = await db.query<{ goal_id: string; status: 'DONE' | 'SKIPPED' }>(
+    `select l.goal_id, l.status from action_log l
+       join unnest($1::uuid[], $2::date[]) as t(goal_id, local_date) on l.goal_id = t.goal_id and l.local_date = t.local_date`,
+    [pairs.map((p) => p.goalId), pairs.map((p) => p.today)],
+  );
+  for (const r of rows.rows) statuses.set(r.goal_id, r.status);
+  return statuses;
+}
+
+async function toGoals(db: Queryable, rows: GoalRow[], now: Date): Promise<Goal[]> {
+  const todays = rows.map((r) => ({ goalId: r.id, today: localDateIn(now, r.timezone) }));
+  const statuses = await todayStatuses(db, todays);
+  return rows.map((r, i) => ({
+    id: r.id,
+    title: r.title,
+    unit: r.unit,
+    totalRequired: r.total_required,
+    sessionAmount: r.session_amount,
+    initialProgress: r.initial_progress,
+    timezone: r.timezone,
+    recordStartDate: r.record_start_date,
+    hasLogs: r.has_logs,
+    today: todays[i]!.today,
+    todayStatus: statuses.get(r.id) ?? 'UNRECORDED',
+  }));
+}
+
+export async function listGoals(db: Queryable, userId: string, now: Date): Promise<Goal[]> {
+  const rows = await db.query<GoalRow>(`select ${GOAL_COLUMNS} from goal g where g.user_id = $1 order by g.created_at, g.id`, [userId]);
+  return toGoals(db, rows.rows, now);
+}
+
+export async function getGoal(db: Queryable, userId: string, goalId: string, now: Date): Promise<Goal | null> {
+  if (!isGoalId(goalId)) return null;
+  const rows = await db.query<GoalRow>(`select ${GOAL_COLUMNS} from goal g where g.user_id = $1 and g.id = $2`, [userId, goalId]);
+  const row = rows.rows[0];
+  return row ? (await toGoals(db, [row], now))[0]! : null;
+}
+
+// 記録開始日は作成時刻をGoalのtimezoneで暦日にした値で固定する（Architecture「初期進捗と日々の記録の境界」の最小案）。
+export async function createGoal(db: Queryable, userId: string, input: GoalCreate, now: Date): Promise<Goal> {
+  const recordStartDate = localDateIn(now, input.timezone);
+  const rows = await db.query<GoalRow>(
+    `with inserted as (
+       insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::date)
+       returning *)
+     select ${GOAL_COLUMNS} from inserted g`,
+    [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate],
+  );
+  return (await toGoals(db, [rows.rows[0]!], now))[0]!;
+}
+
+export type LockedField = 'timezone' | 'initialProgress';
+export type UpdateResult = { kind: 'updated'; goal: Goal } | { kind: 'not_found' } | { kind: 'locked'; fields: LockedField[] };
+
+// 記録が1件でもあるGoalでは timezone と initialProgress を変更できない（R-02）。
+// 同じ値の再送は「変更」ではないので通す。行をロックして、同時の記録追加と判定がずれないようにする。
+export async function updateGoal(pool: Pool, userId: string, goalId: string, patch: GoalPatch, now: Date): Promise<UpdateResult> {
+  if (!isGoalId(goalId)) return { kind: 'not_found' };
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const current = (
+      await client.query<GoalRow>(`select ${GOAL_COLUMNS} from goal g where g.user_id = $1 and g.id = $2 for update of g`, [userId, goalId])
+    ).rows[0];
+    if (!current) {
+      await client.query('rollback');
+      return { kind: 'not_found' };
+    }
+    if (current.has_logs) {
+      const locked: LockedField[] = [];
+      if (patch.timezone !== undefined && patch.timezone !== current.timezone) locked.push('timezone');
+      if (patch.initialProgress !== undefined && patch.initialProgress !== current.initial_progress) locked.push('initialProgress');
+      if (locked.length) {
+        await client.query('rollback');
+        return { kind: 'locked', fields: locked };
+      }
+    }
+    const updated = await client.query<GoalRow>(
+      `with changed as (
+         update goal set
+           title = coalesce($3, title),
+           unit = coalesce($4, unit),
+           total_required = coalesce($5, total_required),
+           session_amount = coalesce($6, session_amount),
+           initial_progress = coalesce($7, initial_progress),
+           timezone = coalesce($8, timezone)
+         where user_id = $1 and id = $2
+         returning *)
+       select ${GOAL_COLUMNS} from changed g`,
+      [userId, goalId, patch.title ?? null, patch.unit ?? null, patch.totalRequired ?? null, patch.sessionAmount ?? null, patch.initialProgress ?? null, patch.timezone ?? null],
+    );
+    const goal = (await toGoals(client, [updated.rows[0]!], now))[0]!;
+    await client.query('commit');
+    return { kind: 'updated', goal };
+  } catch (error) {
+    await client.query('rollback').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/** 削除。紐づく記録はDBの外部キー（ON DELETE CASCADE）で消える。 */
+export async function deleteGoal(db: Queryable, userId: string, goalId: string): Promise<boolean> {
+  if (!isGoalId(goalId)) return false;
+  const result = await db.query('delete from goal where user_id = $1 and id = $2', [userId, goalId]);
+  return (result.rowCount ?? 0) > 0;
+}

@@ -28,8 +28,9 @@ async function insertUser(pool: pg.Pool, id: string) {
   );
 }
 
-const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone)
-                    values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo') returning id`;
+const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date)
+                    values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo', '2026-10-01') returning id`;
+const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql'];
 
 test('空のDBへ db:migrate（認証→アプリ）が通り、2回目は差分なし', async (t) => {
   const db = await createTestDatabase();
@@ -42,7 +43,7 @@ test('空のDBへ db:migrate（認証→アプリ）が通り、2回目は差分
     assert.ok(tables.includes(expected), `table ${expected} should exist`);
   }
   assert.ok(first.auth && first.auth.tablesCreated.includes('user') && first.auth.tablesCreated.includes('rateLimit'));
-  assert.deepEqual(first.app, { applied: ['0001_goal_action_log.sql'] });
+  assert.deepEqual(first.app, { applied: APP_MIGRATIONS });
 
   const second = await migrate(db.pool, 'all');
   assert.deepEqual(second, { target: 'all', auth: { tablesCreated: [], columnsAdded: [] }, app: { applied: [] } });
@@ -55,7 +56,7 @@ test('アプリのmigrationは認証テーブルがないと適用できない�
   assert.deepEqual(await publicTables(db.pool), ['schema_migrations']);
   // 認証→アプリの順なら通る
   await migrate(db.pool, 'auth');
-  assert.deepEqual(await migrate(db.pool, 'app'), { target: 'app', app: { applied: ['0001_goal_action_log.sql'] } });
+  assert.deepEqual(await migrate(db.pool, 'app'), { target: 'app', app: { applied: APP_MIGRATIONS } });
 });
 
 test('DB制約: (goal_id, local_date) の重複、DONEでamountなし、SKIPPEDでamountありを拒否する', async (t) => {
@@ -89,6 +90,11 @@ test('DB制約: goalのtitle長・unit・量の下限と、userとの参照整�
   assert.equal(await sqlState(db.pool, goalInsert, ['u1', 'x', 'minutes', 1, -1, 1]), '23514', 'negative initial_progress');
   assert.equal(await sqlState(db.pool, goalInsert, ['u1', 'x', 'minutes', 1, 0, 0]), '23514', 'session_amount 0');
   assert.equal(await sqlState(db.pool, goalInsert, ['nobody', 'x', 'minutes', 1, 0, 1]), '23503', 'unknown user');
+  assert.equal(
+    await sqlState(db.pool, `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone) values ('u1', 'x', 'minutes', 1, 0, 1, 'Asia/Tokyo')`),
+    '23502',
+    'record_start_date is required (no default after 0002)',
+  );
 });
 
 test('userの削除でgoalとaction_logが連鎖削除され、更新でupdated_atが進む', async (t) => {
@@ -144,8 +150,8 @@ test('同時に2つのmigrateを実行しても、どちらも成功しアプリ
     await db.close();
   });
   const [a, b] = await Promise.all([migrate(pool), migrate(pool)]);
-  assert.deepEqual([...(a.app?.applied ?? []), ...(b.app?.applied ?? [])], ['0001_goal_action_log.sql']);
-  assert.equal((await pool.query('select count(*)::int as n from schema_migrations')).rows[0]?.n, 1);
+  assert.deepEqual([...(a.app?.applied ?? []), ...(b.app?.applied ?? [])], APP_MIGRATIONS);
+  assert.equal((await pool.query('select count(*)::int as n from schema_migrations')).rows[0]?.n, APP_MIGRATIONS.length);
 });
 
 test('認証用poolはint8を安全な整数として数値で返し、アプリ用poolは文字列のまま', async (t) => {

@@ -1,99 +1,7 @@
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
 import test from 'node:test';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app.ts';
-import { createAuth } from '../src/auth/options.ts';
-import { migrate } from '../src/db/migrate.ts';
-import { createAuthPool } from '../src/db/pool.ts';
-import { createTestDatabase, type TestDatabase } from './helpers/database.ts';
-
-// Cookie値はSecretなので、属性だけを比較する。
-type CookieShape = { name: string; attributes: string[] };
-const cookieShape = (line: string): CookieShape => {
-  const [pair = '', ...attrs] = line.split(';');
-  return { name: pair.slice(0, pair.indexOf('=')).trim(), attributes: attrs.map((a) => a.trim().toLowerCase()) };
-};
-
-class Client {
-  readonly cookies = new Map<string, string>();
-  private readonly app: FastifyInstance;
-  private readonly origin: string | null;
-  constructor(app: FastifyInstance, origin: string | null) {
-    this.app = app;
-    this.origin = origin;
-  }
-  cookieHeader() {
-    return [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
-  }
-  async call(method: 'GET' | 'POST' | 'PUT' | 'DELETE', url: string, body?: unknown, headers: Record<string, string> = {}) {
-    const res = await this.app.inject({
-      method,
-      url,
-      headers: {
-        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
-        ...(this.cookies.size ? { cookie: this.cookieHeader() } : {}),
-        ...(this.origin ? { origin: this.origin } : {}),
-        ...headers,
-      },
-      ...(body !== undefined ? { payload: JSON.stringify(body) } : {}),
-    });
-    const raw = res.headers['set-cookie'];
-    const setCookie = raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
-    for (const line of setCookie) {
-      const { name, attributes } = cookieShape(line);
-      const value = line.slice(line.indexOf('=') + 1).split(';')[0]?.trim() ?? '';
-      if (value === '' || attributes.includes('max-age=0')) this.cookies.delete(name);
-      else this.cookies.set(name, value);
-    }
-    let json: unknown = null;
-    try {
-      json = res.body ? JSON.parse(res.body) : null;
-    } catch {
-      json = null;
-    }
-    return { status: res.statusCode, json: json as Record<string, unknown> | null, setCookie, headers: res.headers };
-  }
-}
-
-type Stack = { app: FastifyInstance; close: () => Promise<void> };
-
-async function startStack(db: TestDatabase, o: { baseURL?: string; signInMax?: number; trustProxyHops?: number } = {}): Promise<Stack> {
-  const baseURL = o.baseURL ?? 'http://127.0.0.1:3000';
-  const authPool = createAuthPool({ connectionString: db.connectionString, max: 2 });
-  const auth = createAuth({
-    pool: authPool,
-    secret: randomBytes(32).toString('base64url'),
-    baseURL,
-    signInMax: o.signInMax ?? 50,
-    signUpMax: 50,
-  });
-  const app = await buildApp({
-    pool: db.pool,
-    logger: false,
-    auth: { instance: auth, baseURL, allowedOrigins: [baseURL], trustProxyHops: o.trustProxyHops ?? 0 },
-  });
-  return {
-    app,
-    close: async () => {
-      await app.close();
-      await authPool.end();
-    },
-  };
-}
-
-const credentials = (tag: string) => ({ name: `user ${tag}`, email: `${tag}-${randomBytes(4).toString('hex')}@example.test`, password: randomBytes(18).toString('base64url') });
-
-async function setup(t: test.TestContext, o: Parameters<typeof startStack>[1] = {}) {
-  const db = await createTestDatabase();
-  await migrate(db.pool);
-  const stack = await startStack(db, o);
-  t.after(async () => {
-    await stack.close();
-    await db.close();
-  });
-  return { db, stack };
-}
+import { Client, cookieShape, credentials, setup, startStack } from './helpers/stack.ts';
 
 test('未ログインでは /api/goals を含む /api/* が401、/api/health だけ公開', async (t) => {
   const { stack } = await setup(t);
@@ -128,10 +36,10 @@ test('登録→セッション→再読み込み→ログアウト→古いCooki
   assert.equal(me.status, 200);
   assert.equal((me.json?.user as { email: string }).email, cred.email);
 
-  // 再読み込み: Cookieだけを持つ新しい要求でも保護APIを通過する（routeがないので404、401ではない）
+  // 再読み込み: Cookieだけを持つ新しい要求でも保護APIを通過する（Goalはまだないので空の一覧）
   const reload = await stack.app.inject({ method: 'GET', url: '/api/goals', headers: { cookie: a.cookieHeader() } });
-  assert.equal(reload.statusCode, 404);
-  assert.equal(reload.json().error.code, 'NOT_FOUND');
+  assert.equal(reload.statusCode, 200);
+  assert.deepEqual(reload.json(), []);
 
   const oldCookie = a.cookieHeader();
   const signOut = await a.call('POST', '/api/auth/sign-out', {});
@@ -152,7 +60,7 @@ test('期限切れセッションは401になり、画面側が再ログイン�
   const { db, stack } = await setup(t);
   const a = new Client(stack.app, 'http://127.0.0.1:3000');
   await a.call('POST', '/api/auth/sign-up/email', credentials('exp'));
-  assert.equal((await stack.app.inject({ method: 'GET', url: '/api/goals', headers: { cookie: a.cookieHeader() } })).statusCode, 404);
+  assert.equal((await stack.app.inject({ method: 'GET', url: '/api/goals', headers: { cookie: a.cookieHeader() } })).statusCode, 200);
   await db.pool.query(`update session set "expiresAt" = now() - interval '1 minute'`);
   assert.equal((await stack.app.inject({ method: 'GET', url: '/api/goals', headers: { cookie: a.cookieHeader() } })).statusCode, 401);
   assert.equal((await a.call('GET', '/api/auth/get-session')).json, null);
@@ -180,9 +88,9 @@ test('別originからの認証要求と、Cookie付きの状態変更要求は�
   assert.equal(sameSite.statusCode, 403);
   // Originなし（非ブラウザ）も状態変更は拒否、読み取りは通す
   assert.equal((await stack.app.inject({ method: 'POST', url: '/api/goals', headers: { cookie, 'content-type': 'application/json' }, payload: '{}' })).statusCode, 403);
-  assert.equal((await stack.app.inject({ method: 'GET', url: '/api/goals', headers: { cookie } })).statusCode, 404);
-  // 正規のoriginなら保護hookを通過する（routeがないので404）
-  assert.equal((await a.call('POST', '/api/goals', {})).status, 404);
+  assert.equal((await stack.app.inject({ method: 'GET', url: '/api/goals', headers: { cookie } })).statusCode, 200);
+  // 正規のoriginなら保護hookを通過し、業務routeの検証（空bodyは422）に届く
+  assert.equal((await a.call('POST', '/api/goals', {})).status, 422);
   // セッションはそのまま残っている
   assert.equal((await a.call('GET', '/api/auth/get-session')).status, 200);
 });

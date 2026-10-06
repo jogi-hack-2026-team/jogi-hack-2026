@@ -482,7 +482,7 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 
 ## アプリを起動・検証する
 
-#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。Product機能はまだなく、APIは`GET /api/health`（DB接続確認を含む）、Webは起動確認画面だけです。
+#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。APIは`GET /api/health`（DB接続確認を含む）、認証（#75）、Goal API（#76。[決定事項](architecture.md#2026-10-06のgoal-api76)）まで、Webは起動確認と登録・ログイン画面までです。記録・予測のAPIとGoal・Today画面は未実装です。
 
 | 構成 | 場所 | 役割 |
 | --- | --- | --- |
@@ -538,7 +538,7 @@ npm run build
 
 ### 登録・ログインを確認する
 
-`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。
+`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。ログイン後のCookieを付けて同じURLを呼ぶとGoalの一覧（最初は`[]`）が返り、作成・編集・削除の規則は[Architecture](architecture.md#2026-10-06のgoal-api76)に記載しています。
 
 stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。
 

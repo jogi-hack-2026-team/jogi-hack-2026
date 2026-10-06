@@ -22,7 +22,7 @@ Supporting Doc / Not a Source of Truth。契約の不足、未採択の選択肢
 
 ## APIの未定義部分
 
-Architectureの記載済み規則は実装の基準だが、完全なHTTP契約を定めた記載ではない。採択後に成功DTO・status・入力細則を正本と共有契約へ反映し、FE・BEが同じfixtureで確認できるようにする案。
+Architectureの記載済み規則は実装の基準だが、完全なHTTP契約を定めた記載ではない。採択後に成功DTO・status・入力細則を正本と共有契約へ反映し、FE・BEが同じfixtureで確認できるようにする案。**Goal APIの5行（`GET`／`POST /api/goals`、`GET`／`PATCH`／`DELETE /api/goals/:goalId`）は#76で採択し、[Architecture](architecture.md#2026-10-06のgoal-api76)へ記録した。下表の案は比較履歴として残す。記録API・`/today`の行は未採択のまま。**
 
 | 対象 | 不足している判断 | 未採択の案・main反映済み方針 | 確認案 |
 | --- | --- | --- | --- |
