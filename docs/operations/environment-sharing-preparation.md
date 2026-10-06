@@ -13,15 +13,15 @@ mise run --skip-tools check:staged
 
 `check`は文書と設定、`check:staged`はcommit対象の空白を検査する。Engineの数値テストやアプリ起動を実行するコマンドではない。miseがなければPowerShell 7で`pwsh -NoProfile -File scripts/check-foundation.ps1`、空白検査は`git diff --cached --check`を直接実行できる。
 
-#70 が正式基盤を揃える時点で、合意したNode/npmの版固定・workspaceのinstall/typecheck/test/build入口をmiseへ整理する。Engine CIのNode22.15.1/24系や単体Dockerの検証版を、そのまま製品版の決定にしない。DockerがあればEngine単体の検証にはhostへのmise/Node追加は不要。miseはツール版とタスクの入口を揃える役割で、Secret共有サービスの採択を代替しない。
+#70で`mise.toml`にNode 24.21.0と`install`・`typecheck`・`test`・`build`・`dev:api`・`dev:web`のタスクを追加した。Engine CIのNode22.15.1/24系や単体Dockerの検証版を、そのまま製品版の決定にしない。DockerがあればEngine単体の検証にはhostへのmise/Node追加は不要。miseはツール版とタスクの入口を揃える役割で、Secret共有サービスの採択を代替しない。
 
 ## 空の環境例と必要になる条件
 
-[.env.example](../../.env.example)は項目名・用途を確認するための空の例。現在のmainにはWeb/APIの起動実装も`.env`の自動読込処理もなく、コピーだけではアプリは動かない。現行Engineの検証とFoundationには、以下の変数を含めて環境設定は不要。
+[.env.example](../../.env.example)は項目名・用途を確認するための空の例。#70以降、`npm run dev:api`だけがrootの`.env`を読む（Nodeの`--env-file-if-exists`）。テスト・CI・コンテナには環境変数を直接渡す。現行Engineの検証とFoundationには、以下の変数を含めて環境設定は不要。
 
 | 項目 | 用途と必要になる条件 | 扱い |
 | --- | --- | --- |
-| `DATABASE_URL` | DBを使うAPIを実装した後の接続先。#74/#70で接続・pool・環境ごとの条件を確定する | password等を含み得るSecret。FE bundleへ渡さない |
+| `DATABASE_URL` | APIの接続先。#70で必須にした（未設定なら起動しない）。pool上限等は#74で確定する | password等を含み得るSecret。FE bundleへ渡さない |
 | `BETTER_AUTH_SECRET` | Better Authの採択・実装後にAPIが使うSecret。#75で生成・更新・読込の条件を確定する | Secret。例には空欄だけを置く。今回生成しない |
 | `BETTER_AUTH_URL` | Better Authの採択・実装後に使う公開base URL。ローカル/staging/productionのorigin整合を確認する | Secretそのものではないが環境ごとに設定する。未作成のURLを成功例として埋めない |
 
@@ -41,6 +41,6 @@ mise run --skip-tools check:staged
 
 空の`.env.example`、既存miseタスクの使いどころ、Git除外の確認手順、共有前に決める項目を用意した。既存`.gitignore`は変更不要。Secret実値の読取・出力・commit・送信、サービス接続、鍵生成、アプリのenv読込実装は行っていない。
 
-残りは#70の正式版・統一コマンド・読込方法、#74/#75の実際の必須条件、共有方式・管理担当・アクセス範囲の決定と、その後の接続確認。#70 のDone条件を満たしたものではない。miseが未導入の環境では今回のmiseコマンド自体は未実行とし、同じFoundation処理をPowerShellで確認する。
+残りは#74/#75の実際の必須条件、共有方式・管理担当・アクセス範囲の決定と、その後の接続確認。#70 のDone条件を満たしたものではない。miseが未導入の環境では今回のmiseコマンド自体は未実行とし、同じFoundation処理をPowerShellで確認する。
 
 miseのタスク実行仕様は[公式ドキュメント](https://mise.jdx.dev/tasks/running-tasks.html)を参照する。

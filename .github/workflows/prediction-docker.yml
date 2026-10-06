@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/prediction-docker.yml'
   push:
     branches: [main]
     paths:
       - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/prediction-docker.yml'
   workflow_dispatch:
 
@@ -29,7 +33,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build isolated Engine verification image
-        run: docker build --file packages/prediction/Dockerfile.verification --tag prediction-verification:${{ github.run_id }}-${{ github.run_attempt }} packages/prediction
+        run: docker build --file packages/prediction/Dockerfile.verification --tag prediction-verification:${{ github.run_id }}-${{ github.run_attempt }} .
       - name: Run Engine checks without network or host mounts
         id: run
         run: |
