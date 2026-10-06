@@ -6,9 +6,10 @@ import { isGoalId } from '../goals/store.ts';
 export type TodaySnapshot = {
   goal: { totalRequired: number; initialProgress: number; sessionAmount: number; timezone: string; recordStartDate: string };
   logs: Log[];
+  now: Date;
 };
 
-export async function loadTodaySnapshot(pool: Pool, userId: string, goalId: string): Promise<TodaySnapshot | null> {
+export async function loadTodaySnapshot(pool: Pool, userId: string, goalId: string, clock: () => Date): Promise<TodaySnapshot | null> {
   if (!isGoalId(goalId)) return null;
   const client = await pool.connect();
   try {
@@ -23,12 +24,15 @@ export async function loadTodaySnapshot(pool: Pool, userId: string, goalId: stri
       await client.query('commit');
       return null;
     }
+    // BEGIN alone does not establish the snapshot. Sample after the first SELECT.
+    const now = clock();
     const logs = await client.query<{ local_date: string; status: Log['status']; amount: number | null }>(
       'select local_date::text as local_date, status, amount from action_log where goal_id = $1 order by local_date',
       [goalId],
     );
     await client.query('commit');
     return {
+      now,
       goal: {
         totalRequired: goal.total_required,
         initialProgress: goal.initial_progress,

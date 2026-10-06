@@ -19,8 +19,9 @@ type GoalRow = {
   has_logs: boolean;
 };
 
-const GOAL_COLUMNS = `g.id, g.title, g.unit, g.total_required, g.session_amount, g.initial_progress, g.timezone,
-  g.record_start_date::text as record_start_date,
+const BASE_GOAL_COLUMNS = `g.id, g.title, g.unit, g.total_required, g.session_amount, g.initial_progress, g.timezone,
+  g.record_start_date::text as record_start_date`;
+const GOAL_COLUMNS = `${BASE_GOAL_COLUMNS},
   exists (select 1 from action_log l where l.goal_id = g.id) as has_logs`;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -59,30 +60,55 @@ async function toGoals(db: Queryable, rows: GoalRow[], now: Date): Promise<Goal[
   }));
 }
 
-export async function listGoals(db: Queryable, userId: string, now: Date): Promise<Goal[]> {
-  const rows = await db.query<GoalRow>(`select ${GOAL_COLUMNS} from goal g where g.user_id = $1 order by g.created_at, g.id`, [userId]);
-  return toGoals(db, rows.rows, now);
+async function readGoals(pool: Pool, sql: string, values: string[], now: () => Date): Promise<Goal[]> {
+  const client = await pool.connect();
+  try {
+    await client.query('begin isolation level repeatable read read only');
+    const rows = await client.query<GoalRow>(sql, values); // first SELECT fixes the snapshot
+    const goals = await toGoals(client, rows.rows, now());
+    await client.query('commit');
+    return goals;
+  } catch (error) {
+    await client.query('rollback').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
-export async function getGoal(db: Queryable, userId: string, goalId: string, now: Date): Promise<Goal | null> {
+export async function listGoals(pool: Pool, userId: string, now: () => Date): Promise<Goal[]> {
+  return readGoals(pool, `select ${GOAL_COLUMNS} from goal g where g.user_id = $1 order by g.created_at, g.id`, [userId], now);
+}
+
+export async function getGoal(pool: Pool, userId: string, goalId: string, now: () => Date): Promise<Goal | null> {
   if (!isGoalId(goalId)) return null;
-  const rows = await db.query<GoalRow>(`select ${GOAL_COLUMNS} from goal g where g.user_id = $1 and g.id = $2`, [userId, goalId]);
-  const row = rows.rows[0];
-  return row ? (await toGoals(db, [row], now))[0]! : null;
+  return (await readGoals(pool, `select ${GOAL_COLUMNS} from goal g where g.user_id = $1 and g.id = $2`, [userId, goalId], now))[0] ?? null;
 }
 
 // 記録開始日は作成時刻をGoalのtimezoneで暦日にした値で固定する（Architecture「初期進捗と日々の記録の境界」の最小案）。
-export async function createGoal(db: Queryable, userId: string, input: GoalCreate, now: Date): Promise<Goal> {
-  const recordStartDate = localDateIn(now, input.timezone);
-  const rows = await db.query<GoalRow>(
-    `with inserted as (
-       insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::date)
-       returning *)
-     select ${GOAL_COLUMNS} from inserted g`,
-    [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate],
-  );
-  return (await toGoals(db, [rows.rows[0]!], now))[0]!;
+export async function createGoal(pool: Pool, userId: string, input: GoalCreate, clock: () => Date): Promise<Goal> {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const now = clock();
+    const recordStartDate = localDateIn(now, input.timezone);
+    const rows = await client.query<GoalRow>(
+      `with inserted as (
+         insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date, created_at, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $9)
+         returning *)
+       select ${GOAL_COLUMNS} from inserted g`,
+      [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate, now],
+    );
+    const goal = (await toGoals(client, [rows.rows[0]!], now))[0]!;
+    await client.query('commit');
+    return goal;
+  } catch (error) {
+    await client.query('rollback').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export type LockedField = 'timezone' | 'initialProgress';
@@ -90,19 +116,22 @@ export type UpdateResult = { kind: 'updated'; goal: Goal } | { kind: 'not_found'
 
 // 記録が1件でもあるGoalでは timezone と initialProgress を変更できない（R-02）。
 // 同じ値の再送は「変更」ではないので通す。行をロックして、同時の記録追加と判定がずれないようにする。
-export async function updateGoal(pool: Pool, userId: string, goalId: string, patch: GoalPatch, now: Date): Promise<UpdateResult> {
+export async function updateGoal(pool: Pool, userId: string, goalId: string, patch: GoalPatch, now: () => Date): Promise<UpdateResult> {
   if (!isGoalId(goalId)) return { kind: 'not_found' };
   const client = await pool.connect();
   try {
-    await client.query('begin');
+    await client.query('begin isolation level read committed');
     const current = (
-      await client.query<GoalRow>(`select ${GOAL_COLUMNS} from goal g where g.user_id = $1 and g.id = $2 for update of g`, [userId, goalId])
+      await client.query<Omit<GoalRow, 'has_logs'>>(`select ${BASE_GOAL_COLUMNS} from goal g where g.user_id = $1 and g.id = $2 for update of g`, [userId, goalId])
     ).rows[0];
     if (!current) {
       await client.query('rollback');
       return { kind: 'not_found' };
     }
-    if (current.has_logs) {
+    // READ COMMITTED takes a fresh snapshot after any Goal lock wait. A first log
+    // committed by the shared-lock holder must be visible before checking R-02.
+    const hasLogs = (await client.query<{ has_logs: boolean }>('select exists (select 1 from action_log where goal_id = $1) as has_logs', [goalId])).rows[0]!.has_logs;
+    if (hasLogs) {
       const locked: LockedField[] = [];
       if (patch.timezone !== undefined && patch.timezone !== current.timezone) locked.push('timezone');
       if (patch.initialProgress !== undefined && patch.initialProgress !== current.initial_progress) locked.push('initialProgress');
@@ -125,7 +154,7 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
        select ${GOAL_COLUMNS} from changed g`,
       [userId, goalId, patch.title ?? null, patch.unit ?? null, patch.totalRequired ?? null, patch.sessionAmount ?? null, patch.initialProgress ?? null, patch.timezone ?? null],
     );
-    const goal = (await toGoals(client, [updated.rows[0]!], now))[0]!;
+    const goal = (await toGoals(client, [updated.rows[0]!], now()))[0]!;
     await client.query('commit');
     return { kind: 'updated', goal };
   } catch (error) {

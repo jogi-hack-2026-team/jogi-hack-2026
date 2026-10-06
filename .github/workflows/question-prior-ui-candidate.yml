@@ -1,0 +1,74 @@
+name: Question prior UI candidate
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/question-prior-ui-candidate/**'
+      - 'experiments/architecture-verification/package*.json'
+      - 'packages/prediction/package*.json'
+      - '.github/workflows/question-prior-ui-candidate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/question-prior-ui-candidate/**'
+      - 'experiments/architecture-verification/package*.json'
+      - 'packages/prediction/package*.json'
+      - '.github/workflows/question-prior-ui-candidate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: question-ui-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    name: React candidate types, SSR and preview build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          # Verification host only, not the #70 production runtime decision.
+          node-version: '24.21.0'
+          package-manager-cache: false
+      - name: Install existing locked verification dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --include=dev --ignore-scripts --no-audit --no-fund
+          else
+            npm ci --prefix packages/prediction --include=dev --ignore-scripts --no-audit --no-fund
+          fi
+          npm ci --prefix experiments/architecture-verification --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Check isolated React candidate
+        run: node experiments/question-prior-ui-candidate/scripts/check.mjs
+      - name: Read pinned PR119 Engine candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # Candidate verification only; never follows an unreviewed moving branch.
+          ref: f7a6c02ec402d3c74fae953cac769de06b31050b
+          path: experiments/question-prior-ui-candidate/.qa/inputs/engine-pr119
+          persist-credentials: false
+      - name: Read pinned PR118 shared fixtures
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: b7400757f1ee7c7beeb37640f7ad9582d770b121
+          path: experiments/question-prior-ui-candidate/.qa/inputs/contract-pr118
+          persist-credentials: false
+      - name: Check real candidate Engine to view to React SSR
+        run: >-
+          node experiments/question-prior-ui-candidate/scripts/check-connection.mjs
+          --engine-root experiments/question-prior-ui-candidate/.qa/inputs/engine-pr119
+          --fixtures experiments/question-prior-ui-candidate/.qa/inputs/contract-pr118/experiments/question-prior-contract/common-fixtures.json
+      - name: Save candidate connection evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: question-prior-ui-connection-node24-${{ github.run_id }}-${{ github.run_attempt }}
+          path: experiments/question-prior-ui-candidate/.qa/connection/report.json
+          if-no-files-found: error
+          retention-days: 14

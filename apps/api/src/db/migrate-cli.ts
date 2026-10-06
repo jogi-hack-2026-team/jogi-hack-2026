@@ -2,7 +2,7 @@
 // DATABASE_URLだけを使う。結果はJSONで1行出力し、接続文字列は出力しない。
 import { loadConfig } from '../config.ts';
 import { migrate, type MigrationTarget } from './migrate.ts';
-import { createAppPool } from './pool.ts';
+import { createMigrationPool } from './pool.ts';
 
 const target = process.argv[2];
 if (target !== 'auth' && target !== 'app' && target !== 'all' || process.argv.length > 3) {
@@ -11,7 +11,7 @@ if (target !== 'auth' && target !== 'app' && target !== 'all' || process.argv.le
 }
 
 const config = loadConfig();
-const pool = createAppPool({ connectionString: config.databaseUrl, max: 3 });
+const pool = createMigrationPool({ connectionString: config.databaseUrl });
 try {
   const result = await migrate(pool, target as MigrationTarget);
   console.log(JSON.stringify(result));

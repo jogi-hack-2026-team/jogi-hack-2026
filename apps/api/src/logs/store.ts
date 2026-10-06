@@ -16,16 +16,16 @@ export type PutLogResult =
   | { kind: 'before_start'; recordStartDate: string };
 
 // 作成・上書き（R-03・R-04、P-14）。許可窓は「Goalのtimezoneで今日・昨日」かつ「記録開始日以降」。
-// 窓の判定と保存を同じtransactionで行い、Goal行を共有ロックして、同時のtimezone変更（PATCHのfor update）と順序づける。
+// 窓の判定と保存を同じtransactionで行い、Goal行を排他ロックして、同時のPATCH・同Goal PUTを時計の取得前に順序づける。
 // DONEでamount省略時はsessionAmountで補い、SKIPPEDはNULLで保存する（DBのCHECKと同じ）。
-export async function putLog(pool: Pool, userId: string, goalId: string, localDate: string, body: LogPut, now: Date): Promise<PutLogResult> {
+export async function putLog(pool: Pool, userId: string, goalId: string, localDate: string, body: LogPut, clock: () => Date): Promise<PutLogResult> {
   if (!isGoalId(goalId)) return { kind: 'not_found' };
   const client = await pool.connect();
   try {
-    await client.query('begin');
+    await client.query('begin isolation level read committed');
     const goal = (
       await client.query<{ timezone: string; record_start_date: string; session_amount: number }>(
-        'select timezone, record_start_date::text as record_start_date, session_amount from goal where id = $1 and user_id = $2 for share',
+        'select timezone, record_start_date::text as record_start_date, session_amount from goal where id = $1 and user_id = $2 for update',
         [goalId, userId],
       )
     ).rows[0];
@@ -33,7 +33,7 @@ export async function putLog(pool: Pool, userId: string, goalId: string, localDa
       await client.query('rollback');
       return { kind: 'not_found' };
     }
-    const today = localDateIn(now, goal.timezone);
+    const today = localDateIn(clock(), goal.timezone);
     const yesterday = shiftLocalDate(today, -1);
     if (localDate !== today && localDate !== yesterday) {
       await client.query('rollback');

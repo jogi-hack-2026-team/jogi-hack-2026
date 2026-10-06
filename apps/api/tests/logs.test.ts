@@ -160,6 +160,8 @@ test('所有者チェック: 他人のGoalの記録は保存も一覧も404、�
     payload: JSON.stringify({ status: 'DONE' }),
   });
   assert.equal(evil.statusCode, 403);
-  assert.equal((await stack.app.inject({ method: 'PUT', url: `/%61pi/goals/${goal.id}/logs/2026-10-06`, headers: { 'content-type': 'application/json' }, payload: '{"status":"DONE"}' })).statusCode, 401);
+  const encoded = await stack.app.inject({ method: 'PUT', url: `/%61pi/goals/${goal.id}/logs/2026-10-06`, headers: { 'content-type': 'application/json' }, payload: '{"status":"DONE"}' });
+  assert.equal(encoded.statusCode, 403);
+  assert.equal(encoded.json().error.code, 'ORIGIN_REJECTED');
   assert.equal((await db.pool.query('select count(*)::int as n from action_log')).rows[0]?.n, 0);
 });

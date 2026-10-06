@@ -1,0 +1,9 @@
+/* QA framing only; never a proposed Goal/Today layout. */
+*{box-sizing:border-box}body{margin:0;color:#18352a;background:#f2f5f3;font:16px/1.65 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:24px}h1{font-size:1.5rem}h2{font-size:1.2rem}h3{font-size:1.05rem}.qa-banner{background:#e4eee8;border-left:5px solid #176348;padding:12px}.qa-controls{display:flex;align-items:flex-start;flex-wrap:wrap;gap:10px}.qa-controls label{display:flex;flex-direction:column;gap:4px}button,select{font:inherit;min-height:44px;padding:8px 12px;max-width:100%;border:1px solid #738d7e;border-radius:6px;background:#fff;color:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #176348;outline-offset:3px}button[aria-pressed=true]{background:#dcece2}button:disabled{opacity:.6}.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.qa-card{min-width:0;border:1px solid #c2d1c8;border-radius:12px;background:#fff;padding:20px;margin-bottom:20px}.qa-small{font-size:.875rem}p{overflow-wrap:anywhere}@media(max-width:740px){main{padding:12px}.qa-grid{grid-template-columns:1fr}.qa-card{padding:16px}}
+/* Synthetic QA colors only. They do not claim to match the FE/B design tokens. */
+.qa-token-probe {
+  --r11-qp-accent: #004080; --r11-qp-focus: #663399; --r11-qp-border: #526575;
+  --r11-qp-separator: #657585; --r11-qp-source-background: #e6f0ff; --r11-qp-source-text: #123456;
+  --r11-qp-error-background: #fff2e6; --r11-qp-error-text: #7a2800;
+  --r11-qp-notice-background: #e6f0ff; --r11-qp-notice-text: #123456;
+}

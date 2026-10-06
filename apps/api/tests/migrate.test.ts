@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -7,6 +7,8 @@ import test from 'node:test';
 import pg from 'pg';
 import { migrate, migrateApp } from '../src/db/migrate.ts';
 import { createAuthPool } from '../src/db/pool.ts';
+import { getMigrations } from 'better-auth/db/migration';
+import { authSchemaOptions } from '../src/auth/options.ts';
 import { createTestDatabase } from './helpers/database.ts';
 
 const publicTables = async (pool: pg.Pool) =>
@@ -31,6 +33,51 @@ async function insertUser(pool: pg.Pool, id: string) {
 const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date)
                     values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo', '2026-10-01') returning id`;
 const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql'];
+
+test('migration 0002 rejects existing Goals without inventing a start date or changing rows/schema', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  const dir = mkdtempSync(join(tmpdir(), 'futureroi-legacy-migration-'));
+  writeFileSync(join(dir, APP_MIGRATIONS[0]!), readFileSync(new URL('../migrations/0001_goal_action_log.sql', import.meta.url)));
+  const url = pathToFileURL(`${dir}/`);
+  await migrate(db.pool, 'all', url);
+  await insertUser(db.pool, 'legacy-owner');
+  await db.pool.query(`insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone)
+    values ('legacy-owner', 'preserve', 'minutes', 100, 7, 30, 'Pacific/Kiritimati')`);
+  writeFileSync(join(dir, APP_MIGRATIONS[1]!), readFileSync(new URL('../migrations/0002_goal_record_start_date.sql', import.meta.url)));
+  await assert.rejects(migrate(db.pool, 'app', url), /explicit record_start_date backfill decision/);
+  assert.deepEqual((await db.pool.query('select title, initial_progress, timezone from goal')).rows,
+    [{ title: 'preserve', initial_progress: 7, timezone: 'Pacific/Kiritimati' }]);
+  assert.equal((await db.pool.query(`select count(*)::int as n from information_schema.columns where table_name = 'goal' and column_name = 'record_start_date'`)).rows[0]!.n, 0);
+  assert.deepEqual((await db.pool.query('select name from schema_migrations order by name')).rows.map((r) => r.name), [APP_MIGRATIONS[0]]);
+});
+
+test('認証table作成後のindex中断をrollbackし、再実行で全field indexまで揃う', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  await db.pool.query(`create function interrupt_auth_index() returns event_trigger language plpgsql as $$
+    begin
+      if to_regclass('public."user"') is not null then
+        raise exception 'index interrupted after table creation';
+      end if;
+    end $$;
+    create event trigger interrupt_auth_index on ddl_command_start
+    when tag in ('CREATE INDEX') execute function interrupt_auth_index();`);
+  await assert.rejects(migrate(db.pool, 'auth'), /index interrupted after table creation/);
+  assert.deepEqual(await publicTables(db.pool), [], 'all auth DDL is rolled back');
+  await db.pool.query('drop event trigger interrupt_auth_index; drop function interrupt_auth_index()');
+  await migrate(db.pool, 'auth');
+  const retry = await getMigrations(authSchemaOptions(db.pool));
+  assert.deepEqual(retry.toBeCreated, []);
+  assert.deepEqual(retry.toBeAdded, []);
+  assert.deepEqual(retry.toBeAddedIndexes, []);
+  const indexes = (await db.pool.query<{ indexname: string; indexdef: string }>("select indexname, indexdef from pg_indexes where schemaname = 'public'")).rows;
+  for (const [name, column] of [['session_userId_idx', '"userId"'], ['account_userId_idx', '"userId"'], ['verification_identifier_idx', 'identifier']]) {
+    const index = indexes.find(row => row.indexname === name);
+    assert.ok(index, `field index ${name} exists after retry`);
+    assert.ok(index.indexdef.includes(`(${column})`), `field index ${name} targets ${column}`);
+  }
+});
 
 test('空のDBへ db:migrate（認証→アプリ）が通り、2回目は差分なし', async (t) => {
   const db = await createTestDatabase();
