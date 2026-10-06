@@ -6,6 +6,7 @@ import { arch, platform } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { samplePosterior } from '../../packages/prediction/dist/src/random.js';
 import { completionPmf, mixtureCompletionQuantiles } from '../../packages/prediction/dist/src/completion.js';
+import { observe } from '../../packages/prediction/dist/src/observations.js';
 
 function choose(n, k) {
   let value = 1;
@@ -37,16 +38,47 @@ export function closedCompletionCdf(a, b, initialState, requiredFutureDone, day)
   return cdf;
 }
 
-export function replayGoldens() {
-  const document = JSON.parse(readFileSync(new URL('./common-fixtures.json', import.meta.url), 'utf8'));
-  const evidence = JSON.parse(readFileSync(new URL('./completion-goldens.json', import.meta.url), 'utf8'));
-  const cases = [];
-  for (const golden of evidence.cases) {
+function checkedGoldenInputs(document, evidence) {
+  // Derive the conditional calculation key from raw input before trusting frozen results.
+  // Validate every case before drawing samples or replaying any DP.
+  return evidence.cases.map(golden => {
     const fixture = document.calculationExamples.find(c => c.id === golden.id);
     assert.ok(fixture, golden.id);
-    assert.deepEqual(fixture.expected.posterior, golden.posterior);
-    assert.equal(fixture.expected.completion.requiredFutureDone, golden.requiredFutureDone);
+    const { counts, actualDone, todayStatus } = observe(fixture.input);
+    const prior = name => ['LOW', 'MID', 'HIGH'].includes(fixture.answers[name])
+      ? document.mappingCandidate.values[fixture.answers[name]]
+      : { alpha: fixture.config.prior, beta: fixture.config.prior };
+    const a = prior('a'), b = prior('b');
+    const posterior = {
+      a: { alpha: a.alpha + counts.nDD, beta: a.beta + counts.nDS },
+      b: { alpha: b.alpha + counts.nSD, beta: b.beta + counts.nSS },
+    };
+    const projected = actualDone + (todayStatus === 'UNRECORDED' ? fixture.input.goal.sessionAmount : 0);
+    const remaining = BigInt(Math.max(0, fixture.input.goal.totalRequired - projected));
+    const amount = BigInt(fixture.input.goal.sessionAmount);
+    const key = { posterior, requiredFutureDone: Number((remaining + amount - 1n) / amount),
+      initialState: todayStatus === 'SKIPPED' ? 'SKIPPED' : 'DONE',
+      samples: fixture.config.samples, seed: fixture.config.seed, horizonDays: fixture.config.horizonDays };
+    const frozen = { posterior: golden.posterior, requiredFutureDone: golden.requiredFutureDone,
+      initialState: golden.initialState, ...evidence.config };
+    for (const field of Object.keys(key)) {
+      assert.deepEqual(key[field], frozen[field], `${golden.id}: completion golden key mismatch (${field})`);
+    }
+    assert.deepEqual(fixture.expected.posterior, posterior, `${golden.id}: fixture posterior mismatch`);
+    assert.equal(fixture.expected.completion.requiredFutureDone, key.requiredFutureDone, `${golden.id}: fixture future count mismatch`);
+    assert.equal(fixture.expected.todayStatus, todayStatus, `${golden.id}: fixture todayStatus mismatch`);
     assert.deepEqual(fixture.config, document.configUnchanged);
+    return { fixture, golden };
+  });
+}
+
+export function replayGoldens(
+  document = JSON.parse(readFileSync(new URL('./common-fixtures.json', import.meta.url), 'utf8')),
+  evidence = JSON.parse(readFileSync(new URL('./completion-goldens.json', import.meta.url), 'utf8')),
+) {
+  const inputs = checkedGoldenInputs(document, evidence);
+  const cases = [];
+  for (const { fixture, golden } of inputs) {
     const { samples, horizonDays: h, seed } = fixture.config;
     const draws = samplePosterior(golden.posterior, samples, seed);
     const drawSha256 = createHash('sha256').update(JSON.stringify(draws)).digest('hex');

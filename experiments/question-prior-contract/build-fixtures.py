@@ -11,7 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 TODAY = "2026-10-05"
-COMPLETION_GOLDENS = {r["id"]:r for r in json.loads((ROOT/"completion-goldens.json").read_text(encoding="utf-8"))["cases"]}
+COMPLETION_EVIDENCE = json.loads((ROOT/"completion-goldens.json").read_text(encoding="utf-8"))
+COMPLETION_GOLDENS = {r["id"]:r for r in COMPLETION_EVIDENCE["cases"]}
 MAP = {"LOW": (1, 3), "MID": (2, 2), "HIGH": (3, 1)}
 DEFAULT = {"modelVersion": "behavior-persistence-m1-v1", "prior": 2,
            "samples": 200, "horizonDays": 1095, "seed": 20261012}
@@ -33,6 +34,18 @@ def quantile(alpha, beta, denominator):
         if denominator * survival <= 1:
             return t
     raise AssertionError("Fixture quantile not reached")
+
+def checked_completion_golden(case, posterior, future_count, initial_state):
+    golden = COMPLETION_GOLDENS[case["id"]]
+    actual = {"posterior": posterior, "requiredFutureDone": future_count,
+              "initialState": initial_state,
+              **{key: case["config"][key] for key in ("samples", "seed", "horizonDays")}}
+    frozen = {key: golden[key] for key in ("posterior", "requiredFutureDone", "initialState")}
+    frozen.update(COMPLETION_EVIDENCE["config"])
+    for key, value in actual.items():
+        if value != frozen[key]:
+            raise ValueError(f'{case["id"]}: completion golden key mismatch ({key})')
+    return golden
 
 def evaluate(case):
     raw = case["answers"]
@@ -94,11 +107,11 @@ def evaluate(case):
                           "requiredFutureDone": future_count}
             if future_count == 0:
                 completion.update(p50Days=0, p80Days=0)
-            elif future_count > DEFAULT["horizonDays"]:
+            elif future_count > case["config"]["horizonDays"]:
                 completion.update(p50Days=None, p80Days=None)
             else:
-                golden = COMPLETION_GOLDENS[case["id"]]
-                assert future_count == golden["requiredFutureDone"] and posterior == golden["posterior"]
+                initial_state = "SKIPPED" if today_status == "SKIPPED" else "DONE"
+                golden = checked_completion_golden(case, posterior, future_count, initial_state)
                 completion.update(p50Days=golden["p50Days"], p80Days=golden["p80Days"])
     return {"mode": "QUESTION_PRIOR_CANDIDATE" if any(qualified.values()) else "LEGACY",
             "todayStatus": today_status, "progress": {"done": actual, "total": goal["totalRequired"], "completed": completed},

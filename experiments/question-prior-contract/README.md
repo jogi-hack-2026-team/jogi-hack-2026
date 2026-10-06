@@ -12,9 +12,12 @@ Python 3がある環境で、リポジトリrootから実行する。Pythonは�
 
 ```powershell
 python experiments/question-prior-contract/build-fixtures.py
+python -B -m unittest discover -s experiments/question-prior-contract -p test_golden_inputs.py -v
 ```
 
 成功時は計算18／入力不正4／保存・UI10、independent_math_checkのPASSを表示し、このディレクトリのJSONと一覧を再生成する。失敗時は非0で終了する。Secret・DB・ネットワーク・外部packageは不要。
+
+[Python回帰](test_golden_inputs.py)は一時ディレクトリで生成コードを読み込み、掲載18例の不変と、posterior／必要回数／開始状態／samples／seed／horizonの各変更拒否を7件で確認する。テストから掲載ファイルを書き換えない。
 
 Pythonの再現確認はこの資料の数式整合と凍結値の読取り。非自明な完了DP9件は下記のNode再現へ分ける。revision・409・partial answer gate・DTOは未採択。質問値の校正・予測精度・UI理解は未検証。
 
@@ -26,7 +29,9 @@ BEレビュー5417166527への文書対応では、C案の最小構成を回答�
 
 ## 完了DPの追加Evidence
 
-[completion-goldens.json](completion-goldens.json)はPR118元HEAD `c3bd5ef`の18例から得た、非自明9件の完了日数・事後分布・draw hash・CDF境界を凍結したもの。[verify-completion.mjs](verify-completion.mjs)はmainのsampler／DPだけを使い、PR119のprior候補ファイルを取り込まずに再現できる。[completion-replay-results.json](completion-replay-results.json)に実行結果を保存した。
+[completion-goldens.json](completion-goldens.json)はPR118元HEAD `c3bd5ef`の18例から得た、非自明9件の完了日数・事後分布・draw hash・CDF境界を凍結したもの。[verify-completion.mjs](verify-completion.mjs)はmainの観測処理・sampler／DPを使い、PR119のprior候補ファイルを取り込まずに再現できる。[completion-replay-results.json](completion-replay-results.json)に実行結果を保存した。
+
+2026-10-06、golden再利用の入力照合を追加した。生成側は計算したposterior・必要回数・開始状態とconfigのsamples／seed／horizonを凍結値へ照合する。Node側も実fixtureのraw回答・mapping・観測・実量・今日の状態から条件を導出し、全9件の照合後にsampler／DPを呼ぶ。F06を初期量75＋今日SKIPPEDへ変えるとposteriorと必要回数2が同じでも開始状態が異なるため、旧4／5日を再利用しない。掲載中の18例・9golden・モデル設定は変更していない。
 
 Node 22.15.1／Windows x64、TypeScript 5.8.3で再現を確認。コンパイラは既に導入したものを指定し、自動installしない。下の`$d26Compiler`を実在するTypeScript 5.8.3の`bin/tsc`へ置き換え、リポジトリrootから実行する（パス部分は置換が必要な例）。
 
@@ -37,7 +42,9 @@ node experiments/question-prior-contract/verify-completion.mjs
 node --test experiments/question-prior-contract/completion-oracle.test.mjs
 ```
 
-コンパイラ呼出しで既存sourceからignoredなdistを生成する。再現スクリプトは共有RNGの全200drawのhashを確認し、9件のP50／P80、H=1095全日のDP／独立CDF一致、刈り込みあり／なしを確認して結果JSONを更新する。テストは独立CDF対整数重み列挙、9件の固定値、0／H超と旧入口の比較履歴の3件。失敗は非0で終了する。別runtimeのdraw hash不一致を、対応済み／同一goldenとは扱わない。
+コンパイラ呼出しで既存sourceからignoredなdistを生成する。再現スクリプトは共有RNGの全200drawのhashを確認し、9件のP50／P80、H=1095全日のDP／独立CDF一致、刈り込みあり／なしを確認して結果JSONを更新する。Nodeテストは従来の独立CDF・9件の固定値・0／H超と旧入口履歴の3件に、入力キー6項目の変更拒否と古い今日metadataの拒否を加えた10件。失敗は非0で終了する。別runtimeのdraw hash不一致を、対応済み／同一goldenとは扱わない。
+
+[専用CI](../../.github/workflows/question-prior-contract.yml)は凍結Evidenceに合わせWindows／Node22.15.1でPython回帰・生成不変・既存sourceのcompile・Node回帰を実行する。T-14や性能ベンチ、API／DB／UI試験は実行しない。runtimeの採択や一般環境の互換性保証ではない。
 
 F03=3／6日、F07=3／11日、F14=2／2日。最大CDF差は約5.6e-16。独立なのは条件付き分布の計算法で、RNG／Beta samplerは共有する。参照CDF許容誤差1e-11はProductionの分位点epsilon1e-12と別で、後者は変更しない。校正・予測精度、別runtimeやT-14全条件を保証しない。
 

@@ -42,3 +42,40 @@ test('zero/horizon cases remain separate from nine nontrivial goldens and origin
   assert.equal(evidence.priorErrorDifference.actual, 'RangeError');
   assert.equal(evidence.integrationSpecificationsNotExecuted, 10);
 });
+
+const document = JSON.parse(readFileSync(new URL('./common-fixtures.json', import.meta.url), 'utf8'));
+const evidence = JSON.parse(readFileSync(new URL('./completion-goldens.json', import.meta.url), 'utf8'));
+const f06 = data => data.calculationExamples.find(c => c.id === 'F06');
+const changeConfig = (data, field, value) => {
+  data.configUnchanged[field] = value;
+  for (const fixture of data.calculationExamples) fixture.config[field] = value;
+};
+const changedKeys = [
+  ['posterior', data => { f06(data).answers.a = 'MID'; }],
+  ['requiredFutureDone', data => { f06(data).input.goal.totalRequired += 15; }],
+  ['initialState', data => {
+    const fixture = f06(data);
+    fixture.input.goal.initialProgress = 75;
+    fixture.input.logs = [{ localDate: fixture.input.today, status: 'SKIPPED', amount: null }];
+    fixture.expected.todayStatus = 'SKIPPED';
+    fixture.expected.progress.done = 75;
+    fixture.expected.completion.scenario = 'CURRENT_STATE';
+  }],
+  ['samples', data => changeConfig(data, 'samples', data.configUnchanged.samples + 1)],
+  ['seed', data => changeConfig(data, 'seed', data.configUnchanged.seed + 1)],
+  ['horizonDays', data => changeConfig(data, 'horizonDays', data.configUnchanged.horizonDays - 1)],
+];
+for (const [field, change] of changedKeys) {
+  test(`rejects changed completion golden key ${field} before replay`, () => {
+    const changed = structuredClone(document);
+    change(changed);
+    assert.throws(() => replayGoldens(changed, evidence),
+      error => error.code === 'ERR_ASSERTION' && error.message.includes(`golden key mismatch (${field})`));
+  });
+}
+
+test('rejects stale today metadata even when DONE recording preserves the conditional golden key', () => {
+  const changed = structuredClone(document), fixture = f06(changed);
+  fixture.input.logs = [{ localDate: fixture.input.today, status: 'DONE', amount: 15 }];
+  assert.throws(() => replayGoldens(changed, evidence), /F06: fixture todayStatus mismatch/);
+});
