@@ -22,7 +22,7 @@ export function project(module, outDir) {
   const qa = join(candidate,'.qa'); mkdirSync(qa,{recursive:true});
   const config = join(qa,`tsconfig-${module}.json`);
   writeFileSync(config,JSON.stringify({compilerOptions:{target:'ES2022',module,moduleResolution:'Node',jsx:'react-jsx',
-    strict:true,noUnusedLocals:true,noUnusedParameters:true,skipLibCheck:false,lib:['ES2022','DOM','DOM.Iterable'],
+    strict:true,exactOptionalPropertyTypes:true,noUnusedLocals:true,noUnusedParameters:true,skipLibCheck:false,lib:['ES2022','DOM','DOM.Iterable'],
     rootDir:candidate,outDir,baseUrl:candidate,
     paths:{react:[join(dependencies,'@types/react/index.d.ts')],'react/jsx-runtime':[join(dependencies,'@types/react/jsx-runtime.d.ts')],
       'react-dom/client':[join(dependencies,'@types/react-dom/client.d.ts')]},

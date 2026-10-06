@@ -10,7 +10,7 @@ export function GoalQuestionSlotExample(props: QuestionPriorFieldsProps & { read
     saveState.kind === "saved" ? "回答を保存しました。" :
     saveState.kind === "saved-refresh-failed" ? "回答は保存済みです。見通しの再取得が必要です。" :
     saveState.kind === "save-unknown" ? "保存できたか未確認です。現在の回答を先に確認してください。" : null;
-  return <><QuestionPriorFields {...questionProps} disabled={saveState.kind === "saving" || questionProps.disabled} />
+  return <><QuestionPriorFields {...questionProps} disabled={saveState.kind === "saving" || questionProps.disabled === true} />
     {status && <p role="status">{status}</p>}
     {saveState.kind === "failed" && <p role="alert">{saveState.message}</p>}
   </>;

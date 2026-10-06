@@ -34,6 +34,16 @@ READMEの接続checkをWindows x64/Node22.15.1と上記既存lockで実行し、
 
 生成された`.qa/connection/report.json`は実Engine出力、表示view、HTMLと検証対象hashを含むローカル証跡。保存成功、正式API契約、ブラウザでの数値更新を示すものではない。型を回避したTODAY_DONE/CURRENT_STATEの逆転、出所不足、無効context、未達成にcompletedを渡す場合は接続例でも拒否する。
 
+## 基盤のoptional propsとBE境界の再確認（2026-10-06）
+
+PR122 `54b59e3`の`exactOptionalPropertyTypes: true`で、旧`GoalQuestionSlotExample`が`disabled?: boolean`へ明示的な`undefined`を渡し得るTS2375を再現しました。`saving || questionProps.disabled === true`でbooleanへ正規化する1式修正と、候補の検証設定への同flag追加を行いました。propsの語彙、5コピー対象、保存処理、API／Engine出力型は変更しません。
+
+Windows x64／Node22.15.1、既存lockのTypeScript5.8.3／React・React DOM19.3.0／Vite8.3.1で、変更後の`check.mjs`（exact optional＋型負例8件、SSR15／15、Vite build）と固定`f7a6c02`への接続24／24が成功しました。compilerのみの別負例でも、mainの`PredictionResult`を`engineViewExample`へ直接渡すと`evidenceSource`／`conditionalPlan`欠落のTS2345となることを確認しました。この負例は実行しておらず、24件へ合算しません。5コピー対象は`7b0debd`とbyte同一です。ブラウザの再操作は行っておらず、過去の実DOM確認を新しい実行結果として扱いません。
+
+main `dc668fb`の`PredictionResult`とBEの暫定方針を読み合わせ、candidate変換へ直接渡せないこと、不足・RECORDS出所・Goal context・未保存draft／revisionの境界を[README](README.md#現行実績モードとの接続境界2026-10-06)に記録しました。HTTP／DB／回答保存やR-11の完成を示す確認ではありません。#88の基点・限定先行の承認も未決です。
+
+上の`783ebb4`時点の計算source同一という記録は当時の確認です。現在のPR119 `918d10e`は共有DPのsource変更を含み、同じ記述を最新HEADへ適用しません。この候補CIのEngine pinは既検証の`f7a6c02`のまま保持し、別PRの変更やテストを今回の検証件数へ合算しません。
+
 ## 実DOMで確認した範囲
 
 公開配置と同じTSXをビルドし、通常の127.0.0.1 HTTPでReact mountした。以下はブラウザ操作とDOM観測による確認で、自動SSRテストとは区別する。

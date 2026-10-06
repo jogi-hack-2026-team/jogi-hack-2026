@@ -29,6 +29,19 @@
 
 [presentation-types.ts](src/presentation-types.ts)はローカル表示候補で、共有API/Engine DTOの採択ではありません。[slots.tsx](examples/slots.tsx)はrenderのみの最小接続例です。form/route/query/mutationや保存ボタンを作っていません。採択後にFEが既存controllerへ接続し、共有ファイルをFEが所有、部品内の変更をKaitoが担当する案です。実際の配置・変更順・競合解消手順はFEレビューで合意してから統合します。
 
+## 現行実績モードとの接続境界（2026-10-06）
+
+[BEの取り込み確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/120#issuecomment-6015329491)は段階的な結合方針であり、D-26採択やR-11のMust変更ではありません。以下はmain `dc668fbae199660a22a93ec0af66a3bed0daba40`、PR120 `7b0debd`、Goal API候補PR125 `a9d6515`のコード読み合わせに基づきます。実HTTP／DB／保存を実行した確認ではありません。
+
+- mainの`PredictionResult`は`conditionalPlan`と`evidenceSource`を持ちません。`engine-view.ts`はPR119の候補出力を前提とし、mainの結果を型assertionで直接渡してはいけません。不足時はPlan参照で、available時も出所検証で失敗し得ます。現行実績モードはFE所有の別の変換／不足分岐でProduct SpecのR-06を表示し、Planや回答出所を捏造しません。coreだけavailableな場合はcoreを維持し、completion不足を分けて扱います。
+- `RECORDS`は現行実績計算の表示可能な見通しの出所を表します。材料不足を実績ありと扱わず、回答draftを`QUESTION`／`QUESTION_AND_RECORDS`へ反映しません。R-08達成、R-07今日記録済みの優先も維持します。
+- PR125のGoal契約は`minutes | sessions`です。候補の`count`へ変換せず、UIの「回」とHTTP／DBの`sessions`を区別します。Goal GETの`unit`／`sessionAmount`とToday結果を別取得する暫定案は、同一snapshot保証ではありません。FEのGoal／取得世代／要求順の管理で古い応答を除外し、設定変更時に再取得しますが、取得管理だけでBEのsnapshot整合を保証しません。
+- PR125のGoalCreate／GoalPatchは未知項目禁止で、a／b・回答用revisionはありません。質問は未保存draftとして扱い、既存Goal保存へ混ぜません。Goal保存の成功を「回答は保存済み」と表示したり、未保存回答で保存済み予測を更新したりしません。draftのみを見せる限定先行では、保存・見通しへの反映が未接続であることを明示し、R-11の完了条件を満たしたと扱いません。
+- 現行実績モードの取得管理と、将来の回答保存の競合防止は別です。revision／409未接続を、後日訂正時の古い書込や異なるsnapshotの混在を許す契約として採択しません。具体契約はPR118の担当調整に残します。
+- #88のFE案はPR122基点、BEの本コメントはPR124 `feat/75-auth`基点で、まだ同じ基点の合意ではありません。取り込みは#88で限定先行の許可範囲と基点を調整し、5元パス→正式配置・差分・担当・検証を記録してから行います。この候補更新はその例外承認ではありません。
+
+実績のみの暫定表示・draft保持は結合準備です。R-11のMust（回答から仮の見通しを作り実績で更新すること）、BEの回答保存／API、FEの正式接続、#117 DoDは残ります。共有`@contracts`はBEが所有し、この候補へAPI型やmock API、正式Goal／Today画面を新設しません。
+
 ## 設計意図と残る条件
 
 目的は、既存画面と競合せずに任意入力・出所の誤読を確認することです。controlled入力とresolved表示に分けた理由は、保存/応答の新旧判定とEngineの数値計算をUIへ重複実装しないためです。native fieldset/legend/radio、instanceごとのuseId、label、error説明IDを使い、任意入力とキーボード操作を保ちます。CSSは`.r11-qp`内に限定します。
