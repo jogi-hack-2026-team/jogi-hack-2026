@@ -70,6 +70,18 @@ async function adminConnection(): Promise<AdminConnection> {
   return startEmbedded();
 }
 
+async function waitForNoBackends(adminPool: pg.Pool, name: string): Promise<void> {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const result = await adminPool.query<{ n: number }>(
+      'select count(*)::int as n from pg_stat_activity where datname = $1', [name],
+    );
+    if (result.rows[0]?.n === 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error('Test database still has connections after its pools were closed');
+}
+
 export async function createTestDatabase(): Promise<TestDatabase> {
   const admin = await adminConnection();
   const name = `t_${randomBytes(6).toString('hex')}`;
@@ -84,9 +96,15 @@ export async function createTestDatabase(): Promise<TestDatabase> {
     pool,
     close: async () => {
       await pool.end();
-      await adminPool.query(`drop database "${name}" with (force)`);
-      await adminPool.end();
-      await admin.stop();
+      try {
+        // pg-pool.end() may resolve before PostgreSQL observes the socket closing.
+        // A remaining connection is a cleanup failure; never terminate it with FORCE.
+        await waitForNoBackends(adminPool, name);
+        await adminPool.query(`drop database "${name}"`);
+      } finally {
+        await adminPool.end();
+        await admin.stop();
+      }
     },
   };
 }
