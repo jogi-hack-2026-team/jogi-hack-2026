@@ -1,7 +1,7 @@
 # リリース・デモ・提出の手順
 
 HTML §16–17に基づく最小運用。ProductはFuture ROI（[Product Spec](../product-spec.md#現行状態2026-09-30)）。基本構成は[D-23](../architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録。認証・公開先は[Architecture](../architecture.md#deployment)の検証・運用条件付き第一候補で、一般公開・課金作成の許可ではない。公開先の最終受入、予算、担当者、URLは未定。
-存在しない起動・migration・seed・deployコマンドは掲載しない。決定後にこの文書を更新する。
+migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は`node apps/api/dist/db/migrate-cli.js all`。[手順](../DEVELOPMENT_GUIDE.md#起動)）。Demo Seedは`npm run db:seed:demo`の枠だけがあり、#82で実装するまで未実装として失敗する。deployコマンドは未定で、存在しないコマンドは掲載しない。
 
 ## リリース担当者が行うこと
 

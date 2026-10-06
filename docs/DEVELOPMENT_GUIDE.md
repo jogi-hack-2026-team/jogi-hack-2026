@@ -508,11 +508,12 @@ cp .env.example .env
 
 ```sh
 docker compose up -d db
+npm run db:migrate
 npm run dev:api
 npm run dev:web
 ```
 
-`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
+`db:migrate`は`.env`の`DATABASE_URL`へ、認証テーブル（固定版Better Authの`getMigrations`）→ アプリのSQL（`apps/api/migrations/`）の順に適用し、結果をJSONで1行出します。2回目以降は差分がなければ何もしません（`rateLimit.lastRequest`の型警告は既知で差分は作られません）。`db:migrate:auth`・`db:migrate:app`で片方だけも実行できます。`db:seed:demo`はDemo Seed（#82）の枠で、実装までは未実装として失敗します。`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
 
 ### 検証
 
@@ -531,6 +532,7 @@ npm run build
 - 環境変数は`DATABASE_URL`（必須）、`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`（任意）。`DATABASE_URL`が未設定なら起動せず、値はログへ出しません。コンテナ内の既定は`HOST=0.0.0.0`・`PORT=8080`・`WEB_DIST=/app/apps/web/dist`。
 - `SIGTERM`で新規接続を止め、処理中の要求を完了し、DB接続を返してからexit 0。`SHUTDOWN_TIMEOUT_MS`（既定10000）を超えたらexit 1。
 - 存在しないAPIと対象外methodはJSONの404、画面のURLはindex.html（`cache-control: no-cache`）、`/assets/`はhash付きのため長期キャッシュ。
+- migrationは起動前に`node apps/api/dist/db/migrate-cli.js all`（コンテナ内に`apps/api/migrations/`を同梱）で適用する。同時に実行されてもadvisory lockで直列化され、適用済みSQLの内容が変わっていれば失敗する。
 - ログはpinoのJSON。Cookie・Authorization・Set-Cookieはredactし、リクエストbodyは出力しません。
 
 stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。

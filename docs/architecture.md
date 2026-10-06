@@ -106,6 +106,18 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 
 この採択に含めないもの：migrationツール、認証ライブラリの版（#74・#75）、公開先（D-25）、API細則。stagingへの配置は公開先の承認待ちで、#70の該当項目は#75へ移管する。手順は[開発ガイド](DEVELOPMENT_GUIDE.md#アプリを起動検証する)を参照する。
 
+### 2026-10-06のmigration方式（#74）
+
+#74でDBスキーマとmigrationを導入した。採択は#74の実装PR（[Issue #74](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/74)の開発情報に記載）の承認レビューを同意として扱う。
+
+| 決める部分 | 採用 | 理由 | 比較していないもの |
+| --- | --- | --- | --- |
+| 認証テーブル | 固定版Better Auth 1.7.7（lockfile）の`getMigrations`を`db:migrate:auth`から呼ぶ。`user`・`session`・`account`・`verification`と、回数制限のDB保存用`rateLimit` | CLIの`@latest`取得を避け、実行時の設定（[authSchemaOptions](../apps/api/src/auth/options.ts)）と同じ定義からテーブルを作る（#84 F-9） | Better Auth自体の最終採択（D-24）は別。2回目以降の実行で`rateLimit.lastRequest`の型警告（期待number／実際int8）が出るが差分は作られない |
+| アプリテーブル | `apps/api/migrations/NNNN_name.sql`を名前順に、1ファイル1トランザクションで適用する小さなrunner（[migrate.ts](../apps/api/src/db/migrate.ts)）。`schema_migrations`に名前とSHA-256を記録し、適用済みファイルの変更は失敗にする。advisory lockで同時実行を直列化 | `goal`・`action_log`の2表にSQLを直接書けば足り、新しい依存を増やさない。CI・本番で`@latest`を取得しない | `node-pg-migrate`等のツールは不採用（必要になった時点で再検討） |
+| 実行順 | `db:migrate` ＝ `db:migrate:auth` → `db:migrate:app`。`db:seed:demo`はその後の枠（#82まで未実装として失敗） | `goal.user_id`が`"user"(id)`を参照するため | — |
+| `updated_at` | 両表のBEFORE UPDATE triggerでDBが進める | 上書きの有無を追う列を、アプリの書き忘れで止めない | — |
+| 認証用poolのint8 | 認証専用poolだけTEXT形式のint8を数値に変換し、安全な整数範囲 `[-(2^53-1), 2^53-1]` の外は例外にする（[pool.ts](../apps/api/src/db/pool.ts)）。アプリ用poolはpgの既定（文字列）のまま | `rateLimit.lastRequest`（int8）の文字列連結で429の待ち時間が異常値になる問題（#84 F-10）を、他の型・他のpoolへ影響させずに直す | — |
+
 以下の比較表は2026-09-30の候補提案と2026-10-02の比較説明を保持したもの。版・追加ツール・migration順・代替候補の不採用を含む表全体を採択した記録ではない。現在の採用範囲は上記とD-23〜D-25で確認する。
 
 <details>
@@ -177,7 +189,7 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 ## Data Model
 
 ```sql
--- Better Auth採択時の認証テーブルは候補。固定版getMigrations案はTechnology Stackを参照
+-- 認証テーブル（"user"・session・account・verification・rateLimit）は固定版Better Auth 1.7.7のgetMigrationsで作る（#74、db:migrate:auth）
 CREATE TABLE goal (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
@@ -207,6 +219,8 @@ CREATE TABLE action_log (
 - 目標期日（targetDate）は持たない。MVPの表示に使わないため（期日到達確率は[D-21](#d-21)で不採用）。
 - `initial_progress`は「記録開始日の前日までに終えた量」（既定0）。現在の実績は常に `initial_progress ＋ 記録開始日以降のDONEのamountの合計` で計算し、別に保存しない。開始日前の新規ログは拒否し、初期量から過去の行動状態・遷移を作らない。
 - 記録が1件でもあるGoalでは、`timezone`と`initial_progress`を変更できない（過去の`local_date`の基準や、過去の予測の意味が変わるため。timezoneの移行処理はMVPで扱わない）。
+
+**実装（#74）**: 上のSQLは[apps/api/migrations/0001_goal_action_log.sql](../apps/api/migrations/0001_goal_action_log.sql)として適用済み（`updated_at`はtriggerで更新）。`npm run db:migrate`が認証→アプリの順に実行し、空のDBへの初回適用・2回目の差分なし・各制約の拒否は[migrate.test.ts](../apps/api/tests/migrate.test.ts)で確認する。方式は[2026-10-06のmigration方式](#2026-10-06のmigration方式74)を参照。
 
 ### 初期進捗と日々の記録の境界
 
@@ -473,7 +487,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-20 | 2026-09-30 | DECIDED（現行の共通prior。回答由来案はD-26でOPEN） | [事前分布をBeta(2,2)とする範囲と変更案](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
-| D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成) |
+| D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74) |
 | D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 | D-26 | 2026-10-05 | OPEN（R-11 Scope・分担は採択済み、具体契約は未採択） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
@@ -512,11 +526,11 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-23
 
-2026-10-03 / **DECIDED（基本構成、FE報告・BE本人記録）** / 2026-09-30のAI候補提案から[合意範囲と出所](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。2026-10-03時点では、版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則を追加採択していない。2026-10-05、このうちworkspace管理（npm workspaces）とPostgreSQLへの接続（`pg`）を[追加採択](#2026-10-05の追加採択)した。2026-10-06、#70でNode 24.21.0・ライブラリ版・`node:test`・起動構成を[固定](#2026-10-06の版固定と起動構成)した。`node-pg-migrate`・fast-check・API細則は未採択のまま。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。記録と予測の整合を保ち、配備・更新対象を少なくする狙い。[Technology Stack](#technology-stack)と[比較・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)に候補提案を保持する。
+2026-10-03 / **DECIDED（基本構成、FE報告・BE本人記録）** / 2026-09-30のAI候補提案から[合意範囲と出所](#2026-10-03の技術構成合意)だけを採用へ更新。TypeScript／Node、React＋Vite＋TanStack Router／Query、Fastify＋TypeBox、PostgreSQL、単一SPA／APIコンテナと独立した純粋計算コアを採用する。責務は`packages/prediction`・`apps/api`・`apps/web`へ分ける。2026-10-03時点では、版・workspace管理・`pg`／`node-pg-migrate`／Vitest／fast-check等の候補ツール・API細則を追加採択していない。2026-10-05、このうちworkspace管理（npm workspaces）とPostgreSQLへの接続（`pg`）を[追加採択](#2026-10-05の追加採択)した。2026-10-06、#70でNode 24.21.0・ライブラリ版・`node:test`・起動構成を[固定](#2026-10-06の版固定と起動構成)した。#74でmigration方式（SQLファイル＋小さなrunner、固定版Better Authの`getMigrations`。`node-pg-migrate`は不採用）を[固定](#2026-10-06のmigration方式74)。fast-check・API細則は未採択のまま。認証・公開先はD-24／D-25の残条件を保持し、復元・実装・個別Issueの着手条件は別途追跡する。記録と予測の整合を保ち、配備・更新対象を少なくする狙い。[Technology Stack](#technology-stack)と[比較・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)に候補提案を保持する。
 
 ### D-24
 
-2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち）** / 2026-09-30の候補Better Authを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。メール＋パスワードの業務要件はR-01、DBセッション／Cookieは候補方式。版・認証更新／DB復旧担当・CSRF／Origin・回数制限・復元対処・公開HTTPSの確認を#75・#74・#84で追跡する。管理対象をDBへ寄せて記録との整合を設計しやすくする狙い。認証ライブラリの更新・復旧・障害対応を継続して担えることを条件とする。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。PR #96のレビューやFirebase／Supabase Auth等の不採用まで合意したと扱わない。
+2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち）** / 2026-09-30の候補Better Authを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。メール＋パスワードの業務要件はR-01、DBセッション／Cookieは候補方式。版・認証更新／DB復旧担当・CSRF／Origin・回数制限・復元対処・公開HTTPSの確認を#75・#74・#84で追跡する。管理対象をDBへ寄せて記録との整合を設計しやすくする狙い。認証ライブラリの更新・復旧・障害対応を継続して担えることを条件とする。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。PR #96のレビューやFirebase／Supabase Auth等の不採用まで合意したと扱わない。2026-10-06、#74で認証テーブルの作成に使う版を1.7.7に固定し、回数制限のDB保存テーブルをmigrationへ含めた（[migration方式](#2026-10-06のmigration方式74)）。本項の残条件は変えない。
 
 ### D-25
 
