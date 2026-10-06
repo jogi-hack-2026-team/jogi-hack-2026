@@ -1,6 +1,7 @@
 import { fromNodeHeaders } from 'better-auth/node';
 import type { FastifyInstance } from 'fastify';
 import type { Auth } from '../auth/options.ts';
+import { apiBoundary } from './api-boundary.ts';
 import { errorBody } from './errors.ts';
 
 declare module 'fastify' {
@@ -11,7 +12,6 @@ declare module 'fastify' {
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const PUBLIC_PATHS = new Set(['/api/health']);
 
 export const ORIGIN_REJECTED = errorBody('ORIGIN_REJECTED', 'Same-origin request required.');
 export const UNAUTHENTICATED = errorBody('UNAUTHENTICATED', 'Sign in required.');
@@ -22,12 +22,17 @@ export const UNAUTHENTICATED = errorBody('UNAUTHENTICATED', 'Sign in required.')
 export function registerApiGuards(app: FastifyInstance, auth: Auth, allowedOrigins: readonly string[]): void {
   app.decorateRequest('userId', '');
   app.addHook('onRequest', async (request, reply) => {
-    const path = request.url.split('?')[0] ?? '';
-    if (!path.startsWith('/api/') || PUBLIC_PATHS.has(path) || path.startsWith('/api/auth/')) return;
+    if (apiBoundary(request.routeOptions.url, request.url) !== 'protected') return;
     if (!SAFE_METHODS.has(request.method) && !allowedOrigins.includes(request.headers.origin ?? '')) {
       return reply.code(403).send(ORIGIN_REJECTED);
     }
-    const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
+    const { response: session, headers } = await auth.api.getSession({ headers: fromNodeHeaders(request.headers), returnHeaders: true });
+    const cookies = headers.getSetCookie();
+    if (cookies.length) {
+      const existing = reply.getHeader('set-cookie');
+      const previous = Array.isArray(existing) ? existing : typeof existing === 'string' ? [existing] : [];
+      reply.header('set-cookie', [...previous, ...cookies]);
+    }
     if (!session) return reply.code(401).send(UNAUTHENTICATED);
     request.userId = session.user.id;
   });

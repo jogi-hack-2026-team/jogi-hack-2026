@@ -1,12 +1,13 @@
 import fastifyStatic from '@fastify/static';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyError, type FastifyInstance, type FastifyReply } from 'fastify';
 import { resolve, sep } from 'node:path';
 import type { Pool } from 'pg';
 import { registerAuthBridge } from './auth/bridge.ts';
 import type { Auth } from './auth/options.ts';
 import { Health } from './contracts/index.ts';
 import { registerGoalRoutes } from './goals/routes.ts';
+import { isValidTimeZone } from './goals/local-date.ts';
 import { errorBody } from './http/errors.ts';
 import { registerApiGuards } from './http/guards.ts';
 
@@ -46,9 +47,20 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
             redact: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]'],
           },
     // 契約違反を黙って受理しない: 未知の項目を削らず、型を変換せず、違反をすべて報告する。
-    ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: true } },
+    ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: true, formats: { 'iana-timezone': isValidTimeZone } } },
     // 信頼するhop数ぶんだけX-Forwarded-Forを遡ってclient IPを決める（回数制限の鍵）。
     trustProxy: o.auth && o.auth.trustProxyHops > 0 ? (_address: string, hop: number) => hop < o.auth!.trustProxyHops : false,
+    // routerが拒否する要求（不正なpercent-encoding等）もsetErrorHandlerを通らないため、ここで共通のJSON形式に揃える。
+    frameworkErrors(error, _request, reply) {
+      // route未確定のためreplyの応答型が汎用になっている。送るのは共通エラー形式だけ。
+      (reply as FastifyReply).code(error.statusCode ?? 400).send(errorBody('BAD_REQUEST', error.message));
+    },
+  });
+
+  // idle中の接続がDB側・network側から切られると、poolは'error'イベントで知らせる。listenerがないとNodeは
+  // 未処理のerrorとしてプロセスを終了する。poolが該当clientを自動で破棄するため、ここでは記録だけ行う。
+  o.pool.on('error', (error) => {
+    app.log.warn({ err: error }, 'db: idle connection lost; the pool discarded it');
   });
 
   // 終了処理中に完了した応答がkeep-alive接続を維持しないようにし、処理中の要求を完了させてから閉じる。
@@ -119,10 +131,18 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
       },
     });
     app.setNotFoundHandler((request, reply) => {
-      const path = request.url.split('?')[0] ?? '';
+      // 判定はpercent-encodingを解いたpathで行う（`/api%2Fnope`や`/assets/old%2Ejs`を画面URLと誤認しない）。
+      let path: string;
+      try {
+        path = decodeURIComponent(request.url.split('?')[0] ?? '');
+      } catch {
+        return reply.code(404).send(JSON_404); // 不正なpercent-encoding
+      }
       const lastSegment = path.slice(path.lastIndexOf('/') + 1);
-      // 存在しないAPI、対象外のmethod、拡張子付きのファイル要求にはSPAのHTMLを返さない。
-      if (path.startsWith('/api/') || (request.method !== 'GET' && request.method !== 'HEAD') || lastSegment.includes('.')) {
+      const isApiNamespace = path === '/api' || path.startsWith('/api/');
+      const isAssetRequest = path.startsWith('/assets/') || lastSegment.includes('.');
+      // API namespace、対象外のmethod、存在しないasset・拡張子付きのファイル要求にはSPAのHTMLを返さない。
+      if (isApiNamespace || (request.method !== 'GET' && request.method !== 'HEAD') || isAssetRequest) {
         return reply.code(404).send(JSON_404);
       }
       return reply.header('cache-control', 'no-cache').sendFile('index.html');

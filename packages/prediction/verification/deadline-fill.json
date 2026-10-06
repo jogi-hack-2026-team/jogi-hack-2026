@@ -1,0 +1,280 @@
+{
+  "supportingArtifact": true,
+  "date": "2026-10-06",
+  "baselineHead": "783ebb443f0d441ca17cce61109b5da12504ee34",
+  "candidateSourceSha256NormalizedLf": "505aecdc1069f95fe8eef902b59df2feaddd5e032a77817b0f28f3d085bfb028",
+  "compiledCompletionSha256": "5d0641401c9aac47aa2fb1d0e246f16522d0376effb466819ae210cbe5782fe8",
+  "configUnchanged": {
+    "prior": 2,
+    "samples": 200,
+    "horizonDays": 1095,
+    "seed": 20261012
+  },
+  "typecheck": "PASS",
+  "packageTests": {
+    "pass": 66,
+    "fail": 0,
+    "skip": 0,
+    "todo": 0
+  },
+  "independentOracleTests": 3,
+  "fullPmfByteComparisons": 16040,
+  "quantileComparisons": 5248,
+  "poisonedConditions": 4804,
+  "guardedStateReads": 4994440,
+  "previousSavedDrawHashSets": 9,
+  "initialIsolatedMeasurement": {
+    "measurements": 48,
+    "summary": [
+      {
+        "n": 120,
+        "state": "TODAY_DONE",
+        "requiredByT14": true,
+        "warmMedianOfThree": {
+          "baseline": 106.31849999999997,
+          "candidate": 106.91399999999999
+        },
+        "speedup": 0.9944301026993657,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 128.1919,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 120,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 107.35910000000004,
+          "candidate": 102.71110000000004
+        },
+        "speedup": 1.0452531420654632,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 124.2551,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 400,
+        "state": "TODAY_DONE",
+        "requiredByT14": true,
+        "warmMedianOfThree": {
+          "baseline": 186.0118000000001,
+          "candidate": 192.27120000000002
+        },
+        "speedup": 0.9674449423522612,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 223.98870000000002,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 400,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 192.37669999999991,
+          "candidate": 186.43600000000004
+        },
+        "speedup": 1.031864554056083,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 216.0129,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 548,
+        "state": "TODAY_DONE",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 196.47209999999995,
+          "candidate": 197.40100000000007
+        },
+        "speedup": 0.9952943500792797,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 226.6178,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 548,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 196.20600000000002,
+          "candidate": 200.21359999999999
+        },
+        "speedup": 0.9799833777525604,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 262.0026,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 1095,
+        "state": "TODAY_DONE",
+        "requiredByT14": true,
+        "warmMedianOfThree": {
+          "baseline": 41.026700000000005,
+          "candidate": 8.61999999999999
+        },
+        "speedup": 4.759477958236665,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 22.960300000000004,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 1095,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 41.550100000000015,
+          "candidate": 8.14909999999999
+        },
+        "speedup": 5.098734829613094,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 23.105300000000007,
+        "resultByteIdentical": true
+      }
+    ]
+  },
+  "finalRepoMeasurement": {
+    "measurements": 48,
+    "summary": [
+      {
+        "n": 120,
+        "state": "TODAY_DONE",
+        "requiredByT14": true,
+        "warmMedianOfThree": {
+          "baseline": 81.52499999999998,
+          "candidate": 81.54239999999999
+        },
+        "speedup": 0.9997866140805273,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 99.77170000000001,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 120,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 77.4958,
+          "candidate": 81.42830000000004
+        },
+        "speedup": 0.951705979370808,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 90.6188,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 400,
+        "state": "TODAY_DONE",
+        "requiredByT14": true,
+        "warmMedianOfThree": {
+          "baseline": 146.6544,
+          "candidate": 145.67809999999997
+        },
+        "speedup": 1.0067017623101897,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 178.3557,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 400,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 141.76110000000006,
+          "candidate": 143.24589999999998
+        },
+        "speedup": 0.989634607343038,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 170.7378,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 548,
+        "state": "TODAY_DONE",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 154.9959,
+          "candidate": 151.4592
+        },
+        "speedup": 1.0233508429993028,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 194.4789,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 548,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 153.4533,
+          "candidate": 150.0788
+        },
+        "speedup": 1.022484854623038,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 177.7403,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 1095,
+        "state": "TODAY_DONE",
+        "requiredByT14": true,
+        "warmMedianOfThree": {
+          "baseline": 32.25740000000002,
+          "candidate": 5.991900000000001
+        },
+        "speedup": 5.383501059764017,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 17.1637,
+        "resultByteIdentical": true
+      },
+      {
+        "n": 1095,
+        "state": "SKIPPED",
+        "requiredByT14": false,
+        "warmMedianOfThree": {
+          "baseline": 31.624599999999987,
+          "candidate": 6.168700000000001
+        },
+        "speedup": 5.126623113459883,
+        "all18CandidateCallsBelow500": true,
+        "maxCandidateMs": 16.130900000000004,
+        "resultByteIdentical": true
+      }
+    ],
+    "environment": {
+      "node": "v22.15.1",
+      "platform": "win32",
+      "release": "10.0.26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+      "logicalCpuCount": 16
+    },
+    "protocol": "Three pairs, sequential fresh process per condition/variant; variant order alternated. Import then first+five warm real predict calls. No CPU pinning or confidence intervals. PMF verification had finished before this final wave. Earlier overlapping wave excluded.",
+    "fixture": {
+      "runs": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        3,
+        1,
+        3
+      ],
+      "firstRun": "DONE",
+      "firstDate": "2026-10-01",
+      "today": "2026-10-31",
+      "sessionAmount": 1,
+      "initialProgress": 0,
+      "TODAY_DONE": "30 logs, goal totalRequired=19+n; today unrecorded",
+      "SKIPPED": "same30 logs plus today SKIPPED, goal totalRequired=18+n"
+    }
+  },
+  "limits": [
+    "No all-input latency/deployment guarantee",
+    "Ordinary n400 TODAY_DONE measured ~3.4% slower in initial wave; not discarded as noise",
+    "Final n120 SKIPPED ~5.1% slower; non-applicable branch has overhead",
+    "Full posterior integration is separate, unadopted; no golden change"
+  ]
+}

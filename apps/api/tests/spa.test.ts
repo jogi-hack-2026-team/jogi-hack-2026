@@ -48,10 +48,27 @@ test('存在しないAPI、対象外のmethod、拡張子付きの未知ファ�
     { method: 'POST', url: '/goals' },
     { method: 'DELETE', url: '/' },
     { method: 'GET', url: '/assets/old-build.js' },
+    // API namespaceの境界とpercent-encodingされた要求（レビュー指摘の回帰例）
+    { method: 'GET', url: '/api' },
+    { method: 'GET', url: '/api?x=1' },
+    { method: 'GET', url: '/api%2Fnope' },
+    { method: 'GET', url: '/assets/old%2Ejs' },
+    { method: 'GET', url: '/assets/no-extension' },
   ] as const;
   for (const c of cases) {
     const res = await app.inject(c);
     assert.equal(res.statusCode, 404, `${c.method} ${c.url}`);
+    assert.match(res.headers['content-type']?.toString() ?? '', /^application\/json/, `${c.method} ${c.url}`);
     assert.deepEqual(res.json(), { error: { code: 'NOT_FOUND', message: 'No such route.' } }, `${c.method} ${c.url}`);
   }
+});
+
+test('不正なpercent-encodingのURLはrouterが拒否し、共通のJSON形式で400を返す', async (t) => {
+  const app = await appWithSpa(t);
+  const res = await app.inject({ method: 'GET', url: '/%E0%A4%A' });
+  assert.equal(res.statusCode, 400);
+  assert.match(res.headers['content-type']?.toString() ?? '', /^application\/json/);
+  const body = res.json<{ error: { code: string; message: string } }>();
+  assert.equal(body.error.code, 'BAD_REQUEST');
+  assert.equal(Object.keys(body).join(), 'error');
 });
