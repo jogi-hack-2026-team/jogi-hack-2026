@@ -508,11 +508,16 @@ cp .env.example .env
 
 ```sh
 docker compose up -d db
+npm run db:migrate
 npm run dev:api
 npm run dev:web
 ```
 
-`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
+`db:migrate`は`.env`の`DATABASE_URL`へ、認証テーブル（固定版Better Authの`getMigrations`）→ アプリのSQL（`apps/api/migrations/`）の順に適用し、結果をJSONで1行出します。2回目以降は差分がなければ何もしません（`rateLimit.lastRequest`の型警告は既知で差分は作られません）。`db:migrate:auth`・`db:migrate:app`で片方だけも実行できます。`db:seed:demo`はDemo Seed（#82）の枠で、実装までは未実装として失敗します。`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
+
+認証DDL（table・column・field index）は固定版の生成SQLを1 transactionで適用します。途中失敗はrollbackされ、同じコマンドで再実行できます。アプリSQLは従来どおり1ファイル1 transactionです。migration専用poolは接続確立を5秒で制限しますが、advisory lock待ち・DDLの実行期限は設けません。長時間待機は別のmigration実行を確認してからoperatorが中止します。HTTP用のapp・auth poolは応答／文実行を5秒で制限し、auth poolのidle切断は単独listenerで処理します。
+
+migrationはruntimeを起動する前に専用CLI／別poolで実行します。同一processで稼働中のBetter Auth schema cache更新や、本修正より前の部分適用schemaの自動修復は保証しません。既存schemaが不完全なら削除せず、field index等を確認して明示的な修復をレビューしてください。session単位のadvisory lockを使うため、transaction pooling経由では実行しません（Neon等の採用時の接続先選択はD-25の残条件です）。
 
 ### 検証
 
@@ -524,7 +529,7 @@ npm run build
 
 `npm test`は[Webの共通エラー回帰](../apps/web/tests/client.test.mjs)、APIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）と[Engineの数値・候補回帰](../packages/prediction/README.md#検証ci)を実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。
 
-`.env`を自動で読むのは`npm run dev:api`だけです。`npm test`とビルド済みサーバーはシェルの環境変数だけを見るため、次のように使い分けます。
+`.env`は`npm run dev:api`とmigration／seedのCLIが読みます。`npm test`とビルド済みサーバーはシェルの環境変数だけを見るため、次のように使い分けます。
 
 | 用途 | sh（macOS / Linux / Git Bash） | PowerShell |
 | --- | --- | --- |
@@ -535,12 +540,15 @@ npm run build
 
 [Application CI](../.github/workflows/application.yml)はPRとmainへのpushで、install・typecheck・test（PostgreSQL service）・buildと、コンテナのbuild・起動・route確認・SIGTERM終了（[smoke test](../scripts/smoke-container.sh)）を実行します。CIとDockerfileの`npm ci --ignore-scripts`はlifecycle scriptsを実行しない設定で、lockfile内でinstall scriptを持つのは開発用の`embedded-postgres`等だけです。Dockerがある端末では`docker compose --profile app up --build`で同じコンテナを起動し、`IMAGE=... DATABASE_URL=... ./scripts/smoke-container.sh`で同じ確認ができます。
 
+Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ証跡を保持します。旧clusterを再利用・削除しない分、初期化時間とディスク使用量が増えます。CIではPostgreSQL serviceを利用します。
+
 ### 本番向けの約束事
 
 - 環境変数は`DATABASE_URL`（必須）、`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`（任意）。`DATABASE_URL`が未設定なら起動せず、値はログへ出しません。コンテナ内の既定は`HOST=0.0.0.0`・`PORT=8080`・`WEB_DIST=/app/apps/web/dist`。
 - `SIGTERM`で新規接続を止め、処理中の要求を完了し、DB接続を返してからexit 0。`SHUTDOWN_TIMEOUT_MS`（既定10000）を超えたらexit 1。
 - DB接続は接続確立・クエリ応答・文の実行をそれぞれ5秒で打ち切り、期限切れの接続は再利用しません。idle中の接続がDB側から切れてもプロセスは終了せず、警告ログを残して次の要求で再接続します。
 - 存在しないAPIと対象外methodはJSONの404、画面のURLはindex.html（`cache-control: no-cache`）、`/assets/`はhash付きのため長期キャッシュ。
+- migrationは起動前に`node apps/api/dist/db/migrate-cli.js all`（コンテナ内に`apps/api/migrations/`を同梱）で適用する。同時に実行されてもadvisory lockで直列化され、適用済みSQLの内容が変わっていれば失敗する。
 - ログはpinoのJSON。Cookie・Authorization・Set-Cookieはredactし、リクエストbodyは出力しません。
 
 stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。

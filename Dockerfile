@@ -23,8 +23,10 @@ COPY packages/prediction/package.json packages/prediction/
 # API workspaceの実行時依存だけを入れる。SPAはビルド済みの静的ファイルとしてコピーする。
 RUN npm ci --workspace=@futureroi/api --omit=dev --ignore-scripts --no-audit --no-fund
 COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY apps/api/migrations ./apps/api/migrations
 COPY --from=build /app/apps/web/dist ./apps/web/dist
 USER node
 EXPOSE 8080
 # DATABASE_URLは起動時に必須。未設定なら起動に失敗する（値はログに出さない）。
+# migrationは起動前に `node apps/api/dist/db/migrate-cli.js all` で適用する（認証→アプリの順）。
 CMD ["node", "apps/api/dist/server.js"]

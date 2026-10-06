@@ -59,6 +59,19 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      - name: Run db:migrate on the empty service database, then again (must be a no-op)
+        env:
+          DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
+        run: |
+          first=$(npm run db:migrate --silent)
+          echo "$first"
+          echo "$first" | grep -q '"applied":\["0001_goal_action_log.sql"\]'
+          second=$(npm run db:migrate --silent)
+          echo "$second"
+          echo "$second" | grep -q '"tablesCreated":\[\],"columnsAdded":\[\]'
+          echo "$second" | grep -q '"applied":\[\]'
+          # ビルド済み出力からも同じ順序で実行できる（コンテナ内の手順）
+          node apps/api/dist/db/migrate-cli.js all | grep -q '"applied":\[\]'
 
   container:
     name: Container build and smoke test
