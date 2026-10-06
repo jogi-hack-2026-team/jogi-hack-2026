@@ -1,6 +1,9 @@
 .fr-choice {
   min-height: var(--fr-h-choice);
   width: 100%;
+  min-width: 0;
+  /* ブラウザ標準の左右の余白を消し、320px幅でも「今日は休む」が折り返さないようにする */
+  padding: 0 var(--fr-space-1);
   border: 1.5px solid var(--fr-btn-line);
   background: var(--fr-surface);
   border-radius: var(--fr-radius-button);
@@ -15,6 +18,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--fr-space-2);
+  white-space: nowrap;
 }
 .fr-choice__sub {
   font-size: var(--fr-fs-help);
