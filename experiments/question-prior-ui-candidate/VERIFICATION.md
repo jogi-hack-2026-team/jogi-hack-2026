@@ -22,7 +22,11 @@
 
 ページRuntimeの意図的guard error 1件を区別し、ほかのRuntime警告／error・未捕捉例外はありません。横はみ出しなし、labelは48px以上でした。スクリーンショットとAX記録は今回のprivate検証資料に保持し、過去のtracked画像を上書きしていません。Playwright CLIは未導入で、既存Chrome／CDPを使用しました。NVDA等の実際の読み上げ・タッチ端末・正式B renderer／FE／API／DBは未確認です。
 
-差分は候補の2部品・SSR・README・本記録の5ファイル。表示型・質問／選択肢・計算・API／依存・正式仕様は変更していません。READMEの現在mainに関する古い前提は候補PR自身の範囲へ直しました。正式仕様・配置・既存参照先を変更していないため、Product Spec／Architecture／change-mapの更新は不要です。この3点で未解決のBlocking／Should Fixはありません。
+Optional 3点の差分は候補の2部品・SSR・README・本記録の5ファイル。表示型・質問／選択肢・計算・API／依存・正式仕様は変更していません。READMEの現在mainに関する古い前提は候補PR自身の範囲へ直しました。正式仕様・配置・既存参照先を変更していないため、Product Spec／Architecture／change-mapの更新は不要です。この3点で未解決のBlocking／Should Fixはありません。
+
+`f9b510c`の候補CIは、main `dda3158`とのmerge checkoutで`packages/prediction/package-lock.json`がなくなったため、旧`npm ci --prefix packages/prediction`がEUSAGEとなりました。UIテスト開始前の失敗で、同HEADのApplication 2件とFoundationは成功しています。検証手順だけを既存root lockの導入へ対応し、compilerはpackage内／rootの両配置を参照します。root workspace・lock・依存manifest・BEコード・テスト内容は変更せず、候補workflowと`runtime.mjs`・再現手順を同期しました。旧HEADのCI成功を新HEADへ流用しません。
+
+対応後に同じ型負例11・SSR27・固定接続24・build・Foundationを再実行し、すべて成功しました。package内compilerが存在しない隔離配置でもrootのロック済みTypeScript5.8.3を参照できることと、workflowのinstall手順のBash構文を確認しました。追加は検証workflowとruntime helperで、累積差分は7ファイルです。部品TSXは`f9b510c`と同一のため、上の実DOM／AX記録は同じ部品ソースへの確認として保持します。
 
 ## p50有限／p80期間外のレビュー修正（2026-10-06）
 

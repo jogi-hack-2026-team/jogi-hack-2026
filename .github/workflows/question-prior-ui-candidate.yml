@@ -39,7 +39,11 @@ jobs:
           package-manager-cache: false
       - name: Install existing locked verification dependencies
         run: |
-          npm ci --prefix packages/prediction --include=dev --ignore-scripts --no-audit --no-fund
+          if [ -f package-lock.json ]; then
+            npm ci --include=dev --ignore-scripts --no-audit --no-fund
+          else
+            npm ci --prefix packages/prediction --include=dev --ignore-scripts --no-audit --no-fund
+          fi
           npm ci --prefix experiments/architecture-verification --include=dev --ignore-scripts --no-audit --no-fund
       - name: Check isolated React candidate
         run: node experiments/question-prior-ui-candidate/scripts/check.mjs

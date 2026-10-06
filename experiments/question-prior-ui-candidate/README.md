@@ -83,10 +83,14 @@ trade-offとして親の正しいstate/値・API validationに依存します。
 
 ## 再現手順
 
-repo rootを作業ディレクトリにし、Node/npm、既存lockを使います。新しいpackage manifestやroot依存はありません。検証依存として既存experimentのReact/React DOM/Viteと既存predictionのTypeScriptを再利用するため、以下の2回のinstallは必要です。experimentのAPI/auth/DB/embedded Postgresやinstall scriptは起動しません。
+repo rootを作業ディレクトリにし、Node/npm、既存lockを使います。新しいpackage manifestやroot依存はありません。検証依存として既存experimentのReact/React DOM/Viteと既存predictionのTypeScriptを再利用します。#70統合後はroot lockで導入し、compilerはpackage内・rootへhoistされた配置の両方に対応します。以下はPOSIX shellの手順です。PowerShellではrootの`package-lock.json`があれば最初にrootで`npm ci`を、なければ従来のprediction向け`npm ci --prefix`を同じオプションで実行してください。experimentのAPI/auth/DB/embedded Postgresやinstall scriptは起動しません。
 
 ```sh
-npm ci --prefix packages/prediction --include=dev --ignore-scripts --no-audit --no-fund
+if [ -f package-lock.json ]; then
+  npm ci --include=dev --ignore-scripts --no-audit --no-fund
+else
+  npm ci --prefix packages/prediction --include=dev --ignore-scripts --no-audit --no-fund
+fi
 npm ci --prefix experiments/architecture-verification --include=dev --ignore-scripts --no-audit --no-fund
 node experiments/question-prior-ui-candidate/scripts/check.mjs
 node experiments/question-prior-ui-candidate/scripts/serve.mjs

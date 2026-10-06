@@ -6,7 +6,9 @@ export const candidate = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const repository = resolve(candidate, '../..');
 // Both dependencies are already locked in this repository; no new manifest/workspace.
 export const dependencies = resolve(repository, 'experiments/architecture-verification/node_modules');
-export const compiler = resolve(repository, 'packages/prediction/node_modules/typescript/bin/tsc');
+const packageCompiler = resolve(repository, 'packages/prediction/node_modules/typescript/bin/tsc');
+// #70 hoists the same locked compiler into root; preserve standalone checkout support.
+export const compiler = existsSync(packageCompiler) ? packageCompiler : resolve(repository, 'node_modules/typescript/bin/tsc');
 export const existingRequire = createRequire(join(dependencies, 'react/package.json'));
 export function requireSetup() {
   for (const name of [compiler, join(dependencies,'react/package.json'),join(dependencies,'react-dom/package.json'),join(dependencies,'vite/package.json')]) {
