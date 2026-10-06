@@ -8,7 +8,7 @@
 | --- | --- |
 | 色・文字の大きさ・余白・角丸・高さ・影（ライト／ダーク） | [tokens.css](tokens.css) の `--fr-…` の値 |
 | ボタン・記録の2択・下に固定する帯・データ不足／エラーの枠などの形 | [components/](components/) の各部品と同じ名前の `.css` |
-| Today 画面の並び・図 | [features/today/](../features/today/) |
+| Today 画面の並び・図 | [features/today/](../features/today/)。図の座標は [chart-geometry.ts](../features/today/chart-geometry.ts)。図は [useElementWidth](useElementWidth.ts) で測った実際の幅で描く（縮めて表示しないので、文字は狭い幅でも指定の大きさのまま） |
 | 画面の文言 | [copy/](../copy/)（仕様の固定文言を変える場合は Product Spec の改訂として記録する） |
 
 ## 決まり

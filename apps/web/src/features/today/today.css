@@ -154,12 +154,13 @@
   color: var(--fr-ink-2);
 }
 
-/* 図（色はトークン） */
+/* 図（色はトークン）。入れ物の幅を測り、その幅で描く（縮めないので文字は常に指定の大きさ） */
+.fr-chart-box {
+  width: 100%;
+  min-width: 0;
+}
 .fr-chart {
   display: block;
-  width: 100%;
-  max-width: 350px;
-  height: auto;
   overflow: visible;
 }
 .fr-chart__axis {
