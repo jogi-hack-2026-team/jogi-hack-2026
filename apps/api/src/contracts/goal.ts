@@ -43,8 +43,8 @@ export const GoalList = Type.Array(Goal);
 const title = Type.String({ minLength: 1, maxLength: 100, pattern: '\\S' });
 const amount = Type.Integer({ minimum: 1, maximum: INT4_MAX });
 const initialProgress = Type.Integer({ minimum: 0, maximum: INT4_MAX });
-// IANA名かどうかはschemaで判定できないため、API側（goals/local-date.ts）で検証して422にする。
-const timezone = Type.String({ minLength: 1, maxLength: 64 });
+// APIのAjv custom formatでIANA名も検証し、通常のschema違反と一緒に全fieldsへ返す。
+const timezone = Type.String({ minLength: 1, maxLength: 64, format: 'iana-timezone' });
 
 export const GoalCreate = Type.Object(
   {

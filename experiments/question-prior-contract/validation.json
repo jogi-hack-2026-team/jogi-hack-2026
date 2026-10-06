@@ -1,0 +1,10 @@
+{
+  "calculation_examples": 18,
+  "negative_specifications": 4,
+  "integration_specifications": 10,
+  "independent_math_check": "PASS: exact Fraction Beta-Geometric quantiles, actual adjacency/counts, metadata, amount and priority invariants",
+  "production_tests_run": false,
+  "numeric_calibration_verified": false,
+  "completion_dp_goldens_available": 9,
+  "completion_dp_goldens_verification": "Node replay in completion-replay-results.json; Python checks reference values only"
+}

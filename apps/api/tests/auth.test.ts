@@ -56,6 +56,22 @@ test('登録→セッション→再読み込み→ログアウト→古いCooki
   assert.ok(a.cookies.size > 0);
 });
 
+test('通常の保護API利用でsessionを延長し、更新Cookieも返す', async (t) => {
+  const { db, stack } = await setup(t);
+  const client = new Client(stack.app, 'http://127.0.0.1:3000');
+  assert.equal((await client.call('POST', '/api/auth/sign-up/email', credentials('refresh'))).status, 200);
+  await db.pool.query(`update session set "expiresAt" = now() + interval '1 day', "updatedAt" = now() - interval '6 days'`);
+  const before = await db.pool.query<{ expiresAt: Date }>('select "expiresAt" from session');
+  const response = await client.call('GET', '/api/goals');
+  assert.equal(response.status, 200, 'authenticated request reaches the Goal list');
+  assert.deepEqual(response.json, []);
+  const cookie = response.setCookie.map(cookieShape).find((c) => c.name.endsWith('session_token'));
+  assert.ok(cookie?.attributes.includes('httponly'), 'refresh cookie reaches the client');
+  assert.ok(cookie?.attributes.some((attribute) => attribute.startsWith('max-age=')));
+  const after = await db.pool.query<{ expiresAt: Date }>('select "expiresAt" from session');
+  assert.ok(after.rows[0]!.expiresAt.valueOf() > before.rows[0]!.expiresAt.valueOf());
+});
+
 test('期限切れセッションは401になり、画面側が再ログインへ誘導できる', async (t) => {
   const { db, stack } = await setup(t);
   const a = new Client(stack.app, 'http://127.0.0.1:3000');

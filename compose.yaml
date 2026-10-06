@@ -24,7 +24,10 @@ services:
     profiles: ["app"]
     build: .
     environment:
-      DATABASE_URL: postgres://futureroi:${LOCAL_DB_PASSWORD}@db:5432/futureroi
+      # passwordはURIに埋め込まない（`%`・`#`・`?`等がURI解析で別の値になる）。pgはURIにpasswordがなければ
+      # PGPASSWORDをそのまま使うため、dbへ渡したrawの値と常に一致する。
+      DATABASE_URL: postgres://futureroi@db:5432/futureroi
+      PGPASSWORD: ${LOCAL_DB_PASSWORD:?Set LOCAL_DB_PASSWORD in the current shell or .env}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

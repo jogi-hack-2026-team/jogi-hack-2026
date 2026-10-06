@@ -24,24 +24,25 @@ test('localDateIn / isValidTimeZone: timezoneの暦日とIANA名の判定', () =
   for (const tz of ['', 'Tokyo', 'JST', 'Japan', 'Asia/Tokio', '+09:00', 'GMT+9', 'Asia/Tokyo/', 'Asia/Tokyo; drop table goal']) assert.ok(!isValidTimeZone(tz), tz);
 });
 
-test('percent-encodeしたURLで共通hookを通らなくても、Goal routeは認証なしを401で止める', async (t) => {
+test('percent-encodeしたURLも共通hookで認証401・Origin403を返し、Goalは変更しない', async (t) => {
   const { db, stack } = await setup(t, { now: () => NOW });
   const a = await signedInClient(stack.app, 'enc');
   await a.call('POST', '/api/goals', validGoal);
-  for (const [method, url, payload] of [
-    ['GET', '/%61pi/goals', undefined],
-    ['POST', '/%61pi/goals', JSON.stringify(validGoal)],
-    ['GET', `/api/go%61ls`, undefined],
+  for (const [method, url, payload, status, code] of [
+    ['GET', '/%61pi/goals', undefined, 401, 'UNAUTHENTICATED'],
+    ['POST', '/%61pi/goals', JSON.stringify(validGoal), 403, 'ORIGIN_REJECTED'],
+    ['GET', `/api/go%61ls`, undefined, 401, 'UNAUTHENTICATED'],
   ] as const) {
     const res = await stack.app.inject({ method, url, headers: { origin: 'http://evil.example', 'content-type': 'application/json' }, ...(payload ? { payload } : {}) });
-    assert.equal(res.statusCode, 401, `${method} ${url}`);
-    assert.equal(res.json().error.code, 'UNAUTHENTICATED');
+    assert.equal(res.statusCode, status, `${method} ${url}`);
+    assert.equal(res.json().error.code, code);
   }
   assert.equal((await db.pool.query('select count(*)::int as n from goal')).rows[0]?.n, 1, 'no goal created without a session');
 });
 
 test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの今日、初期量の既定は0', async (t) => {
-  const { stack } = await setup(t, { now: () => NOW });
+  let instant = NOW;
+  const { stack } = await setup(t, { now: () => instant });
   const a = await signedInClient(stack.app, 'a');
 
   const created = await a.call('POST', '/api/goals', validGoal);
@@ -62,6 +63,7 @@ test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの
   assert.deepEqual(one.json, goal);
 
   // 2件目は作成順で後ろに並ぶ
+  instant = new Date(NOW.valueOf() + 1);
   const second = await a.call('POST', '/api/goals', { ...validGoal, title: '腹筋', unit: 'sessions', totalRequired: 300, sessionAmount: 1, initialProgress: 12 });
   assert.equal(second.status, 201);
   assert.equal((second.json as unknown as Goal).initialProgress, 12);
@@ -116,6 +118,23 @@ test('timezone: 有効なIANA名だけを受け付け、固定オフセットや
   assert.equal((la.json as unknown as Goal).recordStartDate, '2026-10-05');
   assert.equal((la.json as unknown as Goal).today, '2026-10-05');
   assert.deepEqual((await a.call('GET', '/api/goals')).json!.length, 1);
+});
+
+test('POST/PATCHはtimezoneと通常schema違反が混在しても全fieldsを返し、変更しない', async (t) => {
+  const { stack } = await setup(t, { now: () => NOW });
+  const client = await signedInClient(stack.app, 'mixed-validation');
+  const invalid = { title: '', sessionAmount: 0, timezone: 'Mars/Olympus' };
+  const created = (await client.call('POST', '/api/goals', validGoal)).json as unknown as Goal;
+  for (const [method, url, body] of [
+    ['POST', '/api/goals', { ...validGoal, ...invalid }],
+    ['PATCH', `/api/goals/${created.id}`, invalid],
+  ] as const) {
+    const response = await client.call(method, url, body);
+    assert.equal(response.status, 422);
+    assert.equal((response.json?.error as { code: string }).code, 'VALIDATION_ERROR');
+    assert.deepEqual(fieldPaths(response.json), ['body/sessionAmount', 'body/timezone', 'body/title']);
+  }
+  assert.deepEqual((await client.call('GET', '/api/goals')).json, [created]);
 });
 
 test('所有者チェック: 他人のGoalは取得・編集・削除とも404で、データは変わらない。uuidでないidも404', async (t) => {

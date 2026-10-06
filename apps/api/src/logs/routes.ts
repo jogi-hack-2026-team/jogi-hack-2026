@@ -30,7 +30,7 @@ export async function registerLogRoutes(app: FastifyInstance, deps: LogRouteDeps
             errorBody('VALIDATION_ERROR', 'Request does not match the contract.', [{ path: 'body/amount', message: 'must be omitted when status is SKIPPED' }]),
           );
         }
-        const result = await putLog(deps.pool, request.userId, goalId, localDate, request.body, deps.now());
+        const result = await putLog(deps.pool, request.userId, goalId, localDate, request.body, deps.now);
         switch (result.kind) {
           case 'saved':
             return result.log;

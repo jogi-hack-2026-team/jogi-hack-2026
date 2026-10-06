@@ -1,5 +1,7 @@
 import { createRootRoute, createRoute, createRouter, Link, Outlet, redirect, useNavigate } from '@tanstack/react-router';
-import { authClient } from './auth/client.ts';
+import { useState } from 'react';
+import { authClient, describeAuthError } from './auth/client.ts';
+import { runAuthAction } from './auth/action.ts';
 import { AuthForm } from './routes/AuthForm.tsx';
 import { HealthPage } from './routes/HealthPage.tsx';
 import { Home } from './routes/Home.tsx';
@@ -8,9 +10,16 @@ import { TodayPage } from './features/today/TodayPage.tsx';
 function Layout() {
   const session = authClient.useSession();
   const navigate = useNavigate();
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
   async function logout() {
-    await authClient.signOut();
-    await navigate({ to: '/login', search: { redirect: '/' } });
+    if (logoutBusy) return;
+    setLogoutError(null);
+    await runAuthAction(() => authClient.signOut(), {
+      setBusy: setLogoutBusy,
+      onError: (failure) => setLogoutError(describeAuthError(failure.code, failure.message)),
+      onSuccess: () => navigate({ to: '/login', search: { redirect: '/' } }),
+    });
   }
   return (
     <main>
@@ -21,7 +30,7 @@ function Layout() {
           {session.isPending ? null : session.data ? (
             <>
               <span data-testid="session">{session.data.user.email}</span>{' '}
-              <button type="button" onClick={logout}>
+              <button type="button" onClick={logout} disabled={logoutBusy}>
                 ログアウト
               </button>
             </>
@@ -31,6 +40,7 @@ function Layout() {
             </>
           )}
         </nav>
+        {logoutError && <p role="alert">{logoutError}</p>}
       </header>
       <Outlet />
     </main>

@@ -14,17 +14,16 @@ export type TodayRouteDeps = { pool: Pool; now: () => Date };
 const GOAL_NOT_FOUND = errorBody('NOT_FOUND', 'Goal not found.');
 
 // GET /api/goals/:goalId/today（R-05〜R-08、#77）。
-// 時計を1回だけ読み、Goalと記録を1つのsnapshotで取得し、DB接続を返してから純粋Engineを呼ぶ（Architecture「実装時に必要な対策」）。
+// 最初のGoal SELECTでsnapshotを確定後に時計を1回だけ読み、Goalと記録を同じsnapshotで取得し、DB接続を返してから純粋Engineを呼ぶ（Architecture「実装時に必要な対策」）。
 export async function registerTodayRoute(app: FastifyInstance, deps: TodayRouteDeps): Promise<void> {
   await app.register(async (instance) => {
     requireUserId(instance);
     const api = instance.withTypeProvider<TypeBoxTypeProvider>();
 
     api.get('/api/goals/:goalId/today', { schema: { params: GoalParams, response: { 200: Today, 404: ErrorBody } } }, async (request, reply) => {
-      const now = deps.now();
-      const snapshot = await loadTodaySnapshot(deps.pool, request.userId, request.params.goalId);
+      const snapshot = await loadTodaySnapshot(deps.pool, request.userId, request.params.goalId, deps.now);
       if (!snapshot) return reply.code(404).send(GOAL_NOT_FOUND);
-      const today = localDateIn(now, snapshot.goal.timezone);
+      const today = localDateIn(snapshot.now, snapshot.goal.timezone);
       const yesterday = shiftLocalDate(today, -1);
       const todayLog = snapshot.logs.find((l) => l.localDate === today) ?? null;
       // 昨日の問いかけは、昨日が記録開始日以降のときだけ（P-14。開始日前は補完対象ではない）。

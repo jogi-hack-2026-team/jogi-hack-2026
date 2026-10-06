@@ -5,7 +5,6 @@ import type { Pool } from 'pg';
 import { ErrorBody, Goal, GoalCreate, GoalList, GoalParams, GoalPatch } from '../contracts/index.ts';
 import { errorBody } from '../http/errors.ts';
 import { requireUserId } from '../http/guards.ts';
-import { isValidTimeZone } from './local-date.ts';
 import { createGoal, deleteGoal, getGoal, listGoals, updateGoal } from './store.ts';
 
 export type GoalRouteDeps = {
@@ -15,9 +14,6 @@ export type GoalRouteDeps = {
 };
 
 const GOAL_NOT_FOUND = errorBody('NOT_FOUND', 'Goal not found.');
-const INVALID_TIMEZONE = errorBody('VALIDATION_ERROR', 'Request does not match the contract.', [
-  { path: 'body/timezone', message: 'must be a valid IANA time zone name' },
-]);
 
 // Goal API（R-02、#76）。`/api/*`共通hook（guards.ts）の内側に置くため、ここでは認証済みのrequest.userIdを前提にする。
 // 他人のGoalは存在を明かさず404。契約違反は共通のerror handlerが422へ変換する。
@@ -26,16 +22,15 @@ export async function registerGoalRoutes(app: FastifyInstance, deps: GoalRouteDe
     requireUserId(instance);
     const api = instance.withTypeProvider<TypeBoxTypeProvider>();
 
-    api.get('/api/goals', { schema: { response: { 200: GoalList } } }, async (request) => listGoals(deps.pool, request.userId, deps.now()));
+    api.get('/api/goals', { schema: { response: { 200: GoalList } } }, async (request) => listGoals(deps.pool, request.userId, deps.now));
 
     api.post('/api/goals', { schema: { body: GoalCreate, response: { 201: Goal, 422: ErrorBody } } }, async (request, reply) => {
-      if (!isValidTimeZone(request.body.timezone)) return reply.code(422).send(INVALID_TIMEZONE);
-      const goal = await createGoal(deps.pool, request.userId, request.body, deps.now());
+      const goal = await createGoal(deps.pool, request.userId, request.body, deps.now);
       return reply.code(201).send(goal);
     });
 
     api.get('/api/goals/:goalId', { schema: { params: GoalParams, response: { 200: Goal, 404: ErrorBody } } }, async (request, reply) => {
-      const goal = await getGoal(deps.pool, request.userId, request.params.goalId, deps.now());
+      const goal = await getGoal(deps.pool, request.userId, request.params.goalId, deps.now);
       return goal ?? reply.code(404).send(GOAL_NOT_FOUND);
     });
 
@@ -43,8 +38,7 @@ export async function registerGoalRoutes(app: FastifyInstance, deps: GoalRouteDe
       '/api/goals/:goalId',
       { schema: { params: GoalParams, body: GoalPatch, response: { 200: Goal, 404: ErrorBody, 422: ErrorBody } } },
       async (request, reply) => {
-        if (request.body.timezone !== undefined && !isValidTimeZone(request.body.timezone)) return reply.code(422).send(INVALID_TIMEZONE);
-        const result = await updateGoal(deps.pool, request.userId, request.params.goalId, request.body, deps.now());
+        const result = await updateGoal(deps.pool, request.userId, request.params.goalId, request.body, deps.now);
         if (result.kind === 'not_found') return reply.code(404).send(GOAL_NOT_FOUND);
         if (result.kind === 'locked') {
           return reply.code(422).send(
