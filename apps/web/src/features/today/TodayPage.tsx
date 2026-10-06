@@ -23,11 +23,21 @@ import { toForecastView } from './forecast-view.ts';
 import '../../ui/tokens.css';
 import './today.css';
 
+/**
+ * 取得のやり方。失敗した取得は自動でやり直さず、「再読み込み」ボタンで取り直す。
+ * TanStack Query v5 はデータのないまま失敗した取得をやり直すと「読み込み中」に戻るため、画面に戻るたびに
+ * エラーや「Goalが見つかりません」が一瞬消えてしまう。成功している取得は、画面に戻ったとき最新にする。
+ */
+const fetchPolicy = {
+  retry: false,
+  refetchOnWindowFocus: (query: { state: { status: string } }) => query.state.status !== 'error',
+} as const;
+
 /** Today Decision 画面（R-05〜R-08）。/goals/$goalId */
 export function TodayPage({ goalId }: { goalId: string }) {
-  const goalQuery = useQuery({ queryKey: ['goal', goalId], queryFn: () => goalsApi.getGoal(goalId), retry: false });
-  const todayQuery = useQuery({ queryKey: ['today', goalId], queryFn: () => goalsApi.getToday(goalId), retry: false });
-  const logsQuery = useQuery({ queryKey: ['logs', goalId], queryFn: () => goalsApi.listLogs(goalId), retry: false });
+  const goalQuery = useQuery({ queryKey: ['goal', goalId], queryFn: () => goalsApi.getGoal(goalId), ...fetchPolicy });
+  const todayQuery = useQuery({ queryKey: ['today', goalId], queryFn: () => goalsApi.getToday(goalId), ...fetchPolicy });
+  const logsQuery = useQuery({ queryKey: ['logs', goalId], queryFn: () => goalsApi.listLogs(goalId), ...fetchPolicy });
   // 保存の動き（#79・#80）は限定先行の範囲外。押したことが分かるよう、開発用の案内だけを出す。
   const [devNotice, setDevNotice] = useState<string | null>(null);
   const [yesterdayLater, setYesterdayLater] = useState(false);

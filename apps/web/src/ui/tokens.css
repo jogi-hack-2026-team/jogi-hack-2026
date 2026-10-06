@@ -115,14 +115,15 @@
 .fr *::after {
   box-sizing: border-box;
 }
-.fr :is(h1, h2, h3, p, dl, dd, figure) {
+/* 基本の指定は :where() で優先度を0にし、部品のクラス（.fr-btn--primary など）の色や余白が必ず勝つようにする */
+:where(.fr) :where(h1, h2, h3, p, dl, dd, figure) {
   margin: 0;
 }
-.fr :is(button, input, select, textarea) {
+:where(.fr) :where(button, input, select, textarea) {
   font: inherit;
   color: inherit;
 }
-.fr button {
+:where(.fr) :where(button) {
   cursor: pointer;
 }
 .fr :focus-visible {
