@@ -36,7 +36,7 @@ pathはコピーしてfreezeする。全3選択肢のsnapshotを検証し、未�
 
 ## 確認済みと残る採択
 
-[5 adapterテスト](tests/question-prior-adapter-candidate.test.mjs)で18共通例、13件の状態／不足理由の具体期待値、材料判定、raw／mapping不正、未来日付、訂正／解除、凍結入力、出力コピー、seed再実行を確認する。従来56テストとadapter 5件を保持し、下記handoff 3件を加えてpackage全体は64テスト。独立CDFオラクル3テストと[再現手順](../../experiments/question-prior-engine-candidate/README.md)は別に実行する。9例のDP goldenと全200サンプル、閾値前後CDFは従来実験と同一。候補CIの結果はPRの同HEAD Actionsで別に確認する。
+[5 adapterテスト](tests/question-prior-adapter-candidate.test.mjs)で18共通例、13件の状態／不足理由の具体期待値、材料判定、raw／mapping不正、未来日付、訂正／解除、凍結入力、出力コピー、seed再実行を確認する。従来56テストとadapter 5件を保持し、下記handoff 3件を加えて共通DPのn=H境界回帰2件を含めpackage全体は66テスト。独立CDFオラクル3テストと[再現手順](../../experiments/question-prior-engine-candidate/README.md)は別に実行する。9例のDP goldenと全200サンプル、閾値前後CDFは従来実験と同一。候補CIの結果はPRの同HEAD Actionsで別に確認する。
 
 候補内の13接続差とshape分類は具体実装で解消した。残る判断はD-26の写像・強度・補完・gate・共有enum／versionの正式採択、保存context／revision／訂正責任、公開Engine/API DTOとエラー／HTTP変換、採用workspace／runtime／runnerとの整合。保存・HTTP・UIの10統合仕様は実行していない。任意の非対称shapeの性能や校正精度へこの結果を一般化しない。具体契約の採択と別メンバーのレビュー前にMergeしない。
 
