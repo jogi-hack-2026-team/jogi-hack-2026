@@ -3,3 +3,4 @@
 export { ErrorBody } from './error.ts';
 export { Goal, GoalCreate, GoalList, GoalParams, GoalPatch, GoalUnit, LocalDate, TodayStatus } from './goal.ts';
 export { Health } from './health.ts';
+export { Log, LogList, LogParams, LogPut, LogStatus, LogsQuery, PredictionResultSchema, Today } from './log.ts';

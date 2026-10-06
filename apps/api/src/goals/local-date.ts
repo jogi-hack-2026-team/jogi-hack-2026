@@ -31,3 +31,23 @@ export function localDateIn(instant: Date, timeZone: string): string {
   const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
   return `${pick('year')}-${pick('month')}-${pick('day')}`;
 }
+
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+
+/** 実在する暦日（YYYY-MM-DD）か。2026-02-30のような日付は拒否する。 */
+export function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = month === 2 && leap ? 29 : DAYS_IN_MONTH[month - 1];
+  return year >= 1 && month >= 1 && month <= 12 && days !== undefined && day >= 1 && day <= days;
+}
+
+/** 暦日に日数を足す（timezoneに依存しないUTCの日付演算）。昨日は`shiftLocalDate(today, -1)`。 */
+export function shiftLocalDate(localDate: string, days: number): string {
+  const [y, m, d] = localDate.split('-').map(Number) as [number, number, number];
+  const shifted = new Date(Date.UTC(y, m - 1, d + days));
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}-${String(shifted.getUTCDate()).padStart(2, '0')}`;
+}

@@ -95,6 +95,6 @@ TODAY_DONEは未記録の今日を1回実行した仮定からの将来日数、
 
 ## #70後に合わせる点と残条件
 
-#70でroot workspace（`@futureroi/prediction`）とlockfileへ統合し、TypeScript版を5.9.3に揃えた。packageのコマンド、Node標準runner、検証CIのNode matrixは変えていない。今回のT-14 CIは検証用Node/ホストの結果として記録し、正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
+#70でroot workspace（`@futureroi/prediction`）とlockfileへ統合し、TypeScript版を5.9.3に揃えた。#77で`apps/api`の`/today`から呼ぶため、`package.json`に`exports`（ビルド済み`dist/src/index.js`と`.d.ts`）と`build`（`scripts/check.mjs build`、`declaration`出力）を追加し、root scriptsがAPIのtypecheck・testの前にbuildする。packageのコマンド、Node標準runner、検証CIのNode matrixは変えていない。今回のT-14 CIは検証用Node/ホストの結果として記録し、正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
 
 今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・47テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。

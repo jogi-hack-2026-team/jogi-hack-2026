@@ -1,0 +1,75 @@
+import type { Pool } from 'pg';
+import type { Log, LogPut } from '../contracts/log.ts';
+import { isGoalId } from '../goals/store.ts';
+import { localDateIn, shiftLocalDate } from '../goals/local-date.ts';
+
+// 記録のSQL。所有者条件（goal.user_id）を全ての読み書きに付け、他人のGoalは「存在しない」として扱う。
+// 行動日（local_date）はGoalのtimezoneの暦日。date型はpgがDateへ変換するため、SQL側でtextにして受け取る。
+
+type LogRow = { local_date: string; status: Log['status']; amount: number | null };
+const toLog = (r: LogRow): Log => ({ localDate: r.local_date, status: r.status, amount: r.amount });
+
+export type PutLogResult =
+  | { kind: 'saved'; log: Log }
+  | { kind: 'not_found' }
+  | { kind: 'out_of_window'; today: string; yesterday: string }
+  | { kind: 'before_start'; recordStartDate: string };
+
+// 作成・上書き（R-03・R-04、P-14）。許可窓は「Goalのtimezoneで今日・昨日」かつ「記録開始日以降」。
+// 窓の判定と保存を同じtransactionで行い、Goal行を共有ロックして、同時のtimezone変更（PATCHのfor update）と順序づける。
+// DONEでamount省略時はsessionAmountで補い、SKIPPEDはNULLで保存する（DBのCHECKと同じ）。
+export async function putLog(pool: Pool, userId: string, goalId: string, localDate: string, body: LogPut, now: Date): Promise<PutLogResult> {
+  if (!isGoalId(goalId)) return { kind: 'not_found' };
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const goal = (
+      await client.query<{ timezone: string; record_start_date: string; session_amount: number }>(
+        'select timezone, record_start_date::text as record_start_date, session_amount from goal where id = $1 and user_id = $2 for share',
+        [goalId, userId],
+      )
+    ).rows[0];
+    if (!goal) {
+      await client.query('rollback');
+      return { kind: 'not_found' };
+    }
+    const today = localDateIn(now, goal.timezone);
+    const yesterday = shiftLocalDate(today, -1);
+    if (localDate !== today && localDate !== yesterday) {
+      await client.query('rollback');
+      return { kind: 'out_of_window', today, yesterday };
+    }
+    if (localDate < goal.record_start_date) {
+      await client.query('rollback');
+      return { kind: 'before_start', recordStartDate: goal.record_start_date };
+    }
+    const amount = body.status === 'DONE' ? (body.amount ?? goal.session_amount) : null;
+    const saved = await client.query<LogRow>(
+      `insert into action_log (goal_id, local_date, status, amount) values ($1, $2::date, $3, $4)
+       on conflict (goal_id, local_date) do update set status = excluded.status, amount = excluded.amount
+       returning local_date::text as local_date, status, amount`,
+      [goalId, localDate, body.status, amount],
+    );
+    await client.query('commit');
+    return { kind: 'saved', log: toLog(saved.rows[0]!) };
+  } catch (error) {
+    await client.query('rollback').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/** 記録の一覧（行動日の昇順）。期間は両端を含み、省略時は全期間。Goalがなければnull。 */
+export async function listLogs(pool: Pool, userId: string, goalId: string, range: { from?: string; to?: string }): Promise<Log[] | null> {
+  if (!isGoalId(goalId)) return null;
+  const owned = await pool.query('select 1 from goal where id = $1 and user_id = $2', [goalId, userId]);
+  if (owned.rowCount === 0) return null;
+  const rows = await pool.query<LogRow>(
+    `select local_date::text as local_date, status, amount from action_log
+      where goal_id = $1 and ($2::date is null or local_date >= $2::date) and ($3::date is null or local_date <= $3::date)
+      order by local_date`,
+    [goalId, range.from ?? null, range.to ?? null],
+  );
+  return rows.rows.map(toLog);
+}

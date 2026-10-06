@@ -32,3 +32,11 @@ export function registerApiGuards(app: FastifyInstance, auth: Auth, allowedOrigi
     request.userId = session.user.id;
   });
 }
+
+// 業務routeの二重防御。共通hookはraw URLの`/api/`で判定するが、routerはpercent decode後に一致させる（PR #124のレビュー指摘）。
+// hookを通らずに届いた要求（userIdが空）は、所有者条件に空文字を渡さず401で止める。各業務pluginの先頭で呼ぶ。
+export function requireUserId(instance: FastifyInstance): void {
+  instance.addHook('onRequest', async (request, reply) => {
+    if (!request.userId) return reply.code(401).send(UNAUTHENTICATED);
+  });
+}

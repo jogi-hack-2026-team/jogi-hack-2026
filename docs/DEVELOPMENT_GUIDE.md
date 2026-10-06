@@ -482,7 +482,7 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 
 ## アプリを起動・検証する
 
-#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。APIは`GET /api/health`（DB接続確認を含む）、認証（#75）、Goal API（#76。[決定事項](architecture.md#2026-10-06のgoal-api76)）まで、Webは起動確認と登録・ログイン画面までです。記録・予測のAPIとGoal・Today画面は未実装です。
+#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。APIは`GET /api/health`（DB接続確認を含む）、認証（#75）、Goal API（#76。[決定事項](architecture.md#2026-10-06のgoal-api76)）、記録とToday API（#77。[決定事項](architecture.md#2026-10-06の記録today-api77)。`/today`が純粋Engineを呼びます）まで、Webは起動確認と登録・ログイン画面までです。Goal・記録・Todayの画面は未実装です。
 
 | 構成 | 場所 | 役割 |
 | --- | --- | --- |
@@ -513,7 +513,7 @@ npm run dev:api
 npm run dev:web
 ```
 
-`db:migrate`は`.env`の`DATABASE_URL`へ、認証テーブル（固定版Better Authの`getMigrations`）→ アプリのSQL（`apps/api/migrations/`）の順に適用し、結果をJSONで1行出します。2回目以降は差分がなければ何もしません（`rateLimit.lastRequest`の型警告は既知で差分は作られません）。`db:migrate:auth`・`db:migrate:app`で片方だけも実行できます。`db:seed:demo`はDemo Seed（#82）の枠で、実装までは未実装として失敗します。`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
+`dev:api`と`typecheck`・`test`は、先にEngine package（`packages/prediction`）を`npm run build:prediction`でビルドします（APIは`@futureroi/prediction`のビルド済み`dist`を読むため）。`db:migrate`は`.env`の`DATABASE_URL`へ、認証テーブル（固定版Better Authの`getMigrations`）→ アプリのSQL（`apps/api/migrations/`）の順に適用し、結果をJSONで1行出します。2回目以降は差分がなければ何もしません（`rateLimit.lastRequest`の型警告は既知で差分は作られません）。`db:migrate:auth`・`db:migrate:app`で片方だけも実行できます。`db:seed:demo`はDemo Seed（#82）の枠で、実装までは未実装として失敗します。`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
 
 ### 検証
 
@@ -523,7 +523,7 @@ npm test
 npm run build
 ```
 
-`npm test`はAPIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）とEngineの47テストを実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。ビルド済みの構成を1プロセスで確認するには`WEB_DIST=apps/web/dist node apps/api/dist/server.js`を使います。
+`npm test`はEngineをビルドしてから、Engineの47テストとAPIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）を実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。ビルド済みの構成を1プロセスで確認するには`WEB_DIST=apps/web/dist node apps/api/dist/server.js`を使います。
 
 [Application CI](../.github/workflows/application.yml)はPRとmainへのpushで、install・typecheck・test（PostgreSQL service）・buildと、コンテナのbuild・起動・route確認・SIGTERM終了（[smoke test](../scripts/smoke-container.sh)）を実行します。CIとDockerfileの`npm ci --ignore-scripts`はlifecycle scriptsを実行しない設定で、lockfile内でinstall scriptを持つのは開発用の`embedded-postgres`等だけです。Dockerがある端末では`docker compose --profile app up --build`で同じコンテナを起動し、`IMAGE=... DATABASE_URL=... ./scripts/smoke-container.sh`で同じ確認ができます。
 
@@ -538,7 +538,7 @@ npm run build
 
 ### 登録・ログインを確認する
 
-`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。ログイン後のCookieを付けて同じURLを呼ぶとGoalの一覧（最初は`[]`）が返り、作成・編集・削除の規則は[Architecture](architecture.md#2026-10-06のgoal-api76)に記載しています。
+`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。ログイン後のCookieを付けて同じURLを呼ぶとGoalの一覧（最初は`[]`）が返り、作成・編集・削除の規則は[Architecture](architecture.md#2026-10-06のgoal-api76)に記載しています。記録（`PUT /api/goals/:goalId/logs/:localDate`）と`GET /api/goals/:goalId/today`の規則は[記録・Today API](architecture.md#2026-10-06の記録today-api77)を参照してください。
 
 stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。
 

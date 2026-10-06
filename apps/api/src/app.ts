@@ -9,6 +9,9 @@ import { Health } from './contracts/index.ts';
 import { registerGoalRoutes } from './goals/routes.ts';
 import { errorBody } from './http/errors.ts';
 import { registerApiGuards } from './http/guards.ts';
+import { registerLogRoutes } from './logs/routes.ts';
+import { PredictionFailed } from './prediction/engine.ts';
+import { registerTodayRoute } from './prediction/routes.ts';
 
 export type AppOptions = {
   pool: Pool;
@@ -79,6 +82,11 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
     if (error.code === '23505' || error.code === '23514') {
       return reply.code(422).send(errorBody('CONSTRAINT_VIOLATION', 'Rejected by a database constraint.'));
     }
+    if (error instanceof PredictionFailed) {
+      // 保存済みデータから作った入力をEngineが拒否した。利用者の操作では直せないため原因だけ記録して500。
+      request.log.error({ reason: error.reason, path: error.path }, 'prediction: engine rejected stored input');
+      return reply.code(500).send(errorBody('PREDICTION_FAILED', 'Prediction could not be computed.'));
+    }
     if (typeof error.statusCode === 'number' && error.statusCode < 500) {
       return reply.code(error.statusCode).send(errorBody('BAD_REQUEST', error.message));
     }
@@ -89,8 +97,11 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
   if (o.auth) {
     registerApiGuards(app, o.auth.instance, o.auth.allowedOrigins);
     registerAuthBridge(app, o.auth.instance, o.auth.baseURL);
-    // 業務APIは保護hookの内側にだけ置く（認証なしの構成ではGoal APIを公開しない）。
-    await registerGoalRoutes(app, { pool: o.pool, now: o.now ?? (() => new Date()) });
+    // 業務APIは保護hookの内側にだけ置く（認証なしの構成ではGoal・記録・Today APIを公開しない）。
+    const deps = { pool: o.pool, now: o.now ?? (() => new Date()) };
+    await registerGoalRoutes(app, deps);
+    await registerLogRoutes(app, deps);
+    await registerTodayRoute(app, deps);
   }
 
   // Type Providerはpluginごとに適用する（Fastifyのカプセル化により外側の指定は継承されない）。

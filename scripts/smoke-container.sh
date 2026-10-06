@@ -2,7 +2,7 @@
 # 単一コンテナのsmoke test。CI（.github/workflows/application.yml）とDockerがある端末で使う。
 # 必要な環境変数: IMAGE（build済みimage）、DATABASE_URL（コンテナからhost networkで到達できる接続先）。
 # 確認: migration、health、SPAの深いURL、存在しないAPI・対象外methodのJSON 404、assetのcache、
-#       登録→セッション→Goalの作成・一覧・削除（#76）→ログアウト→古いCookieは401（複数Set-Cookieの転送を含む）、未ログインの/api/*は401、SIGTERMで10秒以内にexit 0。
+#       登録→セッション→Goalの作成・一覧（#76）→記録とToday（#77）→削除→ログアウト→古いCookieは401（複数Set-Cookieの転送を含む）、未ログインの/api/*は401、SIGTERMで10秒以内にexit 0。
 # 認証のSecret・URLは確認用の合成値（本番の値を渡さない）。httpのbase URLは BETTER_AUTH_ALLOW_HTTP=1 で許可する。
 set -eu
 
@@ -82,6 +82,18 @@ echo "$created" | grep -q '"todayStatus":"UNRECORDED"' || fail "created goal mus
 goal_id=$(echo "$created" | sed -n 's/.*"id":"\([0-9a-f-]*\)".*/\1/p')
 [ -n "$goal_id" ] || fail "goal id missing in $created"
 curl --silent --cookie "$jar" "$base/api/goals" | grep -q "\"id\":\"$goal_id\"" || fail "created goal is not listed"
+# 記録・Today API（#77）: Goalのtimezone（Asia/Tokyo）での今日を記録し、/todayがEngineの結果を返す（コンテナ内のEngine配置の確認を兼ねる）
+today_jst=$(TZ=Asia/Tokyo date +%Y-%m-%d)
+saved=$(curl --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
+  --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/$today_jst")
+[ "$saved" = "{\"localDate\":\"$today_jst\",\"status\":\"DONE\",\"amount\":30}" ] || fail "log put body: $saved"
+today_body=$(curl --silent --cookie "$jar" "$base/api/goals/$goal_id/today")
+echo "$today_body" | grep -q "\"today\":\"$today_jst\"" || fail "today body: $today_body"
+echo "$today_body" | grep -q '"modelVersion":"behavior-persistence-m1-v1"' || fail "today must include the Engine result: $today_body"
+echo "$today_body" | grep -q '"reason":"TODAY_RECORDED"' || fail "today after a DONE log must report TODAY_RECORDED: $today_body"
+status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
+  --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/2000-01-01")
+[ "$status" = "422" ] || fail "log outside the window status $status"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" --header "origin: $AUTH_URL" --request DELETE "$base/api/goals/$goal_id")
 [ "$status" = "204" ] || fail "goal delete status $status"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" "$base/api/goals/$goal_id")
@@ -106,4 +118,4 @@ code=$(docker inspect --format '{{.State.ExitCode}}' "$NAME")
 [ "$code" = "0" ] || fail "exit code after SIGTERM was $code"
 [ "$elapsed" -le 10 ] || fail "shutdown took ${elapsed}s"
 docker logs "$NAME" 2>&1 | grep -q 'shutdown: complete' || fail "shutdown log missing"
-echo "PASS: migration, health, SPA deep URL, JSON 404s, asset cache, auth and goal round trip, SIGTERM exit 0 in ${elapsed}s"
+echo "PASS: migration, health, SPA deep URL, JSON 404s, asset cache, auth, goal, log and today round trip, SIGTERM exit 0 in ${elapsed}s"

@@ -9,15 +9,16 @@
     "npm": ">=11.11.1"
   },
   "workspaces": [
-    "apps/web",
+    "packages/prediction",
     "apps/api",
-    "packages/prediction"
+    "apps/web"
   ],
   "scripts": {
-    "dev:api": "npm run dev --workspace=@futureroi/api",
+    "build:prediction": "npm run build --workspace=@futureroi/prediction",
+    "dev:api": "npm run build:prediction && npm run dev --workspace=@futureroi/api",
     "dev:web": "npm run dev --workspace=@futureroi/web",
-    "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run build:prediction && npm run typecheck --workspaces",
+    "test": "npm run build:prediction && npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "db:migrate": "npm run db:migrate --workspace=@futureroi/api",
     "db:migrate:auth": "npm run db:migrate:auth --workspace=@futureroi/api",

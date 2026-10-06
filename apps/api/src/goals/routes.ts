@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import { ErrorBody, Goal, GoalCreate, GoalList, GoalParams, GoalPatch } from '../contracts/index.ts';
 import { errorBody } from '../http/errors.ts';
-import { UNAUTHENTICATED } from '../http/guards.ts';
+import { requireUserId } from '../http/guards.ts';
 import { isValidTimeZone } from './local-date.ts';
 import { createGoal, deleteGoal, getGoal, listGoals, updateGoal } from './store.ts';
 
@@ -23,11 +23,7 @@ const INVALID_TIMEZONE = errorBody('VALIDATION_ERROR', 'Request does not match t
 // 他人のGoalは存在を明かさず404。契約違反は共通のerror handlerが422へ変換する。
 export async function registerGoalRoutes(app: FastifyInstance, deps: GoalRouteDeps): Promise<void> {
   await app.register(async (instance) => {
-    // 二重防御: 共通hookはraw URLの`/api/`で判定するが、routerはpercent decode後に一致させる（PR #124のレビュー指摘）。
-    // hookを通らずにこのrouteへ届いた要求（userIdが空）は、所有者条件に空文字を渡さず401で止める。
-    instance.addHook('onRequest', async (request, reply) => {
-      if (!request.userId) return reply.code(401).send(UNAUTHENTICATED);
-    });
+    requireUserId(instance);
     const api = instance.withTypeProvider<TypeBoxTypeProvider>();
 
     api.get('/api/goals', { schema: { response: { 200: GoalList } } }, async (request) => listGoals(deps.pool, request.userId, deps.now()));
