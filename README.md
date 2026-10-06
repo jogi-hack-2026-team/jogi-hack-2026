@@ -29,7 +29,7 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、文書・設定検証用のGitHub Actionsがあります。
-旧Web/API・開発用DBの起動構成、旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成はありません。
+旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で導入し、Product機能（認証・Goal・記録・予測API・画面）は未実装です。
 現行の未決定事項と当時の検証記録への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
@@ -37,11 +37,13 @@
 
 ## 開発基盤のセットアップと確認
 
-GitとPowerShell 7を使います。文書・設定チェックの手順は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。基本構成の採用と認証・公開先の残条件は[Architecture](docs/architecture.md#technology-stack)で確認します。起動構成の復元・版固定・動作確認は実装Issueで行い、まだ完了していません。
+GitとPowerShell 7を使います。文書・設定チェックの手順は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。基本構成の採用と認証・公開先の残条件は[Architecture](docs/architecture.md#technology-stack)で確認します。アプリの起動構成はNode 24.21.0に版固定し、[起動・検証手順](docs/DEVELOPMENT_GUIDE.md#アプリを起動検証する)にまとめています。公開先（staging）への配置は未実施です。
 
 導入済みの環境では、リポジトリのルートで `mise run --skip-tools check` を実行します。文書・設定を検査し、成功時は `PASS:` が表示されます。
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
+
+アプリ全体は `npm ci` → `npm run typecheck` → `npm test` → `npm run build` で検証します（Node 24.21.0。miseなら `mise install` の後に `mise run test` 等）。APIテストはPostgreSQLを使い、`DATABASE_URL`がなければ開発依存の`embedded-postgres`でローカルクラスタを自動起動します。[Application CI](.github/workflows/application.yml)は同じ4段階とコンテナのsmoke testを実行します。
 
 Prediction単体は[Docker検証手順](packages/prediction/DOCKER.md)で、hostにNodeを追加せず型検査・テスト・接続例・T-14を実行できます。Secret・DBは不要です。製品全体の起動構成やruntimeの採択とは分けます。
 

@@ -1,0 +1,95 @@
+name: Application
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: application-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Node 24.21.0 は package.json engines・mise.toml・Dockerfile と同じ版。
+  NODE_VERSION: '24.21.0'
+
+jobs:
+  application:
+    name: Install, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18.6-trixie
+        env:
+          POSTGRES_DB: futureroi
+          POSTGRES_USER: futureroi
+          POSTGRES_PASSWORD: ci-only-placeholder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U futureroi -d futureroi"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Install locked workspace dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Show versions
+        run: |
+          node --version
+          npm --version
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        # APIテストはCIのPostgreSQL serviceへ接続する（CI専用の合成password。Secretではない）。
+        env:
+          DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  container:
+    name: Container build and smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18.6-trixie
+        env:
+          POSTGRES_DB: futureroi
+          POSTGRES_USER: futureroi
+          POSTGRES_PASSWORD: ci-only-placeholder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U futureroi -d futureroi"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Validate compose file
+        env:
+          LOCAL_DB_PASSWORD: ci-only-placeholder
+        run: docker compose config --quiet
+      - name: Build the single SPA/API container
+        run: docker build --tag future-roi:${{ github.run_id }}-${{ github.run_attempt }} .
+      - name: Start, probe routes and stop with SIGTERM
+        env:
+          IMAGE: future-roi:${{ github.run_id }}-${{ github.run_attempt }}
+          DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
+        run: ./scripts/smoke-container.sh

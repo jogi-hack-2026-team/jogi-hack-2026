@@ -1,4 +1,7 @@
-# Current tasks only. The previous application toolchain is archived.
+# Runtime pin for the application (Refs #70). Documentation checks still run with --skip-tools.
+[tools]
+node = "24.21.0"
+
 [tasks.check]
 description = "Check repository documentation and configuration (no application tests)"
 run = "pwsh -NoProfile -File scripts/check-foundation.ps1"
@@ -10,3 +13,27 @@ run = "git diff --cached --check"
 [tasks."hooks:install"]
 description = "Install repository-local hooks without replacing existing hooks"
 run = "pwsh -NoProfile -File scripts/install-hooks.ps1"
+
+[tasks.install]
+description = "Install locked workspace dependencies (apps/web, apps/api, packages/prediction)"
+run = "npm ci"
+
+[tasks.typecheck]
+description = "Typecheck every workspace"
+run = "npm run typecheck"
+
+[tasks.test]
+description = "Run every workspace test (API tests need PostgreSQL: DATABASE_URL or the embedded fallback)"
+run = "npm test"
+
+[tasks.build]
+description = "Build the SPA and the API"
+run = "npm run build"
+
+[tasks."dev:api"]
+description = "Run the API with file watching (reads .env when present)"
+run = "npm run dev:api"
+
+[tasks."dev:web"]
+description = "Run the Vite dev server with /api proxied to the API"
+run = "npm run dev:web"

@@ -1,0 +1,29 @@
+{
+  "name": "@futureroi/web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Future ROI Web (React + Vite + TanStack Router/Query). Built as a static SPA served by the API.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --import ./tests/register-contracts.mjs --test tests/*.test.mjs",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "0.34.52",
+    "@tanstack/react-query": "5.104.0",
+    "@tanstack/react-router": "1.170.40",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.1"
+  }
+}

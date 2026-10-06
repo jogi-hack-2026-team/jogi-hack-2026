@@ -5,12 +5,16 @@ on:
     paths:
       - 'experiments/question-prior-contract/**'
       - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/question-prior-contract.yml'
   push:
     branches: [main]
     paths:
       - 'experiments/question-prior-contract/**'
       - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/question-prior-contract.yml'
   workflow_dispatch:
 
@@ -49,8 +53,8 @@ jobs:
           git diff --exit-code -- experiments/question-prior-contract/common-fixtures.json experiments/question-prior-contract/fixture-summary.md experiments/question-prior-contract/validation.json experiments/question-prior-contract/completion-goldens.json
       - name: Install locked compiler and compile existing math source
         run: |
-          npm --prefix packages/prediction ci --include=dev --ignore-scripts --no-audit --no-fund
+          npm ci --workspace=@futureroi/prediction --include=dev --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          node packages/prediction/node_modules/typescript/bin/tsc --project packages/prediction/tsconfig.json
+          node node_modules/typescript/bin/tsc --project packages/prediction/tsconfig.json
       - name: Check raw input keys and nine conditional DP goldens
         run: node --test experiments/question-prior-contract/completion-oracle.test.mjs

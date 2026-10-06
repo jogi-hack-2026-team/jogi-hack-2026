@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
       - 'experiments/question-prior-engine-candidate/**'
       - '.github/workflows/prediction.yml'
   push:
     branches: [main]
     paths:
       - 'packages/prediction/**'
+      - 'package.json'
+      - 'package-lock.json'
       - 'experiments/question-prior-engine-candidate/**'
       - '.github/workflows/prediction.yml'
   workflow_dispatch:
@@ -39,16 +43,17 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          # Verification version, not a production runtime decision (Refs #70).
+          # Verification versions. The product runtime pin (24.21.0) lives in package.json engines / mise.toml (#70).
           node-version: ${{ matrix.node }}
           package-manager-cache: false
-      - name: Install locked verification dependency
-        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Install locked verification dependency from the workspace lockfile
+        working-directory: .
+        run: npm ci --workspace=@futureroi/prediction --include=dev --ignore-scripts --no-audit --no-fund
       - name: Show verification versions
         run: |
           node --version
           npm --version
-          node node_modules/typescript/bin/tsc --version
+          npm exec --no -- tsc --version
       - name: Typecheck public contracts and source
         run: npm run typecheck
       - name: Run numerical and regression tests

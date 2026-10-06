@@ -1,17 +1,20 @@
-# packageをcontextにし、検証で使うファイルだけを送る。
+# repository rootをcontextにし、検証で使うファイルだけを送る。
 **
 !package.json
 !package-lock.json
-!tsconfig.json
-!src/
-!src/*.ts
-!tests/
-!tests/*.ts
-!tests/*.mjs
-!scripts/
-!scripts/*.mjs
-!examples/
-!examples/*.mjs
+!apps/api/package.json
+!apps/web/package.json
+!packages/prediction/package.json
+!packages/prediction/tsconfig.json
+!packages/prediction/src/
+!packages/prediction/src/*.ts
+!packages/prediction/tests/
+!packages/prediction/tests/*.ts
+!packages/prediction/tests/*.mjs
+!packages/prediction/scripts/
+!packages/prediction/scripts/*.mjs
+!packages/prediction/examples/
+!packages/prediction/examples/*.mjs
 
 # 許可したディレクトリ内にもローカル環境値・生成物を入れない。
 **/.env*

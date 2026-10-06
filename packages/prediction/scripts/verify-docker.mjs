@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 // hostのenv・DB・時計を計算へ渡さず、既存の検証入口を順番に実行する。
@@ -20,7 +21,8 @@ function run(args, output) {
   if (output) console.log(`保存: ${evidence}/${output}`);
 }
 
-run(['node_modules/typescript/bin/tsc', '--version']);
+// workspaceではcompilerがrootへhoistされるため、packageから解決した実パスを使う。
+run([createRequire(import.meta.url).resolve('typescript/bin/tsc'), '--version']);
 run(['scripts/check.mjs', 'typecheck']);
 run(['scripts/check.mjs', 'test']);
 run(['examples/recalculate.mjs'], 'connection.json');
