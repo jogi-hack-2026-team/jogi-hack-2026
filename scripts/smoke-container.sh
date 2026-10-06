@@ -2,7 +2,7 @@
 # 単一コンテナのsmoke test。CI（.github/workflows/application.yml）とDockerがある端末で使う。
 # 必要な環境変数: IMAGE（build済みimage）、DATABASE_URL（コンテナからhost networkで到達できる接続先）。
 # 確認: migration、health、SPAの深いURL、存在しないAPI・対象外methodのJSON 404、assetのcache、
-#       登録→セッション→ログアウト→古いCookieは401（複数Set-Cookieの転送を含む）、未ログインの/api/*は401、SIGTERMで10秒以内にexit 0。
+#       登録→セッション→Goalの作成・一覧・削除（#76）→ログアウト→古いCookieは401（複数Set-Cookieの転送を含む）、未ログインの/api/*は401、SIGTERMで10秒以内にexit 0。
 # 認証のSecret・URLは確認用の合成値（本番の値を渡さない）。httpのbase URLは BETTER_AUTH_ALLOW_HTTP=1 で許可する。
 set -eu
 
@@ -72,8 +72,20 @@ status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie-ja
 [ "$status" = "200" ] || fail "sign-up status $status"
 grep -q 'session_token' "$jar" || fail "session cookie was not set"
 curl --silent --cookie "$jar" "$base/api/auth/get-session" | grep -q "\"email\":\"$email\"" || fail "get-session did not return the user"
-status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" "$base/api/goals")
-[ "$status" = "404" ] || fail "authenticated /api/goals status $status (expected 404: protected but no route yet)"
+# Goal API（#76）の往復: 空の一覧 → 作成201 → 一覧に含まれる → 削除204 → 一覧が空
+body=$(curl --silent --cookie "$jar" "$base/api/goals")
+[ "$body" = '[]' ] || fail "authenticated /api/goals must start empty: $body"
+created=$(curl --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
+  --data '{"title":"smoke goal","unit":"minutes","totalRequired":600,"sessionAmount":30,"timezone":"Asia/Tokyo"}' "$base/api/goals")
+echo "$created" | grep -q '"title":"smoke goal"' || fail "goal creation body: $created"
+echo "$created" | grep -q '"todayStatus":"UNRECORDED"' || fail "created goal must report todayStatus"
+goal_id=$(echo "$created" | sed -n 's/.*"id":"\([0-9a-f-]*\)".*/\1/p')
+[ -n "$goal_id" ] || fail "goal id missing in $created"
+curl --silent --cookie "$jar" "$base/api/goals" | grep -q "\"id\":\"$goal_id\"" || fail "created goal is not listed"
+status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" --header "origin: $AUTH_URL" --request DELETE "$base/api/goals/$goal_id")
+[ "$status" = "204" ] || fail "goal delete status $status"
+status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" "$base/api/goals/$goal_id")
+[ "$status" = "404" ] || fail "deleted goal status $status"
 curl --silent --cookie "$jar" "$base/api/nope" | grep -q '"NOT_FOUND"' || fail "authenticated unknown API must be JSON 404"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$base/api/goals")
 [ "$status" = "401" ] || fail "anonymous /api/goals status $status"
@@ -94,4 +106,4 @@ code=$(docker inspect --format '{{.State.ExitCode}}' "$NAME")
 [ "$code" = "0" ] || fail "exit code after SIGTERM was $code"
 [ "$elapsed" -le 10 ] || fail "shutdown took ${elapsed}s"
 docker logs "$NAME" 2>&1 | grep -q 'shutdown: complete' || fail "shutdown log missing"
-echo "PASS: migration, health, SPA deep URL, JSON 404s, asset cache, auth round trip, SIGTERM exit 0 in ${elapsed}s"
+echo "PASS: migration, health, SPA deep URL, JSON 404s, asset cache, auth and goal round trip, SIGTERM exit 0 in ${elapsed}s"
