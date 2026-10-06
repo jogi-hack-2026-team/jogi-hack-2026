@@ -55,6 +55,6 @@ jobs:
         run: |
           npm ci --workspace=@futureroi/prediction --include=dev --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npm exec --no -- tsc --project packages/prediction/tsconfig.json
+          node node_modules/typescript/bin/tsc --project packages/prediction/tsconfig.json
       - name: Check raw input keys and nine conditional DP goldens
         run: node --test experiments/question-prior-contract/completion-oracle.test.mjs
