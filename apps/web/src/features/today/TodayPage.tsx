@@ -5,7 +5,7 @@ import type { Goal, Log, Today } from '@contracts';
 import { goalsApi } from '../../api/goals-api.ts';
 import { ApiError } from '../../api/client.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
-import { Button, IconButton } from '../../ui/components/Button.tsx';
+import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
@@ -53,7 +53,7 @@ export function TodayPage({ goalId }: { goalId: string }) {
             <Icon name="back" />
           </Link>
         }
-        trailing={<IconButton icon="more" label="Goalのメニュー" onClick={notConnected} />}
+        // Goal のメニュー（編集・削除）は #78 で追加する
       />
       <MockBanner currentGoalId={goalId} />
       {today?.yesterdayMissing && !yesterdayLater ? (

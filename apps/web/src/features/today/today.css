@@ -4,6 +4,7 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
+  /* 既存の Layout（styles.css の main）の左右 1rem の余白を打ち消し、帯を画面の端まで広げる。Layout の余白を変えたらここも合わせる */
   margin: 0 calc(-1 * var(--fr-space-4));
 }
 .fr-today__top {
