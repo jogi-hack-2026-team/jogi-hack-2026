@@ -4,6 +4,26 @@
 
 対象はこのディレクトリのTSX、slot例、固定状態のReact previewと、別checkoutの候補Engineからのローカル表示接続。正式FE画面・API・本番Engine・保存revision・D-26採択の検証ではない。表示例は予測精度の根拠にしない。
 
+## FEレビューのOptional 3点（2026-10-06）
+
+[レビュー5431612554](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/120#pullrequestreview-5431612554)の指定3点を`7a2f081`へ追加した回帰テストの3失敗で再現してから修正しました。
+
+- R-02は実績を初期量＋DONE量の累積とし、R-08は総量以上を達成済みとします。最新main `dda3158`の`predict.ts`／`observations.ts`も超過分を保持します。したがって120／100は`completed`で有効のまま表示し、clampしません。shared guardは未達成を`completed`へ渡す場合、総量以上を`forecast`／`today-recorded`へ渡す場合を拒否します。状態の解決や実量の修正をUIへ移していません。
+- 長い共通説明を各fieldsetへ関連づけ、radioごとのdescriptionから外しました。選択肢の短いlabel、任意／UNKNOWN／回答しない、項目エラーのID／aria-invalidは保持しています。
+- 中心不足で任意の`message`を省いた場合だけ、回答を前提にしない「見通しを出すための材料がまだ足りません。」を表示します。FEが渡すR-06等の文言は優先します。
+
+| 今回実行した確認 | 結果・範囲 |
+| --- | --- |
+| strict・exact optional・型負例11件／React SSR 27件／Vite build | 成功。旧24件を維持し、達成状態と超過実績、fieldset／radio説明と短いエラー、回答に触れないfallbackを3件追加 |
+| 固定Engine接続24件 | 成功。pin `f7a6c02`とLF正規化fixture hash `ba7820…4ac47`を維持。latest mainのEngine全体の実行確認へ読み替えない |
+| 敵対的セルフレビュー33例 | 成功。両単位の達成／超過／未達成、状態逆転、NaN／Infinity／負量／total=0／不正単位、2インスタンスの参照・短いエラー・escape、不正不足文言を確認 |
+| Chrome154.0.8037.98の独立React mount | 11確認が成功。AXツリーで2groupの長い説明と10radioの短いlabel、エラー時は対象5radioだけの短い説明を確認。外部見出し・複数Goal・keyboard・disabled／draft・不足／記録済み／達成・Boundary復帰・1280／390／320pxを確認 |
+| Foundation・差分空白検査 | 112 text files／1241 local links／7 ignore casesで成功 |
+
+ページRuntimeの意図的guard error 1件を区別し、ほかのRuntime警告／error・未捕捉例外はありません。横はみ出しなし、labelは48px以上でした。スクリーンショットとAX記録は今回のprivate検証資料に保持し、過去のtracked画像を上書きしていません。Playwright CLIは未導入で、既存Chrome／CDPを使用しました。NVDA等の実際の読み上げ・タッチ端末・正式B renderer／FE／API／DBは未確認です。
+
+差分は候補の2部品・SSR・README・本記録の5ファイル。表示型・質問／選択肢・計算・API／依存・正式仕様は変更していません。READMEの現在mainに関する古い前提は候補PR自身の範囲へ直しました。正式仕様・配置・既存参照先を変更していないため、Product Spec／Architecture／change-mapの更新は不要です。この3点で未解決のBlocking／Should Fixはありません。
+
 ## p50有限／p80期間外のレビュー修正（2026-10-06）
 
 [Naokiレビュー5430680820](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/120#pullrequestreview-5430680820)のShould Fixを、`e9599f2`へ追加した回帰テストの失敗で再現しました。原因はp80のnullだけで「も3年以上先」と決めていたことです。p50有限／p80=nullではp50のラベルを残して「目安は3年以上先」、両方nullでは「目安も3年以上先」と表示します。有効な一部期間外の入力を拒否する修正にはしていません。Optionalの空文字・空白だけの`conditional.reason`も既存guardで拒否します。

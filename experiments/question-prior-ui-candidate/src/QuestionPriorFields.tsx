@@ -30,7 +30,7 @@ export function QuestionPriorFields({ value, onChange, disabled = false, fieldEr
         const error = fieldErrors[origin];
         const errorId = `${id}-${origin}-error`;
         return (
-          <fieldset key={origin} disabled={disabled}>
+          <fieldset key={origin} disabled={disabled} aria-describedby={error ? `${helpId} ${errorId}` : helpId}>
             <legend>{questions[origin]}</legend>
             {options.map(option => {
               const raw = option.value ?? "";
@@ -39,7 +39,7 @@ export function QuestionPriorFields({ value, onChange, disabled = false, fieldEr
                 <label key={raw || "missing"} className="r11-qp-option" htmlFor={inputId}>
                   <input id={inputId} name={`${id}-${origin}`} type="radio" value={raw}
                     checked={value[origin] === option.value}
-                    aria-describedby={error ? `${helpId} ${errorId}` : helpId}
+                    aria-describedby={error ? errorId : undefined}
                     aria-invalid={error ? true : undefined}
                     onChange={() => { if (!disabled) onChange({ ...value, [origin]: option.value }); }} />
                   {option.label}

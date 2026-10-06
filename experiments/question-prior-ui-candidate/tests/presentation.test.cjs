@@ -180,3 +180,52 @@ test('conditional plans require a nonblank reason through both the shared guard 
     assert.throws(()=>forecast(view),TypeError);
   }
 });
+
+test('progress state follows R-08 while completed actual amounts preserve legitimate overrun',()=>{
+  for(const unit of ['minutes','sessions']){
+    for(const done of [100,120]){
+      const view={kind:'completed',progress:{done,total:100,unit}};
+      assertForecastPresentation(view);
+      const html=forecast(view);assert.match(html,new RegExp(`実際に完了した量：${done}／100`));
+      assert.match(html,/目標を達成しました/);assert.doesNotMatch(html,/data-r11-aux/);
+      assert.equal(view.progress.done,done);
+    }
+    for(const done of [100,120])for(const base of [partial,views.recorded]){
+      const view={...base,progress:{done,total:100,unit}};
+      assert.throws(()=>assertForecastPresentation(view),TypeError);assert.throws(()=>forecast(view),TypeError);
+    }
+    const unfinished={kind:'completed',progress:{done:99,total:100,unit}};
+    assert.throws(()=>assertForecastPresentation(unfinished),TypeError);assert.throws(()=>forecast(unfinished),TypeError);
+  }
+});
+
+test('long help belongs to each fieldset while radio labels and short field errors remain intact',()=>{
+  for(const fieldErrors of [{},{b:'回答を確認してください'}]){
+    const html=fields({fieldErrors});
+    const helpId=html.match(/<p id="([^"]+-help)"/)[1];
+    const groups=[...html.matchAll(/<fieldset\b([^>]*)>([\s\S]*?)<\/fieldset>/g)];assert.equal(groups.length,2);
+    for(const [index,group]of groups.entries()){
+      const groupDescription=group[1].match(/aria-describedby="([^"]+)"/);assert(groupDescription);assert.ok(groupDescription[1].split(' ').includes(helpId));
+      assert.match(group[2],/<legend>[^<]+<\/legend>/);
+      const radios=[...group[2].matchAll(/<input\b[^>]*>/g)];assert.equal(radios.length,5);
+      const errorId=index===1&&fieldErrors.b?group[2].match(/<p class="r11-qp-error" id="([^"]+)"/)[1]:undefined;
+      for(const [radio]of radios){
+        const described=radio.match(/aria-describedby="([^"]+)"/);assert.ok(!described||!described[1].split(' ').includes(helpId));
+        if(errorId){assert.equal(described[1],errorId);assert.match(radio,/aria-invalid="true"/);assert.ok(groupDescription[1].split(' ').includes(errorId));}
+        else assert.equal(described, null);
+      }
+      for(const text of ['少なかった（4回に1回くらい）','半分くらい（4回に2回くらい）','多かった（4回に3回くらい）','経験がない・思い出せない','回答しない'])assert.ok(group[2].includes(text));
+    }
+    assert.equal((html.match(/記録開始前の、今回に近い行動/g)||[]).length,1);
+  }
+});
+
+test('core insufficiency fallback is neutral without overriding FE-resolved record-only text',()=>{
+  const neutral={...views['records-missing'],core:{kind:'insufficient'}};
+  assertForecastPresentation(neutral);const html=forecast(neutral);
+  assert.match(html,/見通しを出すための材料がまだ足りません。/);assert.doesNotMatch(html,/回答|あと\d+回分|約\d+日/);
+  const resolved=forecast(views['records-missing']);assert.match(resolved,/まだ「休んだ翌日」の記録がありません/);
+  assert.doesNotMatch(resolved,/見通しを出すための材料がまだ足りません/);
+  const custom=forecast({...neutral,core:{kind:'insufficient',message:'<script>カスタム不足文言</script>'}});
+  assert.match(custom,/&lt;script&gt;カスタム不足文言&lt;\/script&gt;/);assert.doesNotMatch(custom,/<script>|見通しを出すための材料がまだ足りません/);
+});

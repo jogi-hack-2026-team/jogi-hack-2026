@@ -29,9 +29,11 @@ function integer(value: unknown, minimum: number): value is number {
 function assertSource(source: unknown): asserts source is SufficientSource {
   if (source !== "QUESTION" && source !== "QUESTION_AND_RECORDS" && source !== "RECORDS") throw new TypeError("A displayed estimate needs resolved provenance.");
 }
-function assertProgress(progress: unknown): asserts progress is ActualProgress {
+function assertProgress(progress: unknown, completed: boolean): asserts progress is ActualProgress {
   assertObject(progress);
   if (!finite(progress.done, 0) || !finite(progress.total, 0) || progress.total <= 0 || (progress.unit !== "minutes" && progress.unit !== "sessions")) throw new TypeError("Invalid actual progress.");
+  // R-02 preserves accumulated actual amount; R-08 permits overrun only in completed.
+  if ((progress.done >= progress.total) !== completed) throw new TypeError("Actual progress must match the resolved completion state.");
 }
 function assertCounts(counts: unknown): asserts counts is Counts {
   assertObject(counts);
@@ -68,11 +70,11 @@ export function assertForecastPresentation(view: unknown): asserts view is Forec
     case "error":
       if (typeof view.message !== "string") throw new TypeError("Invalid forecast error text.");
       return;
-    case "completed": assertProgress(view.progress); return;
+    case "completed": assertProgress(view.progress, true); return;
     case "forecast": case "today-recorded": break;
     default: throw new TypeError("Invalid forecast presentation.");
   }
-  assertProgress(view.progress); assertCounts(view.resumed); assertCompletion(view.completion);
+  assertProgress(view.progress, false); assertCounts(view.resumed); assertCompletion(view.completion);
   if (view.kind === "forecast") {
     assertObject(view.core);
     if (view.core.kind === "estimate") {
@@ -137,7 +139,7 @@ export function PriorForecast({ view, className }: PriorForecastProps) {
   return (
     <section className={rootClass}>
       {view.kind === "today-recorded" ? <p className="r11-qp-notice">今日は記録済みです。</p> : view.core.kind === "insufficient" ?
-        <section><h2>見通しの材料が不足しています</h2><p>{view.core.message ?? "「休んだ翌日」の回答や実際の記録をもとに見通しを出します。回答は任意です。"}</p></section> :
+        <section><h2>見通しの材料が不足しています</h2><p>{view.core.message ?? "見通しを出すための材料がまだ足りません。"}</p></section> :
         <section><h2>ゴールが遠ざかる日数（目安）</h2><p className="r11-qp-value">約{view.core.days}日</p><p><span className="r11-qp-source">{sourceLabel(view.core.source)}</span> {sourceNote(view.core.source)}</p></section>}
       <ActualProgressText progress={view.progress} />
       <div className="r11-qp-aux"><ResumeRecords counts={view.resumed} /><Completion completion={view.completion} /></div>

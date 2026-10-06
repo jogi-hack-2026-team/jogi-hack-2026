@@ -2,7 +2,7 @@
 
 **Supporting Artifact / Not a Source of Truth。具体契約は未採択、本番画面・API・Engineへの組込は未確認。**
 
-[#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)の追加UI担当分を、FEが部品と状態所有者をレビューできるように隔離した候補です。現在mainに正式な`apps/web`とroot workspaceはなく、[D-23の採択構成](../../docs/architecture.md#repository構成)に置く前の部品確認です。Goal作成・一覧やToday画面全体、認証・DB・HTTP、計算Engineを複製していません。
+[#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)の追加UI担当分を、FEが部品と状態所有者をレビューできるように隔離した候補です。この候補PRは正式な`apps/web`とroot workspaceを追加せず、[D-23の採択構成](../../docs/architecture.md#repository構成)へ取り込む前の部品確認を扱います。Goal作成・一覧やToday画面全体、認証・DB・HTTP、計算Engineを複製していません。
 
 [PR115](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/115)はR-11のMust・分担の採択記録で、mainへ反映済みです。[PR118](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/118)は具体質問・数値・保存・表示契約の提案、[PR119](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119)は質問prior計算adapterの候補です。本候補は当時のmainから分けたSupporting Artifactで、PR118/119の変更は取り込んでいません。2026-10-06確認のmain `3166e14`には両候補が反映されていますが、D-26の具体契約採択や正式アプリ統合の証拠とは扱いません。#70 Hardと#117のDoR/blocked/Close条件は維持します。
 
@@ -16,9 +16,13 @@
 
 記録開始前の、今回と近い行動・量・生活状況、少量でも取り組めた日を含む過去の経験を答える説明を置きます。`value`はa/b両方を含み、選択・解除ごとに`onChange(nextPair)`へ新しいpairを返します。片方を編集しても他方を保持し、内部に回答stateや保存処理を持ちません。回答・UNKNOWN・スキップからActionLog、進捗、実績件数を作りません。
 
+長い共通説明は各`fieldset`の`aria-describedby`で関連づけます。radioには選択肢の短いlabelを保持し、項目エラーがある場合だけそのerror IDを説明として参照します。共通説明をradioごとのdescriptionへ重複させません。nativeなfieldset／legendの構造は[W3C WAIのgrouping guidance](https://www.w3.org/WAI/tutorials/forms/grouping/)に沿い、実際の読み上げ方は支援技術での確認を残します。
+
 [PriorForecast](src/PriorForecast.tsx)は、親が解決済みの`view`だけを表示する参照rendererです。出所は回答／回答＋実績／実績／不足に分け、a/b別の出所と実際の観測件数を別に扱います。回答を含む見通しには仮定である説明を付けます。材料不足の`conditional`は供給された残量・設定量での条件付き回数を表示し、日数の予測でないことを明示します。実績のみのR-06不足はPlanのない`insufficient`で、親が解決した文言を表示します。回数の切上げ、gate、quantile、週の月曜日やtimezoneの計算は行いません。
 
 `completed`は実績達成、`today-recorded`は今日の記録後の表示で、core比較を受け取りません。記録済みの完了estimateはCURRENT_STATEだけを型と実行時で許可します。未記録のTODAY_DONE完了は仮定と明示し、実績・達成への反映をしません。p50/p80の元の日数とFEが作るラベルを別に保持し、nullは両方の値で維持します。未計算quantileを推測した固定値で埋めません。loading/error、保存成功後の再取得失敗、保存結果不明は数値viewと別unionです。
+
+実績量はR-02の累積量のまま保ち、clampしません。R-08どおり`done >= total`は`completed`で有効で、120／100もそのまま表示します。shared guardは未達成を`completed`で渡す場合と、総量以上を`forecast`／`today-recorded`で渡す場合を拒否します。状態の選択はFEが行い、UIで達成へ変換しません。中心不足の`message`省略時は「見通しを出すための材料がまだ足りません。」と表示し、回答を前提にしません。指定されたR-06等の文言は従来どおり優先します。
 
 | 所有者 | 接続点・責務 |
 | --- | --- |
@@ -67,7 +71,7 @@ P-12の補助実績は`nSD + nSS`回中`nSD`回を保持します。0件は実�
 
 取り込み対象は従来の`src/`4ファイルと`examples/engine-view.ts`の5つですが、今回**すべてに差分があり、旧`7b0debd`とGit blob同一ではありません**。取得元はこの調整を含むPR120のHEADを返信で固定し、FEの取り込みPRで元5パス→配置先・変更理由・担当を記録してください。`features/today/forecast-view.ts`へ置く例では、型importを`../prior/presentation-types`へ変えます。正式配置後はFE側を単一の保守元とし、候補の同期コピーは増やしません。
 
-引き継ぐ検証は型負例11件・部品24件・固定Engine接続24件。これらを正式配置とimportに合わせて移し、さらにB rendererで不足／0日／null／実観測0件／R-07／R-08、guard fallbackと記録操作の維持、Goal切替・有効再取得での復帰を確認してください。[今回の実DOM記録](VERIFICATION.md#c対応の再検証2026-10-06)は独立previewの結果で、B rendererや正式FEの成功には流用しません。
+引き継ぐ検証は型負例11件・部品27件・固定Engine接続24件。これらを正式配置とimportに合わせて移し、さらにB rendererで不足／0日／null／実観測0件／R-07／R-08、guard fallbackと記録操作の維持、Goal切替・有効再取得での復帰を確認してください。[今回の実DOM記録](VERIFICATION.md#c対応の再検証2026-10-06)は独立previewの結果で、B rendererや正式FEの成功には流用しません。
 
 ### 既存の設計意図と残る条件
 
@@ -88,7 +92,7 @@ node experiments/question-prior-ui-candidate/scripts/check.mjs
 node experiments/question-prior-ui-candidate/scripts/serve.mjs
 ```
 
-checkはstrict型検証（[11の型負例](tests/type-contracts.tsx)を含む）、[24件のReact SSRテスト](tests/presentation.test.cjs)、隔離previewのVite buildを順に実行します。成功時は最後に`PASS: strict candidate types, SSR tests and isolated React preview build.`と表示します。生成物とホストごとの型参照は`.qa/`に置き、Git管理しません。個人パスをソースへ固定しません。
+checkはstrict型検証（[11の型負例](tests/type-contracts.tsx)を含む）、[27件のReact SSRテスト](tests/presentation.test.cjs)、隔離previewのVite buildを順に実行します。成功時は最後に`PASS: strict candidate types, SSR tests and isolated React preview build.`と表示します。生成物とホストごとの型参照は`.qa/`に置き、Git管理しません。個人パスをソースへ固定しません。
 
 serveが出す`http://127.0.0.1:<port>/`を通常ブラウザで開きます。候補previewの静的GET/HEADだけを配信し、directory listing/APIはありません。外部公開・auth・DB・API接続はなく、CSPのconnect-srcはnoneです。終える時は通常interactive terminalで`stop`、またはCtrl+Cを使います。ブラウザのfile URLはこのpreview手順では使いません。
 
