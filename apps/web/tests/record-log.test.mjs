@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
-import { choiceFromLog, classifySaveError, describeChoice, editLocks, toLogPut, yesterdayRecord } from '../src/features/logs/record-log.ts';
+import { choiceFromLog, classifySaveError, describeChoice, editLocks, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
@@ -83,4 +83,19 @@ test('今日の量の入力を開いた後は昨日の変更を始められず�
     yesterdayLocked: false,
     todayLocked: false,
   });
+});
+
+test('今日の保存が失敗した後に昨日の訂正を始めたら、今日の「もう一度保存」からも送らない（#88）', () => {
+  const sent = [];
+  const retryToday = () => sent.push('today');
+  // 今日は未記録・昨日は記録済み。今日の保存が通信／サーバー失敗（保存中ではない）→ 昨日の訂正を始める
+  const failedToday = { changingToday: false, todayAmountEditing: false, todayChoicesShown: true, todaySaving: false, yesterdayEditing: false };
+  assert.equal(editLocks(failedToday).yesterdayLocked, false);
+  const locks = editLocks({ ...failedToday, yesterdayEditing: true });
+  // 「もう一度保存」を押しても今日の PUT を送らない
+  unlessLocked(locks.todayLocked, retryToday)();
+  assert.deepEqual(sent, []);
+  // 昨日の訂正を終えれば、再試行できる
+  unlessLocked(editLocks(failedToday).todayLocked, retryToday)();
+  assert.deepEqual(sent, ['today']);
 });

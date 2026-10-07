@@ -59,6 +59,15 @@ export function choiceFromLog(log: Log): RecordChoice {
 }
 
 /**
+ * locked の間は action を実行しない操作にする（#88）。通常の保存だけでなく、失敗後の「もう一度保存」にも同じ排他を効かせるため。
+ */
+export function unlessLocked(locked: boolean, action: () => void): () => void {
+  return () => {
+    if (!locked) action();
+  };
+}
+
+/**
  * 今日と昨日を同時に編集しない（#88の採択条件）。どちらかを編集・保存している間は、もう片方を始めない・送らない。
  * - 今日の編集：記録済みの今日の選び直し（changing）、または記録の2択を出している間の量の入力
  * - 昨日の編集：記録済みの昨日の訂正
