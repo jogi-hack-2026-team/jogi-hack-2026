@@ -91,7 +91,8 @@ until [ "$(sql "select count(*) from pg_stat_activity where wait_event='advisory
 done
 if curl --silent --fail "$base/api/health" >/dev/null 2>&1; then fail 'startup served HTTP before migration'; fi
 dc stop app >/dev/null
-[ "$(docker inspect --format '{{.State.ExitCode}}' "$(app_id)")" = 143 ] || fail 'migration cancellation must exit on SIGTERM, not SIGKILL'
+cancel_exit=$(docker inspect --format '{{.State.ExitCode}}' "$(app_id)")
+[ "$cancel_exit" = 143 ] || fail "migration cancellation must exit 143 on SIGTERM; actual=$cancel_exit"
 wait "$lock_pid"
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data lost on migration cancellation'
 
@@ -124,4 +125,4 @@ dc up -d --wait --wait-timeout 120
 healthy
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data lost across down/up'
 [ "$(sql "select count(*) from \"user\" where email='$email'")" = 1 ] || fail 'auth data lost across down/up'
-echo "PASS: default Compose startup, migration repeat/restart/failure gate, SPA/API/auth, SIGTERM exit 0, data retained across down/up; project=$PROJECT volume=$volume"
+echo "PASS: default Compose startup, migration repeat/restart/failure gate, SPA/API/auth, running SIGTERM exit 0 / migration wait exit 143, data retained across down/up; project=$PROJECT volume=$volume"

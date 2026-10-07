@@ -22,6 +22,8 @@ services:
 
   app:
     build: .
+    # initがSIGTERMをNodeへ転送し、serverのhandler登録前のmigration待機も中断できる。
+    init: true
     # 起動時DDLはローカルComposeの経路に限定する。公開環境のmigration jobは別途レビュー。
     command: ["node", "apps/api/dist/container-start.js"]
     environment:

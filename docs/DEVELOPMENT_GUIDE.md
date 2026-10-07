@@ -513,7 +513,7 @@ docker compose down
 docker compose up -d --build --wait --wait-timeout 120
 ```
 
-`restart app`は現在のimageでmigrationを再確認します。コード変更後は`up -d --build`でimageを再作成します。すでに稼働中の同じimageへの`up`はappを再起動しません。migrationは適用履歴・checksumとadvisory lockを使い、反復時にschemaやデータを作り直しません。API稼働後のSIGTERMでは処理中要求→app/auth poolの順に閉じ、正常時exit 0。Composeの停止猶予は15秒、APIの期限は10秒です。`down`はcontainer/networkを停止・削除し、`postgres_data`は保持するため、再upでもデータが残ります。データを持つ環境で`down -v`やvolume削除を実行しないでください。
+`restart app`は現在のimageでmigrationを再確認します。コード変更後は`up -d --build`でimageを再作成します。すでに稼働中の同じimageへの`up`はappを再起動しません。migrationは適用履歴・checksumとadvisory lockを使い、反復時にschemaやデータを作り直しません。ComposeのinitがSIGTERMをNodeへ転送し、migration待機中はexit 143で中断してDB接続を切ります。API稼働後は処理中要求→app/auth poolの順に閉じ、正常時exit 0。Composeの停止猶予は15秒、APIの期限は10秒です。`down`はcontainer/networkを停止・削除し、`postgres_data`は保持するため、再upでもデータが残ります。データを持つ環境で`down -v`やvolume削除を実行しないでください。
 
 設定不足またはmigration失敗は`startup: configuration failed`／`startup: migration failed`としてappがexit 1になり、配信を開始しません。`docker compose logs app`で失敗段階を確認し、設定、DBの接続・権限、適用済みSQLと履歴を照合してから同じ`up`を再実行します。ログにはDB例外の原文を出しません。適用済みSQLは書き換えず、新しい番号のmigrationで修正します。既存の部分schemaは自動削除しません。DDL/lock待ちに自動期限はないため、長く待つ場合は他のmigrationやDBを確認し、必要ならappだけ停止します。起動中の中断では未commitのtransactionとlockはDB切断で解放され、commit済み変更は保持されます。
 

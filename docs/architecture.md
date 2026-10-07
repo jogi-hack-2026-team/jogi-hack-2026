@@ -114,7 +114,7 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 | --- | --- |
 | DB health→設定検査→migration→単一Node配信 | コンテナのrunningだけではDBは準備できていないため、Composeの`service_healthy`を使う。production認証設定をDB変更前に検査し、認証→アプリmigration成功後にHTTP listenerを開く。失敗はexit 1で配信を開始しない |
 | コンテナ起動点で毎回migrationを実行 | 別のone-shot migration serviceは初回の依存順を示しやすいが、`docker compose restart app`やcontainer再起動は成功済みserviceを再実行しない。起動点なら毎回既存runnerのchecksum・transaction・advisory lockを使って確認できる。変更履歴・poolの責務と実行順は#74の方式を保持 |
-| 同じprocessでserverを読み込む | shell/npm wrapperをPID 1にせず、稼働後のSIGTERMを既存serverの正常終了処理へ直接届ける。migration poolを閉じてからruntime poolを作る。待機中のmigrationの中断はDB切断で未commitのtransactionをrollbackする |
+| 同じprocessでserverを読み込む + Compose init | initがSIGTERMを単一Nodeへ転送する。handler登録前のmigration待機は既定のsignal終了（143）、配信後は既存serverの正常終了処理（0）を使う。migration poolを閉じてからruntime poolを作る。中断時はDB切断で未commitのtransactionをrollbackする |
 | ローカル専用envとloopback公開 | Secretはユーザーが設定し、固定値・自動生成で永続credentialを作らない。DB passwordはURIへ埋め込まずPGPASSWORDで渡す。HTTP許可はloopback Composeだけ。既存project名/volumeを維持し、再作成や停止でデータを削除しない |
 | Docker確認とhost watchを併用 | Dockerだけにhost編集の速度を求めるとbind mountやdev専用imageが増える。既存host Node/Vite watchを日常編集、Dockerのビルド済みSPA/APIを配信・起動順・認証・終了の確認に使う。FE/APIを別配備サービスにすると同一origin/Cookieの方針と起動単位が増えるため採用しない |
 

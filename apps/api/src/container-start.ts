@@ -1,5 +1,5 @@
-// コンテナ専用の起動点。同じNode processでmigration後にserverを起動するため、
-// shellやnpmがSIGTERMを受け止めず、server.tsの終了処理へ直接届く。
+// コンテナ専用の起動点。ComposeのinitがSIGTERMをこのNode processへ転送する。
+// migration中は既定のsignal終了、配信後はserver.tsの正常終了処理を使う。
 import { loadAuthConfig, loadConfig } from './config.ts';
 import { migrate } from './db/migrate.ts';
 import { createMigrationPool } from './db/pool.ts';
