@@ -27,6 +27,6 @@ COPY apps/api/migrations ./apps/api/migrations
 COPY --from=build /app/apps/web/dist ./apps/web/dist
 USER node
 EXPOSE 8080
-# DATABASE_URLは起動時に必須。未設定なら起動に失敗する（値はログに出さない）。
-# migrationは起動前に `node apps/api/dist/db/migrate-cli.js all` で適用する（認証→アプリの順）。
+# DATABASE_URLとproduction認証設定は起動時に注入する。公開環境では事前にmigrationを適用する。
+# ローカルComposeはcommandをcontainer-start.jsへ上書きし、migration成功後に配信する。
 CMD ["node", "apps/api/dist/server.js"]

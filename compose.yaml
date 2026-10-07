@@ -1,5 +1,5 @@
-# ローカル開発用。既定ではPostgreSQLだけを起動し、WebとAPIはhostのNodeで動かす。
-# `docker compose --profile app up` で単一コンテナ（Dockerfile）も起動して配信を確認できる。
+# ローカル開発用。既定でDBと単一SPA/APIコンテナを起動する。
+# ホットリロード開発では `docker compose up -d db` とhostのNodeを使う。
 name: future-roi-local
 
 services:
@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: futureroi
       POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:?Set LOCAL_DB_PASSWORD in the current shell or .env}
     ports:
-      - "127.0.0.1:55432:5432"
+      - "127.0.0.1:${LOCAL_DB_PORT:-55432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -21,15 +21,25 @@ services:
       start_period: 5s
 
   app:
-    profiles: ["app"]
     build: .
+    # 起動時DDLはローカルComposeの経路に限定する。公開環境のmigration jobは別途レビュー。
+    command: ["node", "apps/api/dist/container-start.js"]
     environment:
       # passwordはURIに埋め込まない（`%`・`#`・`?`等がURI解析で別の値になる）。pgはURIにpasswordがなければ
       # PGPASSWORDをそのまま使うため、dbへ渡したrawの値と常に一致する。
       DATABASE_URL: postgres://futureroi@db:5432/futureroi
       PGPASSWORD: ${LOCAL_DB_PASSWORD:?Set LOCAL_DB_PASSWORD in the current shell or .env}
+      # 自動生成・固定値にせず、再起動後も同じローカル専用Secretをユーザーが設定する。
+      # 空値はappの起動時に拒否する（dbだけのhost開発ではSecretを要求しない）。
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      # このComposeはloopback専用。公開HTTPS環境にはHTTP許可を持ち込まない。
+      BETTER_AUTH_URL: http://127.0.0.1:${LOCAL_APP_PORT:-8080}
+      BETTER_AUTH_ALLOW_HTTP: "1"
+      AUTH_TRUSTED_ORIGINS: http://localhost:${LOCAL_APP_PORT:-8080}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${LOCAL_APP_PORT:-8080}:8080"
+    # APIの終了猶予10秒より長くし、poolを閉じる前にSIGKILLしない。
+    stop_grace_period: 15s
     depends_on:
       db:
         condition: service_healthy

@@ -106,3 +106,5 @@ jobs:
           IMAGE: future-roi:${{ github.run_id }}-${{ github.run_attempt }}
           DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
         run: ./scripts/smoke-container.sh
+      - name: Verify default Compose startup, restart, failure gates and volume retention
+        run: ./scripts/smoke-compose.sh

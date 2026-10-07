@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行Product機能とアプリの起動構成は未実装で、旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)へ退避しています。比較PoCは別の起動・検証手順を持ちます。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証はローカル実装済みで、Goal・記録・予測の業務APIと画面は結合前です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
@@ -441,7 +441,7 @@ README更新
 
 # 13. 初回セットアップ
 
-基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。アプリの起動構成（Node 24.21.0、npm workspaces、`apps/api`・`apps/web`・`packages/prediction`、Compose、単一コンテナ）は#70で導入し、手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。旧Web/API・開発用PostgreSQLの構成は[履歴](../archive/music-exploration/README.md)に保持。Product機能、DB migration、認証・業務APIはまだありません（#74以降）。PowerShell 7は文書・設定チェックに使用します。
+基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。Goal・記録・予測の業務APIと画面、公開環境は未結合・未配置です。旧構成は[履歴](../archive/music-exploration/README.md)に保持。PowerShell 7は文書・設定チェックに使用します。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -482,7 +482,7 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 
 ## アプリを起動・検証する
 
-#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。Product機能はまだなく、APIは`GET /api/health`（DB接続確認を含む）、Webは起動確認画面だけです。
+#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。DB migrationと登録・ログイン・ログアウトは#74・#75で導入済み。APIは`GET /api/health`（DB接続確認を含む）と認証、Webは認証と起動確認画面です。Goal・記録・予測の業務機能は未結合です。
 
 | 構成 | 場所 | 役割 |
 | --- | --- | --- |
@@ -490,8 +490,40 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 | API | `apps/api/` | Fastify＋TypeBox＋`pg`。`src/server.ts`が起動点、`src/app.ts`がroute・エラー形式・SPA配信、`src/contracts/`がWebと共有する契約 |
 | Web | `apps/web/` | React＋Vite＋TanStack Router／Query。`vite build`の出力をAPIが同一originで配信する。開発中は`/api`をAPIへ転送する |
 | Engine | `packages/prediction/` | 既存の純粋計算。root lockfileへ統合し、packageのコマンドは変えていない |
-| DB | `compose.yaml` | ローカル開発用PostgreSQL 18（`db`）。`--profile app`で単一コンテナも起動できる |
-| コンテナ | `Dockerfile`、`.dockerignore`、`scripts/smoke-container.sh` | APIがビルド済みSPAを配信する1コンテナ。smoke testはCIと同じ手順 |
+| DB | `compose.yaml` | ローカル開発用PostgreSQL 18（`db`）。既定でDB＋単一SPA/APIコンテナ、`up -d db`ならDBだけ |
+| コンテナ | `Dockerfile`、`.dockerignore`、`apps/api/src/container-start.ts` | DB health後、起動設定検査→認証・アプリmigration→API/SPA配信。`scripts/smoke-compose.sh`でCIと同じ検証 |
+
+### Dockerで一式を起動する
+
+リポジトリのルートで、Docker EngineとCompose v2以降を使います（Docker DesktopではLinux containers）。この経路にhostのNode・npm・miseは不要です。初回だけ`.env.example`を`.env`へコピーします（sh/Git Bashは`cp .env.example .env`、PowerShellは`Copy-Item .env.example .env`）。すでにある`.env`は上書きせず不足項目を追加してください。
+
+`.env`をローカルで編集して`LOCAL_DB_PASSWORD`と32文字以上の`BETTER_AUTH_SECRET`へ、それぞれローカル専用の値を設定します。本番の値を使わず、Issue・PR・チャットへ貼らないでください。既存DBを使う場合は現在のpasswordを維持します。Secretも再起動のたびに変更しません。記号や`$`を含む値はComposeの補間を避けるため`.env`では単一引用符で囲みます。ComposeはDB passwordをURIへ埋め込まず`PGPASSWORD`で渡します。`DATABASE_URL`・`BETTER_AUTH_URL`・`BETTER_AUTH_ALLOW_HTTP`はCompose側が設定するため、この経路の`.env`では空のままで構いません。
+
+```sh
+docker compose up -d --build
+docker compose ps
+curl http://127.0.0.1:8080/api/health
+```
+
+DBがhealthyになった後、app内のmigration専用poolで認証→アプリのschemaを適用し、完了後に同じNode processで配信を始めます。`up -d`は配信準備完了を待たないため、待つ場合は`docker compose up -d --build --wait --wait-timeout 120`を使います。`ps`でapp/dbがhealthy、healthが`{"status":"ok","database":"ok"}`になれば、ブラウザで`http://127.0.0.1:8080`を開き登録・ログインできます。healthはDB到達確認で、未統合の業務機能の完成判定ではありません。DBは`127.0.0.1:55432`です。portが競合する場合だけ`.env`の`LOCAL_APP_PORT`・`LOCAL_DB_PORT`を変更し、app URLのportも合わせます。公開portはloopbackだけで、HTTP許可はこのローカルComposeに限定します。
+
+```sh
+docker compose restart app
+docker compose down
+docker compose up -d --build --wait --wait-timeout 120
+```
+
+`restart app`は現在のimageでmigrationを再確認します。コード変更後は`up -d --build`でimageを再作成します。すでに稼働中の同じimageへの`up`はappを再起動しません。migrationは適用履歴・checksumとadvisory lockを使い、反復時にschemaやデータを作り直しません。API稼働後のSIGTERMでは処理中要求→app/auth poolの順に閉じ、正常時exit 0。Composeの停止猶予は15秒、APIの期限は10秒です。`down`はcontainer/networkを停止・削除し、`postgres_data`は保持するため、再upでもデータが残ります。データを持つ環境で`down -v`やvolume削除を実行しないでください。
+
+設定不足またはmigration失敗は`startup: configuration failed`／`startup: migration failed`としてappがexit 1になり、配信を開始しません。`docker compose logs app`で失敗段階を確認し、設定、DBの接続・権限、適用済みSQLと履歴を照合してから同じ`up`を再実行します。ログにはDB例外の原文を出しません。適用済みSQLは書き換えず、新しい番号のmigrationで修正します。既存の部分schemaは自動削除しません。DDL/lock待ちに自動期限はないため、長く待つ場合は他のmigrationやDBを確認し、必要ならappだけ停止します。起動中の中断では未commitのtransactionとlockはDB切断で解放され、commit済み変更は保持されます。
+
+DBだけを再起動した際はappが一時的に503になることがあります。復旧後のhealthを確認し、必要なら`docker compose restart app`で再接続します。Docker daemonの再起動後も自動起動を前提にせず`up`で起動順を通してください。既存volumeのpasswordは`LOCAL_DB_PASSWORD`の変更だけでは変更されないため、不一致時は元の値を確認し、volume削除で解消しないでください。Project名`future-roi-local`と既存volumeの保存先は維持しています。他のcheckoutと同時に動かす検証は、別project名・別port・独立DBを使います。
+
+### Dockerとhost開発の使い分け
+
+Docker一式はビルド済みSPA/APIとDB、起動順・認証Cookie・migration・終了処理をまとめて確認する経路です。ソースをbind mountしないため、変更反映には再buildが必要です。日常の編集では次のhost起動を使い、Viteの画面更新とNodeのwatchで変更を早く確認します。Compose appとhost開発は別port・別認証originを使うため、同じ開発DBを使う場合も同時migrationを意図なく走らせないでください。
+
+miseはhostのNode 24.21.0を固定し、`install`・`typecheck`・`test`・`build`・`dev:*`で既存npmコマンドを呼ぶ道具です。DockerはOS・Runtime・依存・配信とDBの実行環境を再現します。DockerfileとCIはmiseを呼ばず、imageとsetup-nodeで同じNodeを固定し、lockfileからnpm ciします。
 
 ### 準備
 
@@ -517,7 +549,7 @@ npm run dev:web
 
 認証DDL（table・column・field index）は固定版の生成SQLを1 transactionで適用します。途中失敗はrollbackされ、同じコマンドで再実行できます。アプリSQLは従来どおり1ファイル1 transactionです。migration専用poolは接続確立を5秒で制限しますが、advisory lock待ち・DDLの実行期限は設けません。長時間待機は別のmigration実行を確認してからoperatorが中止します。HTTP用のapp・auth poolは応答／文実行を5秒で制限し、auth poolのidle切断は単独listenerで処理します。
 
-migrationはruntimeを起動する前に専用CLI／別poolで実行します。同一processで稼働中のBetter Auth schema cache更新や、本修正より前の部分適用schemaの自動修復は保証しません。既存schemaが不完全なら削除せず、field index等を確認して明示的な修復をレビューしてください。session単位のadvisory lockを使うため、transaction pooling経由では実行しません（Neon等の採用時の接続先選択はD-25の残条件です）。
+migrationはHTTP listenerを開く前に専用poolで実行します。host開発は専用CLI、Dockerは`container-start.ts`が起動時に実行してからserverを読み込みます。同一processで稼働中のBetter Auth schema cache更新や、古い部分適用schemaの自動修復は保証しません。既存schemaが不完全なら削除せず、field index等を確認して明示的な修復をレビューしてください。session単位のadvisory lockを使うため、transaction pooling経由では実行しません（Neon等の採用時の接続先選択はD-25の残条件です）。
 
 ### 検証
 
@@ -538,7 +570,7 @@ npm run build
 
 本番・コンテナでは`.env`を使わず、環境変数を直接注入します（`DATABASE_URL`未設定ならexit 1）。passwordに記号を含める場合の書き方は[.env.example](../.env.example)を参照してください。
 
-[Application CI](../.github/workflows/application.yml)はPRとmainへのpushで、install・typecheck・test（PostgreSQL service）・buildと、コンテナのbuild・起動・route確認・SIGTERM終了（[smoke test](../scripts/smoke-container.sh)）を実行します。CIとDockerfileの`npm ci --ignore-scripts`はlifecycle scriptsを実行しない設定で、lockfile内でinstall scriptを持つのは開発用の`embedded-postgres`等だけです。Dockerがある端末では`docker compose --profile app up --build`で同じコンテナを起動し、`IMAGE=... DATABASE_URL=... ./scripts/smoke-container.sh`で同じ確認ができます。
+[Application CI](../.github/workflows/application.yml)はinstall・typecheck・test（PostgreSQL service）・build、[単体コンテナsmoke test](../scripts/smoke-container.sh)と[Compose検証](../scripts/smoke-compose.sh)を実行します。Compose検証は空のenv-file、別project・portと合成データで起動、再実行/restart、履歴不一致・設定不足の配信抑止、認証/API/SPA、正常終了、down/up後のvolume・データ保持を確認します。検証projectは最後に停止しますがvolumeは保持し、既存DBを削除しません。Dockerがある端末のsh/Git Bashでは`sh scripts/smoke-compose.sh`、競合portの変更は`SMOKE_APP_PORT`・`SMOKE_DB_PORT`で指定します。CIとDockerfileの`npm ci --ignore-scripts`はlifecycle scriptsを実行せず、Docker/CI内にmiseは不要です。
 
 Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ証跡を保持します。旧clusterを再利用・削除しない分、初期化時間とディスク使用量が増えます。CIではPostgreSQL serviceを利用します。
 
