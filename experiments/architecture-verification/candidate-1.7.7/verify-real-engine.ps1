@@ -4,6 +4,7 @@ param([Parameter(Mandatory)][string]$EngineRoot, [ValidateRange(1024,65535)][int
   [ValidateSet('predict','question-prior')][string[]]$Entries = @('predict','question-prior'))
 $ErrorActionPreference = 'Stop'
 $candidateRoot = [IO.Path]::GetFullPath($PSScriptRoot)
+. (Join-Path $candidateRoot 'verify\measurement-ledger.ps1')
 $env:SPIKE_ENGINE_ROOT = [IO.Path]::GetFullPath($EngineRoot)
 $env:SPIKE_PG_PORT = [string]$PgPort
 $nodeBinary = Join-Path $candidateRoot 'node_modules\node\bin\node.exe'
@@ -12,7 +13,6 @@ $evidenceRoot = Join-Path $candidateRoot ('..\results\' + [DateTimeOffset]::UtcN
 if (Test-Path -LiteralPath $evidenceRoot) { throw 'Evidence path exists; refusing to overwrite.' }
 New-Item -ItemType Directory -Path $evidenceRoot | Out-Null
 $ledger = @()
-$hadAssertionFailure = $false
 Push-Location -LiteralPath $candidateRoot
 try {
   foreach ($entry in $Entries) {
@@ -36,9 +36,8 @@ try {
       $ledger += @{ entry=$publicEntry; iteration=$iteration; startedAt=$started.ToString('o'); endedAt=[DateTimeOffset]::UtcNow.ToString('o'); exitCode=$code; assertionFailures=$failures }
       $ledger | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $evidenceRoot 'commands.json')
       Get-Content -LiteralPath $log -Tail 11
-      if ($null -eq $failures -or ($code -ne 0 -and $failures -eq 0)) { throw ('Measurement execution failed: ' + $entry + ' run ' + $iteration) }
+      if ((Get-MeasurementOutcome $code $failures) -eq 'execution-failure') { throw ('Measurement execution failed: ' + $entry + ' run ' + $iteration) }
       # A valid saved FAIL is evidence. Collect remaining runs without weakening the criterion.
-      if ($failures -ne 0) { $hadAssertionFailure = $true }
     }
   }
 } finally {
@@ -54,4 +53,4 @@ try {
   Pop-Location
 }
 Write-Output ('Evidence: ' + $evidenceRoot)
-if ($hadAssertionFailure) { exit 1 }
+exit (Get-MeasurementExitCode $ledger)
