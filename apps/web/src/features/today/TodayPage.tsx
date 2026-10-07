@@ -1,11 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { Goal, Log, Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
-import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -20,7 +17,7 @@ import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
-import { fetchPolicy } from './fetch-policy.ts';
+import { useTodayData } from './useTodayData.ts';
 import { toForecastView } from './forecast-view.ts';
 import { useSaveLog } from '../logs/useSaveLog.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
@@ -40,9 +37,8 @@ export function TodayPage({ goalId }: { goalId: string }) {
 }
 
 function TodayScreen({ goalId }: { goalId: string }) {
-  const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: () => goalsHttp.getGoal(goalId), ...fetchPolicy });
-  const todayQuery = useQuery({ queryKey: todayKeys.today(goalId), queryFn: () => todayHttp.getToday(goalId), ...fetchPolicy });
-  const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: () => todayHttp.listLogs(goalId), ...fetchPolicy });
+  // Goal・Today・記録は同じ時点の材料がそろったものだけを使う（snapshot）。日付の切り替わりでも取り直す
+  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId);
   // 今日の記録（#79）と昨日の補完・訂正（#80）。保存の状態は別々に持つ
   // 記録済みの今日を選び直している（D5-change）。保存に成功したら戻す
   const [changing, setChanging] = useState(false);
@@ -54,14 +50,15 @@ function TodayScreen({ goalId }: { goalId: string }) {
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
 
   if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound />;
+  // ログインが切れたら、キャッシュに残る前の表示（タイトル・昨日の案内・記録の帯）を出さず、画面全体をログイン切れにする
+  if ([goalQuery.error, todayQuery.error, logsQuery.error].some(isUnauthenticated)) return <SignedOutPage />;
 
-  const goal = goalQuery.data;
-  const today = todayQuery.data;
+  const goal = snapshot?.goal;
+  const today = snapshot?.today;
   const unit = goal ? unitLabel(goal.unit) : '';
   // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）。記録済みでも選び直し中なら出す
   const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
   const showChoices = Boolean(today && goal) && (unrecorded || (changing && today?.todayLog != null));
-  const refresh = () => void Promise.all([goalQuery.refetch(), todayQuery.refetch(), logsQuery.refetch()]);
   // 保存は成功したが、Today・記録の取り直しに失敗している（「保存できなかった」と区別して伝える）
   const savedButStale = (todaySaver.refreshFailed || yesterdaySaver.refreshFailed) && (todayQuery.isError || logsQuery.isError);
 
@@ -84,8 +81,8 @@ function TodayScreen({ goalId }: { goalId: string }) {
       );
     } else if (showYesterdayPrompt(today, yesterdayLaterFor)) {
       yesterdayArea = <YesterdayPrompt {...common} yesterday={today.yesterday} onLater={() => setYesterdayLaterFor(today.yesterday)} />;
-    } else if (logsQuery.data) {
-      const record = yesterdayRecord(today.yesterday, goal.recordStartDate, logsQuery.data);
+    } else if (snapshot) {
+      const record = yesterdayRecord(today.yesterday, goal.recordStartDate, snapshot.logs);
       if (record.kind === 'recorded') {
         yesterdayArea = (
           <YesterdayCorrection
@@ -125,19 +122,21 @@ function TodayScreen({ goalId }: { goalId: string }) {
       />
       {yesterdayArea}
 
-      {goalQuery.isPending || todayQuery.isPending || logsQuery.isPending ? (
-        <Loading />
-      ) : todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
+      {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
         savedButStale ? (
           <SavedButStale onRetry={refresh} />
         ) : (
           <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={refresh} />
         )
-      ) : goal && today && logsQuery.data ? (
+      ) : resyncFailed ? (
+        <Inconsistent onRetry={retryResync} />
+      ) : snapshot ? (
         <ForecastBoundary key={todayQuery.dataUpdatedAt}>
-          <TodayContent goal={goal} today={today} logs={logsQuery.data} onChange={() => (yesterdayEdit ? undefined : setChanging(true))} />
+          <TodayContent goal={snapshot.goal} today={snapshot.today} logs={snapshot.logs} onChange={() => (yesterdayEdit ? undefined : setChanging(true))} />
         </ForecastBoundary>
-      ) : null}
+      ) : (
+        <Loading />
+      )}
 
       {showChoices && today && goal ? (
         <RecordChoiceBar
@@ -234,6 +233,42 @@ function FetchError({ error, onRetry }: { error: unknown; onRetry: () => void })
         }
       >
         {calc ? todayCopy.calcError : todayCopy.networkError}
+      </ErrorPanel>
+    </div>
+  );
+}
+
+/** ログイン切れ（401）の画面全体。 */
+function SignedOutPage() {
+  return (
+    <div className="fr fr-page">
+      <AppBar
+        title=""
+        leading={
+          <Link to="/goals" className="fr-icon-btn" aria-label="Goal一覧へ戻る">
+            <Icon name="back" />
+          </Link>
+        }
+      />
+      <SignedOut />
+    </div>
+  );
+}
+
+/** 取り直しても Goal・Today・記録の時点がそろわなかった。食い違った組み合わせは表示しない。 */
+function Inconsistent({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="fr-today__top">
+      <h1 className="fr-today__question">{todayCopy.question}</h1>
+      <ErrorPanel
+        title={todayCopy.inconsistentTitle}
+        action={
+          <Button icon="retry" onClick={onRetry}>
+            {todayCopy.reload}
+          </Button>
+        }
+      >
+        {todayCopy.inconsistent}
       </ErrorPanel>
     </div>
   );

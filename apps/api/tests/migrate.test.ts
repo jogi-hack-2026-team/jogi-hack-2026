@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import pg from 'pg';
-import { migrate, migrateApp } from '../src/db/migrate.ts';
+import { migrate, migrateApp, MigrationChecksumError } from '../src/db/migrate.ts';
 import { createAuthPool } from '../src/db/pool.ts';
 import { getMigrations } from 'better-auth/db/migration';
 import { authSchemaOptions } from '../src/auth/options.ts';
@@ -179,7 +179,8 @@ test('適用済みSQLファイルの内容が変わると失敗し、新しい�
   assert.deepEqual(await migrateApp(db.pool, dirUrl), { applied: ['0002_second.sql'] });
 
   writeFileSync(join(dir, '0001_first.sql'), 'create table t1 (id integer primary key, changed boolean);');
-  await assert.rejects(migrateApp(db.pool, dirUrl), /0001_first\.sql の内容が変更されています/);
+  await assert.rejects(migrateApp(db.pool, dirUrl), (error: unknown) =>
+    error instanceof MigrationChecksumError && /0001_first\.sql の内容が変更されています/.test(error.message));
 
   // 失敗したファイルはロールバックされ、記録も増えない
   writeFileSync(join(dir, '0001_first.sql'), 'create table t1 (id integer primary key);');

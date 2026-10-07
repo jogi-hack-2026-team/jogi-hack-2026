@@ -47,7 +47,7 @@ export function GoalCreatePage() {
 
 /** Goal の編集・削除（R-02、#78）。/goals/$goalId/edit。Goal を読み込んでからフォームを出す。 */
 export function GoalEditPage({ goalId }: { goalId: string }) {
-  const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: () => goalsHttp.getGoal(goalId), ...fetchPolicy });
+  const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
   if (query.isPending) return <FormShell title={f.editTitle} body={<FormLoading />} />;
   if (query.isError) {
     return (

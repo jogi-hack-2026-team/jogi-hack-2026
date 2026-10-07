@@ -92,6 +92,8 @@ export const todayCopy = {
   savedButStaleTitle: '記録は保存しました',
   savedButStale: '最新の見通しを読み込めませんでした。表示が古いままかもしれません。通信状態を確認して、再読み込みしてください。',
   back: '戻る',
+  inconsistentTitle: '表示をそろえられませんでした',
+  inconsistent: 'Goal・記録・見通しを同じ時点の内容で読み込めませんでした。別の画面で変更が続いている可能性があります。もう一度読み込んでください。',
   signedOutTitle: 'ログインが切れました',
   signedOut: '続けるには、もう一度ログインしてください。記録や見通しが消えたわけではありません。',
   signIn: 'ログインする',

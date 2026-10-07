@@ -26,7 +26,7 @@ function browserToday(): string {
 
 /** Goal 一覧（R-02、#78）。/goals */
 export function GoalListPage() {
-  const query = useQuery({ queryKey: goalKeys.list(), queryFn: goalsHttp.listGoals, ...fetchPolicy });
+  const query = useQuery({ queryKey: goalKeys.list(), queryFn: ({ signal }) => goalsHttp.listGoals(signal), ...fetchPolicy });
 
   return (
     <div className="fr fr-page">
