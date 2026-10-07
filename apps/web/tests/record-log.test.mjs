@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
-import { choiceFromLog, classifySaveError, describeChoice, toLogPut, yesterdayRecord } from '../src/features/logs/record-log.ts';
+import { choiceFromLog, classifySaveError, describeChoice, editLocks, toLogPut, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
@@ -65,4 +65,22 @@ test('作り直す前の画面の保存が終わるまで、新しい画面か�
   await pending;
   assert.equal(busy('2026-10-07'), false);
   client.clear();
+});
+
+test('今日の量の入力を開いた後は昨日の変更を始められず、昨日の訂正中は今日を送れない（今日と昨日を同時に編集しない）', () => {
+  const idle = { changingToday: false, todayAmountEditing: false, todayChoicesShown: true, todaySaving: false, yesterdayEditing: false };
+  assert.deepEqual(editLocks(idle), { todayAmountEditing: false, yesterdayLocked: false, todayLocked: false });
+  // 今日が未記録・昨日が記録済み：今日の「量を変更」を開くと、昨日の［変更］は押せない
+  assert.equal(editLocks({ ...idle, todayAmountEditing: true }).yesterdayLocked, true);
+  // 昨日の訂正中は、今日の2択・量の入力から送らない
+  assert.equal(editLocks({ ...idle, yesterdayEditing: true }).todayLocked, true);
+  // 記録済みの今日を選び直している間・今日を保存している間も、昨日は始めない
+  assert.equal(editLocks({ ...idle, changingToday: true }).yesterdayLocked, true);
+  assert.equal(editLocks({ ...idle, todaySaving: true }).yesterdayLocked, true);
+  // 別のタブで今日が記録されて2択が消えたら、量の入力は閉じたものとして昨日を止めたままにしない
+  assert.deepEqual(editLocks({ ...idle, todayAmountEditing: true, todayChoicesShown: false }), {
+    todayAmountEditing: false,
+    yesterdayLocked: false,
+    todayLocked: false,
+  });
 });

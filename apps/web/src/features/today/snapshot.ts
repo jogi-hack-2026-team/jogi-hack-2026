@@ -29,3 +29,22 @@ function sameLog(a: Log | null, b: Log | null): boolean {
   if (a === null || b === null) return a === b;
   return a.localDate === b.localDate && a.status === b.status && a.amount === b.amount;
 }
+
+/**
+ * 予測の材料になる Goal の設定（1回の量・単位・記録開始日・初期実績・総量・timezone）を1つの値にしたもの。
+ * 通常の /today の応答はこれらを返さないため、isSameSnapshot では照らし合わせられない。
+ * 代わりに、表示中の Goal からこの値が変わったのに、Today がその Goal より前に取得したものなら、
+ * 古い設定で作った予測かもしれないとして使わずに取り直す（useTodayData.ts）。
+ */
+export function predictionInputs(goal: Goal): string {
+  return JSON.stringify([goal.sessionAmount, goal.unit, goal.recordStartDate, goal.initialProgress, goal.totalRequired, goal.timezone]);
+}
+
+/**
+ * 設定が変わった Goal と、その Goal より前に取得した Today を組み合わせていないか。
+ * shownGoal は最後にそろっていた Goal、goalAt・todayAt はそれぞれの取得が届いた時刻。
+ */
+export function isTodayOlderThanSettings(shownGoal: Goal | undefined, goal: Goal, goalAt: number, todayAt: number): boolean {
+  if (!shownGoal || predictionInputs(shownGoal) === predictionInputs(goal)) return false;
+  return todayAt < goalAt;
+}

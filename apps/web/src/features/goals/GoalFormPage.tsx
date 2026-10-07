@@ -5,6 +5,7 @@ import type { Goal } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
+import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
 import { unitLabel } from '../../copy/today.ts';
@@ -48,11 +49,14 @@ const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** Goal の作成（R-02、#78）。/goals/new */
 export function GoalCreatePage() {
-  return <GoalForm mode="create" />;
+  // ログインしている人が替わったら作り直し、前の人の入力を持ち越さない
+  const { owner } = usePrivateEpoch();
+  return <GoalForm key={owner ?? ''} mode="create" />;
 }
 
 /** Goal の編集・削除（R-02、#78）。/goals/$goalId/edit。Goal を読み込んでからフォームを出す。 */
 export function GoalEditPage({ goalId }: { goalId: string }) {
+  const { owner } = usePrivateEpoch();
   const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
   if (!query.data) {
     if (!query.isError) return <FormShell title={f.editTitle} body={<FormLoading />} />;
@@ -64,11 +68,11 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
       />
     );
   }
-  // 別の Goal を開き直したら、入力中の値を持ち越さない。
+  // 別の Goal を開き直したとき・ログインしている人が替わったときは、入力中の値と編集開始時の値（baseline）を持ち越さない。
   // 表示した後の再取得（focus・reconnect）の失敗では、フォームを残したまま知らせる（未保存の入力を消さない）
   return (
     <GoalForm
-      key={goalId}
+      key={`${owner ?? ''}:${goalId}`}
       mode="edit"
       goal={query.data}
       refreshError={query.isError ? query.error : null}

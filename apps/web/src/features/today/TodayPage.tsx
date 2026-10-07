@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
+import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -22,7 +23,7 @@ import { toForecastView } from './forecast-view.ts';
 import { useSaveLog } from '../logs/useSaveLog.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
 import { YesterdayCorrection } from '../logs/YesterdayCorrection.tsx';
-import { yesterdayRecord } from '../logs/record-log.ts';
+import { editLocks, yesterdayRecord } from '../logs/record-log.ts';
 import '../../ui/tokens.css';
 import '../../ui/page.css';
 import './today.css';
@@ -31,21 +32,31 @@ import './today.css';
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
  * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
  * 「後で答える」や記録の変更中の状態を別の Goal へ持ち越さない。
+ * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
-  return <TodayScreen key={goalId} goalId={goalId} />;
+  const { owner, clearedAt } = usePrivateEpoch();
+  return <TodayScreen key={`${owner ?? ''}:${goalId}`} goalId={goalId} notBefore={clearedAt} />;
 }
 
-function TodayScreen({ goalId }: { goalId: string }) {
+function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number }) {
   // Goal・Today・記録は同じ時点の材料がそろったものだけを使う（snapshot）。日付の切り替わりでも取り直す
-  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId);
+  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId, notBefore);
   // 今日の記録（#79）と昨日の補完・訂正（#80）。保存の状態は別々に持つ
   // 記録済みの今日を選び直している（D5-change）。保存に成功したら戻す
   const [changing, setChanging] = useState(false);
+  // 今日の量の入力を開いている。開いている間は昨日の訂正を始めない（今日と昨日を同時に編集しない、#88）
+  const [amountEditing, setAmountEditing] = useState(false);
   // 記録済みの昨日を訂正している。訂正を始めた時点の記録（対象日）を固定して持つ。今日と同時には編集しない
   const [yesterdayEdit, setYesterdayEdit] = useState<Log | null>(null);
   // 保存中の状態は Goal・日付ごとに見る（画面を作り直しても、同じ日の保存が残っていれば保存中のまま）
-  const todaySaver = useSaveLog(goalId, { onSaved: () => setChanging(false), localDate: snapshot?.today.today ?? goalQuery.data?.today });
+  const todaySaver = useSaveLog(goalId, {
+    onSaved: () => {
+      setChanging(false);
+      setAmountEditing(false);
+    },
+    localDate: snapshot?.today.today ?? goalQuery.data?.today,
+  });
   const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
@@ -65,6 +76,14 @@ function TodayScreen({ goalId }: { goalId: string }) {
   const recordGoal = goal ?? fallbackGoal;
   const recordDate = today?.today ?? fallbackGoal?.today;
   const showChoices = today && goal ? unrecorded || (changing && today.todayLog != null) : fallbackGoal?.todayStatus === 'UNRECORDED';
+  // 今日と昨日を同時に編集しない（#88）
+  const locks = editLocks({
+    changingToday: changing,
+    todayAmountEditing: amountEditing,
+    todayChoicesShown: !!showChoices,
+    todaySaving: todaySaver.isSaving,
+    yesterdayEditing: yesterdayEdit !== null,
+  });
   // 保存は成功したが、Today・記録の取り直しに失敗している（「保存できなかった」と区別して伝える）
   const savedButStale = (todaySaver.refreshFailed || yesterdaySaver.refreshFailed) && (todayQuery.isError || logsQuery.isError);
 
@@ -97,7 +116,7 @@ function TodayScreen({ goalId }: { goalId: string }) {
             log={record.log}
             currentYesterday={today.yesterday}
             editing={false}
-            disabled={changing || todaySaver.isSaving}
+            disabled={locks.yesterdayLocked}
             onStart={() => {
               yesterdaySaver.reset();
               setYesterdayEdit(record.log);
@@ -138,7 +157,16 @@ function TodayScreen({ goalId }: { goalId: string }) {
         <Inconsistent onRetry={retryResync} />
       ) : snapshot ? (
         <ForecastBoundary key={todayQuery.dataUpdatedAt}>
-          <TodayContent goal={snapshot.goal} today={snapshot.today} logs={snapshot.logs} onChange={() => (yesterdayEdit ? undefined : setChanging(true))} />
+          <TodayContent
+            goal={snapshot.goal}
+            today={snapshot.today}
+            logs={snapshot.logs}
+            onChange={() => {
+              if (yesterdayEdit) return;
+              setAmountEditing(false);
+              setChanging(true);
+            }}
+          />
         </ForecastBoundary>
       ) : (
         <Loading />
@@ -153,10 +181,13 @@ function TodayScreen({ goalId }: { goalId: string }) {
           unit={unitLabel(recordGoal.unit)}
           current={changing && today ? today.todayLog : null}
           saver={todaySaver}
-          locked={yesterdayEdit !== null}
+          locked={locks.todayLocked}
+          editingAmount={locks.todayAmountEditing}
+          onEditingAmountChange={setAmountEditing}
           onCancelChange={() => {
             todaySaver.reset();
             setChanging(false);
+            setAmountEditing(false);
           }}
           onRefresh={refresh}
         />
