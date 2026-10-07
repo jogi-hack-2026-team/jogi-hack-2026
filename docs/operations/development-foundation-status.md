@@ -1,6 +1,6 @@
 # 開発基盤の現行状態
 
-2026-09-30の候補記録を、2026-10-03の[技術構成合意](../architecture.md#2026-10-03の技術構成合意)に基づき更新しました。[D-23](../architecture.md#d-23)の基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録。[D-24](../architecture.md#d-24)／[D-25](../architecture.md#d-25)は検証・運用条件付き第一候補で、最終採択・公開・課金作成の許可ではありません。版・追加ツール・Secret管理・外部設定・運用担当は未確定。[D-18](../architecture.md#d-18-旧開発スタックの一時退避)の基本構成未定状態はD-23で置き換えますが、[履歴](../../archive/music-exploration/README.md)の復元・動作確認は実装Issueで行い、未完了です。
+2026-09-30の候補記録を、2026-10-03の[技術構成合意](../architecture.md#2026-10-03の技術構成合意)に基づき更新しました。[D-23](../architecture.md#d-23)の基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録。[D-24](../architecture.md#d-24)／[D-25](../architecture.md#d-25)は検証・運用条件付き第一候補で、最終採択・公開・課金作成の許可ではありません。版・runner・migration方式は#70/#74で固定済み。Secret共有管理・外部設定・運用担当の残条件は未確定。[D-18](../architecture.md#d-18-旧開発スタックの一時退避)の基本構成未定状態はD-23で置き換えますが、[履歴](../../archive/music-exploration/README.md)の復元・動作確認は実装Issueで追います。現在の起動基盤・migration・認証の導入と、未結合業務機能・未配置公開環境を分けて確認します。
 
 現行の共通基盤は、Issue/PR運用、Git Hook、`mise.toml`の共通タスク、[文書・設定チェック](../../scripts/check-foundation.ps1)、[Foundation CI](../../.github/workflows/foundation.yml)です。#71〜#73の限定先行Engineには別の[型検査・数値テストCI](../../packages/prediction/README.md#検証ci)を追加しました。#70でroot workspace、Node 24.21.0の版固定、[Application CI](../../.github/workflows/application.yml)、Compose、単一コンテナを導入しました（[手順](../DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。Engine検証CIの固定版は検証版のまま、lockfileはrootへ統合しました。`pwsh -NoProfile -File scripts/check-foundation.ps1`はアプリの起動、ビルド、型検査、DB接続を実行しません。
 
@@ -10,7 +10,7 @@
 
 ## 現在の未決定事項
 
-- 採用基本構成の残る追加ツール（migrationツール等）と、認証／公開先の最終採択・検証・運用条件（[D-23](../architecture.md#d-23)〜[D-25](../architecture.md#d-25)）。
+- 認証／公開先の最終受入・検証・運用条件（[D-24](../architecture.md#d-24)／[D-25](../architecture.md#d-25)）。Runtime・runner・migration方式は[#70/#74の記録](../architecture.md#2026-10-06の版固定と起動構成)で固定済み。ローカルのDB migration・認証は実装済みで、[Docker一式起動](../DEVELOPMENT_GUIDE.md#dockerで一式を起動する)は#130で補完する。
 - 公開先のアカウント・課金設定・regionの作成と最終受入（確定後、承認を受けてから）。
 - stagingへのhealthコンテナ配置とManaged PostgreSQL接続（公開先の承認後。#70から#75へ移管）。
 - 退避した旧構成のうち使わない部分の削除。
