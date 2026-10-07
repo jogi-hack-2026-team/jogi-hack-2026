@@ -15,7 +15,7 @@
 | DECIDED | 現行の実績由来の予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
 | DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。2026-10-05に[npm workspacesと`pg`を追加採択](docs/architecture.md#2026-10-05の追加採択)。版・残りの追加ツール・API細則は未確定 |
 | 条件付き第一候補 | Better Auth＋Cloud Run＋Neonは検証・運用条件付き。[D-24](docs/architecture.md#d-24)／[D-25](docs/architecture.md#d-25)。最終採択・公開受入、一般公開、アカウント・課金作成の許可ではない |
-| 限定先行／結合待ち | #71〜#73の承認範囲の[Prediction計算本体・テスト](packages/prediction/README.md)は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。日数metadata・公開例外の契約も依頼者承認を反映。[純粋Engine検証CI](packages/prediction/README.md#検証ci)を追加。アプリ結合・採用基盤への整合・正式受入は未完了。Product画面・API・DB・公開環境は未実装。#70のBLOCKEDと正式Hard依存を維持する |
+| ローカル実装／画面・公開待ち | #71〜#73の承認範囲の[Prediction計算本体・テスト](packages/prediction/README.md)は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。[純粋Engine検証CI](packages/prediction/README.md#検証ci)がある。起動基盤・DB schema/migration・認証・Goal・記録・Today APIはローカル実装済みで、`/today`からEngineを呼ぶ。Goal・記録・Today画面と公開配置は未完了。既存Issueの正式依存・残条件は各Issueで確認する |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
@@ -39,6 +39,8 @@
 
 GitとPowerShell 7を使います。文書・設定チェックの手順は[開発ガイド](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を参照してください。基本構成の採用と認証・公開先の残条件は[Architecture](docs/architecture.md#technology-stack)で確認します。アプリの起動構成はNode 24.21.0に版固定し、[起動・検証手順](docs/DEVELOPMENT_GUIDE.md#アプリを起動検証する)にまとめています。公開先（staging）への配置は未実施です。
 
+Dockerで一式を起動する場合、初回だけ`.env.example`を`.env`へコピーし、ローカル専用の`LOCAL_DB_PASSWORD`と32文字以上の`BETTER_AUTH_SECRET`を設定します。その後は`docker compose up -d --build`でDB health→認証・アプリmigration→単一NodeのWeb/API配信へ進みます。準備完了を待つには`--wait --wait-timeout 120`を追加し、`http://127.0.0.1:8080`を開きます。hostのNode/miseは不要です。[設定・停止・再起動・失敗時とデータ保持](docs/DEVELOPMENT_GUIDE.md#dockerで一式を起動する)、[hostのホットリロードとの使い分け](docs/DEVELOPMENT_GUIDE.md#dockerとhost開発の使い分け)を参照してください。
+
 導入済みの環境では、リポジトリのルートで `mise run --skip-tools check` を実行します。文書・設定を検査し、成功時は `PASS:` が表示されます。
 miseがない場合は、PowerShell 7で `pwsh -NoProfile -File scripts/check-foundation.ps1` を実行すると同じ検証ができます。
 Hook（コミット前に走る処理）の導入はローカル設定を変更するため、[初回セットアップ](docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)を読んで別に行います。
@@ -47,7 +49,7 @@ Hook（コミット前に走る処理）の導入はローカル設定を変更�
 
 Prediction単体は[Docker検証手順](packages/prediction/DOCKER.md)で、hostにNodeを追加せず型検査・テスト・接続例・T-14を実行できます。Secret・DBは不要です。製品全体の起動構成やruntimeの採択とは分けます。
 
-`check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。旧アプリを調べる場合だけ[履歴内の手順](archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照してください。次のProduct向け起動・型検査・ビルド・テストは技術採択後に定めます。
+`check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。旧アプリを調べる場合だけ[履歴内の手順](archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照してください。
 
 ## 最初に読む順番
 
