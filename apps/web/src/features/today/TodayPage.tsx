@@ -23,6 +23,7 @@ import { fetchPolicy } from './fetch-policy.ts';
 import { toForecastView } from './forecast-view.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
 import '../../ui/tokens.css';
+import '../../ui/page.css';
 import './today.css';
 
 /**
@@ -60,7 +61,7 @@ function TodayScreen({ goalId }: { goalId: string }) {
       <AppBar
         title={goal?.title ?? ''}
         leading={
-          <Link to="/" className="fr-icon-btn" aria-label="Goal一覧へ戻る">
+          <Link to="/goals" className="fr-icon-btn" aria-label="Goal一覧へ戻る">
             <Icon name="back" />
           </Link>
         }
@@ -179,7 +180,7 @@ function NotFound({ goalId }: { goalId: string }) {
         <ErrorPanel
           title={todayCopy.notFoundPanel}
           action={
-            <Link to="/" className="fr-btn fr-btn--secondary">
+            <Link to="/goals" className="fr-btn fr-btn--secondary">
               {todayCopy.backToGoals}
             </Link>
           }
