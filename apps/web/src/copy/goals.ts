@@ -68,6 +68,11 @@ export const goalsCopy = {
       retry: 'もう一度保存',
     },
     delete: 'このGoalを削除',
+    refreshFailed: {
+      title: '最新のGoalを読み込めませんでした',
+      body: '入力内容はそのまま残っています。通信状態を確認して、再読み込みしてください。保存はこのままできます。',
+      notFound: 'このGoalは、別の画面で削除された可能性があります。入力内容は残っていますが、保存はできません。Goal一覧から開き直してください。',
+    },
   },
   errors: {
     titleRequired: 'タイトルを入力してください',

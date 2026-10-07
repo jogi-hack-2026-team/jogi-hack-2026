@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { ApiError } from '../src/api/client.ts';
 import { goalsCopy } from '../src/copy/goals.ts';
 import { emptyValues, fieldErrorsFromApi, parseInteger, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
@@ -52,4 +53,40 @@ test('APIの422を項目ごとのエラーへ割り当てる', () => {
   assert.deepEqual(fieldErrorsFromApi(new ApiError(422, { error: { code: 'CONSTRAINT_VIOLATION', message: 'x' } })), {});
   assert.equal(fieldErrorsFromApi(new ApiError(500, null)), null);
   assert.equal(fieldErrorsFromApi(new TypeError('Failed to fetch')), null);
+});
+
+test('編集を始めた時点の値と比べ、別のタブでの変更を触っていない項目で巻き戻さない', () => {
+  // 編集開始時：sessionAmount=20。その後、別のタブで30へ変更され、再取得でGoalが新しくなった
+  const baseline = goal;
+  const refreshed = { ...goal, sessionAmount: 30 };
+  const values = { ...valuesFromGoal(baseline), title: '英単語アプリ（朝）' };
+  // 比較元を編集開始時に固定していれば、タイトルだけを送る
+  assert.deepEqual(toPatchBody(values, baseline), { title: '英単語アプリ（朝）' });
+  // 比較元を再取得後のGoalにすると、触っていない sessionAmount=20 まで送って巻き戻してしまう（直す前の動き）
+  assert.deepEqual(toPatchBody(values, refreshed), { title: '英単語アプリ（朝）', sessionAmount: 20 });
+});
+
+test('保存の途中で画面を離れたら、mutateに渡した一覧への移動は呼ばれず、取り直しだけは行われる', async () => {
+  const client = new QueryClient();
+  let finish;
+  let invalidated = 0;
+  let navigated = 0;
+  const observer = new MutationObserver(client, {
+    mutationFn: () => new Promise((resolve) => (finish = resolve)),
+    onSuccess: () => {
+      invalidated += 1;
+    },
+  });
+  const unsubscribe = observer.subscribe(() => {});
+  const pending = observer.mutate(undefined, { onSuccess: () => (navigated += 1) }).catch(() => {});
+  // 保存の要求が送られるのを待つ
+  while (!finish) await new Promise((r) => setTimeout(r, 1));
+  // 保存の途中でフォームを離れる（部品が消えると購読も外れる）
+  unsubscribe();
+  finish({ ok: true });
+  await pending;
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(invalidated, 1);
+  assert.equal(navigated, 0);
+  client.clear();
 });
