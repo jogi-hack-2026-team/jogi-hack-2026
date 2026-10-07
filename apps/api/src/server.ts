@@ -1,10 +1,32 @@
 import { buildApp } from './app.ts';
-import { loadConfig } from './config.ts';
-import { createAppPool } from './db/pool.ts';
+import { createAuth } from './auth/options.ts';
+import { loadAuthConfig, loadConfig } from './config.ts';
+import { createAppPool, createAuthPool } from './db/pool.ts';
 
 const config = loadConfig();
+const authConfig = loadAuthConfig(process.env, config);
 const pool = createAppPool({ connectionString: config.databaseUrl });
-const app = await buildApp({ pool, webDist: config.webDist, logLevel: config.logLevel });
+// 認証は専用pool（int8を数値で読む）。接続数はアプリ用5＋認証用2を合算してDB側の上限と比べる。
+const authPool = createAuthPool({ connectionString: config.databaseUrl });
+const auth = createAuth({
+  pool: authPool,
+  secret: authConfig.secret,
+  baseURL: authConfig.baseURL,
+  trustedOrigins: authConfig.trustedOrigins,
+  signInMax: authConfig.signInMax,
+  signUpMax: authConfig.signUpMax,
+});
+const app = await buildApp({
+  pool,
+  webDist: config.webDist,
+  logLevel: config.logLevel,
+  auth: {
+    instance: auth,
+    baseURL: authConfig.baseURL,
+    allowedOrigins: [authConfig.baseURL, ...authConfig.trustedOrigins],
+    trustProxyHops: authConfig.trustProxyHops,
+  },
+});
 
 let closing = false;
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
@@ -20,6 +42,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   try {
     await app.close(); // listenerを閉じ、処理中の要求を完了させる
     await pool.end(); // その後にDB接続を返す
+    await authPool.end();
     app.log.info({ signal }, 'shutdown: complete');
     process.exit(0);
   } catch (error) {
@@ -31,3 +54,4 @@ process.on('SIGTERM', () => void shutdown('SIGTERM'));
 process.on('SIGINT', () => void shutdown('SIGINT'));
 
 await app.listen({ host: config.host, port: config.port });
+app.log.info({ baseURL: authConfig.baseURL, trustProxyHops: authConfig.trustProxyHops }, 'auth: configured');

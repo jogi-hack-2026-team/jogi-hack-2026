@@ -101,7 +101,7 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 | ライブラリの版 | Fastify 5.12.5、@fastify/static 10.1.5、@fastify/type-provider-typebox 6.1.0、TypeBox 0.34.52、pg 8.23.0、React 19.3.0、Vite 8.3.1、TanStack Router 1.170.40／Query 5.104.0、TypeScript 5.9.3 | #84の候補検証で組み合わせて動作した版をlockfileで固定 | 最新版への追従は各Issueで判断 |
 | テストランナー | Node標準`node:test`（APIも`packages/prediction`と同じ） | 既存Engineと同じで依存が増えない。APIテストは実PostgreSQLへ接続する | Vitest／fast-checkは未採択のまま（候補） |
 | ローカルDB | ComposeのPostgreSQL 18。テストは`DATABASE_URL`、なければ開発依存`embedded-postgres`（Dockerのない端末向け。#84と同じ） | Docker有無に関わらずAPIテストを実DBで実行できる | — |
-| 配信・終了 | APIが`WEB_DIST`のSPAを同一originで配信。存在しないAPI・対象外methodはJSON 404。SIGTERMで処理中要求を完了してからexit 0（猶予10秒） | #84 Linux試験のexit 137を本実装で避ける | 実クラウドでの確認は未実施（#75・#83） |
+| 配信・終了 | APIが`WEB_DIST`のSPAを同一originで配信。保護hookを通過した存在しないAPI・対象外methodはJSON 404（未ログイン401・業務API Origin違反403）。SIGTERMで処理中要求を完了してからexit 0（猶予10秒） | #84 Linux試験のexit 137を本実装で避ける | 実クラウドでの確認は未実施（#75・#83） |
 | 入力検証・エラー形式 | Ajvを`removeAdditional: false`・`coerceTypes: false`・`allErrors: true`にし、契約違反・DB制約違反（23505／23514）を`{ error: { code, message, fields? } }`の422へ変換 | [実装時に必要な対策](#実装時に必要な対策)の入力検証とエラー形式案を基盤で一度だけ実装する | 業務APIの成功DTO・statusは未定のまま |
 
 この採択に含めるもの：上表の版・runner・ローカルDB・配信／終了・入力検証と共通エラー形式（422／404のenvelope `{ error: { code, message, fields? } }`とDB制約違反の変換）。含めないもの：migrationツール、認証ライブラリの版（#74・#75）、公開先（D-25）、業務APIの成功DTO・status・PATCH等の細則。stagingへの配置は公開先の承認待ちで、#70の該当項目は#75へ移管する。手順は[開発ガイド](DEVELOPMENT_GUIDE.md#アプリを起動検証する)を参照する。
@@ -119,6 +119,23 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 | 認証用poolのint8 | 認証専用poolだけTEXT形式のint8を数値に変換し、安全な整数範囲 `[-(2^53-1), 2^53-1]` の外は例外にする（[pool.ts](../apps/api/src/db/pool.ts)）。アプリ用poolはpgの既定（文字列）のまま | `rateLimit.lastRequest`（int8）の文字列連結で429の待ち時間が異常値になる問題（#84 F-10）を、他の型・他のpoolへ影響させずに直す | auth poolも応答／文実行を5秒で制限し、idle errorを単独処理する |
 | 認証DDLと失敗復旧 | 固定版の生成SQLを1 transactionで適用し、table作成後のindex失敗もrollbackする | 再実行時に部分schemaを残さない（[回帰](../apps/api/tests/migrate.test.ts)） | 既存schemaの手動変更・古い部分適用は自動削除しない |
 | migrationの時間制限 | 専用poolは接続確立だけ5秒。advisory lock待ち・DDL実行にHTTP用の5秒制限を使わない | 他instanceのmigrationが終わるまで直列化する（[回帰](../apps/api/tests/pool-responsibility.test.ts)） | 長時間待機はoperatorが原因を確認し中止する |
+
+### 2026-10-06の認証実装（#75）
+
+#75でR-01（メール＋パスワードの登録・ログイン・ログアウト、未ログインは画面とAPIを使えない）を実装した。採択は#75の実装PR（[Issue #75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)の開発情報に記載）の承認レビューを同意として扱う。D-24の「条件付き第一候補」は、残条件（認証更新／DB復旧担当、復元後の巻戻し対処、公開HTTPSでの確認）が済むまで維持する。
+
+| 決める部分 | 採用 | 理由 |
+| --- | --- | --- |
+| ライブラリと版 | Better Auth 1.7.7（#74で固定）。メール＋パスワード、DBセッション、同一originのCookie、`/api/auth/*` | #84・#96で登録〜ログアウト・回数制限・Cookie属性・Linuxコンテナを実測した版。自作よりパスワード・セッションの保守責任が小さい |
+| Fastifyとの接続 | [bridge.ts](../apps/api/src/auth/bridge.ts)。URLは`BETTER_AUTH_URL`から組み立て、client IPはFastifyの`trustProxy`判定の結果だけを専用headerで渡し、複数のSet-Cookieをそのまま転送する | 公式ガイドの形では、Host偽装・X-Forwarded-For偽装による回数制限の回避と、sign-outのCookie消去漏れが起きうる（#84 F-5〜F-7） |
+| 保護の既定 | [guards.ts](../apps/api/src/http/guards.ts)はrouterの確定routeで判定する。登録済み`/api/health`・`/api/auth/*`以外の業務APIはセッション必須（route未定義のAPI pathも401）。業務APIの状態変更（GET／HEAD／OPTIONS以外）は許可originのOriginヘッダーが必須（違反は403 `ORIGIN_REJECTED`） | 追加し忘れで公開されるAPIを作らない。`SameSite=Lax`だけでは同一siteの別originを防げない（#84 F-8）。認証endpointは固定版Better Authの`trustedOrigins`・Referer／Fetch Metadata検査に委ね、業務APIの「Originなしは403」とは異なる。#76・#77はこのhookの内側に置く |
+| session更新とlogout故障 | 保護APIでgetSessionが返す複数のSet-Cookieを転送し、DB expiry延長とCookie更新を揃える。画面は通信例外・API errorを表示しbusyをfinallyで解除、logout error時は遷移しない | 通常時のlogoutではDB session削除とCookie消去を確認する。Better Auth 1.7.7はDB削除例外を内部でlogして成功を返すため、その故障時の保存済み旧Cookie失効は保証しない。fail-closed処理・復旧／再試行の方式はD-24/#75/#84の人の判断待ち |
+| Cookie | HttpOnly・SameSite=Lax・Path=/。`BETTER_AUTH_URL`がhttpsなら`Secure`と`__Secure-`接頭辞。本番（`NODE_ENV=production`）はhttpsのURLを必須にし、ローカルのコンテナ確認だけ`BETTER_AUTH_ALLOW_HTTP=1`で許可 | staging／本番で`Secure`が付かない設定ミスを起動時に止める |
+| 回数制限 | DB保存（`rateLimit`表）。1 IPあたり60秒にsign-in／sign-up各5回（`AUTH_SIGN_IN_MAX`／`AUTH_SIGN_UP_MAX`で上書き）、その他の認証endpointは100回。429の`X-Retry-After`は整数秒で、画面は残り秒数を数えて表示し、経過後に再試行できる | 再起動・複数instance・並列要求をまたいで効く（#84で実測）。共有回線のデモ会場向けの上限は未合意のため環境変数で変えられる |
+| Secret・URL | `BETTER_AUTH_SECRET`（本番必須、32文字以上。開発では`apps/api/.local/auth-secret`に自動生成）、`BETTER_AUTH_URL`（本番必須）、`AUTH_TRUSTED_ORIGINS`（任意）、`TRUST_PROXY_HOPS`（既定0） | 実値をGitへ入れず、開発者ごとの生成を手順から外す。proxyのhop数は公開先の実形式で確認する（#83） |
+| 画面 | `/login`・`/register`（[AuthForm](../apps/web/src/routes/AuthForm.tsx)）、`/`は未ログインなら`/login?redirect=`へ（[router](../apps/web/src/router.tsx)）。戻り先はアプリ内pathだけ。ログアウトはnavのボタン。セッション切れは再ログインへ誘導 | R-01の画面要件。Goal・記録の画面は#78〜#81 |
+
+未実施: staging（公開HTTPS）でのCookie属性・複数Set-Cookie・転送ヘッダーの実形式・休止後の応答の確認（公開先D-25の承認待ち。#70から移管した項目を含めて#83へ引き継ぐ）。認証ライブラリのsupported版／advisoryの更新担当とDB復旧担当、復元後の全session失効・旧Cookie 401の確認手順はチームで決める（#84の[復元後session失効手順](../experiments/architecture-verification/candidate-1.7.7/RESTORE-PROCEDURE.md)は合成DB限定の案）。
 
 以下の比較表は2026-09-30の候補提案と2026-10-02の比較説明を保持したもの。版・追加ツール・migration順・代替候補の不採用を含む表全体を採択した記録ではない。現在の採用範囲は上記とD-23〜D-25で確認する。
 
@@ -236,13 +253,13 @@ CREATE TABLE action_log (
 
 ## API契約
 
-業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の候補であり、R-01の確定要件と区別する。認証ライブラリのエラーを業務APIのstatus・共通error形式へ揃える範囲は未決定。
+業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の条件付き第一候補を#75で実装したもの（[認証実装](#2026-10-06の認証実装75)）。未ログインの401と別originからの状態変更の403（`ORIGIN_REJECTED`）は`/api/*`共通のhookが返す。認証endpoint自体のエラー形式はBetter Authのまま（`{ code, message }`）で、業務APIの共通error形式へ揃える範囲は未決定。
 
 以下はmethod / pathと記載済みの規則の一覧。成功DTO・成功status、PATCHの省略・null・空body、Goal一覧の今日状態の表現、SKIPPEDの応答量は未定義であり、[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
 
 | Method / Path | 内容 |
 | --- | --- |
-| `/api/auth/*`（候補） | Better Auth採択時のハンドラ（登録・ログイン・ログアウト・セッション）。業務APIの確定契約とは別 |
+| `/api/auth/*` | Better Authのハンドラ（`sign-up/email`・`sign-in/email`・`sign-out`・`get-session`等。#75で実装）。業務APIの確定契約とは別。回数制限超過は429と`X-Retry-After`（整数秒） |
 | `GET /api/goals` | 自分のGoal一覧（今日の記録状態を含む） |
 | `POST /api/goals` | 作成。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone`。初期量の既定は0で、記録開始日の前日までの量。timezoneは有効なIANA名のみ（それ以外は422）。開始日の算出・保持・応答での共有方法は上のOPEN事項 |
 | `GET / PATCH / DELETE /api/goals/:goalId` | 取得・編集・削除。記録があるGoalで`timezone`・`initialProgress`を変えようとすると422 |
@@ -427,7 +444,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 | 層 | 方法 | 内容 |
 | --- | --- | --- |
 | `packages/prediction` | `node:test`＋固定例・固定seed・独立オラクル（性質T-01〜T-15を具体例と閉形式で検査）。fast-check（性質ベースの入力生成）は未採択の候補 | 下表T-01〜T-15。CIで毎回実行 |
-| `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
+| `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 認証（未ログイン401、登録→再読み込み→ログアウト→旧Cookie 401、期限切れ、別origin403、https Cookie、DB保存の回数制限と再起動。[auth.test.ts](../apps/api/tests/auth.test.ts)）、所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
 | `apps/web` | 手動チェックリスト＋Playwright CLI（主要Flow 1本） | 登録→Goal作成→記録→前日補完→Today Decision表示 |
 
 | ID | Prediction Engineの性質 |
@@ -490,7 +507,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
 | D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74) |
-| D-24 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24) |
+| D-24 | 2026-09-30 → 2026-10-03（2026-10-06実装） | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24)。[#74で版固定、#75で実装](#2026-10-06の認証実装75)。公開HTTPS・運用担当は残条件 |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 | D-26 | 2026-10-05 | OPEN（R-11 Scope・分担は採択済み、具体契約は未採択） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 
@@ -532,7 +549,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### D-24
 
-2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち）** / 2026-09-30の候補Better Authを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。メール＋パスワードの業務要件はR-01、DBセッション／Cookieは候補方式。版・認証更新／DB復旧担当・CSRF／Origin・回数制限・復元対処・公開HTTPSの確認を#75・#74・#84で追跡する。管理対象をDBへ寄せて記録との整合を設計しやすくする狙い。認証ライブラリの更新・復旧・障害対応を継続して担えることを条件とする。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。PR #96のレビューやFirebase／Supabase Auth等の不採用まで合意したと扱わない。2026-10-06、#74で認証テーブルの作成に使う版を1.7.7に固定し、回数制限のDB保存テーブルをmigrationへ含めた（[migration方式](#2026-10-06のmigration方式74)）。本項の残条件は変えない。
+2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち）** / 2026-09-30の候補Better Authを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。メール＋パスワードの業務要件はR-01、DBセッション／Cookieは候補方式。版・認証更新／DB復旧担当・CSRF／Origin・回数制限・復元対処・公開HTTPSの確認を#75・#74・#84で追跡する。管理対象をDBへ寄せて記録との整合を設計しやすくする狙い。認証ライブラリの更新・復旧・障害対応を継続して担えることを条件とする。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。PR #96のレビューやFirebase／Supabase Auth等の不採用まで合意したと扱わない。2026-10-06、#74で認証テーブルの作成に使う版を1.7.7に固定し、回数制限のDB保存テーブルをmigrationへ含めた（[migration方式](#2026-10-06のmigration方式74)）。本項の残条件は変えない。同日、#75で登録・ログイン・ログアウト・保護hook・回数制限・画面を[実装](#2026-10-06の認証実装75)した（ローカルとCIで検証。公開HTTPSは未確認）。
 
 ### D-25
 

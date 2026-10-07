@@ -29,7 +29,7 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、文書・設定検証用のGitHub Actionsがあります。
-旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で、DBスキーマとmigration（`npm run db:migrate`）は#74で導入し、Product機能（認証・Goal・記録・予測API・画面）は未実装です。
+旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で、DBスキーマとmigration（`npm run db:migrate`）は#74で、認証（登録・ログイン・ログアウト、未ログインは401）は#75でローカル実装済みです。Goal・記録・予測のAPI・画面は未実装、公開先（staging）への配置は未実施です。
 現行の未決定事項と当時の検証記録への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。

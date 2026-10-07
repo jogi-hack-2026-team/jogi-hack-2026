@@ -1,19 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchHealth } from '../api/client.ts';
+import { Link } from '@tanstack/react-router';
+import { authClient } from '../auth/client.ts';
 
+// ログイン後のホーム。Goal・記録・予測の画面は#78〜#81で追加する。
 export function Home() {
-  const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth, retry: false });
-  const label = health.isPending
-    ? '確認中'
-    : health.data?.status === 'ok'
-      ? '接続できています'
-      : '接続できません。APIとDBの起動を確認してください';
+  const session = authClient.useSession();
+  if (session.isPending) return <p>確認中</p>;
+  if (!session.data) {
+    // 画面表示中にセッションが切れた場合（期限切れ・別タブでのログアウト）
+    return (
+      <p role="alert">
+        ログインが必要です。<Link to="/login" search={{ redirect: '/' }}>ログイン</Link>
+      </p>
+    );
+  }
   return (
     <section>
       <p>今日サボると、ゴールは何日遠ざかる？</p>
-      <p>開発基盤の起動確認画面です。Goal・記録・予測の画面はこれから実装します。</p>
-      <p role="status" aria-live="polite">
-        API: {label}
+      <p>
+        <strong>{session.data.user.email}</strong> でログインしています。Goal・記録・予測の画面はこれから実装します。
       </p>
     </section>
   );

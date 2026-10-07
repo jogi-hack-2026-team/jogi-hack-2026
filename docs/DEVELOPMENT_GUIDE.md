@@ -502,7 +502,7 @@ npm ci
 cp .env.example .env
 ```
 
-`.env`には`DATABASE_URL`と、Composeを使う場合は`LOCAL_DB_PASSWORD`を入れます（Git除外。実値をIssue・PR・チャットへ書かない）。項目の意味は[.env.example](../.env.example)に書いています。
+`.env`には`DATABASE_URL`と、Composeを使う場合は`LOCAL_DB_PASSWORD`を入れます（Git除外。実値をIssue・PR・チャットへ書かない）。項目の意味は[.env.example](../.env.example)に書いています。認証の`BETTER_AUTH_SECRET`は開発環境では未設定でよく、初回起動時に`apps/api/.local/auth-secret`（Git除外）へ自動生成します。`BETTER_AUTH_URL`も開発環境では`http://127.0.0.1:<PORT>`が既定で、Viteの`http://127.0.0.1:5173`からの要求も許可します。
 
 ### 起動
 
@@ -547,9 +547,18 @@ Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ�
 - 環境変数は`DATABASE_URL`（必須）、`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`（任意）。`DATABASE_URL`が未設定なら起動せず、値はログへ出しません。コンテナ内の既定は`HOST=0.0.0.0`・`PORT=8080`・`WEB_DIST=/app/apps/web/dist`。
 - `SIGTERM`で新規接続を止め、処理中の要求を完了し、DB接続を返してからexit 0。`SHUTDOWN_TIMEOUT_MS`（既定10000）を超えたらexit 1。
 - DB接続は接続確立・クエリ応答・文の実行をそれぞれ5秒で打ち切り、期限切れの接続は再利用しません。idle中の接続がDB側から切れてもプロセスは終了せず、警告ログを残して次の要求で再接続します。
-- 存在しないAPIと対象外methodはJSONの404、画面のURLはindex.html（`cache-control: no-cache`）、`/assets/`はhash付きのため長期キャッシュ。
+- 認証・Originの保護hookを通過した存在しないAPIと対象外methodはJSONの404。未ログインは401、業務APIのOrigin違反は403。画面のURLはindex.html（`cache-control: no-cache`）、`/assets/`はhash付きのため長期キャッシュ。
 - migrationは起動前に`node apps/api/dist/db/migrate-cli.js all`（コンテナ内に`apps/api/migrations/`を同梱）で適用する。同時に実行されてもadvisory lockで直列化され、適用済みSQLの内容が変わっていれば失敗する。
 - ログはpinoのJSON。Cookie・Authorization・Set-Cookieはredactし、リクエストbodyは出力しません。
+- 認証は`BETTER_AUTH_SECRET`（32文字以上）と公開URLの`BETTER_AUTH_URL`（https）が必須。proxyを挟む公開先では`TRUST_PROXY_HOPS`をhop数に合わせる（回数制限の鍵になるclient IPの決定に使う）。詳細は[Architecture「2026-10-06の認証実装」](architecture.md#2026-10-06の認証実装75)。
+
+### 登録・ログインを確認する
+
+業務APIの状態変更は許可originのOriginが必須です。認証API `/api/auth/*` は固定版Better AuthのtrustedOrigins検査を使い、RefererやFetch Metadataのfallbackがあるため「Originなしは常に403」とは扱いません。保護対象はrouterが確定したrouteで判定します。通常のAPI利用でsessionが延長された場合、更新Cookieも返します。
+
+登録・ログイン・ログアウトの通信失敗は画面に表示し、送信ボタンを再利用できます。logoutがAPI errorを返した場合はlogin画面へ遷移しません。ただし固定版Better AuthはDB session削除例外を内部でlogして成功を返すため、DB削除失敗時の保存済み旧Cookie失効は保証しません。この故障時のfail-closed方式・再試行／復旧手順はD-24と#75/#84で判断待ちです。
+
+`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。
 
 stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。
 
