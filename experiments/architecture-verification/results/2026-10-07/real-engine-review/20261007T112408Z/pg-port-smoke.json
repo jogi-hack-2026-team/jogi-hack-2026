@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-07T11:28:53.811Z",
+  "startedAt": "2026-10-07T11:28:53.349Z",
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "purpose": "startup regression only, no performance measurement",
+  "runtime": "v24.21.0",
+  "originalPort": 55592,
+  "originalFailure": "Windows excluded TCP range 55552-55651; bind Permission denied",
+  "selectedPort": 65392,
+  "loopback": true,
+  "query": {
+    "ok": 1,
+    "version": "PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit"
+  },
+  "pass": true
+}

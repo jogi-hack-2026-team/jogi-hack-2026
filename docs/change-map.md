@@ -29,6 +29,8 @@
 
 ## 未採択の追加提案
 
+PR #131の実Engine混合負荷は[2026-10-07の訂正・追加報告](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)から、独立oracle、[測定cohort](../experiments/architecture-verification/candidate-1.7.7/verify/load-cohort.ts)、[入力/worker/HTTP回帰](../experiments/architecture-verification/candidate-1.7.7/verify/v9-real-engine-regression.test.ts)、[再実行runner](../experiments/architecture-verification/candidate-1.7.7/verify-real-engine.ps1)へたどれる。旧JSONは保持し、採用環境の性能やworker/prior採択の証拠にはしない。
+
 ここはレビュー用のSupporting Docsへの入口であり、上の仕様・実装予定やMustの追加ではない。機能の採否は技術選定Issue #84から分け、[文書分離のIssue #94](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/94)・[提案PR #95](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/95)で提案と根拠を確認する。機能の採用・Scope・時期・実装Issueは未決定。採用しない・保留する場合の資料と入口の扱いも、採否と合わせて判断する。
 
 | 提案 | 説明先 | 状態・確認範囲 |

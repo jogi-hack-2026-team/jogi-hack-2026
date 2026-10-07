@@ -1,0 +1,18 @@
+[
+  {
+    "exitCode": 0,
+    "endedAt": "2026-10-07T11:35:04.6187638+00:00",
+    "iteration": 1,
+    "startedAt": "2026-10-07T11:33:21.0201451+00:00",
+    "entry": "predict",
+    "assertionFailures": 0
+  },
+  {
+    "exitCode": 1,
+    "endedAt": "2026-10-07T11:36:45.9375326+00:00",
+    "iteration": 2,
+    "startedAt": "2026-10-07T11:35:04.6651719+00:00",
+    "entry": "predict",
+    "assertionFailures": 1
+  }
+]

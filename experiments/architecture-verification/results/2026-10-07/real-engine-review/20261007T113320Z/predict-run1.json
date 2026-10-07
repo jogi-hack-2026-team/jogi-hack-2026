@@ -1,0 +1,3140 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "title": "verification-2 mixed load with the real prediction engine",
+  "at": "2026-10-07T11:35:04.518Z",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "win32-x64",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "logicalCpus": 16,
+    "totalMemGb": 15.6
+  },
+  "summary": {
+    "pass": 6,
+    "fail": 0,
+    "info": 1
+  },
+  "engineProvenance": {
+    "repositoryHead": "93a4efd4e80cdef3811a47880d6bd520257e94e1",
+    "candidateDiffSha256": "c7b029bc4adb336f800a3c69cd4f4474c1591227d8ba2d2ed42f2c5828d32644",
+    "engineRepositoryHead": "e55d3cea9fc97860191939e6aa7173215b3df29b",
+    "engineLastCommit": "16792bfdfe75ac2bdd3d602673b8b7000d255756",
+    "engineSourceTree": "5fb64f192b965b22b4597c9ace473e0e7bbe150f",
+    "engineWorkingTreeClean": true,
+    "enginePath": "separate detached main worktree/packages/prediction",
+    "loadedIndexSha256": "b2e672b296fe84d4784a19fa3a945b9aad18a237d99bd551bf69020f624aac1d",
+    "loadedDistSha256": "b8b3c4b7c2c8ca2c8dc57daae4b4079f6c6c2d762533d140932f50f149681ab5",
+    "entryPoint": "predict"
+  },
+  "engineBenchmarkRaw": {
+    "criterion": "T-14: each real predict call <500ms; no probability pruning",
+    "limitation": "Measured representative inputs on this machine; not a worst-case or deployment guarantee. 548 is informational only.",
+    "environment": {
+      "node": "v24.21.0",
+      "platform": "win32",
+      "release": "10.0.26200",
+      "arch": "x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+      "logicalCpuCount": 16,
+      "memoryGiB": 15.649772644042969
+    },
+    "config": {
+      "modelVersion": "behavior-persistence-m1-v1",
+      "prior": 2,
+      "samples": 200,
+      "horizonDays": 1095,
+      "seed": 20261012
+    },
+    "cases": [
+      {
+        "requiredFutureDone": 120,
+        "requiredByT14": true,
+        "input": {
+          "goal": {
+            "totalRequired": 139,
+            "initialProgress": 0,
+            "sessionAmount": 1
+          },
+          "logs": [
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-01"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-02"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-03"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-04"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-05"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-06"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-07"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-08"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-09"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-10"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-11"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-12"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-13"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-14"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-15"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-16"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-17"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-18"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-19"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-20"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-21"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-22"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-23"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-24"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-25"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-26"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-27"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-28"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-29"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-30"
+            }
+          ],
+          "today": "2026-10-31"
+        },
+        "observations": {
+          "nDD": 12,
+          "nDS": 5,
+          "nSD": 5,
+          "nSS": 7,
+          "effectiveTransitions": 29,
+          "observedDays": 30,
+          "recordedDays": 30
+        },
+        "posterior": {
+          "a": {
+            "alpha": 14,
+            "beta": 7
+          },
+          "b": {
+            "alpha": 7,
+            "beta": 9
+          }
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 208,
+          "p80Days": 249
+        },
+        "firstMs": 96.7733,
+        "warmMs": [
+          88.92149999999998,
+          89.29649999999998,
+          87.56370000000004,
+          88.7679,
+          102.05620000000005
+        ],
+        "medianWarmMs": 88.92149999999998,
+        "maxMs": 102.05620000000005,
+        "pass": true
+      },
+      {
+        "requiredFutureDone": 400,
+        "requiredByT14": true,
+        "input": {
+          "goal": {
+            "totalRequired": 419,
+            "initialProgress": 0,
+            "sessionAmount": 1
+          },
+          "logs": [
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-01"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-02"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-03"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-04"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-05"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-06"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-07"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-08"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-09"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-10"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-11"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-12"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-13"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-14"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-15"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-16"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-17"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-18"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-19"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-20"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-21"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-22"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-23"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-24"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-25"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-26"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-27"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-28"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-29"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-30"
+            }
+          ],
+          "today": "2026-10-31"
+        },
+        "observations": {
+          "nDD": 12,
+          "nDS": 5,
+          "nSD": 5,
+          "nSS": 7,
+          "effectiveTransitions": 29,
+          "observedDays": 30,
+          "recordedDays": 30
+        },
+        "posterior": {
+          "a": {
+            "alpha": 14,
+            "beta": 7
+          },
+          "b": {
+            "alpha": 7,
+            "beta": 9
+          }
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 694,
+          "p80Days": 826
+        },
+        "firstMs": 170.93820000000005,
+        "warmMs": [
+          161.91639999999995,
+          161.37270000000012,
+          216.01249999999982,
+          178.21530000000007,
+          167.35629999999992
+        ],
+        "medianWarmMs": 167.35629999999992,
+        "maxMs": 216.01249999999982,
+        "pass": true
+      },
+      {
+        "requiredFutureDone": 1095,
+        "requiredByT14": true,
+        "input": {
+          "goal": {
+            "totalRequired": 1114,
+            "initialProgress": 0,
+            "sessionAmount": 1
+          },
+          "logs": [
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-01"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-02"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-03"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-04"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-05"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-06"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-07"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-08"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-09"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-10"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-11"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-12"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-13"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-14"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-15"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-16"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-17"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-18"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-19"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-20"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-21"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-22"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-23"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-24"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-25"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-26"
+            },
+            {
+              "status": "SKIPPED",
+              "amount": null,
+              "localDate": "2026-10-27"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-28"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-29"
+            },
+            {
+              "status": "DONE",
+              "amount": 1,
+              "localDate": "2026-10-30"
+            }
+          ],
+          "today": "2026-10-31"
+        },
+        "observations": {
+          "nDD": 12,
+          "nDS": 5,
+          "nSD": 5,
+          "nSS": 7,
+          "effectiveTransitions": 29,
+          "observedDays": 30,
+          "recordedDays": 30
+        },
+        "posterior": {
+          "a": {
+            "alpha": 14,
+            "beta": 7
+          },
+          "b": {
+            "alpha": 7,
+            "beta": 9
+          }
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": null,
+          "p80Days": null
+        },
+        "firstMs": 84.19130000000018,
+        "warmMs": [
+          7.673699999999826,
+          7.9284999999999854,
+          6.084100000000035,
+          7.493200000000115,
+          7.401599999999917
+        ],
+        "medianWarmMs": 7.493200000000115,
+        "maxMs": 84.19130000000018,
+        "pass": true
+      }
+    ]
+  },
+  "setup": {
+    "users": 2,
+    "predictedGoals": [
+      {
+        "intendedFutureDone": 120,
+        "expectedFutureDone": 120,
+        "actualDone": 1200,
+        "todayStatus": "UNRECORDED",
+        "input": {
+          "goal": {
+            "totalRequired": 4830,
+            "initialProgress": 0,
+            "sessionAmount": 30
+          },
+          "today": "2026-10-07",
+          "logs": [
+            {
+              "localDate": "2026-08-07",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-08",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-09",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-10",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-11",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-12",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-13",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-14",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-15",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-16",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-17",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-18",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-19",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-20",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-21",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-22",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-23",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-24",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-25",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-26",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-27",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-28",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-29",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-30",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-31",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-01",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-02",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-03",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-04",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-05",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-06",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-07",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-08",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-09",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-10",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-11",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-12",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-13",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-14",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-15",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-16",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-17",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-18",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-19",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-20",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-21",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-22",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-23",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-24",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-25",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-26",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-27",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-28",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-29",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-30",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-01",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-10-02",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-03",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-04",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-10-05",
+              "status": "DONE",
+              "amount": 30
+            }
+          ]
+        }
+      },
+      {
+        "intendedFutureDone": 400,
+        "expectedFutureDone": 400,
+        "actualDone": 1200,
+        "todayStatus": "UNRECORDED",
+        "input": {
+          "goal": {
+            "totalRequired": 13230,
+            "initialProgress": 0,
+            "sessionAmount": 30
+          },
+          "today": "2026-10-07",
+          "logs": [
+            {
+              "localDate": "2026-08-07",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-08",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-09",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-10",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-11",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-12",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-13",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-14",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-15",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-16",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-17",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-18",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-19",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-20",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-21",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-22",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-23",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-24",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-25",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-26",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-27",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-28",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-29",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-30",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-31",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-01",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-02",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-03",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-04",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-05",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-06",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-07",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-08",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-09",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-10",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-11",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-12",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-13",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-14",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-15",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-16",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-17",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-18",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-19",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-20",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-21",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-22",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-23",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-24",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-25",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-26",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-27",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-28",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-29",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-30",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-01",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-02",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-10-03",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-04",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-05",
+              "status": "SKIPPED",
+              "amount": null
+            }
+          ]
+        }
+      },
+      {
+        "intendedFutureDone": 1095,
+        "expectedFutureDone": 1095,
+        "actualDone": 1200,
+        "todayStatus": "UNRECORDED",
+        "input": {
+          "goal": {
+            "totalRequired": 34080,
+            "initialProgress": 0,
+            "sessionAmount": 30
+          },
+          "today": "2026-10-07",
+          "logs": [
+            {
+              "localDate": "2026-08-07",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-08",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-09",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-10",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-11",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-12",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-13",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-14",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-15",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-16",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-17",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-18",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-19",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-20",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-21",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-22",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-23",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-24",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-25",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-26",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-27",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-28",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-08-29",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-30",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-08-31",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-01",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-02",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-03",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-04",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-05",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-06",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-07",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-08",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-09",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-10",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-11",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-12",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-13",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-14",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-15",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-16",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-17",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-18",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-19",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-20",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-21",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-22",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-23",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-24",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-25",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-26",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-27",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-09-28",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-29",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-09-30",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-10-01",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-02",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-03",
+              "status": "SKIPPED",
+              "amount": null
+            },
+            {
+              "localDate": "2026-10-04",
+              "status": "DONE",
+              "amount": 30
+            },
+            {
+              "localDate": "2026-10-05",
+              "status": "DONE",
+              "amount": 30
+            }
+          ]
+        }
+      }
+    ],
+    "logDaysPerGoal": 60,
+    "sessionAmount": 30,
+    "pgPort": 65392,
+    "entryPoint": "predict",
+    "questionPrior": null,
+    "phaseBoundary": "warmup stop/drain -> reset -> measurement stop/drain -> snapshot metrics",
+    "crudOpenLoopPerSec": 20,
+    "crudMix": "GET /api/goals, PUT log (separate write goal), GET /api/auth/get-session in rotation",
+    "todayPerSec": [
+      1,
+      4,
+      10
+    ],
+    "measuredWindowMs": 8000,
+    "warmupMs": 1000,
+    "pgPoolMax": 5,
+    "workerThreads": 2,
+    "database": "PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit",
+    "caveats": [
+      "Load generator, API server and PostgreSQL all run on the same laptop with many cores. Not Cloud Run 1 vCPU.",
+      "Each scenario was run once for 8 s. Treat the numbers as order-of-magnitude.",
+      "Open-loop generator in a separate process on the same machine; latency is measured from the moment each request is sent.",
+      "Three representative inputs (the T-14 sizes with 60 days of logs). Not a worst case over all inputs.",
+      "The /today response carries a load-observation summary of the engine result, not the Product DTO."
+    ]
+  },
+  "checks": [
+    {
+      "id": "E0",
+      "name": "T-14 on this runtime: every required real predict call is under 500 ms (engine benchmark, unmodified)",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "environment": {
+          "node": "v24.21.0",
+          "platform": "win32",
+          "release": "10.0.26200",
+          "arch": "x64",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+          "logicalCpuCount": 16,
+          "memoryGiB": 15.649772644042969
+        },
+        "config": {
+          "modelVersion": "behavior-persistence-m1-v1",
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        },
+        "cases": [
+          {
+            "requiredFutureDone": 120,
+            "requiredByT14": true,
+            "firstMs": 96.7733,
+            "warmMs": [
+              88.92149999999998,
+              89.29649999999998,
+              87.56370000000004,
+              88.7679,
+              102.05620000000005
+            ],
+            "maxMs": 102.05620000000005,
+            "pass": true
+          },
+          {
+            "requiredFutureDone": 400,
+            "requiredByT14": true,
+            "firstMs": 170.93820000000005,
+            "warmMs": [
+              161.91639999999995,
+              161.37270000000012,
+              216.01249999999982,
+              178.21530000000007,
+              167.35629999999992
+            ],
+            "maxMs": 216.01249999999982,
+            "pass": true
+          },
+          {
+            "requiredFutureDone": 1095,
+            "requiredByT14": true,
+            "firstMs": 84.19130000000018,
+            "warmMs": [
+              7.673699999999826,
+              7.9284999999999854,
+              6.084100000000035,
+              7.493200000000115,
+              7.401599999999917
+            ],
+            "maxMs": 84.19130000000018,
+            "pass": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "E1",
+      "name": "wiring: /today matches independent DB oracle, today unrecorded",
+      "status": "PASS",
+      "detail": [
+        {
+          "expected": 120,
+          "status": 200,
+          "todayLog": null,
+          "yesterdayMissing": true,
+          "prediction": {
+            "placeholder": false,
+            "observedDays": 60,
+            "computeMode": "inline",
+            "modelVersion": "behavior-persistence-m1-v1",
+            "completionStatus": "available",
+            "coreMetricStatus": "available",
+            "requiredFutureDone": 120,
+            "entryPoint": "predict",
+            "computeMs": 142.59
+          }
+        },
+        {
+          "expected": 400,
+          "status": 200,
+          "todayLog": null,
+          "yesterdayMissing": true,
+          "prediction": {
+            "placeholder": false,
+            "observedDays": 60,
+            "computeMode": "inline",
+            "modelVersion": "behavior-persistence-m1-v1",
+            "completionStatus": "available",
+            "coreMetricStatus": "available",
+            "requiredFutureDone": 400,
+            "entryPoint": "predict",
+            "computeMs": 394.52
+          }
+        },
+        {
+          "expected": 1095,
+          "status": 200,
+          "todayLog": null,
+          "yesterdayMissing": true,
+          "prediction": {
+            "placeholder": false,
+            "observedDays": 60,
+            "computeMode": "inline",
+            "modelVersion": "behavior-persistence-m1-v1",
+            "completionStatus": "available",
+            "coreMetricStatus": "available",
+            "requiredFutureDone": 1095,
+            "entryPoint": "predict",
+            "computeMs": 18.33
+          }
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "name": "no request failed in any scenario, including baseline",
+      "status": "PASS",
+      "detail": [
+        {
+          "scenario": {
+            "engine": "placeholder",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "errors": 0
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "errors": 0
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "errors": 0
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "errors": 0
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "errors": 0
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 10
+          },
+          "errors": 0
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 10
+          },
+          "errors": 0
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "name": "every measured /today matches its independent oracle and entry point, covering all three sizes",
+      "status": "PASS",
+      "detail": [
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "realResponses": 7,
+          "nonRealResponses": 0,
+          "oracleMismatches": 0,
+          "requiredFutureDoneSeen": {
+            "120": 3,
+            "400": 2,
+            "1095": 2
+          },
+          "serverComputeMs": {
+            "count": 7,
+            "p50": 169.08,
+            "p95": 365.43,
+            "max": 365.43
+          },
+          "responseComputeMsMax": 365.24
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "realResponses": 7,
+          "nonRealResponses": 0,
+          "oracleMismatches": 0,
+          "requiredFutureDoneSeen": {
+            "120": 3,
+            "400": 2,
+            "1095": 2
+          },
+          "serverComputeMs": {
+            "count": 7,
+            "p50": 169.21,
+            "p95": 468.71,
+            "max": 468.71
+          },
+          "responseComputeMsMax": 468.49
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "realResponses": 31,
+          "nonRealResponses": 0,
+          "oracleMismatches": 0,
+          "requiredFutureDoneSeen": {
+            "120": 11,
+            "400": 10,
+            "1095": 10
+          },
+          "serverComputeMs": {
+            "count": 31,
+            "p50": 176.82,
+            "p95": 383.25,
+            "max": 394.53
+          },
+          "responseComputeMsMax": 394.32
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "realResponses": 31,
+          "nonRealResponses": 0,
+          "oracleMismatches": 0,
+          "requiredFutureDoneSeen": {
+            "120": 11,
+            "400": 10,
+            "1095": 10
+          },
+          "serverComputeMs": {
+            "count": 31,
+            "p50": 168.03,
+            "p95": 391.91,
+            "max": 435.68
+          },
+          "responseComputeMsMax": 435.59
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 10
+          },
+          "realResponses": 74,
+          "nonRealResponses": 0,
+          "oracleMismatches": 0,
+          "requiredFutureDoneSeen": {
+            "120": 25,
+            "400": 25,
+            "1095": 24
+          },
+          "serverComputeMs": {
+            "count": 74,
+            "p50": 155.71,
+            "p95": 375.91,
+            "max": 486.28
+          },
+          "responseComputeMsMax": 486.23
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 10
+          },
+          "realResponses": 75,
+          "nonRealResponses": 0,
+          "oracleMismatches": 0,
+          "requiredFutureDoneSeen": {
+            "120": 25,
+            "400": 25,
+            "1095": 25
+          },
+          "serverComputeMs": {
+            "count": 75,
+            "p50": 144.7,
+            "p95": 369.62,
+            "max": 385.35
+          },
+          "responseComputeMsMax": 385.12
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "name": "in-service compute: every real predict call measured inside the server is under 500 ms",
+      "status": "PASS",
+      "detail": [
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "serverComputeMs": {
+            "count": 7,
+            "p50": 169.08,
+            "p95": 365.43,
+            "max": 365.43
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "serverComputeMs": {
+            "count": 7,
+            "p50": 169.21,
+            "p95": 468.71,
+            "max": 468.71
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "serverComputeMs": {
+            "count": 31,
+            "p50": 176.82,
+            "p95": 383.25,
+            "max": 394.53
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "serverComputeMs": {
+            "count": 31,
+            "p50": 168.03,
+            "p95": 391.91,
+            "max": 435.68
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 10
+          },
+          "serverComputeMs": {
+            "count": 74,
+            "p50": 155.71,
+            "p95": 375.91,
+            "max": 486.28
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 10
+          },
+          "serverComputeMs": {
+            "count": 75,
+            "p50": 144.7,
+            "p95": 369.62,
+            "max": 385.35
+          }
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "name": "mixed-load runs (baseline without compute, then real engine inline vs worker pool)",
+      "status": "INFO",
+      "detail": [
+        {
+          "scenario": {
+            "engine": "placeholder",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "crud": {
+            "n": 88,
+            "p50": 6.5,
+            "p95": 12,
+            "p99": 14.5,
+            "max": 14.5
+          },
+          "session": {
+            "n": 43,
+            "p50": 10,
+            "p95": 15.4,
+            "p99": 19.1,
+            "max": 19.1
+          },
+          "today": {
+            "sent": 31,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 31,
+            "p50": 8,
+            "p95": 11.4,
+            "p99": 14.4,
+            "max": 14.4
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "today": {
+              "sent": 31,
+              "success": 31,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 3,
+              "success": 3,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 0,
+            "nonRealResponses": 31,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {},
+            "serverComputeMs": null,
+            "responseComputeMsMax": null
+          },
+          "server": {
+            "cpuUtilization": 0.12,
+            "rssMb": 160,
+            "eventLoopDelayMeanMs": 15.45,
+            "eventLoopDelayP99Ms": 22.51,
+            "eventLoopDelayMaxMs": 33.69,
+            "dbAcquireWaitP95Ms": 0.09,
+            "dbAcquireWaitMaxMs": 0.14,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null,
+            "workerQueueWaitMaxMs": null
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "crud": {
+            "n": 88,
+            "p50": 7.3,
+            "p95": 229.8,
+            "p99": 301.1,
+            "max": 301.1
+          },
+          "session": {
+            "n": 43,
+            "p50": 10,
+            "p95": 180.5,
+            "p99": 330.8,
+            "max": 330.8
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 7,
+            "p50": 175.7,
+            "p95": 378.2,
+            "p99": 378.2,
+            "max": 378.2
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "today": {
+              "sent": 7,
+              "success": 7,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 1,
+              "success": 1,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 7,
+            "nonRealResponses": 0,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {
+              "120": 3,
+              "400": 2,
+              "1095": 2
+            },
+            "serverComputeMs": {
+              "count": 7,
+              "p50": 169.08,
+              "p95": 365.43,
+              "max": 365.43
+            },
+            "responseComputeMsMax": 365.24
+          },
+          "server": {
+            "cpuUtilization": 0.31,
+            "rssMb": 151,
+            "eventLoopDelayMeanMs": 18.16,
+            "eventLoopDelayP99Ms": 165.81,
+            "eventLoopDelayMaxMs": 369.36,
+            "dbAcquireWaitP95Ms": 0.09,
+            "dbAcquireWaitMaxMs": 178.52,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null,
+            "workerQueueWaitMaxMs": null
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "crud": {
+            "n": 87,
+            "p50": 6.1,
+            "p95": 13.1,
+            "p99": 19,
+            "max": 19
+          },
+          "session": {
+            "n": 43,
+            "p50": 9.1,
+            "p95": 16,
+            "p99": 24.9,
+            "max": 24.9
+          },
+          "today": {
+            "sent": 7,
+            "unfinishedWhenWindowClosed": 0,
+            "n": 7,
+            "p50": 175,
+            "p95": 477.9,
+            "p99": 477.9,
+            "max": 477.9
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "session": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "today": {
+              "sent": 7,
+              "success": 7,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 1,
+              "success": 1,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 7,
+            "nonRealResponses": 0,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {
+              "120": 3,
+              "400": 2,
+              "1095": 2
+            },
+            "serverComputeMs": {
+              "count": 7,
+              "p50": 169.21,
+              "p95": 468.71,
+              "max": 468.71
+            },
+            "responseComputeMsMax": 468.49
+          },
+          "server": {
+            "cpuUtilization": 0.34,
+            "rssMb": 156,
+            "eventLoopDelayMeanMs": 15.73,
+            "eventLoopDelayP99Ms": 23.18,
+            "eventLoopDelayMaxMs": 26.49,
+            "dbAcquireWaitP95Ms": 0.09,
+            "dbAcquireWaitMaxMs": 0.15,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.02,
+            "workerQueueWaitMaxMs": 0.02
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "crud": {
+            "n": 88,
+            "p50": 89,
+            "p95": 341.9,
+            "p99": 600.7,
+            "max": 600.7
+          },
+          "session": {
+            "n": 44,
+            "p50": 109.2,
+            "p95": 398.1,
+            "p99": 480.1,
+            "max": 480.1
+          },
+          "today": {
+            "sent": 31,
+            "unfinishedWhenWindowClosed": 1,
+            "n": 31,
+            "p50": 183.9,
+            "p95": 397,
+            "p99": 401.8,
+            "max": 401.8
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 31,
+              "success": 31,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 3,
+              "success": 3,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 31,
+            "nonRealResponses": 0,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {
+              "120": 11,
+              "400": 10,
+              "1095": 10
+            },
+            "serverComputeMs": {
+              "count": 31,
+              "p50": 176.82,
+              "p95": 383.25,
+              "max": 394.53
+            },
+            "responseComputeMsMax": 394.32
+          },
+          "server": {
+            "cpuUtilization": 0.84,
+            "rssMb": 167,
+            "eventLoopDelayMeanMs": 45.84,
+            "eventLoopDelayP99Ms": 390.33,
+            "eventLoopDelayMaxMs": 401.6,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.16,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": null,
+            "workerQueueWaitMaxMs": null
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "crud": {
+            "n": 88,
+            "p50": 4.9,
+            "p95": 9.1,
+            "p99": 14.6,
+            "max": 14.6
+          },
+          "session": {
+            "n": 44,
+            "p50": 8.6,
+            "p95": 12.4,
+            "p99": 12.6,
+            "max": 12.6
+          },
+          "today": {
+            "sent": 31,
+            "unfinishedWhenWindowClosed": 1,
+            "n": 31,
+            "p50": 177.7,
+            "p95": 417.4,
+            "p99": 440.9,
+            "max": 440.9
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 31,
+              "success": 31,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 3,
+              "success": 3,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 31,
+            "nonRealResponses": 0,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {
+              "120": 11,
+              "400": 10,
+              "1095": 10
+            },
+            "serverComputeMs": {
+              "count": 31,
+              "p50": 168.03,
+              "p95": 391.91,
+              "max": 435.68
+            },
+            "responseComputeMsMax": 435.59
+          },
+          "server": {
+            "cpuUtilization": 0.8,
+            "rssMb": 227,
+            "eventLoopDelayMeanMs": 15.57,
+            "eventLoopDelayP99Ms": 23.72,
+            "eventLoopDelayMaxMs": 27.28,
+            "dbAcquireWaitP95Ms": 0.06,
+            "dbAcquireWaitMaxMs": 0.14,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 0.01,
+            "workerQueueWaitMaxMs": 0.02
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 10
+          },
+          "crud": {
+            "n": 90,
+            "p50": 2998.5,
+            "p95": 5424.5,
+            "p99": 5651.3,
+            "max": 5651.3
+          },
+          "session": {
+            "n": 44,
+            "p50": 6237.9,
+            "p95": 8690.9,
+            "p99": 8891,
+            "max": 8891
+          },
+          "today": {
+            "sent": 74,
+            "unfinishedWhenWindowClosed": 32,
+            "n": 74,
+            "p50": 3028.7,
+            "p95": 5684.2,
+            "p99": 5966.5,
+            "max": 5966.5
+          },
+          "cohort": {
+            "list": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "write": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 74,
+              "success": 74,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 9,
+              "success": 9,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 74,
+            "nonRealResponses": 0,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {
+              "120": 25,
+              "400": 25,
+              "1095": 24
+            },
+            "serverComputeMs": {
+              "count": 74,
+              "p50": 155.71,
+              "p95": 375.91,
+              "max": 486.28
+            },
+            "responseComputeMsMax": 486.23
+          },
+          "server": {
+            "cpuUtilization": 1.06,
+            "rssMb": 170,
+            "eventLoopDelayMeanMs": 167.71,
+            "eventLoopDelayP99Ms": 522.72,
+            "eventLoopDelayMaxMs": 554.17,
+            "dbAcquireWaitP95Ms": 8.96,
+            "dbAcquireWaitMaxMs": 518.78,
+            "poolMaxWaiting": 2,
+            "workerQueueWaitP95Ms": null,
+            "workerQueueWaitMaxMs": null
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 10
+          },
+          "crud": {
+            "n": 90,
+            "p50": 4.2,
+            "p95": 8.2,
+            "p99": 8.9,
+            "max": 8.9
+          },
+          "session": {
+            "n": 44,
+            "p50": 6.3,
+            "p95": 10.9,
+            "p99": 14.7,
+            "max": 14.7
+          },
+          "today": {
+            "sent": 75,
+            "unfinishedWhenWindowClosed": 2,
+            "n": 75,
+            "p50": 153.4,
+            "p95": 417,
+            "p99": 427.4,
+            "max": 427.4
+          },
+          "cohort": {
+            "list": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "write": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 75,
+              "success": 75,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 9,
+              "success": 9,
+              "failure": 0
+            }
+          },
+          "errors": 0,
+          "engine": {
+            "realResponses": 75,
+            "nonRealResponses": 0,
+            "oracleMismatches": 0,
+            "requiredFutureDoneSeen": {
+              "120": 25,
+              "400": 25,
+              "1095": 25
+            },
+            "serverComputeMs": {
+              "count": 75,
+              "p50": 144.7,
+              "p95": 369.62,
+              "max": 385.35
+            },
+            "responseComputeMsMax": 385.12
+          },
+          "server": {
+            "cpuUtilization": 1.64,
+            "rssMb": 224,
+            "eventLoopDelayMeanMs": 15.38,
+            "eventLoopDelayP99Ms": 22.45,
+            "eventLoopDelayMaxMs": 27.49,
+            "dbAcquireWaitP95Ms": 0.05,
+            "dbAcquireWaitMaxMs": 0.16,
+            "poolMaxWaiting": 0,
+            "workerQueueWaitP95Ms": 49.94,
+            "workerQueueWaitMaxMs": 71.17
+          }
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "name": "all cohorts settle: sent=success+failure per kind; server compute count equals measured today successes",
+      "status": "PASS",
+      "detail": [
+        {
+          "scenario": {
+            "engine": "placeholder",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "today": {
+              "sent": 31,
+              "success": 31,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 3,
+              "success": 3,
+              "failure": 0
+            }
+          }
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 1
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "today": {
+              "sent": 7,
+              "success": 7,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 1,
+              "success": 1,
+              "failure": 0
+            }
+          },
+          "computeCount": 7
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 1
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "session": {
+              "sent": 43,
+              "success": 43,
+              "failure": 0
+            },
+            "today": {
+              "sent": 7,
+              "success": 7,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 1,
+              "success": 1,
+              "failure": 0
+            }
+          },
+          "computeCount": 7
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 4
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 31,
+              "success": 31,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 3,
+              "success": 3,
+              "failure": 0
+            }
+          },
+          "computeCount": 31
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 4
+          },
+          "cohort": {
+            "list": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "write": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 31,
+              "success": 31,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 3,
+              "success": 3,
+              "failure": 0
+            }
+          },
+          "computeCount": 31
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "inline",
+            "todayPerSec": 10
+          },
+          "cohort": {
+            "list": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "write": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 74,
+              "success": 74,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 9,
+              "success": 9,
+              "failure": 0
+            }
+          },
+          "computeCount": 74
+        },
+        {
+          "scenario": {
+            "engine": "real",
+            "mode": "worker",
+            "todayPerSec": 10
+          },
+          "cohort": {
+            "list": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "write": {
+              "sent": 45,
+              "success": 45,
+              "failure": 0
+            },
+            "session": {
+              "sent": 44,
+              "success": 44,
+              "failure": 0
+            },
+            "today": {
+              "sent": 75,
+              "success": 75,
+              "failure": 0
+            }
+          },
+          "warmup": {
+            "list": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "write": {
+              "sent": 6,
+              "success": 6,
+              "failure": 0
+            },
+            "session": {
+              "sent": 5,
+              "success": 5,
+              "failure": 0
+            },
+            "today": {
+              "sent": 9,
+              "success": 9,
+              "failure": 0
+            }
+          },
+          "computeCount": 75
+        }
+      ]
+    }
+  ]
+}

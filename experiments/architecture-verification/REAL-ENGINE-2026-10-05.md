@@ -2,6 +2,8 @@
 
 **Supporting Artifact / Not a Source of Truth。採択・本実装・配備先の性能証拠ではない。**
 
+**2026-10-07の訂正:** 以下は当時の履歴であり、混合負荷の実際の将来DONE回数は119／399／1094だった。今日の仮想DONEがEngine内で1回控除されるためである。また、旧run1／run2にはwarmup応答が測定へ混入した `sent:7 / n:8` がある。旧JSONと当時の数値は保持し、修正後の入力・cohortと現main Engineの検証は[追加報告](REAL-ENGINE-2026-10-07.md)で分ける。独立benchmarkによる単体T-14の34〜75msはこの2指摘の対象外。
+
 [Issue #84](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84)の検証2は、これまで代用のCPU消費で行っていた。main統合済みの純粋Engine（`packages/prediction`）へ差し替えて、候補runtimeで測り直した。D-23〜D-25の状態、worker poolの採否、`/today`の応答項目は変更しない。
 
 ## 結論
@@ -84,17 +86,20 @@ Engineの[benchmark.mjs](../../packages/prediction/scripts/benchmark.mjs)を、�
 
 ## 再実行
 
-リポジトリのルートから実行する。Secretの実値とDockerは不要。使用ポートは3230と55592。
+現行の再実行手順は[2026-10-07の追加報告](REAL-ENGINE-2026-10-07.md#再実行)を参照。root workspaceの `npm ci` → Engine buildと、隔離候補内の独立した `npm ci` を分ける。Secretの実値とDockerは不要。
 
 ```bash
-cd packages/prediction && npm ci && cd ../..
-cd experiments/architecture-verification/candidate-1.7.7 && npm ci
-./node_modules/.bin/node ../../../packages/prediction/scripts/check.mjs test
-npm run typecheck
-npm run verify:real-engine
+# 現mainを取得した参照checkoutのルート (Node24.21.0 / npm11.19.0)
+npm ci
+npm run build:prediction
+npm run test --workspace=@futureroi/prediction
+# PR131の独立候補checkoutへ移動し、その中で別途 npm ci
+cd /path/to/pr131/experiments/architecture-verification/candidate-1.7.7
+npm ci
+# 参照Engineを明示する詳細は追加報告へ
 ```
 
-`check.mjs test`がEngineをbuildして47テストを実行する。buildがないと`verify:real-engine`は開始前に止まる。結果は`results/post-fix/v8-real-engine-mixed-load.json`に上書きされる。今回の生結果は[2回分](results/2026-10-05/real-engine/)を保存した。
+現main `e55d3ce` のEngine回帰は70件。PR131同梱の旧Engineと区別し、追加報告の `SPIKE_ENGINE_ROOT` で実測対象を指定する。buildがないと測定は開始前に止まる。旧生結果は[2回分](results/2026-10-05/real-engine/)のまま保持した。
 
 ## 検証コードの変更
 

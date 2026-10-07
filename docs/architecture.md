@@ -126,7 +126,7 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 
 **2026-10-02追加実測（採択は保留）：** 上の表は#85時点の履歴。旧1.7.6と隔離候補1.7.7を再実行し、候補修正後は認証/DB31・rate-limit11・追加回帰37 PASS（実Chrome9項目含む）。アプリ状態変更APIのOrigin拒否とauth専用int8 parserを確認したが、復元で削除user/古いpasswordも戻る問題の運用対処は未決。[Linuxコンテナ](../experiments/architecture-verification/LINUX-2026-10-02.md)のbuild/認証/DBは成功。修正前SIGTERMはexit137、承認済み最小終了hook後v6 9・追加9条件v7 29 PASS、全要求200・DB保持・10秒以内exit0。Windowsも終了試験失敗。実Engine/クラウド/費用は未検証。[追加報告と採用ブロッカー](../experiments/architecture-verification/FOLLOWUP-2026-10-02.md)を優先して読む。D-23〜D-25、Product要件、関連Issueの依存・Ready/BLOCKEDは変更しない。
 
-**2026-10-05追加実測（採択は保留）：** main統合済みの実Engineを候補1.7.7の検証サーバーへつなぎ、macOS・Apple M5・Node 24.21.0で測った。T-14の必須3条件は各回34〜75msで500ms未満。混合負荷（CRUD毎秒20件、`/today`毎秒1／4／10件、2回実行）はエラー0件。同期実行ではCRUDのp95が約5msから39〜85msへ伸び、同一プロセス内のworker 2本では1.4〜6.2msだった。10コアの端末での結果で、1 vCPU・実クラウド・最悪入力は未検証。予測の実行場所（同期かworkerか）は決めていない。[実Engineの報告](../experiments/architecture-verification/REAL-ENGINE-2026-10-05.md)を参照。
+**実Engineの追加検証（採択は保留）：** [2026-10-05の履歴](../experiments/architecture-verification/REAL-ENGINE-2026-10-05.md)ではApple M5・Node24で単体T-14が34〜75ms。旧混合負荷は実際の将来DONE回数119／399／1094とwarmup応答混入が判明したため、意図した120／400／1095の証拠には使わない。[2026-10-07の訂正・追加報告](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)に独立oracle・cohort・worker失敗回帰、現main Engineと公開R-11の別検証を記録する。1vCPU・実Cloud・最悪入力は未検証で、workerの本採択は決めていない。
 
 ### 実装時に必要な対策
 
