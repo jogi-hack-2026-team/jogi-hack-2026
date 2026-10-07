@@ -1,6 +1,7 @@
 # Supporting Artifact / Not a Source of Truth. Execute only in an otherwise idle CPU measurement slot.
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$EngineRoot, [ValidateRange(1024,65535)][int]$PgPort = 55592)
+param([Parameter(Mandatory)][string]$EngineRoot, [ValidateRange(1024,65535)][int]$PgPort = 55592,
+  [ValidateSet('predict','question-prior')][string[]]$Entries = @('predict','question-prior'))
 $ErrorActionPreference = 'Stop'
 $candidateRoot = [IO.Path]::GetFullPath($PSScriptRoot)
 $env:SPIKE_ENGINE_ROOT = [IO.Path]::GetFullPath($EngineRoot)
@@ -11,9 +12,10 @@ $evidenceRoot = Join-Path $candidateRoot ('..\results\' + [DateTimeOffset]::UtcN
 if (Test-Path -LiteralPath $evidenceRoot) { throw 'Evidence path exists; refusing to overwrite.' }
 New-Item -ItemType Directory -Path $evidenceRoot | Out-Null
 $ledger = @()
+$hadAssertionFailure = $false
 Push-Location -LiteralPath $candidateRoot
 try {
-  foreach ($entry in @('predict','question-prior')) {
+  foreach ($entry in $Entries) {
     $env:SPIKE_PREDICT_ENTRY = $entry
     foreach ($iteration in 1..2) {
       $tag = $stamp + '-run' + $iteration
@@ -34,7 +36,9 @@ try {
       $ledger += @{ entry=$publicEntry; iteration=$iteration; startedAt=$started.ToString('o'); endedAt=[DateTimeOffset]::UtcNow.ToString('o'); exitCode=$code; assertionFailures=$failures }
       $ledger | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $evidenceRoot 'commands.json')
       Get-Content -LiteralPath $log -Tail 11
-      if ($code -ne 0 -or $failures -ne 0) { throw ('Measurement failed: ' + $entry + ' run ' + $iteration) }
+      if ($null -eq $failures -or ($code -ne 0 -and $failures -eq 0)) { throw ('Measurement execution failed: ' + $entry + ' run ' + $iteration) }
+      # A valid saved FAIL is evidence. Collect remaining runs without weakening the criterion.
+      if ($failures -ne 0) { $hadAssertionFailure = $true }
     }
   }
 } finally {
@@ -50,3 +54,4 @@ try {
   Pop-Location
 }
 Write-Output ('Evidence: ' + $evidenceRoot)
+if ($hadAssertionFailure) { exit 1 }
