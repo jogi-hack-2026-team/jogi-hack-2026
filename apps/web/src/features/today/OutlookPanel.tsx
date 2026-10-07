@@ -3,7 +3,8 @@ import { InsufficientNotice } from '../../ui/components/Notice.tsx';
 import { todayCopy } from '../../copy/today.ts';
 import { useElementWidth } from '../../ui/useElementWidth.ts';
 import { DEFAULT_CHART_WIDTH, outlookAxis } from './chart-geometry.ts';
-import type { CompletionPresentation } from '../prior/presentation-types.ts';
+import { sourceLabel } from '../prior/PriorForecast.tsx';
+import type { CompletionPresentation, Plan } from '../prior/presentation-types.ts';
 
 /** これからの見通し（補助指標2）。目安と「10回中8回」の日付を、実際の日付に比例した軸に置く。 */
 export function OutlookPanel({ completion, today, title }: { completion: CompletionPresentation; today: string; title: string }) {
@@ -17,8 +18,8 @@ export function OutlookPanel({ completion, today, title }: { completion: Complet
       ) : completion.kind === 'insufficient' ? (
         <InsufficientNotice>{completion.message}</InsufficientNotice>
       ) : (
-        // 条件付きの回数は記録だけのモードでは出ない（D-26 の採択後に表示を決める）
-        <InsufficientNotice>{completion.reason}</InsufficientNotice>
+        // 材料が足りないときの、設定量で行う場合の残り（R-11、デザインキャンバス R2・R4）。日数の予測ではない
+        <PlanView plan={completion.plan} reason={completion.reason} />
       )}
     </Band>
   );
@@ -33,6 +34,7 @@ function Estimate({ completion, today }: { completion: Extract<CompletionPresent
         <p className="fr-outlook__p50">{completion.p50Label ? todayCopy.completionP50(completion.p50Label) : todayCopy.over3Years}</p>
         <p className="fr-outlook__p80">{completion.p80Label ? todayCopy.completionP80(completion.p80Label) : todayCopy.completionP80Over3Years}</p>
       </div>
+      <SourceRows sources={completion.sources} />
       {completion.p50Days !== null ? (
         <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} />
       ) : null}
@@ -41,6 +43,43 @@ function Estimate({ completion, today }: { completion: Extract<CompletionPresent
         {todayCopy.axisNote}
       </p>
     </>
+  );
+}
+
+/** a／b 別の出所（R-11）。どちらも記録だけなら出さない（記録だけのモードの表示を変えない）。 */
+function SourceRows({ sources }: { sources: Extract<CompletionPresentation, { kind: 'estimate' }>['sources'] }) {
+  if (sources.a === 'RECORDS' && sources.b === 'RECORDS') return null;
+  return (
+    <div className="fr-sources">
+      <dl className="fr-sources__list" aria-label={todayCopy.sourcesTitle}>
+        <div>
+          <dt>{todayCopy.sourceA}</dt>
+          <dd>
+            <span className="fr-source">{sourceLabel(sources.a)}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>{todayCopy.sourceB}</dt>
+          <dd>
+            <span className="fr-source">{sourceLabel(sources.b)}</span>
+          </dd>
+        </div>
+      </dl>
+      <p className="fr-note">{todayCopy.questionAssumption}</p>
+    </div>
+  );
+}
+
+function PlanView({ plan, reason }: { plan: Plan; reason: string }) {
+  const unit = plan.unit === 'minutes' ? '分' : '回';
+  const amount = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
+  return (
+    <div className="fr-plan">
+      <p className="fr-plan__title">{todayCopy.planTitle}</p>
+      <p className="fr-plan__value">{todayCopy.planSessions(plan.sessions)}</p>
+      <p className="fr-note">{todayCopy.planNote(amount(plan.remainingAmount), amount(plan.sessionAmount), amount(plan.lastAmount))}</p>
+      <InsufficientNotice>{reason}</InsufficientNotice>
+    </div>
   );
 }
 

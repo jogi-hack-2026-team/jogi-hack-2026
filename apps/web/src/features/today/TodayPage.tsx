@@ -167,7 +167,8 @@ function TodayScreen({ goalId }: { goalId: string }) {
 
 function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Today; logs: Log[]; onChange: () => void }) {
   // 変換と検査は Boundary の内側で行う（失敗しても記録の2択は残る）
-  const view = toForecastView(today.prediction, goal.unit);
+  // R-11 の読み取り（?view=r11）の出所と計画も渡す。回答由来の値を実記録として見せないため
+  const view = toForecastView(today.prediction, goal.unit, { provenance: today.provenance, plan: today.plan, sessionAmount: today.context.sessionAmount });
   assertForecastPresentation(view);
   const unit = unitLabel(goal.unit);
   const progress =
@@ -202,6 +203,12 @@ function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Toda
               {todayCopy.question}
             </h1>
             <CoreMetric core={view.core} resumed={view.resumed} />
+            {view.core.kind === 'insufficient' && !hasAnswers(goal) ? (
+              // まだ質問に答えていなければ、答えて最初の見通しを出せることを伝える（R-11、デザインキャンバス R4）
+              <Link to="/goals/$goalId/edit" params={{ goalId: goal.id }} className="fr-link">
+                {todayCopy.answerQuestions}
+              </Link>
+            ) : null}
           </section>
           <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
           {progress}
@@ -211,6 +218,11 @@ function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Toda
       // loading・error など取得側の状態は、この部品に渡さない（親で扱う）
       throw new TypeError(`Today の表示データとして想定していない状態です: ${view.kind}`);
   }
+}
+
+/** R-11 の回答が1つでもあるか（Goal は ?view=r11 で読むので questionPrior を持つ）。 */
+function hasAnswers(goal: Goal & { questionPrior?: { a: unknown; b: unknown } }): boolean {
+  return goal.questionPrior !== undefined && (goal.questionPrior.a !== null || goal.questionPrior.b !== null);
 }
 
 function Loading() {

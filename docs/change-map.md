@@ -28,6 +28,13 @@
 | raw回答・保存snapshot・回答版・文脈変更での撤回 | [0003](../apps/api/migrations/0003_goal_question_prior.sql)、[snapshot.ts](../apps/api/src/questions/snapshot.ts)、[Goal store](../apps/api/src/goals/store.ts)、[入力schema](../apps/api/src/contracts/question.ts) | [保存・同時更新・失敗回帰](../apps/api/tests/question-prior.test.ts)、[非破壊migration](../apps/api/tests/migrate.test.ts) |
 | 保存回答＋同じToday snapshotの実ログから予測と出所を作る | [公開Engine](../packages/prediction/src/question-prior.ts)、[Today変換](../apps/api/src/prediction/r11.ts)、[専用DTO/query](../apps/api/src/contracts/r11.ts)、[Goal GET](../apps/api/src/goals/routes.ts)・[Today GET](../apps/api/src/prediction/routes.ts)、[D-26](architecture.md#2026-10-07の保存予測接続133)。両GETの`?view=r11`を依頼者承認範囲で接続 | [公開Engine回帰](../packages/prediction/tests/question-prior-public.test.mjs)、[HTTP旧互換・owner/認証・query・部分回答/UNKNOWN/撤回/競合・出所・日跨ぎsnapshot](../apps/api/tests/question-prior-http.test.ts)、型の双方向検査と通常snapshot更新回帰。FE結合・E2E・チームレビューは別に確認 |
 
+FE結合は[#137](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/137)が追跡する（#133のBEが前提）。
+
+| #137の変更 | 実装 | 確認 |
+| --- | --- | --- |
+| Goalの作成・編集で初期質問に答える・撤回する、回答版の競合（409）を読み込み直す | [goals-http.ts](../apps/web/src/api/goals-http.ts)（`?view=r11`）、[goal-form.ts](../apps/web/src/features/goals/goal-form.ts)（送る本文と回答版の規則）、[GoalFormPage](../apps/web/src/features/goals/GoalFormPage.tsx)、[QuestionPriorFields](../apps/web/src/features/prior/QuestionPriorFields.tsx) | [goal-form.test.mjs](../apps/web/tests/goal-form.test.mjs)（回答・撤回・回答版の付け方、422の項目対応）、ローカル実ブラウザ |
+| Todayで出所（回答／記録）と、材料不足時の計画（設定量で行う場合の残り回数）を表示する | [today-http.ts](../apps/web/src/api/today-http.ts)（`?view=r11`）、[forecast-view.ts](../apps/web/src/features/today/forecast-view.ts)（provenance・planをそのまま渡す。FEは計算しない）、[CoreMetric](../apps/web/src/features/today/CoreMetric.tsx)、[OutlookPanel](../apps/web/src/features/today/OutlookPanel.tsx) | [today-presentation.test.mjs](../apps/web/tests/today-presentation.test.mjs)（出所の受け渡し、NONEの拒否、計画の条件付き表示）、ローカル実ブラウザ |
+
 以下は2026-10-05時点の分担・未決履歴。[P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)で機能ScopeのMust追加と分担を採択し、当時の実現方式はD-26でOPENだった。追加UIは[#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)（Kaito、ネイティブ親#88）、Engineは#90配下の#71〜#73、BEは#89配下の#76・#77、FEの既存画面・組み込みは#88配下の#78・#81へ追跡する。#107は提案公開・文書追跡Taskであり、追加UIの親ではない。現在の保存・公開API追加は上の#133で分け、個別期限・Hard依存・Ready/BLOCKED・元の完了チェックは採択から自動変更しない。
 
 | 実装Issue | 追加機能による影響 | 具体契約の採択後に確認する内容 |
