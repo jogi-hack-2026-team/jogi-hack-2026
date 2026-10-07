@@ -54,6 +54,18 @@ curl --silent --fail --cookie-jar "$JAR" --header "origin: $base" --header 'cont
   --data "{\"email\":\"$email\",\"password\":\"smoke-only-user-password\",\"name\":\"Compose Smoke\"}" \
   "$base/api/auth/sign-up/email" >/dev/null
 curl --silent --fail --cookie "$JAR" "$base/api/auth/get-session" | grep -q "\"email\":\"$email\"" || fail 'session after sign-up'
+# mainに統合されたGoal・記録・Todayを通し、コンテナ内のEngine配置も検証する。
+created=$(curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
+  --data '{"title":"compose smoke goal","unit":"minutes","totalRequired":600,"sessionAmount":30,"timezone":"Asia/Tokyo"}' "$base/api/goals")
+goal_id=$(echo "$created" | sed -n 's/.*"id":"\([0-9a-f-]*\)".*/\1/p')
+[ -n "$goal_id" ] || fail 'goal creation missing id'
+today_jst=$(TZ=Asia/Tokyo date +%Y-%m-%d)
+saved=$(curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
+  --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/$today_jst")
+[ "$saved" = "{\"localDate\":\"$today_jst\",\"status\":\"DONE\",\"amount\":30}" ] || fail 'log save body'
+today_body=$(curl --silent --fail --cookie "$JAR" "$base/api/goals/$goal_id/today")
+echo "$today_body" | grep -q '"modelVersion":"behavior-persistence-m1-v1"' || fail 'Today did not return the Engine result'
+echo "$today_body" | grep -q '"reason":"TODAY_RECORDED"' || fail 'Today did not reflect the log'
 [ "$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$JAR" "$base/api/compose-smoke-missing")" = 404 ] || fail 'unknown protected API must remain 404'
 [ "$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$JAR" --header 'origin: http://evil.example' \
   --header 'content-type: application/json' --data '{}' "$base/api/goals")" = 403 ] || fail 'mutation origin boundary'
@@ -71,6 +83,7 @@ healthy
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data changed after restart'
 [ "$(sql 'select count(*) from schema_migrations')" = "$recorded" ] || fail 'migration history changed after restart'
 curl --silent --fail --cookie "$JAR" "$base/api/auth/get-session" | grep -q "\"email\":\"$email\"" || fail 'session lost after restart'
+[ "$(sql "select count(*) from action_log where goal_id='$goal_id'")" = 1 ] || fail 'log lost after restart'
 dc logs --no-color app | grep -q 'startup: migrations complete' || fail 'automatic migration missing'
 
 dc stop app >/dev/null
@@ -125,4 +138,5 @@ dc up -d --wait --wait-timeout 120
 healthy
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data lost across down/up'
 [ "$(sql "select count(*) from \"user\" where email='$email'")" = 1 ] || fail 'auth data lost across down/up'
-echo "PASS: default Compose startup, migration repeat/restart/failure gate, SPA/API/auth, running SIGTERM exit 0 / migration wait exit 143, data retained across down/up; project=$PROJECT volume=$volume"
+[ "$(sql "select count(*) from action_log where goal_id='$goal_id'")" = 1 ] || fail 'log lost across down/up'
+echo "PASS: default Compose startup, migration repeat/restart/failure gate, SPA/API/auth/Goal/log/Today, running SIGTERM exit 0 / migration wait exit 143, data retained across down/up; project=$PROJECT volume=$volume"

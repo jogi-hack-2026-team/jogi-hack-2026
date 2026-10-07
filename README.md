@@ -15,7 +15,7 @@
 | DECIDED | 現行の実績由来の予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
 | DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。2026-10-05に[npm workspacesと`pg`を追加採択](docs/architecture.md#2026-10-05の追加採択)。版・残りの追加ツール・API細則は未確定 |
 | 条件付き第一候補 | Better Auth＋Cloud Run＋Neonは検証・運用条件付き。[D-24](docs/architecture.md#d-24)／[D-25](docs/architecture.md#d-25)。最終採択・公開受入、一般公開、アカウント・課金作成の許可ではない |
-| 限定先行／結合待ち | #71〜#73の承認範囲の[Prediction計算本体・テスト](packages/prediction/README.md)は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。[純粋Engine検証CI](packages/prediction/README.md#検証ci)がある。起動基盤・DB schema/migration・認証・Goal APIはローカル実装済み。記録・予測のAPIとGoal・Today画面への結合・正式受入と公開配置は未完了。既存Issueの正式依存・残条件は各Issueで確認する |
+| ローカル実装／画面・公開待ち | #71〜#73の承認範囲の[Prediction計算本体・テスト](packages/prediction/README.md)は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。[純粋Engine検証CI](packages/prediction/README.md#検証ci)がある。起動基盤・DB schema/migration・認証・Goal・記録・Today APIはローカル実装済みで、`/today`からEngineを呼ぶ。Goal・記録・Today画面と公開配置は未完了。既存Issueの正式依存・残条件は各Issueで確認する |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
@@ -29,7 +29,7 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、文書・設定検証用のGitHub Actionsがあります。
-旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で、DBスキーマとmigration（`npm run db:migrate`）は#74で、認証（登録・ログイン・ログアウト、未ログインは401）は#75でローカル実装済みです。Goal API（一覧・作成・編集・削除）は#76でローカル実装済み、記録・予測のAPIと画面は未実装、公開先（staging）への配置は未実施です。
+旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で、DBスキーマとmigration（`npm run db:migrate`）は#74で、認証（登録・ログイン・ログアウト、未ログインは401）は#75でローカル実装済みです。Goal API（#76）と記録・Today API（#77、`/today`が純粋Engineを呼ぶ）はローカル実装済み、画面は未実装、公開先（staging）への配置は未実施です。
 現行の未決定事項と当時の検証記録への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。

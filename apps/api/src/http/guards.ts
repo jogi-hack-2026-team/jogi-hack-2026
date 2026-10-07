@@ -37,3 +37,11 @@ export function registerApiGuards(app: FastifyInstance, auth: Auth, allowedOrigi
     request.userId = session.user.id;
   });
 }
+
+// 業務routeの二重防御。共通hookはrouterの確定routeを保護する。
+// 各業務pluginでも認証済みuserIdを要求し、所有者条件へ空文字を渡さない。
+export function requireUserId(instance: FastifyInstance): void {
+  instance.addHook('onRequest', async (request, reply) => {
+    if (!request.userId) return reply.code(401).send(UNAUTHENTICATED);
+  });
+}

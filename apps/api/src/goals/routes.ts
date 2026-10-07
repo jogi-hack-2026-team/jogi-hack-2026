@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import { ErrorBody, Goal, GoalCreate, GoalList, GoalParams, GoalPatch } from '../contracts/index.ts';
 import { errorBody } from '../http/errors.ts';
-import { UNAUTHENTICATED } from '../http/guards.ts';
+import { requireUserId } from '../http/guards.ts';
 import { createGoal, deleteGoal, getGoal, listGoals, updateGoal } from './store.ts';
 
 export type GoalRouteDeps = {
@@ -19,10 +19,7 @@ const GOAL_NOT_FOUND = errorBody('NOT_FOUND', 'Goal not found.');
 // 他人のGoalは存在を明かさず404。契約違反は共通のerror handlerが422へ変換する。
 export async function registerGoalRoutes(app: FastifyInstance, deps: GoalRouteDeps): Promise<void> {
   await app.register(async (instance) => {
-    // 共通hookがrouterの確定routeを保護する。ここでも認証済みIDを要求する。
-    instance.addHook('onRequest', async (request, reply) => {
-      if (!request.userId) return reply.code(401).send(UNAUTHENTICATED);
-    });
+    requireUserId(instance);
     const api = instance.withTypeProvider<TypeBoxTypeProvider>();
 
     api.get('/api/goals', { schema: { response: { 200: GoalList } } }, async (request) => listGoals(deps.pool, request.userId, deps.now));
