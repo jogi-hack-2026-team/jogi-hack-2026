@@ -82,7 +82,9 @@ const r11Cases = entryPoint === 'predictWithQuestionPrior' ? (benchJson.cases as
     firstMs: measuredMs[0], warmMs: measuredMs.slice(1), maxMs: Math.max(...measuredMs), pass: measuredMs.every(ms => ms < 500) };
 }) : null;
 
-const db = await startPg({ name: 'v8', port: 55592, fresh: true });
+const pgPort = Number(process.env.SPIKE_PG_PORT ?? 55592);
+if (!Number.isInteger(pgPort) || pgPort < 1024 || pgPort > 65535) throw new Error('Invalid synthetic PG port');
+const db = await startPg({ name: 'v8', port: pgPort, fresh: true });
 const admin = new pg.Pool({ connectionString: db.connectionString, max: 2 });
 await migrate(admin, createAuth({ pool: admin, secret, baseURL: 'http://127.0.0.1:3230' }));
 const dbVersion = (await admin.query('select version()')).rows[0].version as string;
@@ -305,7 +307,7 @@ const s = report.save(`v8-${entryPoint}-${resultTag}.json`, {
   engineProvenance,
   engineBenchmarkRaw: benchJson,
   setup: {
-    users: USERS, predictedGoals: predicted.map(p => p.oracle), logDaysPerGoal: LOG_DAYS, sessionAmount: SESSION_AMOUNT,
+    users: USERS, predictedGoals: predicted.map(p => p.oracle), logDaysPerGoal: LOG_DAYS, sessionAmount: SESSION_AMOUNT, pgPort,
     entryPoint, questionPrior: entryPoint === 'predictWithQuestionPrior' ? questionPrior : null,
     phaseBoundary: 'warmup stop/drain -> reset -> measurement stop/drain -> snapshot metrics',
     crudOpenLoopPerSec: CRUD_PER_SEC, crudMix: 'GET /api/goals, PUT log (separate write goal), GET /api/auth/get-session in rotation',

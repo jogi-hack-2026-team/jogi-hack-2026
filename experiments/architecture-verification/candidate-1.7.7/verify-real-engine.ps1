@@ -1,9 +1,10 @@
 # Supporting Artifact / Not a Source of Truth. Execute only in an otherwise idle CPU measurement slot.
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$EngineRoot)
+param([Parameter(Mandatory)][string]$EngineRoot, [ValidateRange(1024,65535)][int]$PgPort = 55592)
 $ErrorActionPreference = 'Stop'
 $candidateRoot = [IO.Path]::GetFullPath($PSScriptRoot)
 $env:SPIKE_ENGINE_ROOT = [IO.Path]::GetFullPath($EngineRoot)
+$env:SPIKE_PG_PORT = [string]$PgPort
 $nodeBinary = Join-Path $candidateRoot 'node_modules\node\bin\node.exe'
 $stamp = [DateTimeOffset]::UtcNow.ToString('yyyyMMddTHHmmssZ')
 $evidenceRoot = Join-Path $candidateRoot ('..\results\' + [DateTimeOffset]::UtcNow.ToString('yyyy-MM-dd') + '\real-engine-review\' + $stamp)
@@ -45,7 +46,7 @@ try {
     & $control status -D $dbDirectory *> $null
     if ($LASTEXITCODE -eq 0) { & $control stop -D $dbDirectory -m fast -w -t 10 *> $null }
   }
-  Remove-Item Env:SPIKE_RESULT_TAG,Env:SPIKE_PREDICT_ENTRY,Env:SPIKE_ENGINE_ROOT -ErrorAction SilentlyContinue
+  Remove-Item Env:SPIKE_RESULT_TAG,Env:SPIKE_PREDICT_ENTRY,Env:SPIKE_ENGINE_ROOT,Env:SPIKE_PG_PORT -ErrorAction SilentlyContinue
   Pop-Location
 }
 Write-Output ('Evidence: ' + $evidenceRoot)
