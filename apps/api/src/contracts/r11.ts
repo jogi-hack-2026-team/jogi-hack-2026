@@ -4,6 +4,9 @@ import { PredictionResultSchema, Today } from './log.ts';
 import { AnswerRevision, QuestionAnswers } from './question.ts';
 
 const strict = { additionalProperties: false } as const;
+// GET Goal/Todayだけで使う読取表現の選択。書込bodyと回答版はqueryに依存しない。
+export const R11ViewQuery = Type.Object({ view: Type.Optional(Type.Literal('r11')) }, strict);
+export type R11ViewQuery = Static<typeof R11ViewQuery>;
 export const GoalR11 = Type.Object({ ...Goal.properties,
   schemaVersion: Type.Literal('r11-v1'), questionPrior: QuestionAnswers, answerRevision: AnswerRevision,
 }, strict);

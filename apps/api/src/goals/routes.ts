@@ -2,7 +2,7 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { Type } from '@sinclair/typebox';
 import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
-import { ErrorBody, Goal, GoalCreate, GoalList, GoalParams, GoalPatch } from '../contracts/index.ts';
+import { ErrorBody, Goal, GoalCreate, GoalList, GoalParams, GoalPatch, GoalR11, R11ViewQuery } from '../contracts/index.ts';
 import { errorBody } from '../http/errors.ts';
 import { requireUserId } from '../http/guards.ts';
 import { createGoal, deleteGoal, getGoal, listGoals, updateGoal } from './store.ts';
@@ -29,9 +29,14 @@ export async function registerGoalRoutes(app: FastifyInstance, deps: GoalRouteDe
       return reply.code(201).send(goal);
     });
 
-    api.get('/api/goals/:goalId', { schema: { params: GoalParams, response: { 200: Goal, 404: ErrorBody } } }, async (request, reply) => {
+    api.get('/api/goals/:goalId', { schema: { params: GoalParams, querystring: R11ViewQuery,
+      response: { 200: Type.Union([GoalR11, Goal]), 404: ErrorBody, 422: ErrorBody } } }, async (request, reply) => {
       const goal = await getGoal(deps.pool, request.userId, request.params.goalId, deps.now);
-      return goal ?? reply.code(404).send(GOAL_NOT_FOUND);
+      if (!goal) return reply.code(404).send(GOAL_NOT_FOUND);
+      if (request.query.view === 'r11') return { ...goal, schemaVersion: 'r11-v1' as const };
+      // unionの候補照合にも旧schemaを満たす値を渡す。内部の回答欄は旧表現へ含めない。
+      const { questionPrior: _answers, answerRevision: _revision, ...legacyGoal } = goal;
+      return legacyGoal;
     });
 
     api.patch(
