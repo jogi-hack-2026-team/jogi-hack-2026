@@ -1,4 +1,4 @@
-import type { LogPut, LogStatus } from '@contracts';
+import type { Log, LogPut, LogStatus } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isUnauthenticated } from '../../api/http.ts';
 
@@ -36,4 +36,24 @@ export function classifySaveError(error: unknown): SaveFailureKind {
     if (code === 'LOG_DATE_OUT_OF_WINDOW' || code === 'LOG_DATE_BEFORE_START') return 'date';
   }
   return 'failed';
+}
+
+/**
+ * 昨日の記録の状態（R-04、#80）。記録済みの昨日だけ「昨日：やった・20分［変更］」から訂正できる。
+ * - before-start：昨日が記録開始日より前。補完も訂正も出さない
+ * - missing：未記録。既存の「昨日はどうでしたか？」で補完する（出すかどうかは /today の yesterdayMissing に従う）
+ * - recorded：記録済み。保存済みの記録（量を含む）を訂正の初期値にする
+ */
+export type YesterdayRecord = { kind: 'before-start' } | { kind: 'missing' } | { kind: 'recorded'; log: Log };
+
+export function yesterdayRecord(yesterday: string, recordStartDate: string, logs: readonly Log[]): YesterdayRecord {
+  // YYYY-MM-DD どうしなので文字列の比較で日付の前後が分かる
+  if (yesterday < recordStartDate) return { kind: 'before-start' };
+  const log = logs.find((l) => l.localDate === yesterday);
+  return log ? { kind: 'recorded', log } : { kind: 'missing' };
+}
+
+/** 保存済みの記録を、訂正の初期値（RecordChoice）にする。DONE は保存済みの量のまま（今の1回の量に置き換えない）。 */
+export function choiceFromLog(log: Log): RecordChoice {
+  return log.status === 'DONE' ? { status: 'DONE', amount: log.amount } : { status: 'SKIPPED', amount: null };
 }

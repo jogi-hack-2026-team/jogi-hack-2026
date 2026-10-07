@@ -20,6 +20,8 @@ export function AmountEditor({
   busy,
   onSubmit,
   onCancel,
+  submitLabel = todayCopy.saveWithAmount,
+  cancelLabel = todayCopy.back,
 }: {
   label: string;
   initial: number;
@@ -28,6 +30,9 @@ export function AmountEditor({
   busy: boolean;
   onSubmit: (amount: number) => void;
   onCancel: () => void;
+  /** 主ボタンの文言（既定は「この量で記録」。昨日の訂正では「変更を保存」）。 */
+  submitLabel?: string;
+  cancelLabel?: string;
 }) {
   const id = useId();
   const [text, setText] = useState(String(initial));
@@ -72,10 +77,10 @@ export function AmountEditor({
       </div>
       <div className="fr-amount__actions">
         <Button variant="primary" busy={busy} onClick={submit}>
-          {busy ? todayCopy.saving : todayCopy.saveWithAmount}
+          {busy ? todayCopy.saving : submitLabel}
         </Button>
         <Button variant="secondary" disabled={busy} onClick={onCancel}>
-          {todayCopy.back}
+          {cancelLabel}
         </Button>
       </div>
     </div>

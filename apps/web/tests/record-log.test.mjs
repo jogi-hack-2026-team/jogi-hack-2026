@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { ApiError } from '../src/api/client.ts';
-import { classifySaveError, describeChoice, toLogPut } from '../src/features/logs/record-log.ts';
+import { choiceFromLog, classifySaveError, describeChoice, toLogPut, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
@@ -25,4 +25,23 @@ test('保存の失敗を、ログイン切れ・記録できない日・それ�
   assert.equal(classifySaveError(new ApiError(422, body('VALIDATION_ERROR'))), 'failed');
   assert.equal(classifySaveError(new ApiError(500, null)), 'failed');
   assert.equal(classifySaveError(new TypeError('Failed to fetch')), 'failed');
+});
+
+test('昨日は、記録開始日より前なら何も出さず、未記録なら補完、記録済みなら訂正の対象にする', () => {
+  const logs = [
+    { localDate: '2026-10-06', status: 'DONE', amount: 20 },
+    { localDate: '2026-10-07', status: 'SKIPPED', amount: null },
+  ];
+  assert.deepEqual(yesterdayRecord('2026-10-06', '2026-10-07', logs), { kind: 'before-start' });
+  assert.deepEqual(yesterdayRecord('2026-10-05', '2026-10-01', logs), { kind: 'missing' });
+  assert.deepEqual(yesterdayRecord('2026-10-06', '2026-10-01', logs), { kind: 'recorded', log: logs[0] });
+  // 開始日の当日は記録できる
+  assert.deepEqual(yesterdayRecord('2026-10-06', '2026-10-06', logs), { kind: 'recorded', log: logs[0] });
+});
+
+test('訂正の初期値は保存済みの記録（DONEは保存済みの量のまま、今の1回の量に置き換えない）', () => {
+  assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), { status: 'DONE', amount: 20 });
+  assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'SKIPPED', amount: null }), { status: 'SKIPPED', amount: null });
+  // 保存済みの量で要約する（1回の量が30分に変わっていても「20分」）
+  assert.equal(describeChoice(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), 30, '分', '休んだ'), 'やった・20分');
 });

@@ -24,6 +24,7 @@ export function RecordChoiceBar({
   saver,
   onCancelChange,
   onRefresh,
+  locked = false,
 }: {
   today: string;
   sessionAmount: number;
@@ -32,6 +33,8 @@ export function RecordChoiceBar({
   saver: ReturnType<typeof useSaveLog>;
   onCancelChange?: () => void;
   onRefresh: () => void;
+  /** 昨日の記録を訂正している間は押せなくする（今日と昨日を同時に編集しない）。 */
+  locked?: boolean;
 }) {
   const [editingAmount, setEditingAmount] = useState(false);
   const label = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
@@ -76,6 +79,8 @@ export function RecordChoiceBar({
 
   const note = saver.isSaving ? (
     todayCopy.savingNote
+  ) : locked ? (
+    todayCopy.otherEditing
   ) : (
     <span className="fr-record__note">
       {current ? <span>{todayCopy.changeNote}</span> : null}
@@ -102,7 +107,7 @@ export function RecordChoiceBar({
         selected={current?.status === 'DONE'}
         busy={saving?.status === 'DONE'}
         busyLabel={todayCopy.saving}
-        disabled={saver.isSaving}
+        disabled={saver.isSaving || locked}
         onClick={() => save({ status: 'DONE', amount: current?.status === 'DONE' ? currentAmount : null })}
       />
       <ChoiceButton
@@ -111,7 +116,7 @@ export function RecordChoiceBar({
         selected={current?.status === 'SKIPPED'}
         busy={saving?.status === 'SKIPPED'}
         busyLabel={todayCopy.saving}
-        disabled={saver.isSaving}
+        disabled={saver.isSaving || locked}
         onClick={() => save({ status: 'SKIPPED', amount: null })}
       />
     </StickyActionBar>
