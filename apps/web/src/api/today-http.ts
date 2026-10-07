@@ -9,9 +9,9 @@ import { requestJson } from './http.ts';
 const base = (goalId: string) => `/api/goals/${encodeURIComponent(goalId)}`;
 
 export const todayHttp = {
-  getToday: (goalId: string): Promise<Today> => requestJson(TodaySchema, `${base(goalId)}/today`),
+  getToday: (goalId: string, signal?: AbortSignal): Promise<Today> => requestJson(TodaySchema, `${base(goalId)}/today`, { signal }),
   /** 全期間の記録（累計の図に使う）。 */
-  listLogs: (goalId: string): Promise<Log[]> => requestJson(LogList, `${base(goalId)}/logs`),
+  listLogs: (goalId: string, signal?: AbortSignal): Promise<Log[]> => requestJson(LogList, `${base(goalId)}/logs`, { signal }),
 };
 
 export const todayKeys = {

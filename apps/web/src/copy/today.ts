@@ -55,6 +55,8 @@ export const todayCopy = {
   backToGoals: 'Goal一覧へ戻る',
   /** 記録の保存（#79・#80）をつなぐまで、押したときに出す開発用の案内。 */
   saveNotConnected: '記録の保存は #79・#80 で接続します（まだ保存されません）。',
+  inconsistentTitle: '表示をそろえられませんでした',
+  inconsistent: 'Goal・記録・見通しを同じ時点の内容で読み込めませんでした。別の画面で変更が続いている可能性があります。もう一度読み込んでください。',
   signedOutTitle: 'ログインが切れました',
   signedOut: '続けるには、もう一度ログインしてください。記録や見通しが消えたわけではありません。',
   signIn: 'ログインする',
