@@ -5,6 +5,7 @@ import { runAuthAction } from './auth/action.ts';
 import { AuthForm } from './routes/AuthForm.tsx';
 import { HealthPage } from './routes/HealthPage.tsx';
 import { Home } from './routes/Home.tsx';
+import { TodayPage } from './features/today/TodayPage.tsx';
 
 function Layout() {
   const session = authClient.useSession();
@@ -86,7 +87,24 @@ const registerRoute = createRoute({
 
 const healthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/health', component: HealthPage });
 
-export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute, loginRoute, registerRoute, healthRoute]) });
+// Goal の画面は実APIを使うので、未ログインはホームと同じくログイン画面へ送る。
+const requireSignIn = async ({ location }: { location: { href: string } }) => {
+  const session = await authClient.getSession();
+  if (!session.data) throw redirect({ to: '/login', search: { redirect: location.href } });
+};
+
+// Today Decision（#81）。
+const todayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/goals/$goalId',
+  beforeLoad: requireSignIn,
+  component: function TodayRoute() {
+    const { goalId } = todayRoute.useParams();
+    return <TodayPage goalId={goalId} />;
+  },
+});
+
+export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute, loginRoute, registerRoute, healthRoute, todayRoute]) });
 
 declare module '@tanstack/react-router' {
   interface Register {

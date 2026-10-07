@@ -1,0 +1,21 @@
+.fr-appbar {
+  height: var(--fr-h-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-1);
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.fr-appbar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fr-fs-button);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fr-appbar__spacer {
+  width: var(--fr-tap);
+  flex-shrink: 0;
+}

@@ -1,0 +1,148 @@
+/*
+ * デザイントークン（デザインキャンバス「B案：トークンと部品」）。
+ * 色・文字・余白・角丸・高さはここだけで定義し、部品のCSSは var(--fr-…) だけを参照する。
+ * 見た目の調整は、まずこのファイルの値を変えて行う。
+ */
+.fr {
+  /* 色：記録（実績）は青緑、見込み（予測）と操作は藍。赤系は削除だけに使う。 */
+  --fr-bg: #ffffff;
+  --fr-surface: #ffffff;
+  --fr-surface-2: #ffffff;
+  --fr-ink: #1d2630;
+  --fr-ink-2: #4c5764;
+  --fr-line: #d3dae0;
+  --fr-grid: #c9d2d9;
+  --fr-btn-line: #93a0ac;
+  --fr-rec: #1e6b66;
+  --fr-rec-soft: #d7ece9;
+  --fr-dot: #3e4a9e;
+  --fr-dot-soft: #e4e6f4;
+  --fr-on-dot: #ffffff;
+  --fr-rest: #6152a0;
+  --fr-rest-soft: #e8e4f4;
+  --fr-warn: #7a4413;
+  --fr-warn-soft: #f6e8d6;
+  --fr-warn-line: #d6b088;
+  --fr-danger: #d93025;
+  --fr-on-danger: #ffffff;
+  --fr-scrim: rgba(16, 24, 32, 0.45);
+
+  /* 文字 */
+  --fr-font: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  --fr-fs-metric: 60px;
+  --fr-fs-metric-unit: 22px;
+  --fr-fs-achieved: 52px;
+  --fr-fs-date-pair: 28px;
+  --fr-fs-estimate: 24px;
+  --fr-fs-question: 22px;
+  --fr-fs-dialog-title: 18px;
+  --fr-fs-section: 17px;
+  --fr-fs-button: 16px;
+  --fr-fs-body: 15px;
+  --fr-fs-help: 14px;
+  --fr-fs-caption: 13px;
+  --fr-fs-axis: 11px;
+  --fr-lh: 1.6;
+  --fr-lh-body: 1.8;
+
+  /* 余白 */
+  --fr-space-1: 4px;
+  --fr-space-2: 8px;
+  --fr-space-3: 12px;
+  --fr-space-4: 16px;
+  --fr-space-5: 20px;
+  --fr-space-6: 24px;
+  --fr-space-7: 28px;
+  --fr-space-8: 32px;
+  --fr-gutter: 24px;
+  --fr-gutter-band: 20px;
+
+  /* 角丸 */
+  --fr-radius-button: 4px;
+  --fr-radius-input: 14px;
+  --fr-radius-notice: 18px;
+  --fr-radius-dialog: 24px;
+  --fr-radius-sheet: 28px;
+
+  /* 高さ（タップ領域は最小44px） */
+  --fr-tap: 44px;
+  --fr-h-bar: 52px;
+  --fr-h-button: 52px;
+  --fr-h-input: 52px;
+  --fr-h-choice: 64px;
+
+  /* 影 */
+  --fr-shadow-dialog: 0 14px 40px rgba(0, 0, 0, 0.25);
+  --fr-shadow-sticky: 0 -1px 0 var(--fr-line), 0 -10px 24px rgba(16, 24, 32, 0.08);
+  --fr-focus: 3px solid var(--fr-dot);
+}
+
+@media (prefers-color-scheme: dark) {
+  .fr {
+    --fr-bg: #141a1f;
+    --fr-surface: #1b232a;
+    --fr-surface-2: #232d35;
+    --fr-ink: #e7ecef;
+    --fr-ink-2: #a9b4be;
+    --fr-line: #2e3a43;
+    --fr-grid: #34414b;
+    --fr-btn-line: #5b6772;
+    --fr-rec: #6cc9bf;
+    --fr-rec-soft: #1d3735;
+    --fr-dot: #a4aef0;
+    --fr-dot-soft: #262c4a;
+    --fr-on-dot: #141a3a;
+    --fr-rest: #bbaeeb;
+    --fr-rest-soft: #2b2742;
+    --fr-warn: #f0bc84;
+    --fr-warn-soft: #33271b;
+    --fr-warn-line: #6b5034;
+    --fr-scrim: rgba(0, 0, 0, 0.6);
+    --fr-shadow-sticky: 0 -1px 0 var(--fr-line), 0 -10px 24px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* .fr の中の基本。既存の styles.css（Layout 用）より後に読み込まれるため、ここで上書きする。 */
+.fr {
+  font-family: var(--fr-font);
+  color: var(--fr-ink);
+  background: var(--fr-bg);
+  line-height: var(--fr-lh);
+  -webkit-font-smoothing: antialiased;
+}
+.fr *,
+.fr *::before,
+.fr *::after {
+  box-sizing: border-box;
+}
+/* 基本の指定は :where() で優先度を0にし、部品のクラス（.fr-btn--primary など）の色や余白が必ず勝つようにする */
+:where(.fr) :where(h1, h2, h3, p, dl, dd, figure) {
+  margin: 0;
+}
+:where(.fr) :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+:where(.fr) :where(button) {
+  cursor: pointer;
+}
+.fr :focus-visible {
+  outline: var(--fr-focus);
+  outline-offset: 2px;
+}
+.fr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fr *,
+  .fr *::before,
+  .fr *::after {
+    animation-duration: 3s !important;
+    transition: none !important;
+  }
+}

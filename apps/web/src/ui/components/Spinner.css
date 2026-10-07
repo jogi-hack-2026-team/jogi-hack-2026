@@ -1,0 +1,14 @@
+.fr-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  animation: fr-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes fr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

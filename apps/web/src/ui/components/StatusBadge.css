@@ -1,0 +1,29 @@
+.fr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 12px 0 8px;
+  border-radius: 14px;
+  font-size: var(--fr-fs-caption);
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1.5px solid transparent;
+}
+.fr-badge--large {
+  min-height: 36px;
+  font-size: var(--fr-fs-button);
+}
+.fr-badge--done {
+  background: var(--fr-rec-soft);
+  color: var(--fr-rec);
+}
+.fr-badge--rest {
+  background: var(--fr-rest-soft);
+  color: var(--fr-rest);
+}
+.fr-badge--unrecorded {
+  color: var(--fr-ink-2);
+  border: 1.5px dashed var(--fr-btn-line);
+  padding: 0 12px;
+}
