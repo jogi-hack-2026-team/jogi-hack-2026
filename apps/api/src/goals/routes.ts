@@ -36,10 +36,13 @@ export async function registerGoalRoutes(app: FastifyInstance, deps: GoalRouteDe
 
     api.patch(
       '/api/goals/:goalId',
-      { schema: { params: GoalParams, body: GoalPatch, response: { 200: Goal, 404: ErrorBody, 422: ErrorBody } } },
+      { schema: { params: GoalParams, body: GoalPatch, response: { 200: Goal, 404: ErrorBody, 409: ErrorBody, 422: ErrorBody } } },
       async (request, reply) => {
         const result = await updateGoal(deps.pool, request.userId, request.params.goalId, request.body, deps.now);
         if (result.kind === 'not_found') return reply.code(404).send(GOAL_NOT_FOUND);
+        if (result.kind === 'answer_conflict') return reply.code(409).send(errorBody('ANSWER_CONFLICT', 'The answer context changed. Reload the goal before editing the answers.'));
+        if (result.kind === 'invalid_question_patch') return reply.code(422).send(errorBody('VALIDATION_ERROR', 'Request does not match the question contract.',
+          [{ path: `body/${result.field}`, message: result.field === 'questionPrior' ? 'clear the answers when changing unit or sessionAmount; answer again after reloading' : 'include the current answer revision with answer or context updates' }]));
         if (result.kind === 'locked') {
           return reply.code(422).send(
             errorBody(

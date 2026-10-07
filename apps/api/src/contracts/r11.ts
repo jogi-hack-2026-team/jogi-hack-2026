@@ -1,0 +1,21 @@
+import { Type, type Static } from '@sinclair/typebox';
+import { Goal, GoalUnit, LocalDate } from './goal.ts';
+import { PredictionResultSchema, Today } from './log.ts';
+import { AnswerRevision, QuestionAnswers } from './question.ts';
+
+const strict = { additionalProperties: false } as const;
+export const GoalR11 = Type.Object({ ...Goal.properties,
+  schemaVersion: Type.Literal('r11-v1'), questionPrior: QuestionAnswers, answerRevision: AnswerRevision,
+}, strict);
+export type GoalR11 = Static<typeof GoalR11>;
+export const PredictionR11 = Type.Object({ ...PredictionResultSchema.properties,
+  config: Type.Object({ samples: Type.Number(), horizonDays: Type.Number(), seed: Type.Number() }, strict),
+}, strict);
+const source = Type.Union([Type.Literal('NONE'), Type.Literal('QUESTION'), Type.Literal('RECORDS'), Type.Literal('QUESTION_AND_RECORDS')]);
+export const TodayR11 = Type.Object({ ...Today.properties,
+  schemaVersion: Type.Literal('r11-v1'), prediction: PredictionR11,
+  context: Type.Object({ recordStartDate: LocalDate, unit: GoalUnit, sessionAmount: Type.Integer() }, strict),
+  provenance: Type.Object({ a: source, b: source }, strict),
+  plan: Type.Union([Type.Object({ remainingAmount: Type.Integer(), remainingSessions: Type.Integer(), lastSessionAmount: Type.Integer() }, strict), Type.Null()]),
+}, strict);
+export type TodayR11 = Static<typeof TodayR11>;
