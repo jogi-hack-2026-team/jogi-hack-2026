@@ -1,6 +1,6 @@
 import { Band } from '../../ui/components/Section.tsx';
 import { InsufficientNotice } from '../../ui/components/Notice.tsx';
-import { todayCopy } from '../../copy/today.ts';
+import { completionNoteFor, todayCopy } from '../../copy/today.ts';
 import { useElementWidth } from '../../ui/useElementWidth.ts';
 import { DEFAULT_CHART_WIDTH, outlookAxis } from './chart-geometry.ts';
 import { sourceLabel } from '../prior/PriorForecast.tsx';
@@ -39,7 +39,7 @@ function Estimate({ completion, today }: { completion: Extract<CompletionPresent
         <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} />
       ) : null}
       <p className="fr-note">
-        {todayCopy.completionNote}
+        {completionNoteFor(completion.sources)}
         {todayCopy.axisNote}
       </p>
     </>

@@ -120,6 +120,35 @@ export function changesAnswerContext(values: FormValues, goal: Goal): boolean {
 }
 
 /**
+ * 編集で、回答の欄を押せなくする理由（R-11、#133）。単位か1回の量を変えている間は、回答を送れない（同時に送ると 422）。
+ * - withdrawn：保存済みの回答を API が取り消す
+ * - notSaved：保存済みの回答はないが、入力しても一緒には保存できない
+ */
+export function answersLockReason(values: FormValues, goal: GoalWithAnswers): 'withdrawn' | 'notSaved' | null {
+  if (!changesAnswerContext(values, goal)) return null;
+  return sameAnswers(goal.questionPrior ?? NO_ANSWERS, NO_ANSWERS) ? 'notSaved' : 'withdrawn';
+}
+
+/**
+ * 古い版で保存できなかった（409）後に最新の Goal を読み直したとき、入力を新しい比較元へ合わせる。
+ * 触っていない項目（入力が古い比較元と同じ）は最新の値にし、別の画面での変更を古い値で巻き戻さない。触った項目は入力を残す。
+ */
+export function rebaseValues(values: FormValues, previous: GoalWithAnswers, latest: GoalWithAnswers): FormValues {
+  const before = valuesFromGoal(previous);
+  const after = valuesFromGoal(latest);
+  const pick = <K extends FieldName>(name: K, edited: boolean): FormValues[K] => (edited ? values[name] : after[name]);
+  return {
+    title: pick('title', values.title !== before.title),
+    unit: pick('unit', values.unit !== before.unit),
+    totalRequired: pick('totalRequired', int(values.totalRequired) !== previous.totalRequired),
+    sessionAmount: pick('sessionAmount', int(values.sessionAmount) !== previous.sessionAmount),
+    initialProgress: pick('initialProgress', int(values.initialProgress) !== previous.initialProgress),
+    timezone: pick('timezone', values.timezone !== before.timezone),
+    questionPrior: pick('questionPrior', !sameAnswers(values.questionPrior, before.questionPrior)),
+  };
+}
+
+/**
  * 編集で送る内容。変えた項目だけを送る（API は空の変更を 422 にするため、変更がなければ null）。
  * 記録があるGoalでは timezone と initialProgress を送らない。
  * R-11 の回答（#133 の契約）：

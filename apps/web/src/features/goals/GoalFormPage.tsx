@@ -21,11 +21,12 @@ import { fetchPolicy } from '../today/fetch-policy.ts';
 import { QuestionPriorFields } from '../prior/QuestionPriorFields.tsx';
 import '../prior/question-prior.css';
 import {
+  answersLockReason,
   emptyValues,
-  changesAnswerContext,
   errorCount,
   FIELD_ORDER,
   fieldErrorsFromApi,
+  rebaseValues,
   TITLE_MAX,
   titleLength,
   toCreateBody,
@@ -235,11 +236,14 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   const showSaveFailure = saveFailure !== null && count === 0;
   // 通信・サーバーの失敗は「もう一度保存」。ログイン切れはログインし直すまで同じ文言のままにする
   const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isAnswerConflict(saveFailure);
-  // 単位か1回の量を変えると、保存済みの回答は API が取り消す（R-11、#133）。回答の欄は押せなくし、そのことを伝える
-  const withdrawing = mode === 'edit' && baseline !== undefined && changesAnswerContext(values, baseline) && hasAnswers(baseline.questionPrior);
+  // 単位か1回の量を変えている間は、回答を一緒に送れない（R-11、#133。保存済みの回答は API が取り消す）。
+  // 保存済みの回答の有無にかかわらず回答の欄は押せなくし、そのことを伝える（入力した回答が黙って保存されないことを防ぐ）
+  const answersLock = mode === 'edit' && baseline !== undefined ? answersLockReason(values, baseline) : null;
   const reloadLatest = async () => {
     const latest = await onReloadLatest?.();
     if (!latest || !mounted.current) return;
+    // 触っていない項目は最新の値にする（古い値のまま送って、別の画面での変更を巻き戻さない）。触った項目の入力は残す
+    if (baseline) setValues((current) => rebaseValues(current, baseline, latest));
     setBaseline(latest);
     setLatestAnswers(latest.questionPrior ?? NO_ANSWERS);
     save.reset();
@@ -335,12 +339,12 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
               </p>
             ) : null}
             <QuestionPriorFields
-              value={withdrawing ? NO_ANSWERS : values.questionPrior}
+              value={answersLock ? NO_ANSWERS : values.questionPrior}
               onChange={(next) => update('questionPrior', next)}
-              disabled={busy || withdrawing}
+              disabled={busy || answersLock !== null}
               fieldErrors={errors.questionPrior ? { a: errors.questionPrior } : {}}
             />
-            {withdrawing ? <LockedNote>{f.answersWithdrawn}</LockedNote> : null}
+            {answersLock ? <LockedNote>{answersLock === 'withdrawn' ? f.answersWithdrawn : f.answersNotSavedWithContext}</LockedNote> : null}
             <p className="fr-goals__help">{f.answersNotRecords}</p>
           </div>
 
@@ -490,8 +494,6 @@ function isAnswerConflict(error: unknown): boolean {
 }
 
 const answerLabel = (answer: NonNullable<GoalWithAnswers['questionPrior']>['a']) => f.answerLabels[answer ?? 'none'];
-
-const hasAnswers = (answers: GoalWithAnswers['questionPrior']) => answers !== undefined && (answers.a !== null || answers.b !== null);
 
 /** 選べるタイムゾーン。ブラウザが知っている IANA 名に、今の値（ブラウザ設定・保存済みの値）を必ず含める。 */
 function useTimezones(current: string): string[] {

@@ -1,8 +1,8 @@
 import { InsufficientNotice } from '../../ui/components/Notice.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
-import { todayCopy } from '../../copy/today.ts';
+import { coreNoteFor, todayCopy } from '../../copy/today.ts';
 import { sourceLabel, sourceNote } from '../prior/PriorForecast.tsx';
-import type { Counts, CorePresentation } from '../prior/presentation-types.ts';
+import type { Counts, CorePresentation, SufficientSource } from '../prior/presentation-types.ts';
 
 /**
  * 問い・中心の数字・要約・計算の根拠（デザイン案Bの上部）。
@@ -30,7 +30,7 @@ export function CoreMetric({ core, resumed }: { core: CorePresentation; resumed:
       )}
       <p className="fr-today__summary">{core.source === 'RECORDS' ? todayCopy.coreSummary : sourceNote(core.source)}</p>
       <ResumedLine resumed={resumed} />
-      <WhyDetails fromQuestion={core.source !== 'RECORDS'} />
+      <WhyDetails source={core.source} />
     </>
   );
 }
@@ -46,8 +46,8 @@ export function ResumedLine({ resumed }: { resumed: Counts }) {
   );
 }
 
-/** 計算の根拠（開閉）。中心指標の注釈（Product Spec の固定文言）の全文をここに置く。 */
-export function WhyDetails({ fromQuestion = false }: { fromQuestion?: boolean }) {
+/** 計算の根拠（開閉）。中心指標の注釈の全文をここに置く。記録だけのときは Product Spec の固定文言、回答を使うときは出所に合わせた文言。 */
+export function WhyDetails({ source = 'RECORDS' }: { source?: SufficientSource }) {
   return (
     <details className="fr-why">
       <summary>
@@ -55,8 +55,8 @@ export function WhyDetails({ fromQuestion = false }: { fromQuestion?: boolean })
         <Icon name="chevronDown" size={20} />
       </summary>
       <div className="fr-why__body">
-        <p>{todayCopy.coreNote}</p>
-        {fromQuestion ? <p>{todayCopy.whyQuestion}</p> : null}
+        <p>{coreNoteFor(source)}</p>
+        {source === 'RECORDS' ? null : <p>{todayCopy.whyQuestion}</p>}
       </div>
     </details>
   );

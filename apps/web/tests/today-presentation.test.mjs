@@ -92,3 +92,19 @@ test('R-11の出所と計画を、補わずにそのまま表示データへ渡�
   // 計画がなければ従来どおり不足の文言
   assert.equal(toForecastView(insufficient.prediction, 'minutes', { provenance: { a: 'NONE', b: 'NONE' }, plan: null, sessionAmount: 15 }).completion.kind, 'insufficient');
 });
+
+test('回答だけ・回答と記録の見通しでは、注釈で「あなたの記録から」「同じ記録から」を流用しない（R-11、#137）', async () => {
+  const { completionNoteFor, coreNoteFor, todayCopy } = await import('../src/copy/today.ts');
+  // 記録だけのときは Product Spec の固定文言のまま
+  assert.equal(coreNoteFor('RECORDS'), todayCopy.coreNote);
+  assert.equal(completionNoteFor({ a: 'RECORDS', b: 'RECORDS' }), todayCopy.completionNote);
+  // 実ログ0件・回答だけ
+  assert.doesNotMatch(coreNoteFor('QUESTION'), /記録から推定した/);
+  assert.match(coreNoteFor('QUESTION'), /回答/);
+  assert.doesNotMatch(completionNoteFor({ a: 'QUESTION', b: 'QUESTION' }), /同じ記録|記録から推定した/);
+  assert.match(completionNoteFor({ a: 'QUESTION', b: 'QUESTION' }), /回答/);
+  // 回答と記録の両方
+  assert.match(coreNoteFor('QUESTION_AND_RECORDS'), /回答と、あなたの記録/);
+  assert.match(completionNoteFor({ a: 'QUESTION', b: 'RECORDS' }), /回答と、あなたの記録/);
+  assert.match(completionNoteFor({ a: 'QUESTION_AND_RECORDS', b: 'RECORDS' }), /回答と、あなたの記録/);
+});

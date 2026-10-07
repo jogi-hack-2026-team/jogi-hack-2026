@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { ApiError } from '../src/api/client.ts';
 import { goalsCopy } from '../src/copy/goals.ts';
-import { changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
+import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
 
 const e = goalsCopy.errors;
 const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', questionPrior: { a: null, b: null } };
@@ -117,4 +117,34 @@ test('R-11の回答は、変えたときだけ両方の問いと版を送り、�
 test('回答の版の誤り（422）は回答の欄のエラーとして出す', () => {
   const error = new ApiError(422, { error: { code: 'VALIDATION_ERROR', message: 'x', fields: [{ path: 'body/expectedAnswerRevision', message: 'x' }] } });
   assert.deepEqual(fieldErrorsFromApi(error), { questionPrior: e.server });
+});
+
+test('409の後に最新を読み直したら、触っていない項目は最新の値にし、別の画面での変更を巻き戻さない（R-11、#137）', () => {
+  const previous = { ...goal, questionPrior: { a: 'MID', b: null }, answerRevision: 3 };
+  // 別の画面で、タイトル・総量・回答が変わった
+  const latest = { ...previous, title: '英単語アプリ（夜）', totalRequired: 5000, questionPrior: { a: 'LOW', b: 'LOW' }, answerRevision: 4 };
+  // 回答だけを編集していた
+  const edited = { ...valuesFromGoal(previous), questionPrior: { a: 'HIGH', b: 'HIGH' } };
+  const rebased = rebaseValues(edited, previous, latest);
+  assert.equal(rebased.title, '英単語アプリ（夜）');
+  assert.equal(rebased.totalRequired, '5000');
+  assert.deepEqual(rebased.questionPrior, { a: 'HIGH', b: 'HIGH' });
+  // 再保存では、編集した回答と最新の版だけを送り、タイトル・総量を古い値で送らない
+  assert.deepEqual(toPatchBody(rebased, latest), { questionPrior: { a: 'HIGH', b: 'HIGH' }, expectedAnswerRevision: 4 });
+  // 触った項目（タイトル）は入力を残し、触っていない回答は最新にする
+  const titleEdited = rebaseValues({ ...valuesFromGoal(previous), title: '自分の名前' }, previous, latest);
+  assert.equal(titleEdited.title, '自分の名前');
+  assert.deepEqual(titleEdited.questionPrior, { a: 'LOW', b: 'LOW' });
+  assert.deepEqual(toPatchBody(titleEdited, latest), { title: '自分の名前' });
+});
+
+test('単位か1回の量を変えている間は、保存済みの回答がなくても回答の欄を押せなくする（R-11、#137）', () => {
+  const unanswered = { ...goal, questionPrior: { a: null, b: null }, answerRevision: 0 };
+  const answered = { ...goal, questionPrior: { a: 'MID', b: null }, answerRevision: 3 };
+  const changed = { ...valuesFromGoal(unanswered), sessionAmount: '30', questionPrior: { a: 'HIGH', b: 'LOW' } };
+  assert.equal(answersLockReason(changed, unanswered), 'notSaved');
+  // 回答の欄が押せない理由と送信内容が一致する（回答は送らない）
+  assert.deepEqual(toPatchBody(changed, unanswered), { sessionAmount: 30, expectedAnswerRevision: 0 });
+  assert.equal(answersLockReason({ ...valuesFromGoal(answered), unit: 'sessions' }, answered), 'withdrawn');
+  assert.equal(answersLockReason({ ...valuesFromGoal(unanswered), totalRequired: '4000' }, unanswered), null);
 });

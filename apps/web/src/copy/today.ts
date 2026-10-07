@@ -119,4 +119,26 @@ export const todayCopy = {
   signIn: 'ログインする',
 } as const;
 
+/** 材料の出所（R-11）。記録だけ・回答だけ・両方。 */
+type NoteSource = 'RECORDS' | 'QUESTION' | 'QUESTION_AND_RECORDS';
+
+const coreNoteTail = '今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。';
+
+/**
+ * 中心指標の注釈を出所に合わせる。記録だけのときは Product Spec の固定文言（coreNote）のまま。
+ * 回答を使うときは「あなたの記録から」を流用しない（Product Spec「Today Decision画面の表示仕様」、R-11）。
+ */
+export function coreNoteFor(source: NoteSource): string {
+  if (source === 'RECORDS') return todayCopy.coreNote;
+  if (source === 'QUESTION') return `最初の質問の回答から置いた「休んだ後の再開傾向」の仮定をもとに計算しています。まだ記録からは推定していません。${coreNoteTail}`;
+  return `最初の質問の回答と、あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。${coreNoteTail}`;
+}
+
+/** 補助指標2の注釈を a／b の出所に合わせる。どちらも記録だけのときは Product Spec の固定文言（completionNote）のまま。 */
+export function completionNoteFor(sources: { a: NoteSource; b: NoteSource }): string {
+  if (sources.a === 'RECORDS' && sources.b === 'RECORDS') return todayCopy.completionNote;
+  if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定でシミュレーションした見込みです。まだ記録からは推定していません。';
+  return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向でシミュレーションした見込みです。';
+}
+
 export const unitLabel = (unit: 'minutes' | 'sessions') => (unit === 'minutes' ? '分' : '回');

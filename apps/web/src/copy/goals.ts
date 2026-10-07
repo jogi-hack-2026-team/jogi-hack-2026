@@ -71,6 +71,7 @@ export const goalsCopy = {
     // R-11 の初期質問（#137）。質問文・選択肢は PR #120 の QuestionPriorFields にある
     answersNotRecords: '回答は実績や記録には加えません',
     answersWithdrawn: '単位か1回の量を変えると、質問の回答は取り消されます。保存した後に、もう一度答えられます。',
+    answersNotSavedWithContext: '単位か1回の量を変えるときは、質問の回答を一緒に保存できません。保存した後に、もう一度開いて答えられます。',
     answerConflict: {
       title: 'ほかの画面で内容が変わりました',
       body: '質問の回答や単位が、別の画面で変更されています。変更はまだ保存されていません。入力内容はそのまま残っています。最新の内容を読み込んでから、もう一度保存してください。',
