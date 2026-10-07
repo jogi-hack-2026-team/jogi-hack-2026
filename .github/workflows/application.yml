@@ -99,6 +99,11 @@ jobs:
         env:
           LOCAL_DB_PASSWORD: ci-only-placeholder
         run: docker compose config --quiet
+      - name: Verify Compose smoke midnight retry and missing-secret isolation
+        run: |
+          sh scripts/tests/smoke-today.test.sh
+          sh scripts/tests/smoke-env.test.sh
+          bash --posix scripts/tests/smoke-env.test.sh
       - name: Build the single SPA/API container
         run: docker build --tag future-roi:${{ github.run_id }}-${{ github.run_attempt }} .
       - name: Start, probe routes and stop with SIGTERM

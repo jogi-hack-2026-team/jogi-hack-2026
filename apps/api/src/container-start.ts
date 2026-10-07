@@ -3,8 +3,9 @@
 import { loadAuthConfig, loadConfig } from './config.ts';
 import { migrate } from './db/migrate.ts';
 import { createMigrationPool } from './db/pool.ts';
+import { startupFailureMessage, type StartupPhase } from './startup-error.ts';
 
-let phase = 'configuration';
+let phase: StartupPhase = 'configuration';
 async function start(): Promise<void> {
   const config = loadConfig();
   // production認証設定の不足を、DBを書き換える前に検出する。
@@ -24,8 +25,8 @@ async function start(): Promise<void> {
 
 try {
   await start();
-} catch {
+} catch (error) {
   // DB・ライブラリの例外には接続文字列等が含まれ得るため、原文をログへ出さない。
-  console.error(`startup: ${phase} failed; check configuration, DB availability and migration history. API was not started.`);
+  console.error(startupFailureMessage(phase, error));
   process.exit(1);
 }

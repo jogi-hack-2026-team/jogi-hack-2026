@@ -19,6 +19,9 @@ export type MigrationResult = { target: MigrationTarget; auth?: AuthMigrationRes
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
+// 起動ログで履歴不一致を分類する。ファイル名や例外原文をログへ出す必要はない。
+export class MigrationChecksumError extends Error {}
+
 // 固定版のライブラリから直接getMigrationsを呼ぶ（CLIの`@latest`取得を避ける。#84 F-9）。2回目以降は差分なしで何もしない。
 export async function migrateAuth(pool: Pool): Promise<AuthMigrationResult> {
   const { toBeCreated, toBeAdded, compileMigrations } = await getMigrations(authSchemaOptions(pool));
@@ -70,7 +73,7 @@ export async function migrateApp(pool: Pool, dir: URL = defaultMigrationsDir): P
       const previous = recorded.get(name);
       if (previous !== undefined) {
         if (previous !== checksum) {
-          throw new Error(`適用済みのmigration ${name} の内容が変更されています。既存ファイルを直さず、新しい番号のファイルを追加してください。`);
+          throw new MigrationChecksumError(`適用済みのmigration ${name} の内容が変更されています。既存ファイルを直さず、新しい番号のファイルを追加してください。`);
         }
         continue;
       }

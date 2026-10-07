@@ -2,6 +2,8 @@
 # 既定Composeを独立project・空のenv-file・合成データだけで検証する。既存volumeは参照しない。
 # CIとDocker Desktop + Git Bashで実行可能。通常のローカルenv/credentialは渡さない。
 set -eu
+. ./scripts/smoke-today.sh
+. ./scripts/smoke-env.sh
 PROJECT="future-roi-compose-smoke-$(date +%s)-$$"
 ENV_FILE=$(mktemp)
 JAR=$(mktemp)
@@ -14,9 +16,11 @@ dc() { docker compose --file compose.yaml --env-file "$ENV_FILE" --project-name 
 cleanup() {
   # 自分で作成したprojectだけを停止する。volumeを削除せず失敗時の調査にも残す。
   dc down --timeout 15 >/dev/null 2>&1 || true
+  echo "RETAINED (if created): project=$PROJECT volume=${PROJECT}_postgres_data"
   rm -f "$ENV_FILE" "$JAR"
 }
 trap cleanup EXIT
+echo "SMOKE: project=$PROJECT volume=${PROJECT}_postgres_data"
 fail() { echo "FAIL: $1"; exit 1; }
 sql() { dc exec -T db psql -X -U futureroi -d futureroi -v ON_ERROR_STOP=1 -At -c "$1"; }
 app_id() { dc ps --all --quiet app; }
@@ -38,7 +42,7 @@ assert_stopped() {
 }
 
 dc config --quiet
-BETTER_AUTH_SECRET='' dc up -d --wait --wait-timeout 120 db
+without_auth_secret dc up -d --wait --wait-timeout 120 db
 [ -z "$(app_id)" ] || fail 'db-only host development unexpectedly started app'
 dc up -d --build --wait --wait-timeout 120
 healthy
@@ -59,13 +63,16 @@ created=$(curl --silent --fail --cookie "$JAR" --header "origin: $base" --header
   --data '{"title":"compose smoke goal","unit":"minutes","totalRequired":600,"sessionAmount":30,"timezone":"Asia/Tokyo"}' "$base/api/goals")
 goal_id=$(echo "$created" | sed -n 's/.*"id":"\([0-9a-f-]*\)".*/\1/p')
 [ -n "$goal_id" ] || fail 'goal creation missing id'
-today_jst=$(TZ=Asia/Tokyo date +%Y-%m-%d)
-saved=$(curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
-  --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/$today_jst")
-[ "$saved" = "{\"localDate\":\"$today_jst\",\"status\":\"DONE\",\"amount\":30}" ] || fail 'log save body'
-today_body=$(curl --silent --fail --cookie "$JAR" "$base/api/goals/$goal_id/today")
-echo "$today_body" | grep -q '"modelVersion":"behavior-persistence-m1-v1"' || fail 'Today did not return the Engine result'
-echo "$today_body" | grep -q '"reason":"TODAY_RECORDED"' || fail 'Today did not reflect the log'
+smoke_today_clock() {
+  # hostのTZ実装・時計に依存せず、APIと同じNode/ICU・時計・暦日計算を使う。
+  dc exec -T app node --input-type=module -e 'import { localDateIn, shiftLocalDate } from "./apps/api/dist/goals/local-date.js"; const today = localDateIn(new Date(), "Asia/Tokyo"); console.log(today, shiftLocalDate(today, 1));'
+}
+smoke_save_log() {
+  curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
+    --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/$1"
+}
+smoke_get_today() { curl --silent --fail --cookie "$JAR" "$base/api/goals/$goal_id/today"; }
+verify_recorded_today
 [ "$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$JAR" "$base/api/compose-smoke-missing")" = 404 ] || fail 'unknown protected API must remain 404'
 [ "$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$JAR" --header 'origin: http://evil.example' \
   --header 'content-type: application/json' --data '{}' "$base/api/goals")" = 403 ] || fail 'mutation origin boundary'
@@ -83,7 +90,7 @@ healthy
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data changed after restart'
 [ "$(sql 'select count(*) from schema_migrations')" = "$recorded" ] || fail 'migration history changed after restart'
 curl --silent --fail --cookie "$JAR" "$base/api/auth/get-session" | grep -q "\"email\":\"$email\"" || fail 'session lost after restart'
-[ "$(sql "select count(*) from action_log where goal_id='$goal_id'")" = 1 ] || fail 'log lost after restart'
+[ "$(sql "select count(*) from action_log where goal_id='$goal_id'")" = "$today_log_count" ] || fail 'log lost after restart'
 dc logs --no-color app | grep -q 'startup: migrations complete' || fail 'automatic migration missing'
 
 dc stop app >/dev/null
@@ -113,15 +120,21 @@ wait "$lock_pid"
 sql "update schema_migrations set checksum='smoke-corrupted-history' where name='0001_goal_action_log.sql'" >/dev/null
 dc up -d app >/dev/null
 assert_stopped
-dc logs --no-color app | grep -q 'startup: migration failed' || fail 'migration failure was not reported'
+dc logs --no-color app | grep -q 'startup: migration failed (checksum_mismatch)' || fail 'migration checksum failure was not classified'
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data lost on migration failure'
 [ "$(sql "select count(*) from \"user\" where email='$email'")" = 1 ] || fail 'user lost on migration failure'
 sql "update schema_migrations set checksum='$checksum' where name='0001_goal_action_log.sql'" >/dev/null
 
 # 認証設定の不足でも、DB変更/配信より前に非0で止まる。
-BETTER_AUTH_SECRET='' dc up -d app >/dev/null
+without_auth_secret dc up -d app >/dev/null
 assert_stopped
 dc logs --no-color app | grep -q 'startup: configuration failed' || fail 'configuration failure was not reported'
+# DBへ届かない失敗も、秘密を含む例外原文を出さず分類し、exit 1にする。
+if unreachable=$(dc run --rm --no-deps --env DATABASE_URL=postgres://futureroi@127.0.0.1:1/futureroi app node apps/api/dist/container-start.js 2>&1); then
+  fail 'unreachable DB startup succeeded'
+fi
+echo "$unreachable" | grep -q 'startup: migration failed (db_connection)' || fail 'DB connection failure was not classified'
+if echo "$unreachable" | grep -F -e "$LOCAL_DB_PASSWORD" -e "$BETTER_AUTH_SECRET" >/dev/null; then fail 'credential value appeared in failed startup logs'; fi
 dc up -d --wait --wait-timeout 120
 healthy
 curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
@@ -138,5 +151,5 @@ dc up -d --wait --wait-timeout 120
 healthy
 [ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data lost across down/up'
 [ "$(sql "select count(*) from \"user\" where email='$email'")" = 1 ] || fail 'auth data lost across down/up'
-[ "$(sql "select count(*) from action_log where goal_id='$goal_id'")" = 1 ] || fail 'log lost across down/up'
+[ "$(sql "select count(*) from action_log where goal_id='$goal_id'")" = "$today_log_count" ] || fail 'log lost across down/up'
 echo "PASS: default Compose startup, migration repeat/restart/failure gate, SPA/API/auth/Goal/log/Today, running SIGTERM exit 0 / migration wait exit 143, data retained across down/up; project=$PROJECT volume=$volume"

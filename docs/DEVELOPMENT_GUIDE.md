@@ -515,7 +515,7 @@ docker compose up -d --build --wait --wait-timeout 120
 
 `restart app`は現在のimageでmigrationを再確認します。コード変更後は`up -d --build`でimageを再作成します。すでに稼働中の同じimageへの`up`はappを再起動しません。migrationは適用履歴・checksumとadvisory lockを使い、反復時にschemaやデータを作り直しません。ComposeのinitがSIGTERMをNodeへ転送し、migration待機中はexit 143で中断してDB接続を切ります。API稼働後は処理中要求→app/auth poolの順に閉じ、正常時exit 0。Composeの停止猶予は15秒、APIの期限は10秒です。`down`はcontainer/networkを停止・削除し、`postgres_data`は保持するため、再upでもデータが残ります。データを持つ環境で`down -v`やvolume削除を実行しないでください。
 
-設定不足またはmigration失敗は`startup: configuration failed`／`startup: migration failed`としてappがexit 1になり、配信を開始しません。`docker compose logs app`で失敗段階を確認し、設定、DBの接続・権限、適用済みSQLと履歴を照合してから同じ`up`を再実行します。ログにはDB例外の原文を出しません。適用済みSQLは書き換えず、新しい番号のmigrationで修正します。既存の部分schemaは自動削除しません。DDL/lock待ちに自動期限はないため、長く待つ場合は他のmigrationやDBを確認し、必要ならappだけ停止します。起動中の中断では未commitのtransactionとlockはDB切断で解放され、commit済み変更は保持されます。
+設定不足またはmigration失敗は`startup: configuration failed`／`startup: migration failed`としてappがexit 1になり、配信を開始しません。括弧内の原因分類は`invalid_configuration`（設定）、`checksum_mismatch`（履歴不一致）、`db_connection`（接続）、`db_authentication`（DB認証）、`db_permission`（DB権限）、それ以外は`unknown`です。`docker compose logs app`で段階・分類を確認し、設定、DBの接続・権限、適用済みSQLと履歴を照合してから同じ`up`を再実行します。分類は既知のcodeとアプリ自身のchecksum例外だけから作り、例外のname・原文・接続文字列は出しません。適用済みSQLは書き換えず、新しい番号のmigrationで修正します。既存の部分schemaは自動削除しません。DDL/lock待ちに自動期限はないため、長く待つ場合は他のmigrationやDBを確認し、必要ならappだけ停止します。起動中の中断では未commitのtransactionとlockはDB切断で解放され、commit済み変更は保持されます。
 
 DBだけを再起動した際はappが一時的に503になることがあります。復旧後のhealthを確認し、必要なら`docker compose restart app`で再接続します。Docker daemonの再起動後も自動起動を前提にせず`up`で起動順を通してください。既存volumeのpasswordは`LOCAL_DB_PASSWORD`の変更だけでは変更されないため、不一致時は元の値を確認し、volume削除で解消しないでください。Project名`future-roi-local`と既存volumeの保存先は維持しています。他のcheckoutと同時に動かす検証は、別project名・別port・独立DBを使います。
 
@@ -571,6 +571,27 @@ npm run build
 本番・コンテナでは`.env`を使わず、環境変数を直接注入します（`DATABASE_URL`未設定ならexit 1）。passwordに記号を含める場合の書き方は[.env.example](../.env.example)を参照してください。
 
 [Application CI](../.github/workflows/application.yml)はinstall・typecheck・test（PostgreSQL service）・build、[単体コンテナsmoke test](../scripts/smoke-container.sh)と[Compose検証](../scripts/smoke-compose.sh)を実行します。Compose検証は空のenv-file、別project・portと合成データで起動、再実行/restart、履歴不一致・設定不足の配信抑止、認証/API/SPA、正常終了、down/up後のvolume・データ保持を確認します。検証projectは最後に停止しますがvolumeは保持し、既存DBを削除しません。Dockerがある端末のsh/Git Bashでは`sh scripts/smoke-compose.sh`、競合portの変更は`SMOKE_APP_PORT`・`SMOKE_DB_PORT`で指定します。CIとDockerfileの`npm ci --ignore-scripts`はlifecycle scriptsを実行せず、Docker/CI内にmiseは不要です。
+
+記録→Todayの検証はappと同じNodeの時計・東京の暦日計算を使います。Todayが記録日の翌日を返し、appの時計でも翌日への切替が確認できた場合だけ、翌日の記録から1回再試行します。HTTP・保存body・modelの不正、同じ日の不一致、2回目の日付跨ぎは失敗です。跨ぐと合成Goalの記録が1件から2件になるため、restart/down-up後はその件数を保持していることも確認します。[日付境界の回帰](../scripts/tests/smoke-today.test.sh)はDocker・実時計の変更なしで`sh scripts/tests/smoke-today.test.sh`を実行でき、CIでも確認します。
+
+認証設定不足の検証は[subshell](../scripts/smoke-env.sh)へ隔離し、macOSやGit for Windowsの`sh`でもSecretを空にした状態が次の復旧確認へ残らないようにします。[環境変数の回帰](../scripts/tests/smoke-env.test.sh)は`sh scripts/tests/smoke-env.test.sh`と`bash --posix scripts/tests/smoke-env.test.sh`で確認します。macOS本体での追修正確認は人間の再レビューで行います。
+
+Compose検証のvolumeは調査用に残るため、繰り返すと増えます。調査後に削除する場合は、**自分が実行した検証の出力**にある`project=`と`volume=`を控え、sh/Git Bashで次のplaceholderをその一組に置き換えて確認します。prefixだけを根拠に他の実行のvolumeを選ばないでください。
+
+```sh
+project='YOUR_OWN_SMOKE_PROJECT_FROM_OUTPUT'
+volume='YOUR_OWN_SMOKE_VOLUME_FROM_SAME_OUTPUT'
+docker volume inspect --format '{{.Name}} project={{index .Labels "com.docker.compose.project"}} volume={{index .Labels "com.docker.compose.volume"}}' "$volume"
+docker ps -a --filter "volume=$volume" --format '{{.ID}} {{.Names}} {{.Status}}'
+```
+
+実行記録のprojectが`future-roi-compose-smoke-`で始まり、inspectのprojectがその`$project`と一致し、volume labelが`postgres_data`、自分の合成データだけであり、参照containerが0件と確認できたものに限り、次を手動で実行します。失敗時も`SMOKE:`／`RETAINED (if created):`が自分のproject・volume名を示します。作成前の失敗ではvolumeが存在しないこともあり、inspectで対応を確認できなければ保持します。
+
+```sh
+docker volume rm "$volume"
+```
+
+通常の`future-roi-local`・実データ・他人の検証volumeを対象にせず、一括pruneや自動削除は行いません。
 
 Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ証跡を保持します。旧clusterを再利用・削除しない分、初期化時間とディスク使用量が増えます。CIではPostgreSQL serviceを利用します。
 
