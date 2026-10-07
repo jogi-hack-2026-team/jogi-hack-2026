@@ -62,6 +62,7 @@ const app = await buildApp({
     burnMs: Number(env.SPIKE_PREDICT_MS ?? 0),
     mode: (env.SPIKE_PREDICT_MODE ?? 'inline') as 'inline' | 'worker',
     workers: Number(env.SPIKE_WORKERS ?? 2),
+    engine: (env.SPIKE_PREDICT_ENGINE ?? 'placeholder') as 'placeholder' | 'real',
   },
   metrics: env.SPIKE_METRICS === '1',
   webDist: env.SPIKE_WEB_DIST ? resolve(env.SPIKE_WEB_DIST) : undefined,

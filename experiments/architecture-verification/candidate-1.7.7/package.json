@@ -15,6 +15,7 @@
     "verify:auth-db": "node verify/v1-auth-db.ts",
     "verify:rate-limit": "node verify/v1-rate-limit.ts",
     "verify:mixed-load": "node verify/v2-mixed-load.ts",
+    "verify:real-engine": "node verify/v8-real-engine-mixed-load.ts",
     "verify:single-process": "node verify/v3-single-process.ts",
     "verify:fixed": "node verify/v5-fixed-regression.ts",
     "verify:restore-revoke": "node verify/restore-revoke.ts",

@@ -11,3 +11,5 @@ Linux検証は既存のDocker Desktop Linux engineが使える場合だけ、`no
 ローカルHTTP試験だけ`NODE_ENV=test`を指定する。productionのHTTPS gateは変更しない。Containerの`DATABASE_URL`/`BETTER_AUTH_SECRET`/`BASE_URL`不足は拒否し、embedded DBへfallbackしない。本番利用は未承認。[復元後session失効手順](RESTORE-PROCEDURE.md) は loopback合成DB限定で、本番復旧を代行しない。
 
 終了回帰は `node verify/v7-shutdown-regression.mjs`。正常keep-aliveのidle/処理中/並列worker/SQL書込と反復起動9条件。専用tmpfs DB、合成2人、worker1・代用CPU2000ms・書込lock4秒、Docker猶予10秒、全応答200・終了後SQL・resource解放を確認する。実Engine/クラウド試験ではない。WindowsからDockerへはユーザー設定を読まない空の専用DOCKER_CONFIGと既存Linux endpointを指定する。Dockerへの権限がなければ停止し、新認可/設定変更をしない。
+
+実Engineの混合負荷は `npm run verify:real-engine`。先に `packages/prediction` をbuildする。手順・結果・限界は[実Engineの報告](../REAL-ENGINE-2026-10-05.md)。`SPIKE_PREDICT_ENGINE=real` のときだけ `/today` が実Engineを呼び、既定は代用計算のまま。ポート3230、PG55592。

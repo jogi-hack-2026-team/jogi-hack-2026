@@ -28,7 +28,8 @@ export type AppConfig = {
   /** 'default' = Fastify's default Ajv options. 'strict' = removeAdditional/coerceTypes off. */
   ajvMode: 'default' | 'strict';
   trustProxyHops: number;
-  predict: { burnMs: number; mode: 'inline' | 'worker'; workers: number };
+  /** engine 'real' calls packages/prediction (needs its build); default is the CPU-burn placeholder. */
+  predict: { burnMs: number; mode: 'inline' | 'worker'; workers: number; engine?: 'placeholder' | 'real' };
   metrics: boolean;
   webDist?: string;
   logger: boolean;
@@ -57,11 +58,13 @@ export async function buildApp(c: AppConfig) {
   });
 
   const predictPool = c.predict.mode === 'worker' ? new PredictPool(c.predict.workers) : null;
+  const realEngine = c.predict.engine === 'real' ? await import('./predict-real.ts') : null;
 
   // --- metrics (spike only) ---------------------------------------------------------
   const loop = monitorEventLoopDelay({ resolution: 10 });
   const dbWait = createHistogram();
   const workerWait = createHistogram();
+  const predictCompute = createHistogram();
   let poolMaxWaiting = 0;
   let cpuStart = process.cpuUsage();
   let wallStart = performance.now();
@@ -286,7 +289,7 @@ export async function buildApp(c: AppConfig) {
           // One statement = one snapshot: the goal (incl. timezone) and its logs are consistent.
           const r = await withClient((cl) =>
             cl.query(
-              `select g.timezone,
+              `select g.timezone, g.total_required, g.session_amount, g.initial_progress,
                       coalesce((select json_agg(json_build_object(
                                   'localDate', to_char(l.local_date, 'YYYY-MM-DD'),
                                   'status', l.status, 'amount', l.amount) order by l.local_date)
@@ -305,6 +308,42 @@ export async function buildApp(c: AppConfig) {
           const yesterday = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
           const byDate = new Map(logs.map((l) => [l.localDate, l]));
           const tl = byDate.get(today);
+          const todayLog = tl ? { localDate: tl.localDate, status: tl.status, amount: tl.amount === null ? null : Number(tl.amount) } : null;
+
+          if (realEngine) {
+            const row = r.rows[0] as { total_required: string; session_amount: string; initial_progress: string };
+            const sessionAmount = Number(row.session_amount);
+            const input = {
+              goal: { totalRequired: Number(row.total_required), initialProgress: Number(row.initial_progress), sessionAmount },
+              logs: logs.map((l) => ({ localDate: l.localDate, status: l.status, amount: l.amount === null ? null : Number(l.amount) })),
+              today,
+            };
+            let real;
+            if (predictPool) {
+              const done = await predictPool.runReal(input);
+              workerWait.record(Math.max(1, Math.round(done.queueWaitMs * 1e6)));
+              real = done.real;
+            } else {
+              real = realEngine.runReal(input);
+            }
+            predictCompute.record(Math.max(1, Math.round(real.computeMs * 1e6)));
+            return {
+              today,
+              yesterday,
+              todayLog,
+              yesterdayMissing: !byDate.has(yesterday),
+              prediction: {
+                placeholder: false as const,
+                observedDays: logs.length,
+                computeMode: c.predict.mode,
+                modelVersion: real.modelVersion,
+                completionStatus: real.completionStatus,
+                coreMetricStatus: real.coreMetricStatus,
+                requiredFutureDone: Math.ceil(real.remainingAmount / sessionAmount),
+                computeMs: Math.round(real.computeMs * 100) / 100,
+              },
+            };
+          }
 
           if (predictPool) workerWait.record(Math.max(1, Math.round((await predictPool.run(c.predict.burnMs)) * 1e6)));
           else burnCpu(c.predict.burnMs);
@@ -312,7 +351,7 @@ export async function buildApp(c: AppConfig) {
           return {
             today,
             yesterday,
-            todayLog: tl ? { localDate: tl.localDate, status: tl.status, amount: tl.amount === null ? null : Number(tl.amount) } : null,
+            todayLog,
             yesterdayMissing: !byDate.has(yesterday),
             prediction: {
               placeholder: true as const,
@@ -346,6 +385,7 @@ export async function buildApp(c: AppConfig) {
         eventLoopDelay: hist(loop),
         dbAcquireWait: { count: dbWait.count, ...hist(dbWait) },
         workerQueueWait: { count: workerWait.count, ...hist(workerWait) },
+        predictCompute: { count: predictCompute.count, ...hist(predictCompute) },
         poolMaxWaiting,
         pool: { total: c.pool.totalCount, idle: c.pool.idleCount },
       };
@@ -354,6 +394,7 @@ export async function buildApp(c: AppConfig) {
       loop.reset();
       dbWait.reset();
       workerWait.reset();
+      predictCompute.reset();
       poolMaxWaiting = 0;
       cpuStart = process.cpuUsage();
       wallStart = performance.now();
