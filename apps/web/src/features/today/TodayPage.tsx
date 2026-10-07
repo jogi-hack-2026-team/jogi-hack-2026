@@ -66,7 +66,13 @@ function TodayScreen({ goalId }: { goalId: string }) {
             <Icon name="back" />
           </Link>
         }
-        // Goal のメニュー（編集・削除）は #78 で追加する
+        trailing={
+          goal ? (
+            <Link to="/goals/$goalId/edit" params={{ goalId }} className="fr-icon-btn" aria-label={`「${goal.title}」を編集`}>
+              <Icon name="edit" />
+            </Link>
+          ) : undefined
+        }
       />
       {today && showYesterdayPrompt(today, yesterdayLaterFor) ? (
         <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLaterFor(today.yesterday)} />
