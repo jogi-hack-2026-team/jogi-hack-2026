@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Goal, Log, Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
+import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -27,14 +28,16 @@ import './today.css';
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
  * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
  * 「後で答える」や開発用の案内を別の Goal へ持ち越さない。
+ * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
-  return <TodayScreen key={goalId} goalId={goalId} />;
+  const { owner, clearedAt } = usePrivateEpoch();
+  return <TodayScreen key={`${owner ?? ''}:${goalId}`} goalId={goalId} notBefore={clearedAt} />;
 }
 
-function TodayScreen({ goalId }: { goalId: string }) {
+function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number }) {
   // Goal・Today・記録は同じ時点の材料がそろったものだけを使う（snapshot）。日付の切り替わりでも取り直す
-  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId);
+  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId, notBefore);
   // 保存の動き（#79・#80）はまだつないでいない。押したことが分かるよう、開発用の案内だけを出す。
   const [devNotice, setDevNotice] = useState<string | null>(null);
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す

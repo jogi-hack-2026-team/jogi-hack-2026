@@ -12,11 +12,12 @@ export function localDateIn(timezone: string, at: Date): string | null {
 }
 
 /**
- * 画面が表示している「今日」から、Goal の timezone で日付が変わったか。
- * 変わった日付ごとに1回だけ取り直すよう、取り直しを始めた日付（triggeredFor）と比べる。
+ * 画面が表示している「今日」から、Goal の timezone で日付が変わったか（変わっていれば新しい日付）。
+ * 取り直したのに API の「今日」がまだ前日のまま（端末の時計がサーバーより少し進んでいる）こともあるので、
+ * 「取り直しを始めた」ことでは止めず、API の日付が進んで表示の「今日」が変わるまで、確かめるたびに取り直す。
  */
-export function shouldRefetchForNewDay(timezone: string, shownToday: string, now: Date, triggeredFor: string | null): string | null {
+export function shouldRefetchForNewDay(timezone: string, shownToday: string, now: Date): string | null {
   const current = localDateIn(timezone, now);
-  if (current === null || current === shownToday || current === triggeredFor) return null;
+  if (current === null || current <= shownToday) return null;
   return current;
 }
