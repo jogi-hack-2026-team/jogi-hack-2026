@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
-import type { Goal, Log, Today } from '@contracts';
+import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { usePrivateEpoch } from '../../api/session-cache.ts';
@@ -50,17 +50,21 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
   const goal = snapshot?.goal;
   const today = snapshot?.today;
-  const unit = goal ? unitLabel(goal.unit) : '';
-  const sessionLabel = goal ? `${goal.sessionAmount.toLocaleString('ja-JP')}${unit}` : '';
+  // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日の状態で記録の2択を出す
+  // （「今日の記録はこのまま付けられます」の案内と合わせる。401・404は上で画面全体を切り替えている）
+  const fallbackGoal = !today && todayQuery.isError ? goalQuery.data : undefined;
+  const recordGoal = goal ?? fallbackGoal;
+  const unit = recordGoal ? unitLabel(recordGoal.unit) : '';
+  const sessionLabel = recordGoal ? `${recordGoal.sessionAmount.toLocaleString('ja-JP')}${unit}` : '';
   // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）
   const showChoices = today
     ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed
-    : goal?.todayStatus === 'UNRECORDED';
+    : fallbackGoal?.todayStatus === 'UNRECORDED';
 
   return (
     <div className="fr fr-page">
       <AppBar
-        title={goal?.title ?? ''}
+        title={recordGoal?.title ?? ''}
         leading={
           <Link to="/" className="fr-icon-btn" aria-label="Goal一覧へ戻る">
             <Icon name="back" />
@@ -96,7 +100,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
 function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Today; logs: Log[]; onChange: () => void }) {
   // 変換と検査は Boundary の内側で行う（失敗しても記録の2択は残る）
-  const view = toForecastView(today.prediction, goal.unit);
+  // R-11 の出所（provenance）と、材料が足りないときの計画（plan）は API の値をそのまま渡す
+  const view = toForecastView(today.prediction, goal.unit, { provenance: today.provenance, plan: today.plan, sessionAmount: today.context.sessionAmount });
   assertForecastPresentation(view);
   const unit = unitLabel(goal.unit);
   const progress =

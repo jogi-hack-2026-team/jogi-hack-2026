@@ -1,18 +1,24 @@
-import type { Goal, Log, Today } from '@contracts';
+import type { Goal, Log, TodayR11 as Today } from '@contracts';
 
 /**
  * Goal・Today・記録の一覧は別々の GET で取るため、取得した時点がずれることがある（別のタブでの編集・記録など）。
  * ずれたまま組み合わせると、見出しは新しい総量・予測と進捗は古い総量、のように食い違う。
  * ここでは3つが同じ時点の材料かを、互いに重なる値で照らし合わせる。食い違えば Today 画面は取り直す。
+ * 取得の順番や届いた時刻には頼らず、応答の値だけで決める（初回・編集から戻ったとき・古い応答の遅着・逆順でも同じ判定になる）。
  *
  * 照らし合わせる値（どれも API が同じ snapshot から返す値で、FE で予測を計算し直すものではない）：
  * - 日付：Goal の today と Today の today
+ * - 予測に使った設定：R-11 の読み取り（?view=r11）の context（1回の量・単位・記録開始日）と Goal。
+ *   総量・累計が一致したまま1回の量だけが変わった組み合わせ（量10で計算した予測と量20の Goal）を止める
  * - 総量：Goal の totalRequired と予測の progress.total
  * - 実績：Goal の initialProgress ＋ 記録開始日から今日までの DONE の量 と 予測の progress.done
  * - 今日の記録：記録の一覧の今日の行と Today の todayLog、Goal の todayStatus と予測の todayStatus
+ * - 昨日の記録の有無：Today の yesterdayMissing と、記録の一覧に昨日の行があるか（昨日が記録開始日以降のとき）
  */
 export function isSameSnapshot(goal: Goal, today: Today, logs: readonly Log[]): boolean {
   if (goal.today !== today.today) return false;
+  const { context } = today;
+  if (context.sessionAmount !== goal.sessionAmount || context.unit !== goal.unit || context.recordStartDate !== goal.recordStartDate) return false;
   if (goal.totalRequired !== today.prediction.progress.total) return false;
   if (goal.todayStatus !== today.prediction.todayStatus) return false;
 
@@ -21,6 +27,10 @@ export function isSameSnapshot(goal: Goal, today: Today, logs: readonly Log[]): 
     .reduce((sum, log) => sum + (log.amount ?? 0), goal.initialProgress);
   if (done !== today.prediction.progress.done) return false;
 
+  // YYYY-MM-DD どうしなので文字列の比較で日付の前後が分かる
+  const yesterdayMissing = today.yesterday >= goal.recordStartDate && !logs.some((log) => log.localDate === today.yesterday);
+  if (yesterdayMissing !== today.yesterdayMissing) return false;
+
   const todayLog = logs.find((log) => log.localDate === today.today) ?? null;
   return sameLog(todayLog, today.todayLog);
 }
@@ -28,44 +38,4 @@ export function isSameSnapshot(goal: Goal, today: Today, logs: readonly Log[]): 
 function sameLog(a: Log | null, b: Log | null): boolean {
   if (a === null || b === null) return a === b;
   return a.localDate === b.localDate && a.status === b.status && a.amount === b.amount;
-}
-
-/**
- * 予測の材料になる Goal の設定（1回の量・単位・記録開始日・初期実績・総量・timezone）を1つの値にしたもの。
- * 通常の /today の応答はこれらを返さないため、isSameSnapshot では照らし合わせられない。
- * 代わりに、表示中の Goal からこの値が変わったのに、Today の取得をその Goal が届くより前に始めていたなら、
- * 古い設定で作った予測かもしれないとして使わずに取り直す（useTodayData.ts）。
- */
-export function predictionInputs(goal: Goal): string {
-  return JSON.stringify([goal.sessionAmount, goal.unit, goal.recordStartDate, goal.initialProgress, goal.totalRequired, goal.timezone]);
-}
-
-/**
- * 設定が変わった Goal と、その Goal が届くより前に取得を始めた Today を組み合わせていないか。
- * shownGoal は最後にそろっていた Goal、goalAt は Goal の取得が届いた時刻、todayStartedAt は Today の取得を始めた時刻。
- * 届いた時刻ではなく始めた時刻で比べる：設定の変更より前に始めた Today の取得が、新しい Goal より遅れて届くことがあるため。
- * 新しい Goal が届いた後に始めた取得なら、その設定の変更はすでに保存されている。
- */
-export function isTodayOlderThanSettings(shownGoal: Goal | undefined, goal: Goal, goalAt: number, todayStartedAt: number): boolean {
-  if (!shownGoal || predictionInputs(shownGoal) === predictionInputs(goal)) return false;
-  return todayStartedAt < goalAt;
-}
-
-/** 取得した Today ごとの、取得を始めた時刻。 */
-const startedAt = new WeakMap<Today, number>();
-
-/**
- * Today を取得し、取得を始めた時刻を覚えておく（todayStartedAt で読む）。
- * 時刻を応答の値ごとに覚えるため、Today の取得では structuralSharing を切る（同じ内容でも前の値に置き換えない）。
- */
-export async function fetchTodayWithStart(fetchToday: () => Promise<Today>, now: () => number = Date.now): Promise<Today> {
-  const started = now();
-  const today = await fetchToday();
-  startedAt.set(today, started);
-  return today;
-}
-
-/** Today の取得を始めた時刻。分からなければ 0（最も古いものとして扱う）。 */
-export function todayStartedAt(today: Today): number {
-  return startedAt.get(today) ?? 0;
 }

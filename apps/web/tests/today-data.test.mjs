@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { nextEpoch, sessionChanged } from '../src/api/session-cache.ts';
 import { localDateIn, shouldRefetchForNewDay } from '../src/features/today/day-rollover.ts';
-import { fetchTodayWithStart, isSameSnapshot, isTodayOlderThanSettings, todayStartedAt } from '../src/features/today/snapshot.ts';
+import { isSameSnapshot } from '../src/features/today/snapshot.ts';
 
 const goal = {
   id: 'g', title: '英単語', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 600, timezone: 'Asia/Tokyo',
@@ -16,6 +16,7 @@ const logs = [
 const today = {
   today: '2026-10-07', yesterday: '2026-10-06', todayLog: logs[1], yesterdayMissing: false,
   prediction: { today: '2026-10-07', todayStatus: 'DONE', progress: { done: 635, total: 3000, completed: false } },
+  context: { recordStartDate: '2026-10-04', unit: 'minutes', sessionAmount: 20 },
 };
 
 test('Goal・Today・記録が同じ時点の材料ならそろっていると判断する', () => {
@@ -27,67 +28,56 @@ test('取得した時点がずれた組み合わせを見分ける', () => {
   assert.equal(isSameSnapshot({ ...goal, totalRequired: 200 }, today, logs), false);
   // 記録の一覧だけが古い（昨日の量が違う）
   assert.equal(isSameSnapshot(goal, today, [{ ...logs[0], amount: 10 }, logs[1]]), false);
-  // 記録の一覧に今日の記録がまだない
-  assert.equal(isSameSnapshot({ ...goal, todayStatus: 'UNRECORDED' }, today, [logs[0]]), false);
+  // 記録の一覧に今日の記録がまだない（Goal・Today は今日を記録済みのまま、一覧だけが古い）
+  assert.equal(isSameSnapshot(goal, { ...today, prediction: { ...today.prediction, progress: { ...today.prediction.progress, done: 615 } } }, [logs[0]]), false);
   // 日付が変わった後のGoalと前日のToday
   assert.equal(isSameSnapshot({ ...goal, today: '2026-10-08' }, today, logs), false);
   // 記録開始日より前の行は実績に数えない
   assert.equal(isSameSnapshot(goal, today, [{ localDate: '2026-10-01', status: 'DONE', amount: 99 }, ...logs]), true);
 });
 
-test('1回の量などが変わったGoalと、それより前に取得したTodayは組み合わせない', () => {
-  // 総量100・実績80・今日未記録・1回量10で取得したTodayの後に、量20へ変わったGoalを取得した
-  const shown = { ...goal, totalRequired: 100, initialProgress: 80, sessionAmount: 10 };
-  const changed = { ...shown, sessionAmount: 20 };
-  // 総量・累計は一致するので isSameSnapshot だけでは見分けられない。Today が古ければ取り直す
-  assert.equal(isTodayOlderThanSettings(shown, changed, 2000, 1000), true);
-  // 変わった後に取得したTodayなら使う
-  assert.equal(isTodayOlderThanSettings(shown, changed, 2000, 3000), false);
-  // 設定が変わっていなければ、取得の順番は問わない
-  assert.equal(isTodayOlderThanSettings(shown, { ...shown, title: '別名' }, 2000, 1000), false);
-  // まだ一度もそろっていない（最初の表示）ときは比べる相手がない
-  assert.equal(isTodayOlderThanSettings(undefined, changed, 2000, 1000), false);
+test('昨日の記録の有無が、Todayと記録の一覧で食い違えば組み合わせない', () => {
+  // 一覧には昨日の行があるのに、Todayは昨日を未記録としている（昨日を補完した後の一覧と、その前のToday）
+  assert.equal(isSameSnapshot(goal, { ...today, yesterdayMissing: true }, logs), false);
+  // 一覧に昨日の行がないのに、Todayは記録済みとしている
+  const noYesterday = [logs[1]];
+  const doneWithoutYesterday = { ...today, prediction: { ...today.prediction, progress: { ...today.prediction.progress, done: 620 } } };
+  assert.equal(isSameSnapshot(goal, doneWithoutYesterday, noYesterday), false);
+  assert.equal(isSameSnapshot(goal, { ...doneWithoutYesterday, yesterdayMissing: true }, noYesterday), true);
+  // 昨日が記録開始日より前なら、行がなくても「未記録」ではない
+  const startToday = { ...goal, recordStartDate: '2026-10-07' };
+  const startTodayResp = { ...today, yesterdayMissing: false, context: { ...today.context, recordStartDate: '2026-10-07' }, prediction: { ...today.prediction, progress: { ...today.prediction.progress, done: 620 } } };
+  assert.equal(isSameSnapshot(startToday, startTodayResp, noYesterday), true);
+  assert.equal(isSameSnapshot(startToday, { ...startTodayResp, yesterdayMissing: true }, noYesterday), false);
 });
 
-test('設定を変える前に始めたTodayの取得が、新しいGoalより遅れて届いても使わない', async () => {
-  // 総量100・実績80・今日未記録・1回量10。量10の Today を表示中に、量20へ変えた
-  const shown = { ...goal, totalRequired: 100, initialProgress: 80, sessionAmount: 10, todayStatus: 'UNRECORDED' };
-  const changed = { ...shown, sessionAmount: 20 };
-  // 時刻1000に Today の取得を始める（量20へ変える前）。応答は Goal（時刻2000に到着）より後の3000に届く
-  let release;
-  const pending = fetchTodayWithStart(() => new Promise((resolve) => (release = resolve)), () => 1000);
-  release({ ...today });
-  const lateOld = await pending;
-  assert.equal(todayStartedAt(lateOld), 1000);
-  // 届いた時刻（3000）は Goal より後でも、始めた時刻で比べるので古い設定の予測として取り直す
-  assert.equal(isTodayOlderThanSettings(shown, changed, 2000, todayStartedAt(lateOld)), true);
-  // Goal が届いた後に始めた取得なら使う
-  const fresh = await fetchTodayWithStart(async () => ({ ...today }), () => 2500);
-  assert.equal(isTodayOlderThanSettings(shown, changed, 2000, todayStartedAt(fresh)), false);
-  // 覚えていない値は最も古いものとして扱う
-  assert.equal(todayStartedAt({ ...today }), 0);
-});
-
-test('Todayの取得を始めた時刻は、同じ内容の応答で取り直しても新しい時刻になる', async () => {
-  const client = new QueryClient();
-  client.mount();
-  let now = 1000;
-  const observer = new QueryObserver(client, {
-    queryKey: ['goals', 'today', 'g'],
-    queryFn: () => fetchTodayWithStart(async () => ({ ...today }), () => now),
-    structuralSharing: false,
-    retry: false,
+test('画面の1回の量と違う量で計算した予測は、取得の順番や画面の作り直しにかかわらず使わない', () => {
+  // 総量100・実績80・今日未記録。1回量10で計算した予測と、量20へ変えた後の予測
+  const base = { ...goal, totalRequired: 100, initialProgress: 80, todayStatus: 'UNRECORDED', recordStartDate: '2026-10-07' };
+  const goal10 = { ...base, sessionAmount: 10 };
+  const goal20 = { ...base, sessionAmount: 20 };
+  const resp = (sessionAmount) => ({
+    ...today,
+    todayLog: null,
+    yesterdayMissing: false,
+    context: { recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount },
+    prediction: { ...today.prediction, todayStatus: 'UNRECORDED', progress: { done: 80, total: 100, completed: false } },
   });
-  const unsubscribe = observer.subscribe(() => {});
-  await new Promise((r) => setTimeout(r, 10));
-  assert.equal(todayStartedAt(client.getQueryData(['goals', 'today', 'g'])), 1000);
-  now = 5000;
-  await observer.refetch();
-  // 内容が同じでも前の値（時刻1000）に置き換えられないので、取り直しが止まらなくなることはない
-  assert.equal(todayStartedAt(client.getQueryData(['goals', 'today', 'g'])), 5000);
-  unsubscribe();
-  client.clear();
-  client.unmount();
+  const today10 = resp(10);
+  const today20 = resp(20);
+  // 総量・累計・今日の記録はどれも一致する。違いは予測に使った1回の量だけ
+  assert.equal(isSameSnapshot(goal10, today10, []), true);
+  assert.equal(isSameSnapshot(goal20, today20, []), true);
+  // 初回の表示・編集から戻って画面を作り直したとき（前にそろった表示がない）：新しいGoalと古いToday
+  assert.equal(isSameSnapshot(goal20, today10, []), false);
+  // 古いTodayの応答が、新しいGoal・新しいTodayより後に遅れて届いた
+  assert.equal(isSameSnapshot(goal20, today20, []), true);
+  assert.equal(isSameSnapshot(goal20, today10, []), false);
+  // 逆順：Goalだけが古い（新しいToday・古いGoal）
+  assert.equal(isSameSnapshot(goal10, today20, []), false);
+  // 単位・記録開始日だけが違う場合も同じ
+  assert.equal(isSameSnapshot({ ...goal10, unit: 'sessions' }, today10, []), false);
+  assert.equal(isSameSnapshot(goal10, { ...today10, context: { ...today10.context, recordStartDate: '2026-10-06' } }, []), false);
 });
 
 test('Goalのtimezoneで日付を数え、APIの「今日」が進むまで取り直しを止めない', () => {
