@@ -48,8 +48,9 @@ export function GoalCreatePage() {
 /** Goal の編集・削除（R-02、#78）。/goals/$goalId/edit。Goal を読み込んでからフォームを出す。 */
 export function GoalEditPage({ goalId }: { goalId: string }) {
   const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
-  if (query.isPending) return <FormShell title={f.editTitle} body={<FormLoading />} />;
-  if (query.isError) {
+  if (!query.data) {
+    if (!query.isError) return <FormShell title={f.editTitle} body={<FormLoading />} />;
+    // 最初の読み込みの失敗。入力はまだないので、フォームの代わりにエラーを出す
     return (
       <FormShell
         title={isNotFound(query.error) ? c.notFound.heading : f.editTitle}
@@ -57,8 +58,17 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
       />
     );
   }
-  // 別の Goal を開き直したら、入力中の値を持ち越さない
-  return <GoalForm key={goalId} mode="edit" goal={query.data} />;
+  // 別の Goal を開き直したら、入力中の値を持ち越さない。
+  // 表示した後の再取得（focus・reconnect）の失敗では、フォームを残したまま知らせる（未保存の入力を消さない）
+  return (
+    <GoalForm
+      key={goalId}
+      mode="edit"
+      goal={query.data}
+      refreshError={query.isError ? query.error : null}
+      onRetryRefresh={() => void query.refetch()}
+    />
+  );
 }
 
 function FormShell({ title, body }: { title: string; body: ReactNode }) {
@@ -87,9 +97,11 @@ function FormLoading() {
   );
 }
 
-type Props = { mode: 'create'; goal?: undefined } | { mode: 'edit'; goal: Goal };
+type Props =
+  | { mode: 'create'; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined }
+  | { mode: 'edit'; goal: Goal; refreshError: unknown; onRetryRefresh: () => void };
 
-function GoalForm({ mode, goal }: Props) {
+function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const locked = mode === 'edit' && goal.hasLogs;
@@ -105,6 +117,17 @@ function GoalForm({ mode, goal }: Props) {
   // 成功したら一覧へ移るまで立てたままにし、失敗したときだけ下ろす
   const saving = useRef(false);
   const deleting = useRef(false);
+  // 編集を始めた時点の Goal。変えた項目だけを送るための比較元で、再取得で goal が新しくなっても変えない
+  // （変えると、別のタブでの変更を、触っていない項目まで古い値で巻き戻してしまう）
+  const [baseline] = useState(goal);
+  // この画面がまだ表示されているか。保存の途中で離れた後に、別の画面を一覧へ移さないために使う
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const clientErrors = submitted ? validate(values, { locked }) : {};
   const errors: FieldErrors = { ...serverErrors, ...clientErrors };
@@ -113,13 +136,12 @@ function GoalForm({ mode, goal }: Props) {
   const save = useMutation({
     mutationFn: async (v: FormValues): Promise<Goal | null> => {
       if (mode === 'create') return goalsHttp.createGoal(toCreateBody(v));
-      const patch = toPatchBody(v, goal);
+      // 記録の有無は最新の Goal に従う（記録が付いた後は timezone・initialProgress を送らない）
+      const patch = toPatchBody(v, { ...baseline!, hasLogs: goal.hasLogs });
       return patch ? goalsHttp.updateGoal(goal.id, patch) : null;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: goalKeys.all });
-      await navigate({ to: '/goals' });
-    },
+    // 一覧などの取り直しは、画面を離れていても必ず行う。一覧への移動は mutate に渡す onSuccess で、表示中のときだけ行う
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: goalKeys.all }),
     onError: (error) => {
       saving.current = false;
       const fromApi = fieldErrorsFromApi(error);
@@ -133,21 +155,22 @@ function GoalForm({ mode, goal }: Props) {
   const remove = useMutation({
     mutationFn: () => goalsHttp.deleteGoal(goal!.id),
     onSuccess: async () => {
-      setDeleteOpen(false);
       queryClient.removeQueries({ queryKey: goalKeys.detail(goal!.id) });
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
-      await navigate({ to: '/goals' });
     },
     onError: async (error) => {
       deleting.current = false;
-      // すでに削除されていた（別のタブなど）場合は、一覧へ戻る
-      if (isNotFound(error)) {
-        setDeleteOpen(false);
-        await queryClient.invalidateQueries({ queryKey: goalKeys.all });
-        await navigate({ to: '/goals' });
-      }
+      // すでに削除されていた（別のタブなど）場合も、一覧を取り直す
+      if (isNotFound(error)) await queryClient.invalidateQueries({ queryKey: goalKeys.all });
     },
   });
+
+  // 保存・削除が終わったとき、この画面がまだ表示されていれば一覧へ戻る（離れた後なら、いま表示中の別の画面を動かさない）
+  const leaveToList = () => {
+    if (!mounted.current) return;
+    setDeleteOpen(false);
+    void navigate({ to: '/goals' });
+  };
 
   const update = <K extends FieldName>(name: K, value: FormValues[K]) => {
     setValues((prev) => ({ ...prev, [name]: value }));
@@ -166,7 +189,7 @@ function GoalForm({ mode, goal }: Props) {
       return;
     }
     saving.current = true;
-    save.mutate(values);
+    save.mutate(values, { onSuccess: leaveToList });
   };
 
   const focusFirstError = (found: FieldErrors) => {
@@ -196,6 +219,7 @@ function GoalForm({ mode, goal }: Props) {
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
       <form ref={formRef} className="fr-goalform" noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">
+          {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={onRetryRefresh} /> : null}
           {count > 0 ? (
             <div className="fr-goalform__summary" role="alert">
               <Icon name="alert" size={20} />
@@ -303,7 +327,13 @@ function GoalForm({ mode, goal }: Props) {
           onConfirm={() => {
             if (deleting.current) return;
             deleting.current = true;
-            remove.mutate();
+            remove.mutate(undefined, {
+              onSuccess: leaveToList,
+              // すでに削除されていた（別のタブなど）場合は、一覧へ戻る
+              onError: (error) => {
+                if (isNotFound(error)) leaveToList();
+              },
+            });
           }}
           onCancel={() => {
             setDeleteOpen(false);
@@ -327,6 +357,23 @@ function GoalForm({ mode, goal }: Props) {
         </ConfirmDialog>
       ) : null}
     </div>
+  );
+}
+
+/** 表示した後の再取得の失敗。フォームと入力はそのまま残す。 */
+function RefreshFailed({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
+  return (
+    <ErrorPanel
+      title={f.refreshFailed.title}
+      action={
+        <Button icon="retry" onClick={onRetry}>
+          {c.loadError.retry}
+        </Button>
+      }
+    >
+      {isNotFound(error) ? f.refreshFailed.notFound : f.refreshFailed.body}
+    </ErrorPanel>
   );
 }
 
