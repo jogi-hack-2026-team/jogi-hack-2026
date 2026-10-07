@@ -1,5 +1,5 @@
-// PR136の0003/回答APIと組み合わせたtreeだけで明示実行するSupporting検証。
-// mainの通常tests/**/*.test.tsへ未統合APIを持ち込まず、schema適用順と非null回答の保全を再現する。
+// 統合済み0003の回答snapshotと0004のDemo所有権を、標準回帰で一緒に検証する。
+// resetの失敗・新IDへの置換と、0004適用済みDBへの0003後着でデータ保全を確認する。
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -11,7 +11,7 @@ import { migrate } from '../src/db/migrate.ts';
 import { createTestDatabase } from './helpers/database.ts';
 import { setup, signedInClient, startStack } from './helpers/stack.ts';
 
-test('PR136実schema/APIとの組合せ: 旧回答全rowのrollback・通常Goal保全・新Goal未回答/版0・旧版404', async t => {
+test('回答snapshotとDemo reset: 旧回答全rowのrollback・通常Goal保全・新Goal未回答/版0・旧版404', async t => {
   const now = () => new Date('2026-12-31T15:00:00Z');
   const { db, stack } = await setup(t, { now });
   const owner = await signedInClient(stack.app, 'r11-seed-only');
@@ -64,7 +64,7 @@ test('PR136実schema/APIとの組合せ: 旧回答全rowのrollback・通常Goal
   })).status, 404);
 });
 
-test('0004適用済みDBへPR136の0003を後から適用しても、既存Goal/log/marker/auth行を保全する', async t => {
+test('0004適用済みDBへ0003を後から適用しても、既存Goal/log/marker/auth行を保全する', async t => {
   const db = await createTestDatabase();
   const dir = mkdtempSync(join(tmpdir(), 'seed82-migration-order-'));
   let closeStack = async () => {};

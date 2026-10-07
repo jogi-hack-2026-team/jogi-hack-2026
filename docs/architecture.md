@@ -213,7 +213,7 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 | Engineのエラー | 保存済みデータから作った入力を`PredictionInputError`／`PredictionConfigError`が拒否した場合は500 `PREDICTION_FAILED`（reason・pathをログに残す） | 利用者の操作では直せない状態で、422にすると画面が入力エラーとして扱ってしまう |
 | 実行方式 | MVPは同期で`predict`を呼ぶ。呼び出しは[engine.ts](../apps/api/src/prediction/engine.ts)の`runPrediction`に閉じる | T-14は実Engineで各回34〜75ms。混合負荷の結果（[2026-10-05の実測](#第一候補の検証状況84--85)）を受けて同一プロセス内のworkerへ移すかは#84の残判断で、移す場合もrouteを変えない |
 
-含めないもの：R-11の回答保存・出所・条件付き回数・表示context（D-26採択後に`/today`と`PATCH /goals`へ追加）、記録の削除（UNKNOWNへ戻す操作は未採択）、競合検出のrevision／409（未採択。同じ日のPUTは最後の保存が残る）、worker実行、staging。
+この#77実装に含めないもの：R-11（[D-26の#133追加](#2026-10-07の保存予測接続133)へ分離）、記録の削除（UNKNOWNへ戻す操作は未採択）、Logの競合revision／409（未採択。同じ日のPUTは最後の保存が残る）、worker実行、staging。
 
 ### 第一候補の検証状況（#84 / #85）
 
@@ -308,7 +308,7 @@ CREATE TABLE action_log (
 
 業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の条件付き第一候補を#75で実装したもの（[認証実装](#2026-10-06の認証実装75)）。未ログインの401と別originからの状態変更の403（`ORIGIN_REJECTED`）は`/api/*`共通のhookが返す。認証endpoint自体のエラー形式はBetter Authのまま（`{ code, message }`）で、業務APIの共通error形式へ揃える範囲は未決定。
 
-以下はmethod / pathと記載済みの規則の一覧。Goal APIの成功DTO・status・PATCHの省略・null・空body・一覧の今日状態は[2026-10-06のGoal API](#2026-10-06のgoal-api76)、記録APIの成功DTO・status・SKIPPEDの応答量・期間と`/today`の細則は[2026-10-06の記録・Today API](#2026-10-06の記録today-api77)へ実装案を記録した。人のPR承認レビューで採択を確認する。R-11の追加項目と競合検出は[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
+以下はmethod / pathと記載済みの規則の一覧。Goal APIの成功DTO・status・PATCHの省略・null・空body・一覧の今日状態は[2026-10-06のGoal API](#2026-10-06のgoal-api76)、記録APIの成功DTO・status・SKIPPEDの応答量・期間と`/today`の細則は[2026-10-06の記録・Today API](#2026-10-06の記録today-api77)へ実装案を記録した。人のPR承認レビューで採択を確認する。R-11の任意回答・回答版と明示query読取は[D-26](#2026-10-07の保存予測接続133)の依頼者承認範囲で追加する。それ以外の未定義部分は[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
 
 | Method / Path | 内容 |
 | --- | --- |
@@ -318,7 +318,9 @@ CREATE TABLE action_log (
 | `GET / PATCH / DELETE /api/goals/:goalId` | 取得（200）・編集（200。省略は維持、`null`・空bodyは422）・削除（204。記録も連鎖削除）。他人・存在しないidは404。記録があるGoalで`timezone`・`initialProgress`を異なる値へ変えようとすると422 `GOAL_HAS_LOGS`（#76） |
 | `PUT /api/goals/:goalId/logs/:localDate` | 記録の作成・上書き（200＋Log）。body：`status, amount?`。`localDate`がGoalのtimezoneで今日・昨日以外なら422 `LOG_DATE_OUT_OF_WINDOW`、固定した記録開始日より前なら422 `LOG_DATE_BEFORE_START`。どちらの違反でも記録・初期量を変更しない（#77） |
 | `GET /api/goals/:goalId/logs?from&to` | 記録済みの一覧（行動日の昇順、両端を含む任意の期間。履歴表示用、#77） |
-| `GET /api/goals/:goalId/today` | `{ today, yesterday, todayLog, yesterdayMissing, prediction: PredictionResult }`。`yesterdayMissing`は昨日が記録開始日以降で未記録のときだけtrue。1つのDB snapshotと1回の時計読み取りから組み立てる（#77） |
+| `GET /api/goals/:goalId/today` | query省略は`{ today, yesterday, todayLog, yesterdayMissing, prediction: PredictionResult }`。`yesterdayMissing`は昨日が記録開始日以降で未記録のときだけtrue。1つのDB snapshotと1回の時計読み取りから組み立てる（#77） |
+| `GET /api/goals/:goalId?view=r11` | 依頼者承認のR-11専用Goal DTO。raw回答・回答版を含む（#133）。query省略は旧Goal DTO。認証・owner条件、厳密queryの422は[D-26](#2026-10-07の保存予測接続133) |
+| `GET /api/goals/:goalId/today?view=r11` | 依頼者承認のR-11専用Today DTO。保存回答と全実ログの同じsnapshotから、専用prediction・文脈・出所・nullable Planを返す（#133）。DB接続返却後に選択したEngineだけを最大1回実行する |
 
 ### 記録の上書きと予測の再計算
 
@@ -562,13 +564,13 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-17 | 2026-09-29 | DECIDED | [旧音楽案向け設計の適用終了](#d-17-音楽案に依存したarchitectureの適用終了) |
 | D-18 | 2026-09-30 → 2026-10-03 | SUPERSEDED by D-23（基本構成の未定状態） | [旧開発スタックの一時退避](#d-18-旧開発スタックの一時退避)は履歴として保持。起動構成は#70で現行の場所へ導入（2026-10-06） |
 | D-19 | 2026-09-30 | DECIDED | [予測モデルにM1（2状態Bayesian Markov）を採用、M0・M2は不採用](#d-19)（ADR-001） |
-| D-20 | 2026-09-30 | DECIDED（現行の共通prior。回答由来案はD-26でOPEN） | [事前分布をBeta(2,2)とする範囲と変更案](#d-20)（ADR-002） |
+| D-20 | 2026-09-30 | DECIDED（旧predictの共通prior。R-11の依頼者承認範囲はD-26へ分離） | [事前分布をBeta(2,2)とする範囲と変更案](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
 | D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74)。既存方式の[Docker一式起動補完](#docker一式起動の補完130)は#130でレビュー |
 | D-24 | 2026-09-30 → 2026-10-03（2026-10-06実装） | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24)。[#74で版固定、#75で実装](#2026-10-06の認証実装75)。公開HTTPS・運用担当は残条件 |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
-| D-26 | 2026-10-05 | OPEN（R-11 Scope・分担は採択済み、具体契約は未採択） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
+| D-26 | 2026-10-05 / 2026-10-07 | 保存・予測接続と明示query読取は依頼者承認・チームレビュー対象。FE結合・製品受入の残条件を分離 | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 | D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
 
 ### D-27
@@ -627,7 +629,29 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 ### D-26
 
-2026-10-05 / **OPEN（実現方式、未実装）** / [R-11・P-15](product-spec.md#質問から始める見通しr-11)の質問由来の見通しを実現する契約を具体化する。現行Engineは共通の`config.prior = 2`と実績起点の不足判定を持ち、回答由来の分布・表示可否・出所の受け渡しを持たない。[PR #108の公開HEADの提案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/a4c383b1b2bc95e4a838727e5b7e4e28bb261ec0/docs/prediction/question-prior-proposal.md)はSupporting Artifactで、数値・型・保存案全体の採択や製品コードではない。
+2026-10-05 / **OPENの履歴、2026-10-07に下記方針を依頼者承認・チームレビュー対象へ更新** / [R-11・P-15](product-spec.md#質問から始める見通しr-11)の契約を具体化する。旧`predict`の共通`config.prior = 2`と実績起点の不足判定を保ち、R-11用の純粋入口を別に公開する。[PR #108の公開HEADの提案](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/a4c383b1b2bc95e4a838727e5b7e4e28bb261ec0/docs/prediction/question-prior-proposal.md)全体は当時のSupporting Artifactとして保持する。
+
+#### 2026-10-07の保存・予測接続（#133）
+
+[Productの承認範囲](product-spec.md#r-11の保存予測接続方針2026-10-07)と[Issue #133](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/133)を根拠に実装する。2026-10-07 03:12 UTC「仕上げていいよ」、03:26 UTC「続けて」により、Goal/Today GETの`?view=r11`専用DTO選択と公開route・HTTP回帰の仕上げも依頼者が承認した。以下の具体契約はチームレビュー対象で、Human Approve・Merge・FE結合・製品受入とは扱わない。
+
+| 境界 | 契約と理由 |
+| --- | --- |
+| raw入力 | `questionPrior: { a, b }`、両key必須、各値LOW/MID/HIGH/UNKNOWN/null。POST省略は未回答、PATCH省略は維持、両nullは撤回。block全体null、片key、省略不明な内部Beta・mappingは422。必須回答を作らない |
+| 回答版 | `expectedAnswerRevision`は0〜MAX_SAFE_INTEGER。回答PATCHで必須、質問を扱うclientはunit/sessionAmountのkeyを送るときも必ず同送する。owner限定Goal FOR UPDATEを取って確認し、不一致は同一内容でも409 `ANSWER_CONFLICT`、title等を含め全体rollback。回答だけの版で全Goal revisionではない |
+| 互換書込 | 旧bodyの通常Goal更新は従来どおり。旧clientの実際のunit/sessionAmount変更も回答・snapshotを撤回し版を増やすので、古い回答編集を拒否できる。POST/PATCH成功は旧Goal DTOを保持し、回答編集後は新読取でraw／版／Todayを再取得する。token単独や無関係なtitleのみ＋tokenは422 |
+| 公開読取 | `GET /api/goals/:goalId?view=r11`は旧Goalの全欄＋`schemaVersion: r11-v1`・raw `questionPrior`・`answerRevision`。`GET /api/goals/:goalId/today?view=r11`は旧Todayの基礎欄＋同schemaVersion・R-11 prediction・文脈`{ recordStartDate, unit, sessionAmount }`・a/b別provenance・nullable Plan。query省略は旧DTO/旧predict、Goal一覧・POST/PATCH成功も旧DTOを維持。viewは省略または文字列r11だけ、未知key・空値・重複・未対応値は共通422。認証401とowner限定404を両表現で保持。書込bodyと回答版はqueryに依存しない |
+| 公開予測の表現 | R-11 predictionはmodelVersion `m1-question-prior-v1`、configはsamples/horizonDays/seedで旧スカラーprior欄なし。provenanceはa/b別NONE/QUESTION/RECORDS/QUESTION_AND_RECORDS。Planは未達成かつ完了不足のときだけ実残量・条件付き回数・最終回量、他はnull。raw回答・回答版はGoal読取に置き、保存mapping/snapshotはHTTPへ出さない。FEは専用型・表現別cache・出所表示を使い、旧実績専用変換へcastしない |
+| 版の更新 | 新Goalは回答ありでも0。rawの実変更・撤回またはunit/sessionAmountの実変更で1回加算。回答なしの文脈変更も加算し、撤回後にresetしない。同じraw・同じ文脈はno-opで版／snapshotを保持。title/totalRequired/initialProgress/timezone、Logは版を変えない。上限で変更が必要なら500でrollbackし、丸め／wrapしない |
+| 保存snapshot | [0003](../apps/api/migrations/0003_goal_question_prior.sql)でraw、bigint版、nullable JSON snapshotを追加。既存Goalは両null／版0で、既存Goal・実ログ・開始日・timestampを変えない。snapshotはschema `r11-prior-v1`、mapping `r11-strength4-v1`と全3写像、a/b初期Beta、unit/sessionAmount/recordStartDateを保存。保存mapping/snapshotはclientへ公開しない。破損・未知mapping版は500 `PREDICTION_FAILED`、最新mappingへfallbackしない。将来mappingを追加する場合は旧保存版のreaderを維持する |
+| 文脈変更 | unit/sessionAmountが変わるPATCHでは回答block省略か両nullだけを許可し、UNKNOWNを含む回答を同時保存すると422で全体rollback。変更後GETで文脈・版を取得して任意に答え直す。timezoneは元のR-02の制限を維持し、回答を撤回しない。total/initial変更は残量・完了予測へ反映するが初期Betaを変えない |
+| snapshot整合 | RCのGoal lock→版判定→別SQLのlogs EXISTS→既存R-02検証→Goal／raw／版／snapshot更新。PUTのGoal lock順序を維持。TodayはRRでGoal＋保存回答を最初のSELECTで確定→時計1回→全実ログ→commit／接続返却→純粋Engine。異なる回答版・ログ・日付を混ぜない |
+| 純粋Engine | [question-prior.ts](../packages/prediction/src/question-prior.ts)の`predictWithQuestionPrior`。aはnDD+nDS、bはnSD+nSSが実記録の材料。numeric回答も材料、UNKNOWN/nullの内部Beta(2,2)は材料ではない。中心b／完了a+b、R-08→R-07優先。全ログと保存初期分布から再計算し、前回posteriorを次のpriorへ戻さない。既存数値核・K/H/seedを保ち、完了DPは要求ごとに最大1回。R-11 modelVersionは`m1-question-prior-v1`でconfigに旧スカラーpriorを偽装しない |
+| 失敗復旧 | 409と通信失敗で入力を成功済みにせず、最新raw／文脈／版を再取得して明示的に再送する。GETの版一致だけでは自分の保存成功を証明しない。POST応答消失時の操作ID・自動再作成は対象外。FEは表現別cacheと古い応答抑止を持ち、旧Todayの実績専用変換へR-11応答をcastしない |
+
+強度4の理由・未校正という限界は[Product](product-spec.md#r-11の保存予測接続方針2026-10-07)、検証は[保存・同時更新回帰](../apps/api/tests/question-prior.test.ts)、[公開GETと旧互換・出所・日跨ぎsnapshotのHTTP回帰](../apps/api/tests/question-prior-http.test.ts)、[既存Goalへのmigration](../apps/api/tests/migrate.test.ts)、[公開Engine回帰](../packages/prediction/tests/question-prior-public.test.mjs)を参照。旧共通priorと内部候補・独立oracleの回帰を保持する。FEのGoal/Today画面、worker採択、Docker、staging、実ユーザーでの校正はこのIssueの完了に含めない。
+
+以下の表と期限は2026-10-05時点の未決履歴。現在の承認済み部分は上記へ分け、Supporting案全体の採択へ昇格させない。
 
 | OPEN項目 | 影響と採択時に確認する内容 |
 | --- | --- |

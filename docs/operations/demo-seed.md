@@ -59,8 +59,8 @@ COMMIT前の失敗でROLLBACKが完了すれば、旧Goal・旧ログ・保存�
 
 ## 設計理由と検証
 
-理由・代替案・不変条件は[Architecture D-27](../architecture.md#d-27)。実装は[seed-demo.ts](../../apps/api/src/db/seed-demo.ts)、合成入力は[demo-data.ts](../../apps/api/src/db/demo-data.ts)、所有権は[migration 0004](../../apps/api/migrations/0004_demo_seed_goal.sql)。0003は並行するR-11変更用に空け、既存SQLのchecksumを変更しない。公開前には統合後mainの全migration適用順を確認する。
+理由・代替案・不変条件は[Architecture D-27](../architecture.md#d-27)。実装は[seed-demo.ts](../../apps/api/src/db/seed-demo.ts)、合成入力は[demo-data.ts](../../apps/api/src/db/demo-data.ts)、所有権は[migration 0004](../../apps/api/migrations/0004_demo_seed_goal.sql)。R-11の[migration 0003](../../apps/api/migrations/0003_goal_question_prior.sql)を保持し、空のDBでは0001→0002→0003→0004の順に適用する。既存SQLのchecksumは変更しない。
 
 [日付・既存fixture回帰](../../apps/api/tests/demo-data.test.ts)と[専用DBでのAPI／reset回帰](../../apps/api/tests/demo-seed.test.ts)で、データ保全・SQL途中失敗・同一ユーザーの並行実行・DELETEとの競合・lock待ち日またぎ・COMMIT確定不明・CLI終了と非露出を検証する。テストは専用の合成DBだけを作成・削除し、公開DBや既存volumeへ実行しない。`DATABASE_URL`を指定しないAPIテストは既存helperが`.local`へクラスタとテスト資格情報を保存するため、その挙動を許可しない検証では、明示的に隔離した合成PostgreSQLを指定する。
 
-PR136の0003／回答APIとの[組合せ検証](../../apps/api/tests/seed-r11-compatibility.ts)はSupporting検証で、標準globの対象外。PR136の実コードと今回の変更を合わせたtreeでのみ、隔離合成PGの`DATABASE_URL`を明示し、`npm run typecheck`の後に`node --test apps/api/tests/seed-r11-compatibility.ts`を実行する。非nullの保存回答・snapshotの失敗rollback、通常Goalの回答保全、新Goalの未回答／版0、旧回答PATCHの404、0004→0003の後着順と反復を確認する。PR136がmainへ統合されたら、通常回帰への組込みとCIの初回migration期待列の0003／0004整合を確認する。未統合のAPIを今回の通常テストへ仮装していない。
+0003の回答APIとDemo resetの[統合回帰](../../apps/api/tests/seed-r11-compatibility.test.ts)は標準の`npm test`に含まれる。非nullの保存回答・snapshotの失敗rollback、通常Goalの回答保全、新Goalの未回答／版0、旧回答PATCHの404、0004→0003の後着順と反復を確認する。CIと[migration回帰](../../apps/api/tests/migrate.test.ts)の初回適用期待列も0001／0002／0003／0004で一致させる。
