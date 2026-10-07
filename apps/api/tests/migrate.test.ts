@@ -32,7 +32,7 @@ async function insertUser(pool: pg.Pool, id: string) {
 
 const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date)
                     values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo', '2026-10-01') returning id`;
-const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql'];
+const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql', '0004_demo_seed_goal.sql'];
 
 test('R11 migration 0003 keeps existing Goals and logs, starts unanswered at revision 0, and is idempotent', async t => {
   const db = await createTestDatabase();

@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
-import type { Goal, Log, TodayR11 as Today } from '@contracts';
+import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { usePrivateEpoch } from '../../api/session-cache.ts';
@@ -131,7 +131,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   return (
     <div className="fr fr-page">
       <AppBar
-        title={goal?.title ?? ''}
+        title={recordGoal?.title ?? ''}
         leading={
           <Link to="/goals" className="fr-icon-btn" aria-label="Goal一覧へ戻る">
             <Icon name="back" />
@@ -198,7 +198,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
 function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Today; logs: Log[]; onChange: () => void }) {
   // 変換と検査は Boundary の内側で行う（失敗しても記録の2択は残る）
-  // R-11 の読み取り（?view=r11）の出所と計画も渡す。回答由来の値を実記録として見せないため
+  // R-11 の出所（provenance）と、材料が足りないときの計画（plan）は API の値をそのまま渡す
   const view = toForecastView(today.prediction, goal.unit, { provenance: today.provenance, plan: today.plan, sessionAmount: today.context.sessionAmount });
   assertForecastPresentation(view);
   const unit = unitLabel(goal.unit);

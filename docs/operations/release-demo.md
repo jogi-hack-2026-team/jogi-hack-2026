@@ -1,7 +1,7 @@
 # リリース・デモ・提出の手順
 
 HTML §16–17に基づく最小運用。ProductはFuture ROI（[Product Spec](../product-spec.md#現行状態2026-09-30)）。基本構成は[D-23](../architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録。認証・公開先は[Architecture](../architecture.md#deployment)の検証・運用条件付き第一候補で、一般公開・課金作成の許可ではない。公開先の最終受入、予算、担当者、URLは未定。
-migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は`node apps/api/dist/db/migrate-cli.js all`。[手順](../DEVELOPMENT_GUIDE.md#起動)）。Demo Seedは`npm run db:seed:demo`の枠だけがあり、#82で実装するまで未実装として失敗する。deployコマンドは未定で、存在しないコマンドは掲載しない。
+migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は`node apps/api/dist/db/migrate-cli.js all`。[手順](../DEVELOPMENT_GUIDE.md#起動)）。[Demo Seed](demo-seed.md)は認証作成済みuserIdとtimezoneを明示し、専用2Goalだけを作成・resetする。deployコマンドは未定で、存在しないコマンドは掲載しない。
 
 ## リリース担当者が行うこと
 
@@ -19,7 +19,7 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 | 担当者・所要時間・説明順 | 未定 | 説明担当と操作担当で通し練習 |
 | 使用URL・対象Release SHA | 未定 | 別メンバーの端末から到達 |
 | Demo Account | メール＋パスワード認証（[R-01](../product-spec.md#requirementsmvp)、#75でローカル実装済み）。公開環境のアカウントは未作成 | 利用権限を確認。資格情報は承認済みの手段で共有。認証の試行上限（既定: 1接続元60秒に5回）はデモ会場の共有回線に合わせて`AUTH_SIGN_IN_MAX`で調整する |
-| Demo Data・初期状態への戻し方 | 再開が早いGoalと遅いGoalの合成記録（[R-09](../product-spec.md#requirementsmvp)）。スクリプトは未作成 | 開発データと分け、手順を再実行できる |
+| Demo Data・初期状態への戻し方 | 再開が早いGoalと遅いGoalの合成記録（[R-09](../product-spec.md#requirementsmvp)）。[Demo Seedとreset](demo-seed.md)で認証済みuserIdの専用2Goalだけを作成・置換する | 開発データと分け、手順を再実行できる。公開環境・恒久Demo Account・Webの通し確認は未実施 |
 | 操作手順・期待結果 | [Core User Flow](../product-spec.md#core-user-flow)。期待結果は実装後に記入 | 主要Flowを順番どおりに再現 |
 | 通信・アプリのAPI（`/api`）障害時の説明 | 未確認（アプリ実装後に確認） | タイムアウト・エラー表示と代替デモを事前確認。MVPにない外部APIの採用を前提にしない |
 | Backup Plan | 未定 | 許可された録画・画面資料などをチームで決める |

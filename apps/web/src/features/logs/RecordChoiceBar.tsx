@@ -4,7 +4,7 @@ import { Button } from '../../ui/components/Button.tsx';
 import { ChoiceButton } from '../../ui/components/ChoiceButton.tsx';
 import { StickyActionBar } from '../../ui/components/StickyActionBar.tsx';
 import { AmountEditor } from './AmountEditor.tsx';
-import { classifySaveError, describeChoice, type RecordChoice } from './record-log.ts';
+import { classifySaveError, describeChoice, unlessLocked, type RecordChoice } from './record-log.ts';
 import { SaveFailure } from './SaveFailure.tsx';
 import type { useSaveLog } from './useSaveLog.ts';
 import './logs.css';
@@ -55,7 +55,10 @@ export function RecordChoiceBar({
           kind={classifySaveError(saver.failure.error)}
           body={todayCopy.saveFailed(describeChoice(failed, sessionAmount, unit, todayCopy.recordedRest))}
           localDate={saver.failure.vars.localDate}
-          onRetry={saver.retry}
+          // 昨日を訂正している間は、失敗後の再試行からも送らない（通常の保存と同じ排他）
+          onRetry={unlessLocked(locked, saver.retry)}
+          retryLocked={locked}
+          lockedNote={todayCopy.otherEditing}
           onReselect={saver.reset}
           onRefresh={() => {
             saver.reset();

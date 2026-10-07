@@ -65,7 +65,7 @@ jobs:
         run: |
           first=$(npm run db:migrate --silent)
           echo "$first"
-          echo "$first" | grep -q '"applied":\["0001_goal_action_log.sql","0002_goal_record_start_date.sql","0003_goal_question_prior.sql"\]'
+          echo "$first" | grep -q '"applied":\["0001_goal_action_log.sql","0002_goal_record_start_date.sql","0003_goal_question_prior.sql","0004_demo_seed_goal.sql"\]'
           second=$(npm run db:migrate --silent)
           echo "$second"
           echo "$second" | grep -q '"tablesCreated":\[\],"columnsAdded":\[\]'

@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import type { Goal, Log, TodayR11 as Today } from '@contracts';
+import type { GoalR11, Log, TodayR11 } from '@contracts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { shouldRefetchForNewDay } from './day-rollover.ts';
 import { fetchPolicy } from './fetch-policy.ts';
-import { isSameSnapshot, isTodayOlderThanSettings } from './snapshot.ts';
+import { isSameSnapshot } from './snapshot.ts';
 
-export type TodaySnapshot = { goal: Goal; today: Today; logs: Log[] };
+export type TodaySnapshot = { goal: GoalR11; today: TodayR11; logs: Log[] };
 
 /** 食い違いを取り直す回数の上限。超えたら「表示をそろえられませんでした」と再読み込みを出す。 */
 const MAX_RESYNC = 3;
@@ -36,9 +36,8 @@ export function useTodayData(goalId: string, notBefore = 0) {
   const fresh = [goalQuery, todayQuery, logsQuery].every((q) => q.dataUpdatedAt > notBefore);
   // 最後にそろっていた組み合わせ
   const lastGood = useRef<TodaySnapshot | undefined>(undefined);
-  // 予測の材料になる設定（1回の量など）が変わったのに、Today がその Goal より前の取得なら、古い設定の予測として取り直す
-  const staleToday = !!goal && isTodayOlderThanSettings(lastGood.current?.goal, goal, goalQuery.dataUpdatedAt, todayQuery.dataUpdatedAt);
-  const consistent = goal && today && logs && fresh ? isSameSnapshot(goal, today, logs) && !staleToday : null;
+  // 予測に使った設定（1回の量など）も含めて、応答の値だけで照らし合わせる（snapshot.ts）
+  const consistent = goal && today && logs && fresh ? isSameSnapshot(goal, today, logs) : null;
   if (goal && today && logs && consistent) lastGood.current = { goal, today, logs };
 
   // 食い違いを取り直す。取得中は待ち、そろったら数え直す
@@ -47,12 +46,10 @@ export function useTodayData(goalId: string, notBefore = 0) {
     if (consistent === true && resyncs !== 0) setResyncs(0);
     if (consistent === false && !fetching && resyncs < MAX_RESYNC) {
       setResyncs((n) => n + 1);
-      // 古い設定の予測だけが原因なら、Goal より後に始める Today だけを取り直す（3つ同時だと順番がまた前後し得る）
-      if (staleToday) void todayQuery.refetch();
-      else refresh();
+      refresh();
     }
     // refresh は毎回作り直されるが、取り直しのきっかけは consistent・fetching・resyncs だけにする
-  }, [consistent, fetching, resyncs, staleToday]);
+  }, [consistent, fetching, resyncs]);
 
   // Goal の timezone で日付が変わったら取り直す。API の「今日」が進むまで、取得中でなければ確かめるたびに
   const fetchingRef = useRef(fetching);

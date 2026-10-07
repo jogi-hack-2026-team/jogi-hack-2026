@@ -19,6 +19,8 @@ export function SaveFailure({
   onRetry,
   onReselect,
   onRefresh,
+  retryLocked = false,
+  lockedNote,
 }: {
   kind: SaveFailureKind;
   /** failed のときの本文（「やった・20分」はまだ記録されていません…など）。 */
@@ -27,6 +29,10 @@ export function SaveFailure({
   onRetry: () => void;
   onReselect: () => void;
   onRefresh: () => void;
+  /** もう片方の日を編集している間は「もう一度保存」を押せなくする（#88）。 */
+  retryLocked?: boolean;
+  /** retryLocked のときに、押せない理由として出す一文。 */
+  lockedNote?: string;
 }) {
   const location = useLocation();
   if (kind === 'signed-out') {
@@ -62,7 +68,7 @@ export function SaveFailure({
       title={todayCopy.saveFailedTitle}
       action={
         <div className="fr-savefail__actions">
-          <Button variant="primary" icon="retry" onClick={onRetry}>
+          <Button variant="primary" icon="retry" disabled={retryLocked} onClick={onRetry}>
             {todayCopy.retrySave}
           </Button>
           <Button variant="secondary" onClick={onReselect}>
@@ -72,6 +78,12 @@ export function SaveFailure({
       }
     >
       {body}
+      {retryLocked && lockedNote ? (
+        <>
+          <br />
+          {lockedNote}
+        </>
+      ) : null}
     </ErrorPanel>
   );
 }
