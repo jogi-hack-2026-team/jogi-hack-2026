@@ -96,7 +96,7 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
     }
     if (error instanceof PredictionFailed) {
       // 保存済みデータから作った入力をEngineが拒否した。利用者の操作では直せないため原因だけ記録して500。
-      request.log.error({ reason: error.reason, path: error.path }, 'prediction: engine rejected stored input');
+      request.log.error({ name: error.failureName, kind: error.kind, reason: error.reason, path: error.path }, 'prediction: engine rejected stored input');
       return reply.code(500).send(errorBody('PREDICTION_FAILED', 'Prediction could not be computed.'));
     }
     if (typeof error.statusCode === 'number' && error.statusCode < 500) {
