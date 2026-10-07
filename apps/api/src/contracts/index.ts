@@ -2,4 +2,5 @@
 // Webからは vite / tsconfig の alias `@contracts` でこのファイルを参照する。
 // Web bundleにも入るため、ここからpg・server専用処理・環境変数をimportしない。
 export { ErrorBody } from './error.ts';
+export { Goal, GoalCreate, GoalList, GoalParams, GoalPatch, GoalUnit, LocalDate, TodayStatus } from './goal.ts';
 export { Health } from './health.ts';

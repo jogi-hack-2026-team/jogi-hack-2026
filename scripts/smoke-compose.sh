@@ -77,6 +77,24 @@ dc stop app >/dev/null
 [ "$(docker inspect --format '{{.State.ExitCode}}' "$(app_id)")" = 0 ] || fail 'SIGTERM must exit 0'
 dc logs --no-color app | grep -q 'shutdown: complete' || fail 'graceful shutdown missing'
 
+# 自分のDB sessionでlockを保持し、listener開始前の中止でもSIGKILLやデータ削除にならないことを確認する。
+sql 'select pg_advisory_lock(70740001); select pg_sleep(30)' >/dev/null &
+lock_pid=$!
+i=0
+until [ "$(sql "select count(*) from pg_locks where locktype='advisory' and objid=70740001 and granted")" = 1 ]; do
+  i=$((i + 1)); [ "$i" -lt 20 ] || fail 'test migration lock was not acquired'; sleep 0.2
+done
+dc up -d app >/dev/null
+i=0
+until [ "$(sql "select count(*) from pg_stat_activity where wait_event='advisory'")" = 1 ]; do
+  i=$((i + 1)); [ "$i" -lt 20 ] || fail 'startup did not wait for the migration lock'; sleep 0.2
+done
+if curl --silent --fail "$base/api/health" >/dev/null 2>&1; then fail 'startup served HTTP before migration'; fi
+dc stop app >/dev/null
+[ "$(docker inspect --format '{{.State.ExitCode}}' "$(app_id)")" = 143 ] || fail 'migration cancellation must exit on SIGTERM, not SIGKILL'
+wait "$lock_pid"
+[ "$(sql 'select count(*) from compose_smoke_sentinel')" = 1 ] || fail 'data lost on migration cancellation'
+
 # 隔離DBの適用履歴だけを不一致にして、再起動のgateを検証する。既存/本番DBでは実行しない。
 sql "update schema_migrations set checksum='smoke-corrupted-history' where name='0001_goal_action_log.sql'" >/dev/null
 dc up -d app >/dev/null

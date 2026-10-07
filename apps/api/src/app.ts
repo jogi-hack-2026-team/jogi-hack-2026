@@ -6,6 +6,8 @@ import type { Pool } from 'pg';
 import { registerAuthBridge } from './auth/bridge.ts';
 import type { Auth } from './auth/options.ts';
 import { Health } from './contracts/index.ts';
+import { registerGoalRoutes } from './goals/routes.ts';
+import { isValidTimeZone } from './goals/local-date.ts';
 import { errorBody } from './http/errors.ts';
 import { registerApiGuards } from './http/guards.ts';
 
@@ -26,6 +28,8 @@ export type AppOptions = {
     /** 信頼するproxyのhop数。0なら直接接続のpeerをclient IPとする。 */
     trustProxyHops: number;
   };
+  /** 現在時刻。Goalのtimezoneでの「今日」の判定に使う。テストでは固定した時刻を渡す。 */
+  now?: () => Date;
 };
 
 type PgError = FastifyError & { code?: string };
@@ -43,7 +47,7 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
             redact: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]'],
           },
     // 契約違反を黙って受理しない: 未知の項目を削らず、型を変換せず、違反をすべて報告する。
-    ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: true } },
+    ajv: { customOptions: { removeAdditional: false, coerceTypes: false, allErrors: true, formats: { 'iana-timezone': isValidTimeZone } } },
     // 信頼するhop数ぶんだけX-Forwarded-Forを遡ってclient IPを決める（回数制限の鍵）。
     trustProxy: o.auth && o.auth.trustProxyHops > 0 ? (_address: string, hop: number) => hop < o.auth!.trustProxyHops : false,
     // routerが拒否する要求（不正なpercent-encoding等）もsetErrorHandlerを通らないため、ここで共通のJSON形式に揃える。
@@ -67,18 +71,19 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
 
   app.setErrorHandler((error: PgError, request, reply) => {
     if (error.validation) {
+      // 違反した項目をすべて返す。同じ項目に複数の規則（長さとpattern、unionの各候補）が当たる場合は最初の1件にまとめる。
+      const fields = new Map<string, string>();
+      for (const v of error.validation) {
+        const params = v.params as { additionalProperty?: string; missingProperty?: string };
+        const extra = params.additionalProperty ?? params.missingProperty;
+        const path = `${error.validationContext ?? 'body'}${v.instancePath}${extra ? `/${extra}` : ''}`;
+        if (!fields.has(path)) fields.set(path, v.message ?? 'invalid');
+      }
       return reply.code(422).send(
         errorBody(
           'VALIDATION_ERROR',
           'Request does not match the contract.',
-          error.validation.map((v) => {
-            const params = v.params as { additionalProperty?: string; missingProperty?: string };
-            const extra = params.additionalProperty ?? params.missingProperty;
-            return {
-              path: `${error.validationContext ?? 'body'}${v.instancePath}${extra ? `/${extra}` : ''}`,
-              message: v.message ?? 'invalid',
-            };
-          }),
+          [...fields].map(([path, message]) => ({ path, message })),
         ),
       );
     }
@@ -96,6 +101,8 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
   if (o.auth) {
     registerApiGuards(app, o.auth.instance, o.auth.allowedOrigins);
     registerAuthBridge(app, o.auth.instance, o.auth.baseURL);
+    // 業務APIは保護hookの内側にだけ置く（認証なしの構成ではGoal APIを公開しない）。
+    await registerGoalRoutes(app, { pool: o.pool, now: o.now ?? (() => new Date()) });
   }
 
   // Type Providerはpluginごとに適用する（Fastifyのカプセル化により外側の指定は継承されない）。

@@ -31,7 +31,9 @@ function runtimePoolOptions(o: AppPoolOptions): pg.PoolConfig {
 }
 
 export function createAppPool(o: AppPoolOptions): pg.Pool {
-  return new pg.Pool(runtimePoolOptions(o));
+  const pool = new pg.Pool(runtimePoolOptions(o));
+  pool.on('connect', (client) => protectRuntimeClient(client, 'app'));
+  return pool;
 }
 
 // migrationはHTTPと別責務。lock待ちとDDLは5秒で中断せず、接続確立だけを制限する。
@@ -57,12 +59,12 @@ function discardTimedOutClient(client: pg.PoolClient, error: unknown): void {
   if (error instanceof Error && error.message === 'Query read timeout') void client.end();
 }
 
-// Better Auth/Kyselyはpool.connect→client.query→release(errorなし)を使う。
+// Goal storeとBetter Auth/Kyselyはpool.connect→client.query→release(errorなし)を使う。
 // public end()で期限切れclientをending状態にし、release時に再利用されないようにする。
-function protectAuthClient(client: pg.PoolClient): void {
+function protectRuntimeClient(client: pg.PoolClient, owner: 'app' | 'auth'): void {
   client.on('error', () => {
     void client.end();
-    console.warn('auth: DB connection lost; affected client discarded');
+    console.warn(`${owner}: DB connection lost; affected client discarded`);
   });
   const query = client.query;
   client.query = function (...args: unknown[]) {
@@ -103,7 +105,7 @@ export function createAuthPool(o: AppPoolOptions): pg.Pool {
     max: o.max ?? 2,
     types: { getTypeParser },
   });
-  pool.on('connect', protectAuthClient);
+  pool.on('connect', (client) => protectRuntimeClient(client, 'auth'));
   // app側listenerに依存せずidle切断で落とさない。認証情報を含む可能性のあるerror全文は出さない。
   pool.on('error', () => console.warn('auth: idle DB connection lost; affected client discarded'));
   return pool;

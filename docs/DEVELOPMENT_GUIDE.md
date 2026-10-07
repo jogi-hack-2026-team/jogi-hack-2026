@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証はローカル実装済みで、Goal・記録・予測の業務APIと画面は結合前です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証・Goal APIはローカル実装済みで、記録・予測のAPIとGoal・Today画面は結合前です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
@@ -441,7 +441,7 @@ README更新
 
 # 13. 初回セットアップ
 
-基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。Goal・記録・予測の業務APIと画面、公開環境は未結合・未配置です。旧構成は[履歴](../archive/music-exploration/README.md)に保持。PowerShell 7は文書・設定チェックに使用します。
+基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75、Goal APIは#76で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。記録・予測のAPIとGoal・Today画面、公開環境は未結合・未配置です。旧構成は[履歴](../archive/music-exploration/README.md)に保持。PowerShell 7は文書・設定チェックに使用します。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -482,7 +482,7 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 
 ## アプリを起動・検証する
 
-#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。DB migrationと登録・ログイン・ログアウトは#74・#75で導入済み。APIは`GET /api/health`（DB接続確認を含む）と認証、Webは認証と起動確認画面です。Goal・記録・予測の業務機能は未結合です。
+#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。DB migrationは#74、認証は#75、Goal APIは#76（[決定事項](architecture.md#2026-10-06のgoal-api76)）で導入済み。Webは起動確認と登録・ログイン画面までです。記録・予測のAPIとGoal・Today画面は未実装です。
 
 | 構成 | 場所 | 役割 |
 | --- | --- | --- |
@@ -586,11 +586,13 @@ Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ�
 
 ### 登録・ログインを確認する
 
+Goalのmigration 0002は、既存GoalがないDBへ記録開始日を追加します。既存行がある場合はschema・データを変えず停止します。開始日を補完する方針は#76の人の判断待ちです。旧版0002を適用済みの場合もchecksum差異を自動回避せず、既存DBや記録を削除して通してはいけません。
+
 業務APIの状態変更は許可originのOriginが必須です。認証API `/api/auth/*` は固定版Better AuthのtrustedOrigins検査を使い、RefererやFetch Metadataのfallbackがあるため「Originなしは常に403」とは扱いません。保護対象はrouterが確定したrouteで判定します。通常のAPI利用でsessionが延長された場合、更新Cookieも返します。
 
 登録・ログイン・ログアウトの通信失敗は画面に表示し、送信ボタンを再利用できます。logoutがAPI errorを返した場合はlogin画面へ遷移しません。ただし固定版Better AuthはDB session削除例外を内部でlogして成功を返すため、DB削除失敗時の保存済み旧Cookie失効は保証しません。この故障時のfail-closed方式・再試行／復旧手順はD-24と#75/#84で判断待ちです。
 
-`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。
+`npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）を開くと、未ログインでは`/login?redirect=%2F`へ移動します。「登録」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、ホームにメールアドレスが表示されます。再読み込みしてもログイン状態が続き、「ログアウト」で`/login`へ戻ります。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「試行回数の上限に達しました。N秒後に再試行できます」と表示し、経過後に再試行できます。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。ログイン後のCookieを付けて同じURLを呼ぶとGoalの一覧（最初は`[]`）が返り、作成・編集・削除の規則は[Architecture](architecture.md#2026-10-06のgoal-api76)に記載しています。
 
 stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。
 
