@@ -97,6 +97,7 @@ export const Today = Type.Object(
           completionStatus: Type.String(),
           coreMetricStatus: Type.String(),
           requiredFutureDone: Type.Number(),
+          entryPoint: Type.String(),
           computeMs: Type.Number(),
         },
         strict,

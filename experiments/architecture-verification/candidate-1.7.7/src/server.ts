@@ -63,6 +63,10 @@ const app = await buildApp({
     mode: (env.SPIKE_PREDICT_MODE ?? 'inline') as 'inline' | 'worker',
     workers: Number(env.SPIKE_WORKERS ?? 2),
     engine: (env.SPIKE_PREDICT_ENGINE ?? 'placeholder') as 'placeholder' | 'real',
+    questionPrior: env.SPIKE_PREDICT_ENTRY === 'question-prior' ? {
+      answers: { a: 'HIGH', b: 'LOW' },
+      mapping: { version: 'r11-strength4-v1', values: { LOW: { alpha: 1, beta: 3 }, MID: { alpha: 2, beta: 2 }, HIGH: { alpha: 3, beta: 1 } } },
+    } : undefined,
   },
   metrics: env.SPIKE_METRICS === '1',
   webDist: env.SPIKE_WEB_DIST ? resolve(env.SPIKE_WEB_DIST) : undefined,

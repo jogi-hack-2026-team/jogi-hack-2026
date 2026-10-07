@@ -10,6 +10,7 @@ import type { Auth } from './auth.ts';
 import { ErrorBody, Goal, GoalCreate, GoalParams, Log, LogParams, LogPut, Today } from './contracts.ts';
 import { burnCpu } from './predict-placeholder.ts';
 import { PredictPool } from './predict-pool.ts';
+import type { QuestionPrior } from './predict-real.ts';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -29,7 +30,7 @@ export type AppConfig = {
   ajvMode: 'default' | 'strict';
   trustProxyHops: number;
   /** engine 'real' calls packages/prediction (needs its build); default is the CPU-burn placeholder. */
-  predict: { burnMs: number; mode: 'inline' | 'worker'; workers: number; engine?: 'placeholder' | 'real' };
+  predict: { burnMs: number; mode: 'inline' | 'worker'; workers: number; engine?: 'placeholder' | 'real'; questionPrior?: QuestionPrior; workerUrl?: URL };
   metrics: boolean;
   webDist?: string;
   logger: boolean;
@@ -57,8 +58,8 @@ export async function buildApp(c: AppConfig) {
     return payload;
   });
 
-  const predictPool = c.predict.mode === 'worker' ? new PredictPool(c.predict.workers) : null;
   const realEngine = c.predict.engine === 'real' ? await import('./predict-real.ts') : null;
+  const predictPool = c.predict.mode === 'worker' ? new PredictPool(c.predict.workers, c.predict.workerUrl) : null;
 
   // --- metrics (spike only) ---------------------------------------------------------
   const loop = monitorEventLoopDelay({ resolution: 10 });
@@ -107,6 +108,12 @@ export async function buildApp(c: AppConfig) {
     }
   });
   app.setErrorHandler((error: any, request, reply) => {
+    if (['RealInputValidationError', 'PredictionInputError'].includes(error.name)) {
+      return reply.code(422).send(err('ENGINE_INPUT_INVALID', 'Input is incompatible with the real engine.'));
+    }
+    if (error.name === 'PredictPoolUnavailableError') {
+      return reply.code(503).send(err('PREDICTION_UNAVAILABLE', 'Prediction workers unavailable.'));
+    }
     if (error.validation) {
       return reply.code(422).send(
         err(
@@ -223,6 +230,7 @@ export async function buildApp(c: AppConfig) {
         { schema: { body: GoalCreate, response: { 201: Goal, 422: ErrorBody } } },
         async (request, reply) => {
           const b = request.body;
+          if (realEngine) realEngine.validateRealGoal(b);
           const r = await withClient((cl) =>
             cl.query(
               `insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone)
@@ -265,6 +273,9 @@ export async function buildApp(c: AppConfig) {
           const { goalId, localDate } = request.params;
           const b = request.body;
           const amount = b.status === 'DONE' ? b.amount : null;
+          if (realEngine && amount !== null && (!Number.isSafeInteger(amount) || amount < 1)) {
+            throw new realEngine.RealInputValidationError();
+          }
           // Ownership and upsert in one statement: no row is written for someone else's goal.
           const r = await withClient((cl) =>
             cl.query(
@@ -292,7 +303,7 @@ export async function buildApp(c: AppConfig) {
               `select g.timezone, g.total_required, g.session_amount, g.initial_progress,
                       coalesce((select json_agg(json_build_object(
                                   'localDate', to_char(l.local_date, 'YYYY-MM-DD'),
-                                  'status', l.status, 'amount', l.amount) order by l.local_date)
+                                  'status', l.status, 'amount', l.amount::text) order by l.local_date)
                                 from action_log l where l.goal_id = g.id), '[]'::json) as logs
                  from goal g where g.id = $1 and g.user_id = $2`,
               [request.params.goalId, request.userId],
@@ -312,12 +323,14 @@ export async function buildApp(c: AppConfig) {
 
           if (realEngine) {
             const row = r.rows[0] as { total_required: string; session_amount: string; initial_progress: string };
-            const sessionAmount = Number(row.session_amount);
+            const sessionAmount = realEngine.realQuantity(row.session_amount, 1);
             const input = {
-              goal: { totalRequired: Number(row.total_required), initialProgress: Number(row.initial_progress), sessionAmount },
-              logs: logs.map((l) => ({ localDate: l.localDate, status: l.status, amount: l.amount === null ? null : Number(l.amount) })),
+              goal: { totalRequired: realEngine.realQuantity(row.total_required, 1), initialProgress: realEngine.realQuantity(row.initial_progress, 0), sessionAmount },
+              logs: logs.map((l) => ({ localDate: l.localDate, status: l.status, amount: l.amount === null ? null : realEngine.realQuantity(l.amount, 1) })),
               today,
+              questionPrior: c.predict.questionPrior,
             };
+            realEngine.validateRealInput(input);
             let real;
             if (predictPool) {
               const done = await predictPool.runReal(input);
@@ -339,7 +352,8 @@ export async function buildApp(c: AppConfig) {
                 modelVersion: real.modelVersion,
                 completionStatus: real.completionStatus,
                 coreMetricStatus: real.coreMetricStatus,
-                requiredFutureDone: Math.ceil(real.remainingAmount / sessionAmount),
+                requiredFutureDone: real.requiredFutureDone,
+                entryPoint: real.entryPoint,
                 computeMs: Math.round(real.computeMs * 100) / 100,
               },
             };

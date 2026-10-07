@@ -16,6 +16,7 @@
     "verify:rate-limit": "node verify/v1-rate-limit.ts",
     "verify:mixed-load": "node verify/v2-mixed-load.ts",
     "verify:real-engine": "node verify/v8-real-engine-mixed-load.ts",
+    "verify:real-regression": "node --test verify/v9-real-engine-regression.test.ts",
     "verify:single-process": "node verify/v3-single-process.ts",
     "verify:fixed": "node verify/v5-fixed-regression.ts",
     "verify:restore-revoke": "node verify/restore-revoke.ts",
