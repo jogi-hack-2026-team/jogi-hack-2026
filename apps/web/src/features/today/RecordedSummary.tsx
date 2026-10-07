@@ -4,7 +4,7 @@ import { Button } from '../../ui/components/Button.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { todayCopy } from '../../copy/today.ts';
 
-/** 今日は記録済み（R-07）。比較（中心指標）は出さず、記録内容を出す。変更の動き（#79）は後で接続する。 */
+/** 今日は記録済み（R-07）。比較（中心指標）は出さず、記録内容を出す。「記録を変更」で下の2択を選び直せるようにする（#79）。 */
 export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; unit: string; onChange: () => void }) {
   return (
     <section className="fr-today__top" aria-labelledby="fr-recorded-title">

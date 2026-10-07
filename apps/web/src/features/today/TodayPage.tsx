@@ -22,6 +22,7 @@ import { ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
 import { fetchPolicy } from './fetch-policy.ts';
 import { toForecastView } from './forecast-view.ts';
+import { useSaveLog } from '../logs/useSaveLog.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
 import '../../ui/tokens.css';
 import '../../ui/page.css';
@@ -30,7 +31,7 @@ import './today.css';
 /**
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
  * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
- * 「後で答える」や開発用の案内を別の Goal へ持ち越さない。
+ * 「後で答える」や記録の変更中の状態を別の Goal へ持ち越さない。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
   return <TodayScreen key={goalId} goalId={goalId} />;
@@ -40,22 +41,23 @@ function TodayScreen({ goalId }: { goalId: string }) {
   const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: () => goalsHttp.getGoal(goalId), ...fetchPolicy });
   const todayQuery = useQuery({ queryKey: todayKeys.today(goalId), queryFn: () => todayHttp.getToday(goalId), ...fetchPolicy });
   const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: () => todayHttp.listLogs(goalId), ...fetchPolicy });
-  // 保存の動き（#79・#80）はまだつないでいない。押したことが分かるよう、開発用の案内だけを出す。
-  const [devNotice, setDevNotice] = useState<string | null>(null);
+  // 今日の記録（#79）と昨日の補完（#80）。保存の状態は別々に持つ
+  // 記録済みの今日を選び直している（D5-change）。保存に成功したら戻す
+  const [changing, setChanging] = useState(false);
+  const todaySaver = useSaveLog(goalId, { onSaved: () => setChanging(false) });
+  const yesterdaySaver = useSaveLog(goalId);
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
-  const notConnected = () => setDevNotice(todayCopy.saveNotConnected);
 
   if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound />;
 
   const goal = goalQuery.data;
   const today = todayQuery.data;
   const unit = goal ? unitLabel(goal.unit) : '';
-  const sessionLabel = goal ? `${goal.sessionAmount.toLocaleString('ja-JP')}${unit}` : '';
-  // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）
-  const showChoices = today
-    ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed
-    : goal?.todayStatus === 'UNRECORDED';
+  // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）。記録済みでも選び直し中なら出す
+  const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
+  const showChoices = Boolean(today && goal) && (unrecorded || (changing && today?.todayLog != null));
+  const refresh = () => void Promise.all([goalQuery.refetch(), todayQuery.refetch(), logsQuery.refetch()]);
 
   return (
     <div className="fr fr-page">
@@ -75,25 +77,44 @@ function TodayScreen({ goalId }: { goalId: string }) {
         }
       />
       {today && showYesterdayPrompt(today, yesterdayLaterFor) ? (
-        <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLaterFor(today.yesterday)} />
+        goal ? (
+          <YesterdayPrompt
+            yesterday={today.yesterday}
+            sessionAmount={goal.sessionAmount}
+            unit={unit}
+            saver={yesterdaySaver}
+            onLater={() => setYesterdayLaterFor(today.yesterday)}
+            onRefresh={refresh}
+          />
+        ) : null
       ) : null}
 
       {goalQuery.isPending || todayQuery.isPending || logsQuery.isPending ? (
         <Loading />
       ) : todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
-        <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={() => void Promise.all([goalQuery.refetch(), todayQuery.refetch(), logsQuery.refetch()])} />
+        <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={refresh} />
       ) : goal && today && logsQuery.data ? (
         <ForecastBoundary key={todayQuery.dataUpdatedAt}>
-          <TodayContent goal={goal} today={today} logs={logsQuery.data} onChange={notConnected} />
+          <TodayContent goal={goal} today={today} logs={logsQuery.data} onChange={() => setChanging(true)} />
         </ForecastBoundary>
       ) : null}
 
-      {devNotice ? (
-        <p className="fr-dev-notice" role="status">
-          {devNotice}
-        </p>
+      {showChoices && today && goal ? (
+        <RecordChoiceBar
+          // 選び直しを始めたとき・やめたときに、量の入力などを持ち越さない
+          key={changing ? 'change' : 'new'}
+          today={today.today}
+          sessionAmount={goal.sessionAmount}
+          unit={unit}
+          current={changing ? today.todayLog : null}
+          saver={todaySaver}
+          onCancelChange={() => {
+            todaySaver.reset();
+            setChanging(false);
+          }}
+          onRefresh={refresh}
+        />
       ) : null}
-      {showChoices ? <RecordChoiceBar sessionLabel={sessionLabel} onSelect={notConnected} /> : null}
     </div>
   );
 }

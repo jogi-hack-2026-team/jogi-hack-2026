@@ -32,3 +32,42 @@
 .fr-yesterday > .fr-btn--text {
   align-self: center;
 }
+
+/* やった量の確認・変更（D1-sheet・E2） */
+.fr-amount {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}
+.fr-amount__stepper {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--fr-space-2);
+}
+.fr-amount__stepper > .fr-icon-btn {
+  margin-top: 30px;
+  border: 1.5px solid var(--fr-btn-line);
+  border-radius: 50%;
+}
+.fr-amount__actions,
+.fr-savefail__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fr-space-3);
+  width: 100%;
+}
+
+/* 記録の2択の上の一行（やった量・量を変更・変更をやめる） */
+.fr-record__note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.fr-record__note .fr-btn--text,
+.fr-yesterday__amount .fr-btn--text {
+  min-height: var(--fr-tap);
+  padding: 0 var(--fr-space-2);
+  font-size: var(--fr-fs-help);
+}
