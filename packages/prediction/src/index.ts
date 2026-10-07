@@ -4,3 +4,7 @@ export { predict } from './predict.js';
 export { PredictionInputError, PredictionConfigError } from './errors.js';
 export type { LocalDate, PredictionInput, TransitionCounts, Posterior, CoreMetric,
   Completion, PredictionConfig, PredictionCalculation, PredictionResult } from './types.js';
+export { predictWithQuestionPrior, QuestionPriorError } from './question-prior.js';
+export type { QuestionPriorAnswer, QuestionPriorAnswers, QuestionPriorMapping,
+  QuestionPriorPredictionInput, QuestionPriorPredictionConfig, QuestionPriorEvidenceSource,
+  QuestionPriorPredictionResult, QuestionPriorEvaluation } from './question-prior.js';

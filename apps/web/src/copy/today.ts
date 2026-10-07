@@ -94,11 +94,51 @@ export const todayCopy = {
   savedButStaleTitle: '記録は保存しました',
   savedButStale: '最新の見通しを読み込めませんでした。表示が古いままかもしれません。通信状態を確認して、再読み込みしてください。',
   back: '戻る',
+  // R-11 の出所と計画（#137）。出所の名前と説明は PR #120 の sourceLabel・sourceNote を使う
+  planReason: (aMissing: boolean, bMissing: boolean) =>
+    aMissing && bMissing
+      ? '「取り組めた日の翌日」と「休んだ日の翌日」の材料が不足しています。'
+      : aMissing
+        ? '「取り組めた日の翌日」の材料が不足しています。'
+        : bMissing
+          ? '「休んだ日の翌日」の材料が不足しています。'
+          : '見通しを出すための材料がまだ足りません。',
+  planTitle: '設定量で行う場合の残り',
+  planSessions: (n: number) => `あと${n.toLocaleString('ja-JP')}回分`,
+  planNote: (remaining: string, session: string, last: string) =>
+    `残り${remaining}。1回${session}の設定量で行う場合。最後に必要な量は${last}です。これは日数の予測ではありません。`,
+  sourcesTitle: '見通しの材料',
+  sourceA: '取り組めた日の翌日',
+  sourceB: '休んだ日の翌日',
+  questionAssumption: '初期の回答は仮定です。',
+  whyQuestion: '最初の質問の回答を、弱い初期の仮定として使っています。回答は実績や記録には加えず、記録がたまるほど回答の影響は小さくなります。',
   inconsistentTitle: '表示をそろえられませんでした',
   inconsistent: 'Goal・記録・見通しを同じ時点の内容で読み込めませんでした。別の画面で変更が続いている可能性があります。もう一度読み込んでください。',
   signedOutTitle: 'ログインが切れました',
   signedOut: '続けるには、もう一度ログインしてください。記録や見通しが消えたわけではありません。',
   signIn: 'ログインする',
 } as const;
+
+/** 材料の出所（R-11）。記録だけ・回答だけ・両方。 */
+type NoteSource = 'RECORDS' | 'QUESTION' | 'QUESTION_AND_RECORDS';
+
+const coreNoteTail = '今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。';
+
+/**
+ * 中心指標の注釈を出所に合わせる。記録だけのときは Product Spec の固定文言（coreNote）のまま。
+ * 回答を使うときは「あなたの記録から」を流用しない（Product Spec「Today Decision画面の表示仕様」、R-11）。
+ */
+export function coreNoteFor(source: NoteSource): string {
+  if (source === 'RECORDS') return todayCopy.coreNote;
+  if (source === 'QUESTION') return `最初の質問の回答から置いた「休んだ後の再開傾向」の仮定をもとに計算しています。まだ記録からは推定していません。${coreNoteTail}`;
+  return `最初の質問の回答と、あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。${coreNoteTail}`;
+}
+
+/** 補助指標2の注釈を a／b の出所に合わせる。どちらも記録だけのときは Product Spec の固定文言（completionNote）のまま。 */
+export function completionNoteFor(sources: { a: NoteSource; b: NoteSource }): string {
+  if (sources.a === 'RECORDS' && sources.b === 'RECORDS') return todayCopy.completionNote;
+  if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定でシミュレーションした見込みです。まだ記録からは推定していません。';
+  return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向でシミュレーションした見込みです。';
+}
 
 export const unitLabel = (unit: 'minutes' | 'sessions') => (unit === 'minutes' ? '分' : '回');
