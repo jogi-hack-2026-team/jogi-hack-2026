@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { Goal, Log, Today } from '@contracts';
-import { goalsApi } from '../../api/goals-api.ts';
 import { ApiError } from '../../api/client.ts';
+import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
+import { isNotFound, isUnauthenticated } from '../../api/http.ts';
+import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -13,7 +15,6 @@ import { todayCopy, unitLabel } from '../../copy/today.ts';
 import { assertForecastPresentation } from '../prior/PriorForecast.tsx';
 import { RecordChoiceBar } from '../logs/RecordChoiceBar.tsx';
 import { YesterdayPrompt } from '../logs/YesterdayPrompt.tsx';
-import { MockBanner } from '../dev/MockBanner.tsx';
 import { CoreMetric } from './CoreMetric.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
@@ -36,16 +37,16 @@ export function TodayPage({ goalId }: { goalId: string }) {
 }
 
 function TodayScreen({ goalId }: { goalId: string }) {
-  const goalQuery = useQuery({ queryKey: ['goal', goalId], queryFn: () => goalsApi.getGoal(goalId), ...fetchPolicy });
-  const todayQuery = useQuery({ queryKey: ['today', goalId], queryFn: () => goalsApi.getToday(goalId), ...fetchPolicy });
-  const logsQuery = useQuery({ queryKey: ['logs', goalId], queryFn: () => goalsApi.listLogs(goalId), ...fetchPolicy });
-  // 保存の動き（#79・#80）は限定先行の範囲外。押したことが分かるよう、開発用の案内だけを出す。
+  const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: () => goalsHttp.getGoal(goalId), ...fetchPolicy });
+  const todayQuery = useQuery({ queryKey: todayKeys.today(goalId), queryFn: () => todayHttp.getToday(goalId), ...fetchPolicy });
+  const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: () => todayHttp.listLogs(goalId), ...fetchPolicy });
+  // 保存の動き（#79・#80）はまだつないでいない。押したことが分かるよう、開発用の案内だけを出す。
   const [devNotice, setDevNotice] = useState<string | null>(null);
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
   const notConnected = () => setDevNotice(todayCopy.saveNotConnected);
 
-  if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound goalId={goalId} />;
+  if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound />;
 
   const goal = goalQuery.data;
   const today = todayQuery.data;
@@ -67,7 +68,6 @@ function TodayScreen({ goalId }: { goalId: string }) {
         }
         // Goal のメニュー（編集・削除）は #78 で追加する
       />
-      <MockBanner currentGoalId={goalId} />
       {today && showYesterdayPrompt(today, yesterdayLaterFor) ? (
         <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLaterFor(today.yesterday)} />
       ) : null}
@@ -151,6 +151,7 @@ function Loading() {
 }
 
 function FetchError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  if (isUnauthenticated(error)) return <SignedOut />;
   // 計算の失敗（500 PREDICTION_FAILED）と通信の失敗を分け、どちらもデータ不足とは別の見た目にする
   const calc = error instanceof ApiError && error.body?.error.code === 'PREDICTION_FAILED';
   return (
@@ -170,11 +171,10 @@ function FetchError({ error, onRetry }: { error: unknown; onRetry: () => void })
   );
 }
 
-function NotFound({ goalId }: { goalId: string }) {
+function NotFound() {
   return (
     <div className="fr fr-page">
       <AppBar title="" />
-      <MockBanner currentGoalId={goalId} />
       <div className="fr-today__top">
         <h1 className="fr-today__question">{todayCopy.notFoundTitle}</h1>
         <ErrorPanel
@@ -192,6 +192,22 @@ function NotFound({ goalId }: { goalId: string }) {
   );
 }
 
-function isNotFound(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 404;
+/** ログインが切れた（API が 401 を返した）。ログイン後にこの画面へ戻れるよう、今の場所を渡す。 */
+function SignedOut() {
+  const location = useLocation();
+  return (
+    <div className="fr-today__top">
+      <h1 className="fr-today__question">{todayCopy.question}</h1>
+      <ErrorPanel
+        title={todayCopy.signedOutTitle}
+        action={
+          <Link to="/login" search={{ redirect: location.href }} className="fr-btn fr-btn--secondary">
+            {todayCopy.signIn}
+          </Link>
+        }
+      >
+        {todayCopy.signedOut}
+      </ErrorPanel>
+    </div>
+  );
 }

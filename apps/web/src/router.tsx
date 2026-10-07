@@ -89,7 +89,7 @@ const registerRoute = createRoute({
 
 const healthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/health', component: HealthPage });
 
-// Goal の一覧・作成・編集（#78）。実APIを使うので、未ログインはホームと同じくログイン画面へ送る。
+// Goal の画面（一覧・作成・編集は#78、Todayは#81）は実APIを使うので、未ログインはホームと同じくログイン画面へ送る。
 const requireSignIn = async ({ location }: { location: { href: string } }) => {
   const session = await authClient.getSession();
   if (!session.data) throw redirect({ to: '/login', search: { redirect: location.href } });
@@ -109,10 +109,11 @@ const goalEditRoute = createRoute({
   },
 });
 
-// Today Decision（#81）。いまは仮APIで表示する（限定先行。実APIとの結合は#70の基盤が揃ってから）。
+// Today Decision（#81）。
 const todayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/goals/$goalId',
+  beforeLoad: requireSignIn,
   component: function TodayRoute() {
     const { goalId } = todayRoute.useParams();
     return <TodayPage goalId={goalId} />;

@@ -3,8 +3,7 @@ import type { Goal, GoalCreate, GoalPatch } from '@contracts';
 import { requestJson, requestNoContent } from './http.ts';
 
 /**
- * Goal API（#76）を実際に呼ぶ。Goal の一覧・作成・編集・削除の画面（#78）が使う。
- * Today 画面（#81）は、実APIへ切り替えるまで goals-api.ts（仮API）を使う。
+ * Goal API（#76）を実際に呼ぶ。Goal の一覧・作成・編集・削除の画面（#78）と、Today 画面（#81）の Goal の取得が使う。
  */
 const path = (goalId: string) => `/api/goals/${encodeURIComponent(goalId)}`;
 

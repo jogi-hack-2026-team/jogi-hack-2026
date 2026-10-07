@@ -53,8 +53,11 @@ export const todayCopy = {
   notFoundPanel: 'このGoalは開けません',
   notFound: '削除されたか、このアカウントでは開けないGoalです。Goal一覧から開き直してください。',
   backToGoals: 'Goal一覧へ戻る',
-  /** 仮APIでは保存しないため、押したときに出す開発用の案内。 */
-  saveNotConnected: '記録の保存は #79・#80 で接続します（いまは仮のデータです）。',
+  /** 記録の保存（#79・#80）をつなぐまで、押したときに出す開発用の案内。 */
+  saveNotConnected: '記録の保存は #79・#80 で接続します（まだ保存されません）。',
+  signedOutTitle: 'ログインが切れました',
+  signedOut: '続けるには、もう一度ログインしてください。記録や見通しが消えたわけではありません。',
+  signIn: 'ログインする',
 } as const;
 
 export const unitLabel = (unit: 'minutes' | 'sessions') => (unit === 'minutes' ? '分' : '回');
