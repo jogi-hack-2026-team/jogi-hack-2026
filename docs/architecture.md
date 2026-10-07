@@ -130,7 +130,7 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 | --- | --- | --- | --- |
 | 認証テーブル | 固定版Better Auth 1.7.7（lockfile）の`getMigrations`を`db:migrate:auth`から呼ぶ。`user`・`session`・`account`・`verification`と、回数制限のDB保存用`rateLimit` | CLIの`@latest`取得を避け、実行時の設定（[authSchemaOptions](../apps/api/src/auth/options.ts)）と同じ定義からテーブルを作る（#84 F-9） | Better Auth自体の最終採択（D-24）は別。2回目以降の実行で`rateLimit.lastRequest`の型警告（期待number／実際int8）が出るが差分は作られない |
 | アプリテーブル | `apps/api/migrations/NNNN_name.sql`を名前順に、1ファイル1トランザクションで適用する小さなrunner（[migrate.ts](../apps/api/src/db/migrate.ts)）。`schema_migrations`に名前とSHA-256を記録し、適用済みファイルの変更は失敗にする。advisory lockで同時実行を直列化 | `goal`・`action_log`の2表にSQLを直接書けば足り、新しい依存を増やさない。CI・本番で`@latest`を取得しない | `node-pg-migrate`等のツールは不採用（必要になった時点で再検討） |
-| 実行順 | `db:migrate` ＝ `db:migrate:auth` → `db:migrate:app`。`db:seed:demo`はその後の枠（#82まで未実装として失敗） | `goal.user_id`が`"user"(id)`を参照するため | — |
+| 実行順 | `db:migrate` ＝ `db:migrate:auth` → `db:migrate:app`。[`db:seed:demo`](operations/demo-seed.md)は認証作成済みuserIdへ明示実行 | `goal.user_id`が`"user"(id)`を参照するため。自動Seedで既存データをresetしない | — |
 | `updated_at` | 両表のBEFORE UPDATE triggerでDBが進める | 上書きの有無を追う列を、アプリの書き忘れで止めない | — |
 | 認証用poolのint8 | 認証専用poolだけTEXT形式のint8を数値に変換し、安全な整数範囲 `[-(2^53-1), 2^53-1]` の外は例外にする（[pool.ts](../apps/api/src/db/pool.ts)）。アプリ用poolはpgの既定（文字列）のまま | `rateLimit.lastRequest`（int8）の文字列連結で429の待ち時間が異常値になる問題（#84 F-10）を、他の型・他のpoolへ影響させずに直す | auth poolも応答／文実行を5秒で制限し、idle errorを単独処理する |
 | 認証DDLと失敗復旧 | 固定版の生成SQLを1 transactionで適用し、table作成後のindex失敗もrollbackする | 再実行時に部分schemaを残さない（[回帰](../apps/api/tests/migrate.test.ts)） | 既存schemaの手動変更・古い部分適用は自動削除しない |
@@ -548,6 +548,12 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | 環境変数 | `DATABASE_URL`（必須）、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`。任意の`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`・`SHUTDOWN_TIMEOUT_MS`は[.env.example](../.env.example)を参照。実値はProviderのSecret設定に置き、Gitへ入れない |
 | デモ | Demo Seed（合成記録）を開発データと分けて投入。手順は[リリースとデモ](operations/release-demo.md) |
 
+## Demo Seedの所有権とreset（#82）
+
+R-09の2つの合成履歴を、認証で作成済みのoperator指定userIdへ投入する。`demo_seed_goal`は`(user_id, slot)`を主キー、`goal_id`を一意にし、Goalの`(id, user_id)`への複合FKで所有者を一致させる。slotはfast／slowの2種類、seed_versionは1だけ。既存Goalはmarkerを持たず、変更しない。Goal削除ではmarkerとログがCASCADEする。
+
+resetは同ユーザーの初回にも効くtransaction advisory lock→認証user存在確認→ID順Goal lock→別SQLで最新marker全件lock／照合→時計1回→専用Goal削除→新IDの2Goal＋60ログ作成→COMMIT。通常DELETEと同じGoal先lockで逆順のdeadlockを避け、READ COMMITTEDの次statementでCASCADE済みmarkerを読み直す。エラー時はrollbackし、COMMIT送信後の通信失敗は確定不明として返す。操作手順・期限・再実行・残る公開環境／Web受入は[Demo Seed](operations/demo-seed.md)。
+
 ## Architecture Decision Log
 
 | ID | 日付 | 状態 | 判断 |
@@ -563,6 +569,17 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-24 | 2026-09-30 → 2026-10-03（2026-10-06実装） | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24)。[#74で版固定、#75で実装](#2026-10-06の認証実装75)。公開HTTPS・運用担当は残条件 |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 | D-26 | 2026-10-05 | OPEN（R-11 Scope・分担は採択済み、具体契約は未採択） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
+| D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
+
+### D-27
+
+Context: R-09の2パターンを繰り返しデモし、他データを保全して初期状態へ戻す必要がある。依頼者が#82の専用marker／新ID reset方針とローカル実装・Draft PRまでを承認した。公開環境や恒久資格情報の作成は含まれない。
+
+Decision: [所有権marker](#demo-seedの所有権とreset82)で2Goalだけを管理し、同userIdのSeedを直列化して全体を1 transactionで置換する。時計はlock後1回、記録は基準日−31〜−2の30日、昨日／今日は空ける。新IDとする理由は、旧画面の遅延PUTや旧回答版を新しいデモへ混入させないため。回答は新schemaの既定値とし、認証行は変更しない。
+
+Alternatives: タイトル／メールで対象を探して削除する方式は通常データを誤認する。ユーザーの全Goal削除は保全条件を満たさない。固定IDのログだけ置換する方式は遅延要求と回答版を引き継ぐ。通常Goal／Logs API経由の30日投入は現行の記録窓を広げる必要があり、Productの記録規則を変える。Compose自動Seedは再起動のたびにデモ操作を消す。
+
+Consequences / Invariants: marker用の最小tableと複合unique制約を追加するが、通常Goal・他ユーザー・認証行を採用／削除しない。SQL途中失敗はrollback、COMMIT応答喪失は確定不明を返して再実行で収束する。reset後は一覧の再取得が必要。seed version追加、pattern追加、schema制約変更、同ID維持が必要になった場合に再検討する。新しい認証方式・一般APIの日付制約変更・公開DB操作・実データ・精度保証は対象外。Evidenceは[fixture／日付回帰](../apps/api/tests/demo-data.test.ts)と[専用DB回帰](../apps/api/tests/demo-seed.test.ts)、実行結果は対象PRへ記録する。
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
