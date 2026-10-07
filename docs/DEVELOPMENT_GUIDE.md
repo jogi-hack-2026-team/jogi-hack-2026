@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証・Goal APIはローカル実装済みで、記録・予測のAPIとGoal・Today画面は結合前です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証・Goal・記録・Today APIはローカル実装済みで、Today APIに純粋Engineを結合済みです。Goal・記録・Today画面と公開配置は未完了です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
@@ -441,7 +441,7 @@ README更新
 
 # 13. 初回セットアップ
 
-基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75、Goal APIは#76で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。記録・予測のAPIとGoal・Today画面、公開環境は未結合・未配置です。旧構成は[履歴](../archive/music-exploration/README.md)に保持。PowerShell 7は文書・設定チェックに使用します。
+基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75、Goal APIは#76、記録・Today APIとEngine結合は#77で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。Goal・記録・Today画面と公開配置は未完了です。旧構成は[履歴](../archive/music-exploration/README.md)に保持。PowerShell 7は文書・設定チェックに使用します。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。

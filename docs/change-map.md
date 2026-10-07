@@ -66,7 +66,7 @@
 
 表の実装予定は2026-09-30の仕様に基づく。現在のローカルAPI・DB・Engine結合の実装と検証は上表を参照。業務画面・外部Service・公開配置の完成を意味しない。
 
-#71〜#73の限定先行承認に沿った純粋Engineとテストを追加した。型・入口は[src](../packages/prediction/src/index.ts)、固定例は[fixtures.ts](../packages/prediction/tests/fixtures.ts)、補完・訂正の実行例は[再計算例](../packages/prediction/README.md#補完訂正後の再計算例)。[検証手順・残条件](../packages/prediction/README.md#70後に合わせる点と残条件)を確認する。predictは必須metadataを持つPredictionResultを返し、依頼者承認済みの日数集計と公開例外の[契約](../packages/prediction/README.md#metadata公開エラーの契約)を反映した。API結合や正式受入は未完了。純粋Engineの型検査・数値テストCIを追加した。合意反映案PR #97の統合、#70の基盤・採用runtime・runner・統一CIへの整合は残る。
+#71〜#73の限定先行承認に沿った純粋Engineとテストを追加した。型・入口は[src](../packages/prediction/src/index.ts)、固定例は[fixtures.ts](../packages/prediction/tests/fixtures.ts)、補完・訂正の実行例は[再計算例](../packages/prediction/README.md#補完訂正後の再計算例)。[検証手順・残条件](../packages/prediction/README.md#70後に合わせる点と残条件)を確認する。predictは必須metadataを持つPredictionResultを返し、依頼者承認済みの日数集計と公開例外の[契約](../packages/prediction/README.md#metadata公開エラーの契約)を反映した。#77でToday APIへ結合し、root workspaceとDockerにビルド済みEngineを含める。純粋Engineの型検査・数値テストCIとApplication CIで検証する。業務画面・公開配置・製品としての正式受入は未完了。
 
 ## R-11追加UIの独立候補
 
