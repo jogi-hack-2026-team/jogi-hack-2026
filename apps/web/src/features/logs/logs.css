@@ -53,9 +53,15 @@
 .fr-amount__actions,
 .fr-savefail__actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 主ボタン（この量で記録・もう一度保存）を広めにし、320px幅でも折り返さないようにする */
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: var(--fr-space-3);
   width: 100%;
+}
+.fr-amount__actions .fr-btn,
+.fr-savefail__actions .fr-btn {
+  padding: 0 var(--fr-space-3);
+  white-space: nowrap;
 }
 
 /* 記録の2択の上の一行（やった量・量を変更・変更をやめる） */

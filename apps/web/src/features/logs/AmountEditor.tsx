@@ -71,7 +71,7 @@ export function AmountEditor({
         <IconButton icon="plus" label={todayCopy.amountIncrease} disabled={busy} onClick={() => step(sessionAmount)} />
       </div>
       <div className="fr-amount__actions">
-        <Button variant="primary" icon="check" busy={busy} onClick={submit}>
+        <Button variant="primary" busy={busy} onClick={submit}>
           {busy ? todayCopy.saving : todayCopy.saveWithAmount}
         </Button>
         <Button variant="secondary" disabled={busy} onClick={onCancel}>
