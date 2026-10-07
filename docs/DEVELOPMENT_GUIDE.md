@@ -482,7 +482,7 @@ miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File sc
 
 ## アプリを起動・検証する
 
-#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。APIは`GET /api/health`（DB接続確認を含む）、認証（#75）、Goal API（#76。[決定事項](architecture.md#2026-10-06のgoal-api76)）まで、Webは起動確認と登録・ログイン画面までです。記録・予測のAPIとGoal・Today画面は未実装です。
+#70で導入した起動構成です。[Architecture D-23](architecture.md#d-23)の基本構成に、Node 24.21.0（[mise.toml](../mise.toml)・[package.json](../package.json)の`engines`・[Dockerfile](../Dockerfile)で同じ版）を固定しています。APIは`GET /api/health`（DB接続確認を含む）、認証（#75）、Goal API（#76。[実装案](architecture.md#2026-10-06のgoal-api76)）、記録とToday API（#77。[実装案](architecture.md#2026-10-06の記録today-api77)。`/today`が純粋Engineを呼びます）まで、Webは起動確認と登録・ログイン画面までです。Goal・記録・Todayの画面は未実装です。
 
 | 構成 | 場所 | 役割 |
 | --- | --- | --- |
@@ -513,7 +513,7 @@ npm run dev:api
 npm run dev:web
 ```
 
-`db:migrate`は`.env`の`DATABASE_URL`へ、認証テーブル（固定版Better Authの`getMigrations`）→ アプリのSQL（`apps/api/migrations/`）の順に適用し、結果をJSONで1行出します。2回目以降は差分がなければ何もしません（`rateLimit.lastRequest`の型警告は既知で差分は作られません）。`db:migrate:auth`・`db:migrate:app`で片方だけも実行できます。`db:seed:demo`はDemo Seed（#82）の枠で、実装までは未実装として失敗します。`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
+`dev:api`と`typecheck`・`test`は、先にEngine package（`packages/prediction`）を`npm run build:prediction`でビルドします（APIは`@futureroi/prediction`のビルド済み`dist`を読むため）。`db:migrate`は`.env`の`DATABASE_URL`へ、認証テーブル（固定版Better Authの`getMigrations`）→ アプリのSQL（`apps/api/migrations/`）の順に適用し、結果をJSONで1行出します。2回目以降は差分がなければ何もしません（`rateLimit.lastRequest`の型警告は既知で差分は作られません）。`db:migrate:auth`・`db:migrate:app`で片方だけも実行できます。`db:seed:demo`はDemo Seed（#82）の枠で、実装までは未実装として失敗します。`dev:api`は`.env`を読んでAPIを`http://127.0.0.1:3000`で起動し、ファイル変更で再起動します（TypeScriptをNodeが直接実行）。`dev:web`はViteを`http://127.0.0.1:5173`で起動し、`/api`をAPIへ転送します。ブラウザで`/`を開くと「API: 接続できています」、`/health`で状態の内訳が出ます。`GET /api/health`はDBへ到達できれば`{"status":"ok","database":"ok"}`、できなければ503で`database: unreachable`を返します。
 
 認証DDL（table・column・field index）は固定版の生成SQLを1 transactionで適用します。途中失敗はrollbackされ、同じコマンドで再実行できます。アプリSQLは従来どおり1ファイル1 transactionです。migration専用poolは接続確立を5秒で制限しますが、advisory lock待ち・DDLの実行期限は設けません。長時間待機は別のmigration実行を確認してからoperatorが中止します。HTTP用のapp・auth poolは応答／文実行を5秒で制限し、auth poolのidle切断は単独listenerで処理します。
 

@@ -23,6 +23,8 @@ COPY packages/prediction/package.json packages/prediction/
 # API workspaceの実行時依存だけを入れる。SPAはビルド済みの静的ファイルとしてコピーする。
 RUN npm ci --workspace=@futureroi/api --omit=dev --ignore-scripts --no-audit --no-fund
 COPY --from=build /app/apps/api/dist ./apps/api/dist
+# Engine（@futureroi/prediction）はAPIのworkspace依存。node_modulesのリンク先にビルド済みdistを置く。
+COPY --from=build /app/packages/prediction/dist ./packages/prediction/dist
 COPY apps/api/migrations ./apps/api/migrations
 COPY --from=build /app/apps/web/dist ./apps/web/dist
 USER node

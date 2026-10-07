@@ -11,6 +11,7 @@
     "types": [],
     "rootDir": ".",
     "outDir": "dist",
+    "declaration": true,
     "noEmitOnError": true
   },
   "include": ["src/**/*.ts", "tests/fixtures.ts", "tests/type-contracts.ts"]

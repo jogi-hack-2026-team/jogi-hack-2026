@@ -6,9 +6,9 @@ import { readdirSync } from 'node:fs';
 
 // 導入済みのコンパイラを明示して使い、自動installや秘密の環境設定ファイルの参照は行わない。
 const [mode, flag, compilerPath, ...extra] = process.argv.slice(2);
-if (!['typecheck', 'test'].includes(mode) || extra.length ||
+if (!['typecheck', 'test', 'build'].includes(mode) || extra.length ||
     (flag !== undefined && (flag !== '--tsc' || !compilerPath))) {
-  throw new Error('Usage: node scripts/check.mjs typecheck|test [--tsc <existing typescript/bin/tsc>]');
+  throw new Error('Usage: node scripts/check.mjs typecheck|test|build [--tsc <existing typescript/bin/tsc>]');
 }
 const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
@@ -25,6 +25,7 @@ function run(args) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
+// build: 型検査してdist（JSと.d.ts）を出す。apps/apiはpackageのexports経由でこのdistを読む（#77）。testも同じ出力を使う。
 run([compiler, '--project', 'tsconfig.json', ...(mode === 'typecheck' ? ['--noEmit'] : [])]);
 if (mode === 'test') {
   const tests = readdirSync(resolve(root, 'tests')).filter(name => name.endsWith('.test.mjs'));

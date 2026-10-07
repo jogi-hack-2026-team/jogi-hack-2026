@@ -3,7 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
   "scripts": {
+    "build": "node scripts/check.mjs build",
     "typecheck": "node scripts/check.mjs typecheck",
     "test": "node scripts/check.mjs test"
   },
