@@ -55,19 +55,35 @@ export function createMigrationPool(o: { connectionString: string }): pg.Pool {
 
 const INT8_OID = 20;
 
+// Demo SeedはHTTPと別コマンド。並行seedの待機を許すが、待機・応答を有限にする。
+export function createDemoSeedPool(o: { connectionString: string }): pg.Pool {
+  const pool = new pg.Pool({ connectionString: o.connectionString, max: 1, connectionTimeoutMillis: DEFAULT_TIMEOUT_MS,
+    query_timeout: 40_000, statement_timeout: 35_000, keepAlive: true });
+  pool.on('connect', client => protectRuntimeClient(client, 'demo-seed'));
+  pool.on('error', () => console.warn('demo-seed: idle DB connection lost; affected client discarded'));
+  return pool;
+}
+
 function discardTimedOutClient(client: pg.PoolClient, error: unknown): void {
   if (error instanceof Error && error.message === 'Query read timeout') void client.end();
 }
 
 // Goal storeとBetter Auth/Kyselyはpool.connect→client.query→release(errorなし)を使う。
 // public end()で期限切れclientをending状態にし、release時に再利用されないようにする。
-function protectRuntimeClient(client: pg.PoolClient, owner: 'app' | 'auth'): void {
+function protectRuntimeClient(client: pg.PoolClient, owner: 'app' | 'auth' | 'demo-seed'): void {
   client.on('error', () => {
     void client.end();
     console.warn(`${owner}: DB connection lost; affected client discarded`);
   });
   const query = client.query;
   client.query = function (...args: unknown[]) {
+    // pgは接続URIのquery_timeoutをPool設定より優先する。Seedの有限期限は各queryへ明示し、
+    // URIの空値（無期限）や長い値でも40秒を維持する。HTTP/authの既存設定は変更しない。
+    if (owner === 'demo-seed') {
+      const config = args[0];
+      args[0] = typeof config === 'string' ? { text: config, query_timeout: 40_000 }
+        : { ...(config as Record<string, unknown>), query_timeout: 40_000 };
+    }
     const callback = args.at(-1);
     if (typeof callback === 'function') {
       args[args.length - 1] = (error: Error | null, ...results: unknown[]) => {
