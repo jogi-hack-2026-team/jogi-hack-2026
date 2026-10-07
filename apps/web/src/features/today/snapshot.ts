@@ -10,11 +10,15 @@ import type { Goal, Log, TodayR11 as Today } from '@contracts';
  * - 総量：Goal の totalRequired と予測の progress.total
  * - 実績：Goal の initialProgress ＋ 記録開始日から今日までの DONE の量 と 予測の progress.done
  * - 今日の記録：記録の一覧の今日の行と Today の todayLog、Goal の todayStatus と予測の todayStatus
+ * - 予測の材料になる設定：R-11 の読み取り（?view=r11）の context（1回の量・単位・記録開始日）と Goal
+ *   （総量の不一致では見分けられない、1回の量だけが変わった組み合わせを止める）
  */
 export function isSameSnapshot(goal: Goal, today: Today, logs: readonly Log[]): boolean {
   if (goal.today !== today.today) return false;
   if (goal.totalRequired !== today.prediction.progress.total) return false;
   if (goal.todayStatus !== today.prediction.todayStatus) return false;
+  const { context } = today;
+  if (context.sessionAmount !== goal.sessionAmount || context.unit !== goal.unit || context.recordStartDate !== goal.recordStartDate) return false;
 
   const done = logs
     .filter((log) => log.status === 'DONE' && log.localDate >= goal.recordStartDate && log.localDate <= today.today)
@@ -32,8 +36,8 @@ function sameLog(a: Log | null, b: Log | null): boolean {
 
 /**
  * 予測の材料になる Goal の設定（1回の量・単位・記録開始日・初期実績・総量・timezone）を1つの値にしたもの。
- * 通常の /today の応答はこれらを返さないため、isSameSnapshot では照らし合わせられない。
- * 代わりに、表示中の Goal からこの値が変わったのに、Today がその Goal より前に取得したものなら、
+ * 1回の量・単位・記録開始日は R-11 の context と isSameSnapshot で直接照らし合わせる。context にない初期実績・timezone のため、
+ * 表示中の Goal からこの値が変わったのに、Today がその Goal より前に取得したものなら、
  * 古い設定で作った予測かもしれないとして使わずに取り直す（useTodayData.ts）。
  */
 export function predictionInputs(goal: Goal): string {

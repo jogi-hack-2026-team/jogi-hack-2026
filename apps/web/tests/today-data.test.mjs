@@ -16,6 +16,7 @@ const logs = [
 const today = {
   today: '2026-10-07', yesterday: '2026-10-06', todayLog: logs[1], yesterdayMissing: false,
   prediction: { today: '2026-10-07', todayStatus: 'DONE', progress: { done: 635, total: 3000, completed: false } },
+  context: { recordStartDate: '2026-10-04', unit: 'minutes', sessionAmount: 20 },
 };
 
 test('Goal・Today・記録が同じ時点の材料ならそろっていると判断する', () => {
@@ -33,6 +34,14 @@ test('取得した時点がずれた組み合わせを見分ける', () => {
   assert.equal(isSameSnapshot({ ...goal, today: '2026-10-08' }, today, logs), false);
   // 記録開始日より前の行は実績に数えない
   assert.equal(isSameSnapshot(goal, today, [{ localDate: '2026-10-01', status: 'DONE', amount: 99 }, ...logs]), true);
+});
+
+test('R-11の読み取りでは、予測に使った1回の量・単位・記録開始日がGoalと違えば組み合わせない', () => {
+  assert.equal(isSameSnapshot(goal, today, logs), true);
+  // 総量・累計は一致したまま、1回の量だけが変わった（PATCH前のToday と PATCH後のGoal）
+  assert.equal(isSameSnapshot({ ...goal, sessionAmount: 40 }, today, logs), false);
+  assert.equal(isSameSnapshot(goal, { ...today, context: { ...today.context, unit: 'count' } }, logs), false);
+  assert.equal(isSameSnapshot(goal, { ...today, context: { ...today.context, recordStartDate: '2026-10-05' } }, logs), false);
 });
 
 test('1回の量などが変わったGoalと、それより前に取得したTodayは組み合わせない', () => {
