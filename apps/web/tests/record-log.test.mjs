@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { MutationObserver, QueryClient } from '@tanstack/react-query';
+import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
 import { choiceFromLog, classifySaveError, describeChoice, toLogPut, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
@@ -44,4 +46,23 @@ test('訂正の初期値は保存済みの記録（DONEは保存済みの量の�
   assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'SKIPPED', amount: null }), { status: 'SKIPPED', amount: null });
   // 保存済みの量で要約する（1回の量が30分に変わっていても「20分」）
   assert.equal(describeChoice(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), 30, '分', '休んだ'), 'やった・20分');
+});
+test('作り直す前の画面の保存が終わるまで、新しい画面から同じ日の保存は送らない（別の日は送れる）', async () => {
+  const client = new QueryClient();
+  let finish;
+  // 一覧へ戻る前の画面で始めた、今日の「やった」の保存（まだ届いていない）
+  const before = new MutationObserver(client, { mutationKey: saveLogKey('g'), mutationFn: () => new Promise((r) => (finish = r)) });
+  const pending = before.mutate({ localDate: '2026-10-07', choice: { status: 'DONE', amount: null } }).catch(() => {});
+  while (!finish) await new Promise((r) => setTimeout(r, 1));
+
+  // 開き直した新しい画面（useSaveLog の save と同じ確かめ方）
+  const busy = (localDate) => client.isMutating({ mutationKey: saveLogKey('g'), predicate: (m) => isSaveFor(localDate, m.state.variables) }) > 0;
+  assert.equal(busy('2026-10-07'), true);
+  assert.equal(busy('2026-10-06'), false);
+  assert.equal(client.isMutating({ mutationKey: saveLogKey('other'), predicate: (m) => isSaveFor('2026-10-07', m.state.variables) }), 0);
+
+  finish({ localDate: '2026-10-07', status: 'DONE', amount: 20 });
+  await pending;
+  assert.equal(busy('2026-10-07'), false);
+  client.clear();
 });

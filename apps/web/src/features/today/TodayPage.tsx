@@ -16,7 +16,7 @@ import { CoreMetric } from './CoreMetric.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
-import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
+import { AchievedPanel, RecordedSummary, TodayRecordLine } from './RecordedSummary.tsx';
 import { useTodayData } from './useTodayData.ts';
 import { toForecastView } from './forecast-view.ts';
 import { useSaveLog } from '../logs/useSaveLog.ts';
@@ -44,8 +44,9 @@ function TodayScreen({ goalId }: { goalId: string }) {
   const [changing, setChanging] = useState(false);
   // 記録済みの昨日を訂正している。訂正を始めた時点の記録（対象日）を固定して持つ。今日と同時には編集しない
   const [yesterdayEdit, setYesterdayEdit] = useState<Log | null>(null);
-  const todaySaver = useSaveLog(goalId, { onSaved: () => setChanging(false) });
-  const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null) });
+  // 保存中の状態は Goal・日付ごとに見る（画面を作り直しても、同じ日の保存が残っていれば保存中のまま）
+  const todaySaver = useSaveLog(goalId, { onSaved: () => setChanging(false), localDate: snapshot?.today.today ?? goalQuery.data?.today });
+  const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
 
@@ -58,7 +59,12 @@ function TodayScreen({ goalId }: { goalId: string }) {
   const unit = goal ? unitLabel(goal.unit) : '';
   // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）。記録済みでも選び直し中なら出す
   const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
-  const showChoices = Boolean(today && goal) && (unrecorded || (changing && today?.todayLog != null));
+  // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日・今日の状態で、今日の記録を付けられるようにする
+  // （401・404は上で画面全体を切り替えているので、ここに来るのは計算・通信・サーバーの失敗）
+  const fallbackGoal = !today && todayQuery.isError ? goalQuery.data : undefined;
+  const recordGoal = goal ?? fallbackGoal;
+  const recordDate = today?.today ?? fallbackGoal?.today;
+  const showChoices = today && goal ? unrecorded || (changing && today.todayLog != null) : fallbackGoal?.todayStatus === 'UNRECORDED';
   // 保存は成功したが、Today・記録の取り直しに失敗している（「保存できなかった」と区別して伝える）
   const savedButStale = (todaySaver.refreshFailed || yesterdaySaver.refreshFailed) && (todayQuery.isError || logsQuery.isError);
 
@@ -138,14 +144,14 @@ function TodayScreen({ goalId }: { goalId: string }) {
         <Loading />
       )}
 
-      {showChoices && today && goal ? (
+      {showChoices && recordGoal && recordDate ? (
         <RecordChoiceBar
           // 選び直しを始めたとき・やめたときに、量の入力などを持ち越さない
           key={changing ? 'change' : 'new'}
-          today={today.today}
-          sessionAmount={goal.sessionAmount}
-          unit={unit}
-          current={changing ? today.todayLog : null}
+          today={recordDate}
+          sessionAmount={recordGoal.sessionAmount}
+          unit={unitLabel(recordGoal.unit)}
+          current={changing && today ? today.todayLog : null}
           saver={todaySaver}
           locked={yesterdayEdit !== null}
           onCancelChange={() => {
@@ -175,6 +181,8 @@ function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Toda
       return (
         <>
           <AchievedPanel total={view.progress.total} unit={unit} />
+          {/* 達成済みでも、今日の記録の誤りを直せるようにする（R-03の当日の変更と R-08 の達成表示の両立） */}
+          {today.todayLog ? <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} unit={unit} onChange={onChange} /> : null}
           {progress}
         </>
       );

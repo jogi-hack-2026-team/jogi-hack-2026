@@ -1,25 +1,36 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { goalKeys } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { toLogPut, type RecordChoice } from './record-log.ts';
 
-type Vars = { localDate: string; choice: RecordChoice };
+export type SaveVars = { localDate: string; choice: RecordChoice };
+
+/** 記録の保存を Goal ごとに見分ける名前。画面を作り直しても、同じ Goal・同じ日の保存が残っているかを調べられる。 */
+export const saveLogKey = (goalId: string) => ['putLog', goalId] as const;
+
+/** 保存の内容が、その日の記録か。 */
+export const isSaveFor = (localDate: string, vars: unknown) => (vars as SaveVars | undefined)?.localDate === localDate;
 
 /**
- * 1日分の記録を保存する（今日の記録と昨日の補完で別々に使う）。
+ * 1日分の記録を保存する（今日の記録と、昨日の補完・訂正で別々に使う）。
  * - 保存が終わるまで二重に送らない。状態（isPending）は再描画まで切り替わらないため、即座に変わる目印も持つ
+ * - 同じ Goal・同じ日の保存がまだ終わっていなければ、画面を作り直した後（一覧へ戻って開き直した等）でも送らず、
+ *   その保存を「保存中」として出す。前の保存が後から届いて新しい選択を上書きする順序の食い違いを防ぐため
  * - 保存に成功したら、Goal・Today・記録の一覧をまとめて取り直し、取り直しが終わるまで「保存中」のままにする
- *   （古い予測や「未記録」の表示が一瞬戻らないようにするため）
+ *   （古い予測や「未記録」の表示が一瞬戻らないようにするため）。画面を離れていても取り直しは行う
  * - 失敗したら何も書き換えず、同じ内容で再試行できるよう、送ろうとした内容（variables）を残す
  * - 保存は成功したのに取り直し（Today・記録の一覧）が失敗したときは refreshFailed を立て、「保存できなかった」と区別して伝える
+ *
+ * localDate を渡すと、その日の保存（別の画面で始めたものを含む）を「保存中」として扱う。
  */
-export function useSaveLog(goalId: string, { onSaved }: { onSaved?: () => void } = {}) {
+export function useSaveLog(goalId: string, { onSaved, localDate }: { onSaved?: () => void; localDate?: string | undefined } = {}) {
   const queryClient = useQueryClient();
   const inFlight = useRef(false);
   const [refreshFailed, setRefreshFailed] = useState(false);
   const mutation = useMutation({
-    mutationFn: ({ localDate, choice }: Vars) => todayHttp.putLog(goalId, localDate, toLogPut(choice)),
+    mutationKey: saveLogKey(goalId),
+    mutationFn: ({ localDate: date, choice }: SaveVars) => todayHttp.putLog(goalId, date, toLogPut(choice)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
       const failed = [todayKeys.today(goalId), todayKeys.logs(goalId)].some((key) => queryClient.getQueryState(key)?.status === 'error');
@@ -30,8 +41,18 @@ export function useSaveLog(goalId: string, { onSaved }: { onSaved?: () => void }
       inFlight.current = false;
     },
   });
-  const save = (vars: Vars) => {
+
+  // この Goal でまだ終わっていない保存（作り直す前の画面で始めたものも含む）
+  const pending = useMutationState({
+    filters: { mutationKey: saveLogKey(goalId), status: 'pending' },
+    select: (m) => m.state.variables as SaveVars | undefined,
+  });
+  const pendingForDate = localDate === undefined ? undefined : pending.find((vars) => vars?.localDate === localDate);
+
+  const save = (vars: SaveVars) => {
     if (inFlight.current) return;
+    // 同じ日の保存が残っている間は送らない（画面を作り直しても効くよう、QueryClient の記録で確かめる）
+    if (queryClient.isMutating({ mutationKey: saveLogKey(goalId), predicate: (m) => isSaveFor(vars.localDate, m.state.variables) }) > 0) return;
     inFlight.current = true;
     setRefreshFailed(false);
     mutation.mutate(vars);
@@ -46,8 +67,8 @@ export function useSaveLog(goalId: string, { onSaved }: { onSaved?: () => void }
     reset: () => mutation.reset(),
     /** 保存は成功したが、Today・記録の一覧の取り直しに失敗した（表示は古いかもしれない）。 */
     refreshFailed,
-    isSaving: mutation.isPending,
-    saving: mutation.isPending ? mutation.variables : undefined,
+    isSaving: mutation.isPending || pendingForDate !== undefined,
+    saving: mutation.isPending ? mutation.variables : pendingForDate,
     failure: mutation.isError ? { error: mutation.error, vars: mutation.variables } : undefined,
     isSuccess: mutation.isSuccess,
   };

@@ -79,6 +79,8 @@ export const todayCopy = {
   // 記録済みの昨日の訂正（R-04、#80。#88で案Aに決定）
   yesterdaySummary: (date: string, record: string) => `昨日（${date}）：${record}`,
   yesterdayChange: '変更',
+  todaySummary: (date: string, record: string) => `今日（${date}）：${record}`,
+  todayChangeLabel: (date: string) => `今日（${date}）の記録を変更`,
   yesterdayChangeLabel: (date: string) => `昨日（${date}）の記録を変更`,
   yesterdayCorrectTitle: (date: string) => `昨日（${date}）の記録を変更`,
   yesterdayCorrectNote: (current: string) => `今の記録：${current}。選び直して「変更を保存」を押すと上書きします。`,

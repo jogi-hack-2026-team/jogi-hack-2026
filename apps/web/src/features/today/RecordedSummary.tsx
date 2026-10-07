@@ -3,6 +3,8 @@ import { StatusBadge } from '../../ui/components/StatusBadge.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { todayCopy } from '../../copy/today.ts';
+import { longDate, parseLocalDate, shortDate } from '../../copy/date.ts';
+import { choiceFromLog, describeChoice } from '../logs/record-log.ts';
 
 /** 今日は記録済み（R-07）。比較（中心指標）は出さず、記録内容を出す。「記録を変更」で下の2択を選び直せるようにする（#79）。 */
 export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; unit: string; onChange: () => void }) {
@@ -43,6 +45,22 @@ export function AchievedPanel({ total, unit }: { total: number; unit: string }) 
         {total.toLocaleString('ja-JP')}
         {unit}。{todayCopy.achievedBody}
       </p>
+    </section>
+  );
+}
+
+/**
+ * 達成済みの画面で、今日の記録を直す入口（R-03・R-08）。誤った量で達成済みになっても、正しい量や「休んだ」へ直せるようにする。
+ * 押すと下の記録の2択が選び直しの状態になる。記録済みの昨日の要約行と同じ形にそろえる。
+ */
+export function TodayRecordLine({ log, today, sessionAmount, unit, onChange }: { log: Log; today: string; sessionAmount: number; unit: string; onChange: () => void }) {
+  const record = describeChoice(choiceFromLog(log), sessionAmount, unit, todayCopy.recordedRest);
+  return (
+    <section className="fr-yesterday fr-yesterday--summary" aria-label={todayCopy.recordedTitle}>
+      <p className="fr-yesterday__summary">{todayCopy.todaySummary(shortDate(parseLocalDate(today)), record)}</p>
+      <Button variant="text" icon="edit" aria-label={todayCopy.todayChangeLabel(longDate(today))} onClick={onChange}>
+        {todayCopy.yesterdayChange}
+      </Button>
     </section>
   );
 }
