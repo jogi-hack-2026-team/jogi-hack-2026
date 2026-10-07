@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
-import type { Goal, Log, Today } from '@contracts';
+import type { Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';

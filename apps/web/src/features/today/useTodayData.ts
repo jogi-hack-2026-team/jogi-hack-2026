@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import type { Goal, Log, Today } from '@contracts';
+import type { Goal, Log, TodayR11 as Today } from '@contracts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { shouldRefetchForNewDay } from './day-rollover.ts';

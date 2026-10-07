@@ -1,5 +1,5 @@
-import { Goal as GoalSchema, GoalList } from '@contracts';
-import type { Goal, GoalCreate, GoalPatch } from '@contracts';
+import { Goal as GoalSchema, GoalList, GoalR11 as GoalR11Schema } from '@contracts';
+import type { Goal, GoalCreate, GoalPatch, GoalR11 } from '@contracts';
 import { requestJson, requestNoContent } from './http.ts';
 
 /**
@@ -9,7 +9,8 @@ const path = (goalId: string) => `/api/goals/${encodeURIComponent(goalId)}`;
 
 export const goalsHttp = {
   listGoals: (signal?: AbortSignal): Promise<Goal[]> => requestJson(GoalList, '/api/goals', { signal }),
-  getGoal: (goalId: string, signal?: AbortSignal): Promise<Goal> => requestJson(GoalSchema, path(goalId), { signal }),
+  /** R-11 の読み取り（?view=r11）。R-11 の回答（questionPrior）と回答の版（answerRevision）を含む。 */
+  getGoal: (goalId: string, signal?: AbortSignal): Promise<GoalR11> => requestJson(GoalR11Schema, `${path(goalId)}?view=r11`, { signal }),
   createGoal: (body: GoalCreate): Promise<Goal> => requestJson(GoalSchema, '/api/goals', { method: 'POST', body }),
   updateGoal: (goalId: string, body: GoalPatch): Promise<Goal> => requestJson(GoalSchema, path(goalId), { method: 'PATCH', body }),
   deleteGoal: (goalId: string): Promise<void> => requestNoContent(path(goalId), { method: 'DELETE' }),

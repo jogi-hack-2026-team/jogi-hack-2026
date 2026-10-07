@@ -1,5 +1,5 @@
-import { Log as LogSchema, LogList, Today as TodaySchema } from '@contracts';
-import type { Log, LogPut, Today } from '@contracts';
+import { Log as LogSchema, LogList, TodayR11 as TodaySchema } from '@contracts';
+import type { Log, LogPut, TodayR11 } from '@contracts';
 import { requestJson } from './http.ts';
 
 /**
@@ -9,7 +9,8 @@ import { requestJson } from './http.ts';
 const base = (goalId: string) => `/api/goals/${encodeURIComponent(goalId)}`;
 
 export const todayHttp = {
-  getToday: (goalId: string, signal?: AbortSignal): Promise<Today> => requestJson(TodaySchema, `${base(goalId)}/today`, { signal }),
+  /** R-11 の読み取り（?view=r11）。回答由来か実記録由来か（provenance）と、材料が足りないときの計画（plan）を含む。 */
+  getToday: (goalId: string, signal?: AbortSignal): Promise<TodayR11> => requestJson(TodaySchema, `${base(goalId)}/today?view=r11`, { signal }),
   /** 全期間の記録（累計の図に使う）。 */
   listLogs: (goalId: string, signal?: AbortSignal): Promise<Log[]> => requestJson(LogList, `${base(goalId)}/logs`, { signal }),
   /** 記録の作成・上書き（同じ日は上書き）。DONE で amount を省くと API が1回の量で補う。 */

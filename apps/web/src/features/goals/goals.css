@@ -152,3 +152,15 @@
   color: var(--fr-warn);
   font-weight: 700;
 }
+.fr-goalform__prior {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-2);
+}
+.fr-goalform__latest {
+  padding: var(--fr-space-3) var(--fr-space-4);
+  border: 1.5px dashed var(--fr-btn-line);
+  border-radius: var(--fr-radius-notice);
+  font-size: var(--fr-fs-help);
+  line-height: 1.75;
+}

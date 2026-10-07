@@ -11,7 +11,8 @@ import { todayCopy } from '../../copy/today.ts';
 import { weekLabel } from '../../copy/date.ts';
 import type { ActualProgress, CompletionPresentation, ForecastPresentation, Unit } from '../prior/presentation-types.ts';
 
-type Prediction = Today['prediction'];
+// 実績由来の予測と R-11 の予測は config の中身だけが違う。表示に config は使わない
+type Prediction = Omit<Today['prediction'], 'config'>;
 
 export function toForecastView(prediction: Prediction, unit: Unit): ForecastPresentation {
   const progress: ActualProgress = { done: prediction.progress.done, total: prediction.progress.total, unit };

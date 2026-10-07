@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
+import { ApiError } from '../../api/client.ts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { goalsCopy } from '../../copy/goals.ts';
@@ -16,8 +17,11 @@ import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
 import { StickyActionBar } from '../../ui/components/StickyActionBar.tsx';
 import { fetchPolicy } from '../today/fetch-policy.ts';
+import { QuestionPriorFields } from '../prior/QuestionPriorFields.tsx';
+import '../prior/question-prior.css';
 import {
   emptyValues,
+  changesAnswerContext,
   errorCount,
   FIELD_ORDER,
   fieldErrorsFromApi,
@@ -29,6 +33,8 @@ import {
   valuesFromGoal,
   type FieldErrors,
   type FieldName,
+  type GoalWithAnswers,
+  NO_ANSWERS,
   type FormValues,
 } from './goal-form.ts';
 import { GoalNotFoundPanel, LoadErrorPanel, SignedOutPanel } from './GoalStates.tsx';
@@ -67,6 +73,7 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
       goal={query.data}
       refreshError={query.isError ? query.error : null}
       onRetryRefresh={() => void query.refetch()}
+      onReloadLatest={async () => (await query.refetch()).data}
     />
   );
 }
@@ -98,10 +105,17 @@ function FormLoading() {
 }
 
 type Props =
-  | { mode: 'create'; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined }
-  | { mode: 'edit'; goal: Goal; refreshError: unknown; onRetryRefresh: () => void };
+  | { mode: 'create'; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined; onReloadLatest?: undefined }
+  | {
+      mode: 'edit';
+      goal: GoalWithAnswers;
+      refreshError: unknown;
+      onRetryRefresh: () => void;
+      /** 最新の Goal（回答と回答の版を含む）を読み直す。古い版で保存できなかったとき（409）に使う。 */
+      onReloadLatest: () => Promise<GoalWithAnswers | undefined>;
+    };
 
-function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
+function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const locked = mode === 'edit' && goal.hasLogs;
@@ -119,7 +133,10 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
   const deleting = useRef(false);
   // 編集を始めた時点の Goal。変えた項目だけを送るための比較元で、再取得で goal が新しくなっても変えない
   // （変えると、別のタブでの変更を、触っていない項目まで古い値で巻き戻してしまう）
-  const [baseline] = useState(goal);
+  // 古い版で保存できなかったとき（409）に、利用者が最新を読み直したら、その Goal を新しい比較元にする（入力は残す）
+  const [baseline, setBaseline] = useState(goal);
+  // 最新を読み直したときの回答。入力中の回答で上書きする前に確かめられるよう、知らせとして出す
+  const [latestAnswers, setLatestAnswers] = useState<GoalWithAnswers['questionPrior'] | null>(null);
   // この画面がまだ表示されているか。保存の途中で離れた後に、別の画面を一覧へ移さないために使う
   const mounted = useRef(true);
   useEffect(() => {
@@ -195,7 +212,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
   const focusFirstError = (found: FieldErrors) => {
     const first = FIELD_ORDER.find((name) => found[name]);
     if (!first) return;
-    const target = formRef.current?.querySelector<HTMLElement>(first === 'unit' ? '[aria-labelledby="goal-unit-label"] button' : `#goal-${first}`);
+    const selector = first === 'unit' ? '[aria-labelledby="goal-unit-label"] button' : first === 'questionPrior' ? '.r11-qp input' : `#goal-${first}`;
+    const target = formRef.current?.querySelector<HTMLElement>(selector);
     target?.focus();
   };
 
@@ -212,7 +230,16 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
   const saveFailure = save.isError && (apiFieldErrors === null || errorCount(apiFieldErrors) === 0) ? save.error : null;
   const showSaveFailure = saveFailure !== null && count === 0;
   // 通信・サーバーの失敗は「もう一度保存」。ログイン切れはログインし直すまで同じ文言のままにする
-  const canRetry = showSaveFailure && !isUnauthenticated(saveFailure);
+  const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isAnswerConflict(saveFailure);
+  // 単位か1回の量を変えると、保存済みの回答は API が取り消す（R-11、#133）。回答の欄は押せなくし、そのことを伝える
+  const withdrawing = mode === 'edit' && baseline !== undefined && changesAnswerContext(values, baseline) && hasAnswers(baseline.questionPrior);
+  const reloadLatest = async () => {
+    const latest = await onReloadLatest?.();
+    if (!latest || !mounted.current) return;
+    setBaseline(latest);
+    setLatestAnswers(latest.questionPrior ?? NO_ANSWERS);
+    save.reset();
+  };
 
   return (
     <div className="fr fr-page">
@@ -297,6 +324,22 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
             </SelectInput>
           </Field>
 
+          <div className="fr-goalform__prior">
+            {latestAnswers ? (
+              <p className="fr-goalform__latest" role="status">
+                {f.latestAnswers(answerLabel(latestAnswers.a), answerLabel(latestAnswers.b))}
+              </p>
+            ) : null}
+            <QuestionPriorFields
+              value={withdrawing ? NO_ANSWERS : values.questionPrior}
+              onChange={(next) => update('questionPrior', next)}
+              disabled={busy || withdrawing}
+              fieldErrors={errors.questionPrior ? { a: errors.questionPrior } : {}}
+            />
+            {withdrawing ? <LockedNote>{f.answersWithdrawn}</LockedNote> : null}
+            <p className="fr-goals__help">{f.answersNotRecords}</p>
+          </div>
+
           {mode === 'edit' ? (
             <div>
               <Button variant="text" icon="trash" disabled={busy} onClick={() => setDeleteOpen(true)}>
@@ -308,7 +351,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh }: Props) {
 
         <StickyActionBar>
           <div className="fr-goalform__actions">
-            {showSaveFailure ? <SaveFailure error={saveFailure} mode={mode} /> : null}
+            {showSaveFailure ? <SaveFailure error={saveFailure} mode={mode} onReloadLatest={reloadLatest} /> : null}
             <Button type="submit" variant="primary" block busy={busy} {...(canRetry ? { icon: 'retry' as const } : {})}>
               {busy ? f.saving : canRetry ? f.saveFailed.retry : mode === 'create' ? f.save : f.saveEdit}
             </Button>
@@ -413,14 +456,38 @@ function LockedNote({ children }: { children: string }) {
 }
 
 /** 保存の失敗。失敗したのに保存済みに見せない（入力は残し、まだ保存されていないことを書く）。 */
-function SaveFailure({ error, mode }: { error: unknown; mode: 'create' | 'edit' }) {
+function SaveFailure({ error, mode, onReloadLatest }: { error: unknown; mode: 'create' | 'edit'; onReloadLatest: () => Promise<void> }) {
   if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
+  if (isAnswerConflict(error)) {
+    // ほかの画面で回答や単位が変わった（R-11 の回答の版が古い）。保存済みに見せず、入力を残したまま最新を読み直してもらう
+    return (
+      <ErrorPanel
+        title={f.answerConflict.title}
+        action={
+          <Button icon="retry" onClick={() => void onReloadLatest()}>
+            {f.answerConflict.reload}
+          </Button>
+        }
+      >
+        {f.answerConflict.body}
+      </ErrorPanel>
+    );
+  }
   return (
     <ErrorPanel title={f.saveFailed.title}>
       {mode === 'create' ? f.saveFailed.createBody : f.saveFailed.editBody}
     </ErrorPanel>
   );
 }
+
+/** 古い回答の版で保存しようとした（409 ANSWER_CONFLICT）。 */
+function isAnswerConflict(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409 && error.body?.error.code === 'ANSWER_CONFLICT';
+}
+
+const answerLabel = (answer: NonNullable<GoalWithAnswers['questionPrior']>['a']) => f.answerLabels[answer ?? 'none'];
+
+const hasAnswers = (answers: GoalWithAnswers['questionPrior']) => answers !== undefined && (answers.a !== null || answers.b !== null);
 
 /** 選べるタイムゾーン。ブラウザが知っている IANA 名に、今の値（ブラウザ設定・保存済みの値）を必ず含める。 */
 function useTimezones(current: string): string[] {

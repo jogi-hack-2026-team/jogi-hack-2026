@@ -1,4 +1,4 @@
-import type { Goal, Log, Today } from '@contracts';
+import type { Goal, Log, TodayR11 as Today } from '@contracts';
 
 /**
  * Goal・Today・記録の一覧は別々の GET で取るため、取得した時点がずれることがある（別のタブでの編集・記録など）。
