@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Log } from '@contracts';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
@@ -15,6 +14,7 @@ import './logs.css';
  * 予測の表示が失敗しても操作できるよう、予測の Error Boundary の外に置く。
  * 「やった」「今日は休む」は1回押すだけで保存する（やった量は1回の量）。量を変えたいときは「量を変更」から。
  * current があるときは記録の変更（D5-change）：今の記録を選択中として出し、選び直すと上書きする。
+ * 量の入力を開いているかは親（TodayPage）が持つ。開いている間は昨日の訂正を始められないようにするため。
  */
 export function RecordChoiceBar({
   today,
@@ -25,6 +25,8 @@ export function RecordChoiceBar({
   onCancelChange,
   onRefresh,
   locked = false,
+  editingAmount,
+  onEditingAmountChange,
 }: {
   today: string;
   sessionAmount: number;
@@ -35,11 +37,14 @@ export function RecordChoiceBar({
   onRefresh: () => void;
   /** 昨日の記録を訂正している間は押せなくする（今日と昨日を同時に編集しない）。 */
   locked?: boolean;
+  /** 量の入力を開いているか（親が持つ）。 */
+  editingAmount: boolean;
+  onEditingAmountChange: (editing: boolean) => void;
 }) {
-  const [editingAmount, setEditingAmount] = useState(false);
   const label = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
   const currentAmount = current?.status === 'DONE' && current.amount !== null ? current.amount : sessionAmount;
-  const save = (choice: RecordChoice) => saver.save({ localDate: today, choice });
+  // 昨日を訂正している間は、量の入力からも送らない
+  const save = (choice: RecordChoice) => (locked ? undefined : saver.save({ localDate: today, choice }));
   const saving = saver.saving?.choice;
 
   if (saver.failure?.vars) {
@@ -69,9 +74,9 @@ export function RecordChoiceBar({
           initial={currentAmount}
           sessionAmount={sessionAmount}
           unit={unit}
-          busy={saver.isSaving}
+          busy={saver.isSaving || locked}
           onSubmit={(amount) => save({ status: 'DONE', amount })}
-          onCancel={() => setEditingAmount(false)}
+          onCancel={() => onEditingAmountChange(false)}
         />
       </StickyActionBar>
     );
@@ -86,7 +91,7 @@ export function RecordChoiceBar({
       {current ? <span>{todayCopy.changeNote}</span> : null}
       <span>
         {todayCopy.doneAmount(label(current ? currentAmount : sessionAmount))}
-        <Button variant="text" onClick={() => setEditingAmount(true)}>
+        <Button variant="text" onClick={() => onEditingAmountChange(true)}>
           {todayCopy.changeAmount}
         </Button>
         {current && onCancelChange ? (

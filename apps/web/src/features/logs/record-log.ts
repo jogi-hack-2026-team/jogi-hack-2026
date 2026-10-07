@@ -57,3 +57,24 @@ export function yesterdayRecord(yesterday: string, recordStartDate: string, logs
 export function choiceFromLog(log: Log): RecordChoice {
   return log.status === 'DONE' ? { status: 'DONE', amount: log.amount } : { status: 'SKIPPED', amount: null };
 }
+
+/**
+ * 今日と昨日を同時に編集しない（#88の採択条件）。どちらかを編集・保存している間は、もう片方を始めない・送らない。
+ * - 今日の編集：記録済みの今日の選び直し（changing）、または記録の2択を出している間の量の入力
+ * - 昨日の編集：記録済みの昨日の訂正
+ */
+export function editLocks(s: {
+  changingToday: boolean;
+  todayAmountEditing: boolean;
+  todayChoicesShown: boolean;
+  todaySaving: boolean;
+  yesterdayEditing: boolean;
+}): { todayAmountEditing: boolean; yesterdayLocked: boolean; todayLocked: boolean } {
+  // 量の入力は2択を出しているときだけ開いている（別のタブで記録されて2択が消えたら、昨日を止めたままにしない）
+  const todayAmountEditing = s.todayAmountEditing && s.todayChoicesShown;
+  return {
+    todayAmountEditing,
+    yesterdayLocked: s.changingToday || todayAmountEditing || s.todaySaving,
+    todayLocked: s.yesterdayEditing,
+  };
+}
