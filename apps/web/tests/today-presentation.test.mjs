@@ -22,7 +22,7 @@ registerHooks({
 const { assertForecastPresentation } = await import('../src/features/prior/PriorForecast.tsx');
 const { toForecastView } = await import('../src/features/today/forecast-view.ts');
 const { showYesterdayPrompt } = await import('../src/features/today/yesterday-later.ts');
-const examples = JSON.parse(readFileSync(new URL('../src/api/mock/fixtures/engine-examples.json', import.meta.url), 'utf8'));
+const examples = JSON.parse(readFileSync(new URL('./fixtures/engine-examples.json', import.meta.url), 'utf8'));
 
 const resumed = { success: 3, total: 4 };
 const completion = { kind: 'estimate', scenario: 'TODAY_DONE', sources: { a: 'RECORDS', b: 'RECORDS' }, p50Days: 7, p80Days: 14, p50Label: '週A', p80Label: '週B' };
