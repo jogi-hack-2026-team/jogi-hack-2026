@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { nextEpoch, sessionChanged } from '../src/api/session-cache.ts';
 import { localDateIn, shouldRefetchForNewDay } from '../src/features/today/day-rollover.ts';
-import { isSameSnapshot, isTodayOlderThanSettings } from '../src/features/today/snapshot.ts';
+import { fetchTodayWithStart, isSameSnapshot, isTodayOlderThanSettings, todayStartedAt } from '../src/features/today/snapshot.ts';
 
 const goal = {
   id: 'g', title: '英単語', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 600, timezone: 'Asia/Tokyo',
@@ -47,6 +47,47 @@ test('1回の量などが変わったGoalと、それより前に取得したTod
   assert.equal(isTodayOlderThanSettings(shown, { ...shown, title: '別名' }, 2000, 1000), false);
   // まだ一度もそろっていない（最初の表示）ときは比べる相手がない
   assert.equal(isTodayOlderThanSettings(undefined, changed, 2000, 1000), false);
+});
+
+test('設定を変える前に始めたTodayの取得が、新しいGoalより遅れて届いても使わない', async () => {
+  // 総量100・実績80・今日未記録・1回量10。量10の Today を表示中に、量20へ変えた
+  const shown = { ...goal, totalRequired: 100, initialProgress: 80, sessionAmount: 10, todayStatus: 'UNRECORDED' };
+  const changed = { ...shown, sessionAmount: 20 };
+  // 時刻1000に Today の取得を始める（量20へ変える前）。応答は Goal（時刻2000に到着）より後の3000に届く
+  let release;
+  const pending = fetchTodayWithStart(() => new Promise((resolve) => (release = resolve)), () => 1000);
+  release({ ...today });
+  const lateOld = await pending;
+  assert.equal(todayStartedAt(lateOld), 1000);
+  // 届いた時刻（3000）は Goal より後でも、始めた時刻で比べるので古い設定の予測として取り直す
+  assert.equal(isTodayOlderThanSettings(shown, changed, 2000, todayStartedAt(lateOld)), true);
+  // Goal が届いた後に始めた取得なら使う
+  const fresh = await fetchTodayWithStart(async () => ({ ...today }), () => 2500);
+  assert.equal(isTodayOlderThanSettings(shown, changed, 2000, todayStartedAt(fresh)), false);
+  // 覚えていない値は最も古いものとして扱う
+  assert.equal(todayStartedAt({ ...today }), 0);
+});
+
+test('Todayの取得を始めた時刻は、同じ内容の応答で取り直しても新しい時刻になる', async () => {
+  const client = new QueryClient();
+  client.mount();
+  let now = 1000;
+  const observer = new QueryObserver(client, {
+    queryKey: ['goals', 'today', 'g'],
+    queryFn: () => fetchTodayWithStart(async () => ({ ...today }), () => now),
+    structuralSharing: false,
+    retry: false,
+  });
+  const unsubscribe = observer.subscribe(() => {});
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(todayStartedAt(client.getQueryData(['goals', 'today', 'g'])), 1000);
+  now = 5000;
+  await observer.refetch();
+  // 内容が同じでも前の値（時刻1000）に置き換えられないので、取り直しが止まらなくなることはない
+  assert.equal(todayStartedAt(client.getQueryData(['goals', 'today', 'g'])), 5000);
+  unsubscribe();
+  client.clear();
+  client.unmount();
 });
 
 test('Goalのtimezoneで日付を数え、APIの「今日」が進むまで取り直しを止めない', () => {

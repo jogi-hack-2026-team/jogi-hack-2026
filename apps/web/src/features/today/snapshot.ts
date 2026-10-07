@@ -33,7 +33,7 @@ function sameLog(a: Log | null, b: Log | null): boolean {
 /**
  * 予測の材料になる Goal の設定（1回の量・単位・記録開始日・初期実績・総量・timezone）を1つの値にしたもの。
  * 通常の /today の応答はこれらを返さないため、isSameSnapshot では照らし合わせられない。
- * 代わりに、表示中の Goal からこの値が変わったのに、Today がその Goal より前に取得したものなら、
+ * 代わりに、表示中の Goal からこの値が変わったのに、Today の取得をその Goal が届くより前に始めていたなら、
  * 古い設定で作った予測かもしれないとして使わずに取り直す（useTodayData.ts）。
  */
 export function predictionInputs(goal: Goal): string {
@@ -41,10 +41,31 @@ export function predictionInputs(goal: Goal): string {
 }
 
 /**
- * 設定が変わった Goal と、その Goal より前に取得した Today を組み合わせていないか。
- * shownGoal は最後にそろっていた Goal、goalAt・todayAt はそれぞれの取得が届いた時刻。
+ * 設定が変わった Goal と、その Goal が届くより前に取得を始めた Today を組み合わせていないか。
+ * shownGoal は最後にそろっていた Goal、goalAt は Goal の取得が届いた時刻、todayStartedAt は Today の取得を始めた時刻。
+ * 届いた時刻ではなく始めた時刻で比べる：設定の変更より前に始めた Today の取得が、新しい Goal より遅れて届くことがあるため。
+ * 新しい Goal が届いた後に始めた取得なら、その設定の変更はすでに保存されている。
  */
-export function isTodayOlderThanSettings(shownGoal: Goal | undefined, goal: Goal, goalAt: number, todayAt: number): boolean {
+export function isTodayOlderThanSettings(shownGoal: Goal | undefined, goal: Goal, goalAt: number, todayStartedAt: number): boolean {
   if (!shownGoal || predictionInputs(shownGoal) === predictionInputs(goal)) return false;
-  return todayAt < goalAt;
+  return todayStartedAt < goalAt;
+}
+
+/** 取得した Today ごとの、取得を始めた時刻。 */
+const startedAt = new WeakMap<Today, number>();
+
+/**
+ * Today を取得し、取得を始めた時刻を覚えておく（todayStartedAt で読む）。
+ * 時刻を応答の値ごとに覚えるため、Today の取得では structuralSharing を切る（同じ内容でも前の値に置き換えない）。
+ */
+export async function fetchTodayWithStart(fetchToday: () => Promise<Today>, now: () => number = Date.now): Promise<Today> {
+  const started = now();
+  const today = await fetchToday();
+  startedAt.set(today, started);
+  return today;
+}
+
+/** Today の取得を始めた時刻。分からなければ 0（最も古いものとして扱う）。 */
+export function todayStartedAt(today: Today): number {
+  return startedAt.get(today) ?? 0;
 }

@@ -5,7 +5,7 @@ import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { shouldRefetchForNewDay } from './day-rollover.ts';
 import { fetchPolicy } from './fetch-policy.ts';
-import { isSameSnapshot, isTodayOlderThanSettings } from './snapshot.ts';
+import { fetchTodayWithStart, isSameSnapshot, isTodayOlderThanSettings, todayStartedAt } from './snapshot.ts';
 
 export type TodaySnapshot = { goal: Goal; today: Today; logs: Log[] };
 
@@ -24,7 +24,13 @@ const DAY_CHECK_MS = 30_000;
  */
 export function useTodayData(goalId: string, notBefore = 0) {
   const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
-  const todayQuery = useQuery({ queryKey: todayKeys.today(goalId), queryFn: ({ signal }) => todayHttp.getToday(goalId, signal), ...fetchPolicy });
+  // 取得を始めた時刻を応答ごとに覚えるため、同じ内容の応答でも前の値に置き換えない（snapshot.ts）
+  const todayQuery = useQuery({
+    queryKey: todayKeys.today(goalId),
+    queryFn: ({ signal }) => fetchTodayWithStart(() => todayHttp.getToday(goalId, signal)),
+    structuralSharing: false,
+    ...fetchPolicy,
+  });
   const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: ({ signal }) => todayHttp.listLogs(goalId, signal), ...fetchPolicy });
   const refresh = () => void Promise.all([goalQuery.refetch(), todayQuery.refetch(), logsQuery.refetch()]);
 
@@ -36,8 +42,8 @@ export function useTodayData(goalId: string, notBefore = 0) {
   const fresh = [goalQuery, todayQuery, logsQuery].every((q) => q.dataUpdatedAt > notBefore);
   // 最後にそろっていた組み合わせ
   const lastGood = useRef<TodaySnapshot | undefined>(undefined);
-  // 予測の材料になる設定（1回の量など）が変わったのに、Today がその Goal より前の取得なら、古い設定の予測として取り直す
-  const staleToday = !!goal && isTodayOlderThanSettings(lastGood.current?.goal, goal, goalQuery.dataUpdatedAt, todayQuery.dataUpdatedAt);
+  // 予測の材料になる設定（1回の量など）が変わったのに、Today の取得をその Goal が届く前に始めていたなら、古い設定の予測として取り直す
+  const staleToday = !!goal && !!today && isTodayOlderThanSettings(lastGood.current?.goal, goal, goalQuery.dataUpdatedAt, todayStartedAt(today));
   const consistent = goal && today && logs && fresh ? isSameSnapshot(goal, today, logs) && !staleToday : null;
   if (goal && today && logs && consistent) lastGood.current = { goal, today, logs };
 
