@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import pg from 'pg';
-import { createAuthPool, createMigrationPool } from '../src/db/pool.ts';
+import { createAppPool, createAuthPool, createMigrationPool } from '../src/db/pool.ts';
 import { migrate } from '../src/db/migrate.ts';
 import { createTestDatabase } from './helpers/database.ts';
 
@@ -38,6 +38,44 @@ test('認証poolにもclient期限と失敗clientの破棄が適用される', a
   const next = (await auth.query('select 1 as one, pg_backend_pid() as pid')).rows[0];
   assert.equal(next.one, 1);
   assert.notEqual(next.pid, pid);
+});
+
+test('アプリpoolの取得済みclientも期限で破棄され、rollback失敗後のerrorなしreleaseでも再利用しない', async (t) => {
+  const db = await createTestDatabase();
+  const app = createAppPool({ connectionString: db.connectionString, queryTimeoutMs: 100 });
+  t.after(async () => { await app.end(); await db.close(); });
+  const client = await app.connect();
+  const pid = (await client.query('select pg_backend_pid() as pid')).rows[0].pid;
+  try {
+    await client.query('begin');
+    await assert.rejects(client.query('select pg_sleep(1)'), /Query read timeout/);
+    await assert.rejects(client.query('rollback'), /closed|terminated|queryable|ending/);
+  } finally {
+    client.release();
+  }
+  await waitFor(async () => app.totalCount === 0);
+  const next = (await app.query('select 1 as one, pg_backend_pid() as pid')).rows[0];
+  assert.equal(next.one, 1);
+  assert.notEqual(next.pid, pid);
+});
+
+test('アプリpoolの取得済み接続切断を処理し、次の通常操作は新しい接続で復旧する', async (t) => {
+  const db = await createTestDatabase();
+  const app = createAppPool({ connectionString: db.connectionString });
+  t.after(async () => { await app.end(); await db.close(); });
+  const client = await app.connect();
+  let ended = false;
+  client.once('end', () => { ended = true; });
+  try {
+    const pid = (await client.query('select pg_backend_pid() as pid')).rows[0].pid;
+    await db.pool.query('select pg_terminate_backend($1)', [pid]);
+    await waitFor(async () => ended);
+    await assert.rejects(client.query('select 1'));
+  } finally {
+    client.release();
+  }
+  await waitFor(async () => app.totalCount === 0);
+  assert.equal((await app.query('select 1 as one')).rows[0].one, 1);
 });
 
 test('migration専用poolはadvisory lockを5秒超待ってから成功する', async (t) => {
