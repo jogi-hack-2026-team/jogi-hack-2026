@@ -593,7 +593,7 @@ docker volume rm "$volume"
 
 通常の`future-roi-local`・実データ・他人の検証volumeを対象にせず、一括pruneや自動削除は行いません。
 
-Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ証跡を保持します。旧clusterを再利用・削除しない分、初期化時間とディスク使用量が増えます。CIではPostgreSQL serviceを利用します。
+Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ証跡を保持します。旧clusterを再利用・削除しない分、初期化時間とディスク使用量が増えます。embedded初期化は`UTF8`・`C` localeを明示し、`LANG`未設定でも日本語・絵文字を文字数で検証します。[encoding回帰](../apps/api/tests/database-encoding.test.ts)は子プロセスだけで`DATABASE_URL`とlocale変数を外して実embedded DBを確認します。CIの他のDBテストはPostgreSQL serviceを利用します。`npm ci --ignore-scripts`は維持し、embedded起動前だけ固定platform配布物のmanifestから`native/lib/`内のリンクを検査・復元します（外部path・異なる既存linkは失敗し、依存scriptは実行しません）。システムlocale・外部DB・既存clusterは変更しません。
 
 ### 本番向けの約束事
 

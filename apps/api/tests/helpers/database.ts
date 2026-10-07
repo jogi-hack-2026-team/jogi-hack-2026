@@ -6,6 +6,7 @@ import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { restoreEmbeddedLinks } from './embedded-binaries.ts';
 
 export type TestDatabase = {
   connectionString: string;
@@ -31,6 +32,7 @@ async function freePort(): Promise<number> {
 }
 
 async function startEmbedded(): Promise<AdminConnection> {
+  await restoreEmbeddedLinks();
   const { default: EmbeddedPostgres } = await import('embedded-postgres');
   mkdirSync(localDir, { recursive: true });
   // Windowsの停止後のworkerが旧data dirを保持していても、新しいテストのschemaを混ぜない。
@@ -53,6 +55,9 @@ async function startEmbedded(): Promise<AdminConnection> {
     password: credential.password,
     port,
     persistent: true,
+    // LANGのないシェルでもSQL_ASCIIへ落とさず、titleのUnicode文字数契約を実DBで検証する。
+    // CはOSに追加localeを導入せず使える。既存cluster・外部DATABASE_URLの設定は変更しない。
+    initdbFlags: ['--encoding=UTF8', '--locale=C'],
     onLog: () => {},
     onError: (message) => console.error(String(message).replaceAll(credential.password, '[redacted]')),
   });
