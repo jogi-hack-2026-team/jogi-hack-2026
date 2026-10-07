@@ -19,20 +19,11 @@ import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
+import { fetchPolicy } from './fetch-policy.ts';
 import { toForecastView } from './forecast-view.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
 import '../../ui/tokens.css';
 import './today.css';
-
-/**
- * 取得のやり方。失敗した取得は自動でやり直さず、「再読み込み」ボタンで取り直す。
- * TanStack Query v5 はデータのないまま失敗した取得をやり直すと「読み込み中」に戻るため、画面に戻るたびに
- * エラーや「Goalが見つかりません」が一瞬消えてしまう。成功している取得は、画面に戻ったとき最新にする。
- */
-const fetchPolicy = {
-  retry: false,
-  refetchOnWindowFocus: (query: { state: { status: string } }) => query.state.status !== 'error',
-} as const;
 
 /**
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
