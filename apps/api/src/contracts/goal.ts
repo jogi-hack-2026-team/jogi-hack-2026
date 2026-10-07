@@ -41,7 +41,9 @@ export type Goal = Static<typeof Goal>;
 
 export const GoalList = Type.Array(Goal);
 
-const title = Type.String({ minLength: 1, maxLength: 100, pattern: '\\S' });
+// PostgreSQLのtextに保存できないNULはDBへ渡さず、他の違反と同じ422のfieldsへまとめる。
+// 空白のみの拒否は維持し、改行・日本語・絵文字などNUL以外の文字は従来どおり扱う。
+const title = Type.String({ minLength: 1, maxLength: 100, pattern: '^(?=[\\s\\S]*\\S)[^\\u0000]*$' });
 const amount = Type.Integer({ minimum: 1, maximum: INT4_MAX });
 const initialProgress = Type.Integer({ minimum: 0, maximum: INT4_MAX });
 // APIのAjv custom formatでIANA名も検証し、通常のschema違反と一緒に全fieldsへ返す。
