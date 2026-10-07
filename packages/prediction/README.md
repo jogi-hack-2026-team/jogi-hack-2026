@@ -10,7 +10,7 @@
 
 ## 計算の利用条件と処理
 
-2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストとsnapshot／worker接続例の3テストを加え、n=H限定の境界回帰2件と合わせてローカル66テストを実行する。独立CDFオラクル3テストは別コマンドで実行する。正式公開された47テストのCIと区別する。D-26の写像・強度・表示・APIを採択済みとは扱わない。
+2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストとsnapshot／worker接続例の3テストを加え、n=H限定の境界回帰2件と合わせて当時66テストへ拡張した。現在は#133の公開入口4件を加えた70件を同じCIで実行する。独立CDFオラクル3テストは別コマンドで確認する。Supporting候補全体の採択と、下記#133の依頼者承認範囲を分ける。
 
 [src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映したが、正式API結合済みではない。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
 
@@ -60,6 +60,14 @@ package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm tes
 
 テスト期待値は正本の固定例と独立オラクルに基づく。過去の準備branch（`dcc6440`／`f29e24d`）やmainの実験を本体へ丸ごとコピーせず、lgamma参照値を現在の中心計算のオラクルとして流用していない。テスト成功をAPI／UI結合、公開環境、正式なIssue受入の成功と扱わない。
 
+## R-11の公開入口（#133）
+
+[D-26](../../docs/architecture.md#2026-10-07の保存予測接続133)の依頼者承認範囲を実装・チームレビューする`predictWithQuestionPrior`を追加する。旧`predict`と既存候補・独立oracleは保持する。入力は`{ prediction, answers: { a, b }, mapping }`で、APIは保存時mappingから渡す。内部Betaやraw回答をPredictionResultへ漏らさず、`{ prediction, provenance, plan }`を返す。R-11の`config`にはスカラーpriorがなく、modelVersionは`m1-question-prior-v1`。旧結果へcastしない。
+
+numeric回答または実際の起点遷移が材料。UNKNOWN/nullは共通Beta(2,2)を計算に使っても回答材料ではない。中心はb、完了はa/b両方を必要とし、今日記録済み・達成済みの優先を保つ。Planは未達成かつ完了材料不足のときだけ実残量から返す条件付き回数。前回posteriorからの更新や、回答を実績へ加算する処理は持たない。旧数値核とK/H/seedを使い、完了DPを最大1回だけ計算する。
+
+[4公開入口回帰](tests/question-prior-public.test.mjs)と[公開型の負例](tests/type-contracts.ts)を追加し、既存66＋4＝70件を同じCI入口で確認する。DB/HTTPは純粋packageの外側で、FE結合・校正・クラウド性能はこれらの成功から保証しない。
+
 ## 検証CI
 
 [prediction.yml](../../.github/workflows/prediction.yml)は、`packages/prediction/**`またはこのworkflowが変わるPR、mainへのpush、手動実行を対象にする。Foundation CIは別に維持する。PRではGitHubのmerge用commitをcheckoutして基底branchとの組み合わせを検証する。候補adapterの独立CDFオラクル3件と18例の再現JSONもNode matrixで確認し、実験フォルダの変更をCI対象に含める。同じPR／branchの古い実行は取り消し、各jobは10分で打ち切る。read-only permissions・checkout credentials非保持で、Secret・DB・`pull_request_target`は使わない。fork PRも同じ構成で、GitHub側の実行承認が必要な場合はその制限に従う。
@@ -74,7 +82,7 @@ npm run typecheck --workspace=@futureroi/prediction
 npm test --workspace=@futureroi/prediction
 ```
 
-型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストに内部候補9件を加え、PR118候補adapterの5件とsnapshot／worker接続例3件も含め、n=Hの境界回帰2件も加え、このbranchでは66テストを実行する（候補も同じPR CIで確認する）。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
+型検査はsource・固定fixture・公開Resultの型契約を確認する。testはコンパイル後に全`tests/*.test.mjs`を実行し、数値・回帰・固定seed vector・既存MCと独立オラクルの47テストに内部候補9件を加え、PR118候補adapterの5件とsnapshot／worker接続例3件も含め、n=Hの境界回帰2件も加え、#133の公開入口4件を加え、このbranchでは70テストを実行する（候補も同じPR CIで確認する）。compiler・install・テストの失敗はjobを失敗させ、skipや代用の成功値へ変換しない。Actionsログで版・実コマンド・pass/fail件数を確認する。test後に11種類の[接続用入出力例](examples/README.md)を実行し、2種類の[30日合成デモ入力](examples/README.md#デモ向けの30日合成入力)も実行し、実EngineのT-14必須3条件を同じNode matrixで計測する。各条件の初回＋5回をすべて500ms未満と判定し、失敗をjob失敗として保持する。固定入力・seed・CPU/メモリ・実runtime・Actions公開来歴を含むJSON・11接続例JSON・30日デモ入力JSONは、benchmark失敗時も公式upload-artifact v4（SHA固定）で14日保存する。artifactはNode版・run/attemptごとに分け、欠落時も失敗する。これはCI検証ホストの計測で、採用runtime／配備先でのT-14再確認は残る。required checksやbranch protectionは変更しない。
 
 ## 補完・訂正後の再計算例
 
@@ -100,4 +108,4 @@ TODAY_DONEは未記録の今日を1回実行した仮定からの将来日数、
 
 #70でroot workspace（`@futureroi/prediction`）とlockfileへ統合し、TypeScript版を5.9.3に揃えた。#77で`apps/api`の`/today`から呼ぶため、`package.json`に`exports`（ビルド済み`dist/src/index.js`と`.d.ts`）と`build`（`scripts/check.mjs build`、`declaration`出力）を追加し、root scriptsがAPIのtypecheck・testの前にbuildする。packageのコマンド、Node標準runner、検証CIのNode matrixは変えていない。今回のT-14 CIは検証用Node/ホストの結果として記録し、正式runtimeでsampler vectorとT-14を再確認する。APIへのエラー変換と公開config変更範囲は今回の採択に含めない。
 
-今回のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・47テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。
+以下は初期Engineの受入履歴で、現在の#133の完了判定とは分ける。当時のレビューは#71の中心計算、#72の完了計算と統合、#73の数値・性質・性能確認までの純粋Engine範囲。#70完了後の正式結合、#71→#72→#73のレビュー・受入・Merge・完了判定は残る。純粋Engineの型検査・47テストCIを追加したが、#72の採用Runtimeによるvector確認、#70の採用runner・統一CIへの整合と#73のT-14採用環境での再計測は残る。Foundation CIは文書・設定だけを確認し、Prediction Engine CIとは別。アプリコード、DB、FE、認証、配備、課金の作業は今回含めない。metadata／公開エラーの契約が確定しても、アプリ結合やIssueの正式受入へ昇格させない。

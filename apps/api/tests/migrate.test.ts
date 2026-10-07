@@ -32,7 +32,31 @@ async function insertUser(pool: pg.Pool, id: string) {
 
 const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date)
                     values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo', '2026-10-01') returning id`;
-const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql'];
+const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql', '0004_demo_seed_goal.sql'];
+
+test('R11 migration 0003 keeps existing Goals and logs, starts unanswered at revision 0, and is idempotent', async t => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  const dir = mkdtempSync(join(tmpdir(), 'futureroi-r11-migration-'));
+  const url = pathToFileURL(`${dir}/`);
+  for (const name of APP_MIGRATIONS.slice(0, 2)) writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
+  await migrate(db.pool, 'all', url);
+  await insertUser(db.pool, 'r11-existing-owner');
+  const id = (await db.pool.query<{ id: string }>(goalInsert, ['r11-existing-owner', 'preserve', 'minutes', 100, 7, 30])).rows[0]!.id;
+  await db.pool.query(`insert into action_log (goal_id, local_date, status, amount) values ($1, '2026-10-05', 'DONE', 13)`, [id]);
+  const before = (await db.pool.query('select * from goal where id = $1', [id])).rows[0];
+  const logs = (await db.pool.query('select * from action_log where goal_id = $1', [id])).rows;
+  const name = APP_MIGRATIONS[2]!;
+  writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
+  assert.deepEqual(await migrate(db.pool, 'app', url), { target: 'app', app: { applied: [name] } });
+  const { question_prior, answer_revision, question_prior_snapshot, ...after } = (await db.pool.query('select * from goal where id = $1', [id])).rows[0];
+  assert.deepEqual(after, before, 'including fixed start date and timestamps');
+  assert.deepEqual(question_prior, { a: null, b: null });
+  assert.equal(answer_revision, '0');
+  assert.equal(question_prior_snapshot, null);
+  assert.deepEqual((await db.pool.query('select * from action_log where goal_id = $1', [id])).rows, logs);
+  assert.deepEqual(await migrate(db.pool, 'app', url), { target: 'app', app: { applied: [] } });
+});
 
 test('migration 0002 rejects existing Goals without inventing a start date or changing rows/schema', async (t) => {
   const db = await createTestDatabase();

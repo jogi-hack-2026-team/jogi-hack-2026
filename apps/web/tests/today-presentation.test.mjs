@@ -69,3 +69,42 @@ test('「後で答える」は押したときの対象日だけに効き、日�
   assert.equal(showYesterdayPrompt({ yesterdayMissing: false, yesterday: '2026-10-06' }, null), false);
   assert.equal(showYesterdayPrompt(undefined, null), false);
 });
+
+test('R-11の出所と計画を、補わずにそのまま表示データへ渡す', () => {
+  const available = examples.cases.find((c) => c.prediction.coreMetric.status === 'available' && c.prediction.completion.status === 'available' && c.prediction.todayStatus === 'UNRECORDED');
+  const insufficient = examples.cases.find((c) => c.prediction.completion.status === 'insufficient' && c.prediction.todayStatus === 'UNRECORDED' && !c.prediction.progress.completed);
+  assert.ok(available && insufficient);
+  // 回答由来・混合の出所を、中心の数字（bの出所）と完了の目安（a／b）へそのまま
+  const mixed = toForecastView(available.prediction, 'minutes', { provenance: { a: 'QUESTION', b: 'QUESTION_AND_RECORDS' }, plan: null, sessionAmount: 15 });
+  assert.equal(mixed.core.source, 'QUESTION_AND_RECORDS');
+  assert.deepEqual(mixed.completion.sources, { a: 'QUESTION', b: 'QUESTION_AND_RECORDS' });
+  assert.doesNotThrow(() => assertForecastPresentation(mixed));
+  // 出所なしでは従来どおり実績由来
+  assert.equal(toForecastView(available.prediction, 'minutes').core.source, 'RECORDS');
+  // 見通しを出しているのに出所がNONEなら、補わずに止める
+  assert.throws(() => toForecastView(available.prediction, 'minutes', { provenance: { a: 'NONE', b: 'RECORDS' }, plan: null, sessionAmount: 15 }), TypeError);
+  // 材料が足りず計画があるときは、設定量で行う場合の残り（日数ではない）
+  const planned = toForecastView(insufficient.prediction, 'minutes', { provenance: { a: 'NONE', b: 'NONE' }, plan: { remainingAmount: 40, remainingSessions: 3, lastSessionAmount: 10 }, sessionAmount: 15 });
+  assert.equal(planned.completion.kind, 'conditional');
+  assert.deepEqual(planned.completion.plan, { remainingAmount: 40, sessions: 3, sessionAmount: 15, lastAmount: 10, unit: 'minutes' });
+  assert.match(planned.completion.reason, /取り組めた日の翌日」と「休んだ日の翌日/);
+  assert.doesNotThrow(() => assertForecastPresentation(planned));
+  // 計画がなければ従来どおり不足の文言
+  assert.equal(toForecastView(insufficient.prediction, 'minutes', { provenance: { a: 'NONE', b: 'NONE' }, plan: null, sessionAmount: 15 }).completion.kind, 'insufficient');
+});
+
+test('回答だけ・回答と記録の見通しでは、注釈で「あなたの記録から」「同じ記録から」を流用しない（R-11、#137）', async () => {
+  const { completionNoteFor, coreNoteFor, todayCopy } = await import('../src/copy/today.ts');
+  // 記録だけのときは Product Spec の固定文言のまま
+  assert.equal(coreNoteFor('RECORDS'), todayCopy.coreNote);
+  assert.equal(completionNoteFor({ a: 'RECORDS', b: 'RECORDS' }), todayCopy.completionNote);
+  // 実ログ0件・回答だけ
+  assert.doesNotMatch(coreNoteFor('QUESTION'), /記録から推定した/);
+  assert.match(coreNoteFor('QUESTION'), /回答/);
+  assert.doesNotMatch(completionNoteFor({ a: 'QUESTION', b: 'QUESTION' }), /同じ記録|記録から推定した/);
+  assert.match(completionNoteFor({ a: 'QUESTION', b: 'QUESTION' }), /回答/);
+  // 回答と記録の両方
+  assert.match(coreNoteFor('QUESTION_AND_RECORDS'), /回答と、あなたの記録/);
+  assert.match(completionNoteFor({ a: 'QUESTION', b: 'RECORDS' }), /回答と、あなたの記録/);
+  assert.match(completionNoteFor({ a: 'QUESTION_AND_RECORDS', b: 'RECORDS' }), /回答と、あなたの記録/);
+});

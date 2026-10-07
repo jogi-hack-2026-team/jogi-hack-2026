@@ -1,4 +1,5 @@
 import { Type, type Static } from '@sinclair/typebox';
+import { QuestionAnswers, AnswerRevision } from './question.ts';
 
 // Goal API（#76）の契約。Architecture「API契約」「Data Model」とProduct R-02に対応する。
 // 入力はDBのCHECK制約と同じ範囲をここで先に検証し、違反はすべて422のfieldsへ入れる（AjvはallErrors）。
@@ -55,6 +56,7 @@ export const GoalCreate = Type.Object(
     /** 記録開始日の前日までに終えた量。省略時は0。 */
     initialProgress: Type.Optional(initialProgress),
     timezone,
+    questionPrior: Type.Optional(QuestionAnswers),
   },
   strict,
 );
@@ -69,6 +71,8 @@ export const GoalPatch = Type.Object(
     sessionAmount: Type.Optional(amount),
     initialProgress: Type.Optional(initialProgress),
     timezone: Type.Optional(timezone),
+    questionPrior: Type.Optional(QuestionAnswers),
+    expectedAnswerRevision: Type.Optional(AnswerRevision),
   },
   { ...strict, minProperties: 1 },
 );

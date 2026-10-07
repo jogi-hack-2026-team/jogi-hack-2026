@@ -1,5 +1,19 @@
 import { predict, PredictionInputError, PredictionConfigError } from '../src/index.js';
 import type { CoreMetric, LocalDate, PredictionInput, Completion, PredictionCalculation, PredictionResult } from '../src/index.js';
+import type { QuestionPriorPredictionInput, QuestionPriorPredictionConfig, QuestionPriorPredictionResult } from '../src/index.js';
+
+// @ts-expect-error rawのa/bは両方必要で、片方省略をUNKNOWNへ読み替えない。
+const partialQuestion: QuestionPriorPredictionInput['answers'] = { a: 'LOW' };
+// @ts-expect-error 内部Betaをraw回答に持たせない。
+const betaAsAnswer: QuestionPriorPredictionInput['answers'] = { a: { alpha: 1, beta: 3 }, b: null };
+// @ts-expect-error R-11 configは保存snapshotで分布を渡すためスカラーpriorを受け取らない。
+const scalarQuestionConfig: QuestionPriorPredictionConfig = { modelVersion: 'behavior-persistence-m1-v1', samples: 200, horizonDays: 1095, seed: 20261012, prior: 2 };
+function questionResultContract(result: QuestionPriorPredictionResult): void {
+  // @ts-expect-error 回答由来の結果を旧スカラーpriorの結果へ偽装できない。
+  const legacyResult: PredictionResult = result;
+  void legacyResult;
+}
+void partialQuestion; void betaAsAnswer; void scalarQuestionConfig; void questionResultContract;
 
 const callerDate: LocalDate = '2026-10-03';
 const input: PredictionInput = {
