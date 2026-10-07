@@ -1,2 +1,8 @@
 # Git must preserve the shebang of the portable pre-commit hook on Windows.
 .githooks/* text eol=lf
+
+# Docker smoke uses LF with Windows autocrlf as well.
+scripts/smoke-compose.sh text eol=lf
+scripts/smoke-today.sh text eol=lf
+scripts/smoke-env.sh text eol=lf
+scripts/tests/*.sh text eol=lf

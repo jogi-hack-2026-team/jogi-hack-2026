@@ -1,11 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { Goal, Log, Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
-import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -20,7 +17,7 @@ import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
-import { fetchPolicy } from './fetch-policy.ts';
+import { useTodayData } from './useTodayData.ts';
 import { toForecastView } from './forecast-view.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
 import '../../ui/tokens.css';
@@ -37,9 +34,8 @@ export function TodayPage({ goalId }: { goalId: string }) {
 }
 
 function TodayScreen({ goalId }: { goalId: string }) {
-  const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: () => goalsHttp.getGoal(goalId), ...fetchPolicy });
-  const todayQuery = useQuery({ queryKey: todayKeys.today(goalId), queryFn: () => todayHttp.getToday(goalId), ...fetchPolicy });
-  const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: () => todayHttp.listLogs(goalId), ...fetchPolicy });
+  // Goal・Today・記録は同じ時点の材料がそろったものだけを使う（snapshot）。日付の切り替わりでも取り直す
+  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId);
   // 保存の動き（#79・#80）はまだつないでいない。押したことが分かるよう、開発用の案内だけを出す。
   const [devNotice, setDevNotice] = useState<string | null>(null);
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
@@ -47,9 +43,11 @@ function TodayScreen({ goalId }: { goalId: string }) {
   const notConnected = () => setDevNotice(todayCopy.saveNotConnected);
 
   if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound />;
+  // ログインが切れたら、キャッシュに残る前の表示（タイトル・昨日の案内・記録の帯）を出さず、画面全体をログイン切れにする
+  if ([goalQuery.error, todayQuery.error, logsQuery.error].some(isUnauthenticated)) return <SignedOutPage />;
 
-  const goal = goalQuery.data;
-  const today = todayQuery.data;
+  const goal = snapshot?.goal;
+  const today = snapshot?.today;
   const unit = goal ? unitLabel(goal.unit) : '';
   const sessionLabel = goal ? `${goal.sessionAmount.toLocaleString('ja-JP')}${unit}` : '';
   // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）
@@ -78,15 +76,17 @@ function TodayScreen({ goalId }: { goalId: string }) {
         <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLaterFor(today.yesterday)} />
       ) : null}
 
-      {goalQuery.isPending || todayQuery.isPending || logsQuery.isPending ? (
-        <Loading />
-      ) : todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
-        <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={() => void Promise.all([goalQuery.refetch(), todayQuery.refetch(), logsQuery.refetch()])} />
-      ) : goal && today && logsQuery.data ? (
+      {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
+        <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={refresh} />
+      ) : resyncFailed ? (
+        <Inconsistent onRetry={retryResync} />
+      ) : snapshot ? (
         <ForecastBoundary key={todayQuery.dataUpdatedAt}>
-          <TodayContent goal={goal} today={today} logs={logsQuery.data} onChange={notConnected} />
+          <TodayContent goal={snapshot.goal} today={snapshot.today} logs={snapshot.logs} onChange={notConnected} />
         </ForecastBoundary>
-      ) : null}
+      ) : (
+        <Loading />
+      )}
 
       {devNotice ? (
         <p className="fr-dev-notice" role="status">
@@ -172,6 +172,42 @@ function FetchError({ error, onRetry }: { error: unknown; onRetry: () => void })
         }
       >
         {calc ? todayCopy.calcError : todayCopy.networkError}
+      </ErrorPanel>
+    </div>
+  );
+}
+
+/** ログイン切れ（401）の画面全体。 */
+function SignedOutPage() {
+  return (
+    <div className="fr fr-page">
+      <AppBar
+        title=""
+        leading={
+          <Link to="/goals" className="fr-icon-btn" aria-label="Goal一覧へ戻る">
+            <Icon name="back" />
+          </Link>
+        }
+      />
+      <SignedOut />
+    </div>
+  );
+}
+
+/** 取り直しても Goal・Today・記録の時点がそろわなかった。食い違った組み合わせは表示しない。 */
+function Inconsistent({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="fr-today__top">
+      <h1 className="fr-today__question">{todayCopy.question}</h1>
+      <ErrorPanel
+        title={todayCopy.inconsistentTitle}
+        action={
+          <Button icon="retry" onClick={onRetry}>
+            {todayCopy.reload}
+          </Button>
+        }
+      >
+        {todayCopy.inconsistent}
       </ErrorPanel>
     </div>
   );

@@ -37,14 +37,14 @@ interfaceは差替えやテストに必要な境界だけに置く。大がか�
 
 ### Repository構成
 
-`packages/prediction` は実在する限定先行実装で、[利用条件と検証手順](../packages/prediction/README.md)を参照する。rootのworkspace・`apps/api`（health・SPA配信・エラー形式）・`apps/web`（起動確認画面）・Compose・単一コンテナ・Application CIは#70で導入済み（[起動・検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。`auth`・`goals`・`logs`・`prediction`・`migrations`は#74以降の予定。
+`packages/prediction` は実在する純粋Engineで、[利用条件と検証手順](../packages/prediction/README.md)を参照する。root workspace・health/SPA配信・Compose・単一コンテナ・Application CIは#70、DB schema/migrationは#74、認証/API保護/認証画面は#75で導入済み（[起動・検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。Goal APIは#76、記録・Today APIとEngine結合は#77でローカル実装済み。Goal・記録・Today画面と公開配置は未完了で、Docker起動成功を業務機能全体の完成としない。
 
 ```text
 package.json            npm workspaces（apps/web, apps/api, packages/prediction。2026-10-05に管理方式を採択、#70で導入）
 packages/prediction/    src/{index,types,predict,observations,recovery,completion,random,config,errors}.ts, tests/, examples/
-apps/api/               src/{server,app,config}.ts, src/{contracts,db,http}/, tests/（#70）。src/{auth,goals,logs,prediction}/, migrations/ は#74以降
-apps/web/               src/{main,router}.tsx, src/routes/, src/api/（#70。起動確認画面）。src/ui/（デザイントークン・共通部品）、src/features/（画面ごとの部品）、src/copy/（画面の文言）、src/api/http.ts・goals-http.ts・today-http.ts（実APIの呼び出し）は#81（[ui/README](../apps/web/src/ui/README.md)）。src/features/goals/（Goalの一覧・作成・編集・削除）は#78
-compose.yaml            ローカル開発用PostgreSQL（db）。--profile app で単一コンテナも起動
+apps/api/               src/{server,container-start,app,config}.ts, src/{contracts,db,http,auth,goals,logs,prediction}/, migrations/, tests/
+apps/web/               src/{main,router}.tsx, src/routes/, src/api/（#70。認証・起動確認画面）。src/ui/（デザイントークン・共通部品）、src/features/（画面ごとの部品）、src/copy/（画面の文言）、src/api/http.ts・goals-http.ts・today-http.ts（実APIの呼び出し）は#81（[ui/README](../apps/web/src/ui/README.md)）。src/features/goals/（Goalの一覧・作成・編集・削除）は#78
+compose.yaml            ローカルDB＋単一SPA/APIコンテナ。dbだけのhost開発も可能
 Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 ```
 
@@ -65,7 +65,7 @@ Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 | 配信 | 単一SPA／APIコンテナ | 画面とAPIを同じorigin（URLのスキーム・ホスト・ポート）で配信し、配備対象を少なくする |
 | 予測 | 独立した純粋計算コア | 入力だけから同じ結果を返し、画面・DB・HTTPと分けて検証する |
 
-**次の作業：** [#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)〜#73の限定先行Engineは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。アプリへの正式結合・採用基盤への整合・正式受入は未完了。基盤担当は#70の版・追加ツール・起動構成、FE担当は#78〜#81の具体的な先行範囲・依存変更を各Issueで確認する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。合意だけでHard依存・BLOCKEDを解除せず、[着手前の確認](DEVELOPMENT_GUIDE.md#着手前に読み直す)と対象Issueの承認済み範囲に従う。担当者氏名・ProjectsのStatusは推測しない。
+**残る作業：** [#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)〜#73の純粋Engineは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みで、#77でToday APIへ結合した。#70の基盤に対するローカル一式起動は#130で補完する。業務画面・公開配置・製品としての正式受入は未完了。FE担当は#78〜#81の具体的な先行範囲・依存変更を各Issueで確認する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。合意だけでHard依存・BLOCKEDを解除せず、[着手前の確認](DEVELOPMENT_GUIDE.md#着手前に読み直す)と対象Issueの承認済み範囲に従う。担当者氏名・ProjectsのStatusは推測しない。
 
 | 条件付き第一候補 | 引き続き残る条件 |
 | --- | --- |
@@ -105,6 +105,22 @@ API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこ�
 | 入力検証・エラー形式 | Ajvを`removeAdditional: false`・`coerceTypes: false`・`allErrors: true`にし、契約違反・DB制約違反（23505／23514）を`{ error: { code, message, fields? } }`の422へ変換 | [実装時に必要な対策](#実装時に必要な対策)の入力検証とエラー形式案を基盤で一度だけ実装する | 業務APIの成功DTO・statusは未定のまま |
 
 この採択に含めるもの：上表の版・runner・ローカルDB・配信／終了・入力検証と共通エラー形式（422／404のenvelope `{ error: { code, message, fields? } }`とDB制約違反の変換）。含めないもの：migrationツール、認証ライブラリの版（#74・#75）、公開先（D-25）、業務APIの成功DTO・status・PATCH等の細則。stagingへの配置は公開先の承認待ちで、#70の該当項目は#75へ移管する。手順は[開発ガイド](DEVELOPMENT_GUIDE.md#アプリを起動検証する)を参照する。
+
+### Docker一式起動の補完（#130）
+
+既存D-23の単一SPA/API＋PostgreSQLを維持し、ローカルComposeの既定をDBのみから一式へ補完する。ユーザーの「全部起動できる状態まで、理由付きで」という依頼に対応する実装案であり、#130のレビュー・main反映で受け入れる。D-24/D-25の条件、Product要件・既存Hard依存は変更しない。[具体的な起動・復旧手順](DEVELOPMENT_GUIDE.md#dockerで一式を起動する)を参照する。
+
+| 判断 | 理由・代替案・制約 |
+| --- | --- |
+| DB health→設定検査→migration→単一Node配信 | コンテナのrunningだけではDBは準備できていないため、Composeの`service_healthy`を使う。production認証設定をDB変更前に検査し、認証→アプリmigration成功後にHTTP listenerを開く。失敗はexit 1で配信を開始しない |
+| コンテナ起動点で毎回migrationを実行 | 別のone-shot migration serviceは初回の依存順を示しやすいが、`docker compose restart app`やcontainer再起動は成功済みserviceを再実行しない。起動点なら毎回既存runnerのchecksum・transaction・advisory lockを使って確認できる。変更履歴・poolの責務と実行順は#74の方式を保持 |
+| 同じprocessでserverを読み込む + Compose init | initがSIGTERMを単一Nodeへ転送する。handler登録前のmigration待機は既定のsignal終了（143）、配信後は既存serverの正常終了処理（0）を使う。migration poolを閉じてからruntime poolを作る。中断時はDB切断で未commitのtransactionをrollbackする |
+| ローカル専用envとloopback公開 | Secretはユーザーが設定し、固定値・自動生成で永続credentialを作らない。DB passwordはURIへ埋め込まずPGPASSWORDで渡す。HTTP許可はloopback Composeだけ。既存project名/volumeを維持し、再作成や停止でデータを削除しない |
+| Docker確認とhost watchを併用 | Dockerだけにhost編集の速度を求めるとbind mountやdev専用imageが増える。既存host Node/Vite watchを日常編集、Dockerのビルド済みSPA/APIを配信・起動順・認証・終了の確認に使う。FE/APIを別配備サービスにすると同一origin/Cookieの方針と起動単位が増えるため採用しない |
+
+miseはhost Node 24.21.0の固定とnpmタスクの入口。DockerfileはNode image、CIはsetup-nodeで同じRuntimeを固定し、miseを実行しない。新しい依存・migrationツール・cloudリソースは追加しない。migration待ちが長くなる運用や複数配備単位が必要になった場合は、外部migration jobへの分離を再検討する。公開環境のDDL実行方針・権限設計は#83のレビューで決めるため、自動migrationはComposeのcommand上書きでローカル経路だけへ接続する。imageの既定CMDは`node apps/api/dist/server.js`で、直接使用する場合は事前にmigrationを成功させる必要がある。
+
+Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.github/workflows/application.yml)。空のenv-file/別project/合成DBで起動・反復・restart、履歴不一致/設定不足の配信抑止、API/SPA/認証、正常終了、volumeとデータ保持を確認する。既存runnerのtransaction rollback・lock待ちは[回帰](../apps/api/tests/migrate.test.ts)・[pool責務テスト](../apps/api/tests/pool-responsibility.test.ts)で確認する。実行結果は#130/PRへ記録し、テストコードの存在を実行済み証拠としない。
 
 ### 2026-10-06のmigration方式（#74）
 
@@ -543,7 +559,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | D-20 | 2026-09-30 | DECIDED（現行の共通prior。回答由来案はD-26でOPEN） | [事前分布をBeta(2,2)とする範囲と変更案](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
-| D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74) |
+| D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74)。既存方式の[Docker一式起動補完](#docker一式起動の補完130)は#130でレビュー |
 | D-24 | 2026-09-30 → 2026-10-03（2026-10-06実装） | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24)。[#74で版固定、#75で実装](#2026-10-06の認証実装75)。公開HTTPS・運用担当は残条件 |
 | D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
 | D-26 | 2026-10-05 | OPEN（R-11 Scope・分担は採択済み、具体契約は未採択） | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
