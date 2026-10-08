@@ -167,7 +167,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   }
 
   return (
-    <div className="fr fr-page">
+    <div className="fr fr-page fr-page--today">
       <PageTitle title={recordGoal?.title} />
       <AppBar
         title={recordGoal?.title ?? ''}
@@ -178,6 +178,16 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
         }
         trailing={goal ? <GoalMenu goalId={goalId} onCorrectYesterday={startYesterdayCorrection} /> : undefined}
       />
+      {/* デスクトップ幅では上のバーの代わりに「Goal一覧 / Goal名」とメニューを出す（デザイン Desk-today） */}
+      <nav className="fr-today__desknav" aria-label={todayCopy.breadcrumb}>
+        <Link to="/goals" className="fr-btn fr-btn--text fr-today__crumb">
+          <Icon name="back" size={18} />
+          {todayCopy.breadcrumbTrail(recordGoal?.title ?? '')}
+        </Link>
+        {goal ? <GoalMenu goalId={goalId} onCorrectYesterday={startYesterdayCorrection} /> : null}
+      </nav>
+      {/* スマートフォン幅では中身をそのまま縦に並べ、デスクトップ幅では左右2列にする（today.css） */}
+      <div className="fr-today-layout">
       {yesterdayArea}
 
       {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
@@ -232,6 +242,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
           }}
         />
       ) : null}
+      </div>
     </div>
   );
 }
@@ -282,8 +293,10 @@ function TodayContent({
       return (
         <>
           {changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} unit={unit} onChange={onChange} /> : null)}
-          <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
-          {progress}
+          <div className="fr-today__right">
+            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
+            {progress}
+          </div>
         </>
       );
     case 'forecast':
@@ -301,8 +314,10 @@ function TodayContent({
               </Link>
             ) : null}
           </section>
-          <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
-          {progress}
+          <div className="fr-today__right">
+            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
+            {progress}
+          </div>
         </>
       );
     default:

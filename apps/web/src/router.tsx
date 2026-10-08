@@ -1,6 +1,7 @@
 import { createRootRoute, createRoute, createRouter, Outlet, redirect } from '@tanstack/react-router';
 import { authSearch } from './auth/redirect.ts';
 import { checkSession, SessionUnreachableError } from './auth/session.ts';
+import { AppShell } from './routes/AppShell.tsx';
 import { AuthPage } from './routes/AuthPage.tsx';
 import { HealthPage } from './routes/HealthPage.tsx';
 import { Home } from './routes/Home.tsx';
@@ -75,7 +76,8 @@ const appLayout = createRoute({
     if (session.kind === 'signed-out') throw redirect({ to: '/login', search: { redirect: location.href }, replace: true });
     if (session.kind === 'unreachable') throw new SessionUnreachableError();
   },
-  component: Outlet,
+  // デスクトップ幅の上のバー（アプリ名とアカウント）を出す外側
+  component: AppShell,
 });
 
 const goalsRoute = createRoute({ getParentRoute: () => appLayout, path: '/goals', component: GoalListPage });

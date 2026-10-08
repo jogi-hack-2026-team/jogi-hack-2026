@@ -46,6 +46,8 @@ export const todayCopy = {
   changeCurrent: (record: string) => `いまの記録：${record}`,
   // Goalのメニュー（デザインキャンバス D1・P3）
   goalMenu: 'Goalのメニュー',
+  breadcrumb: '現在の場所',
+  breadcrumbTrail: (title: string) => `Goal一覧 / ${title}`,
   menuEdit: 'Goalを編集',
   menuCorrectYesterday: '昨日の記録を訂正',
   // 今日から記録を始めたGoal（デザインキャンバス E4、Product Spec P-14の画面文言）

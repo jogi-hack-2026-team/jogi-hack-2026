@@ -57,3 +57,9 @@
   font-weight: 700;
   color: var(--fr-warn);
 }
+.fr-account__email {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

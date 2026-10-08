@@ -368,3 +368,70 @@
   font-size: var(--fr-fs-section);
   font-weight: 700;
 }
+
+/*
+ * デスクトップ幅（デザイン Desk-today）。スマートフォン幅では .fr-today-layout と .fr-today__right を箱にせず（display: contents）、
+ * これまでどおり縦に並べて記録の2択を下に固定する。デスクトップ幅では左の列に問い・数字・記録の2択、右の列に見通しと積み上げを置く。
+ */
+.fr-today__desknav {
+  display: none;
+}
+.fr-today-layout,
+.fr-today__right {
+  display: contents;
+}
+@media (min-width: 960px) {
+  .fr-page--today {
+    max-width: 1152px;
+    padding: var(--fr-space-4) var(--fr-space-4) var(--fr-space-8);
+  }
+  .fr-page--today > .fr-appbar {
+    display: none;
+  }
+  .fr-today__desknav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--fr-space-3);
+  }
+  .fr-today__crumb {
+    padding: 0 var(--fr-space-1);
+  }
+  .fr-today-layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 1fr) minmax(0, 1.45fr);
+    /* 左の列の行は中身の高さだけにし、右の列の高さの余りは最後の行で受ける（左の要素の間を空けない） */
+    grid-template-rows: repeat(8, auto) 1fr;
+    column-gap: var(--fr-space-8);
+    align-items: start;
+  }
+  .fr-today-layout > * {
+    grid-column: 1;
+    min-width: 0;
+  }
+  .fr-today-layout > .fr-today__right {
+    display: flex;
+    flex-direction: column;
+    grid-column: 2;
+    grid-row: 1 / -1;
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-dialog);
+    overflow: hidden;
+  }
+  /* 達成済みなど右の列がないときは1列 */
+  .fr-today-layout:not(:has(> .fr-today__right)) {
+    grid-template-columns: minmax(0, 40rem);
+    justify-content: center;
+  }
+  .fr-today-layout > .fr-today__top {
+    padding: var(--fr-space-4) 0 var(--fr-gutter);
+  }
+  /* 記録の2択は下に固定せず、左の列の中に置く */
+  .fr-today-layout > .fr-actionbar {
+    position: static;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 0;
+    background: none;
+  }
+}

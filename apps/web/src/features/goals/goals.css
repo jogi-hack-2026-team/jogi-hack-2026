@@ -225,3 +225,42 @@
   font-size: var(--fr-fs-help);
   line-height: 1.75;
 }
+
+/* デスクトップ幅（デザイン Desk-home）：上のバーは画面全体のもの（AppShell）を使い、見出しの右に「Goalを追加」、一覧は角丸の箱 */
+.fr-goals__add-top {
+  display: none;
+}
+@media (min-width: 960px) {
+  .fr-page--list {
+    max-width: 840px;
+    padding: var(--fr-space-4) var(--fr-space-4) var(--fr-space-8);
+  }
+  .fr-page--list > .fr-appbar {
+    display: none;
+  }
+  .fr-goals__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--fr-space-4);
+    flex-wrap: wrap;
+  }
+  .fr-goals__head .fr-goals__top {
+    padding: var(--fr-space-4) 0;
+  }
+  .fr-goals__add-top {
+    display: inline-flex;
+    margin-bottom: var(--fr-space-4);
+  }
+  .fr-goals__add-bottom {
+    display: none;
+  }
+  .fr-page--list .fr-goals__list {
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-dialog);
+    overflow: hidden;
+  }
+  .fr-page--list .fr-goals__row:last-child {
+    border-bottom: 0;
+  }
+}

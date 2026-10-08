@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { todayCopy } from '../../copy/today.ts';
 import { Icon } from '../../ui/components/Icon.tsx';
 
@@ -13,6 +13,8 @@ export function GoalMenu({ goalId, onCorrectYesterday }: { goalId: string; onCor
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  // スマートフォン幅とデスクトップ幅で別の場所に置くので、id は置き場所ごとに分ける
+  const menuId = useId();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -47,13 +49,13 @@ export function GoalMenu({ goalId, onCorrectYesterday }: { goalId: string; onCor
         aria-label={todayCopy.goalMenu}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-controls="fr-goal-menu"
+        aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="more" />
       </button>
       {open ? (
-        <div ref={menuRef} id="fr-goal-menu" className="fr-menu__list" role="menu" aria-label={todayCopy.goalMenu}>
+        <div ref={menuRef} id={menuId} className="fr-menu__list" role="menu" aria-label={todayCopy.goalMenu}>
           <Link to="/goals/$goalId/edit" params={{ goalId }} role="menuitem" className="fr-menu__item" onClick={() => setOpen(false)}>
             <Icon name="edit" size={20} />
             {todayCopy.menuEdit}

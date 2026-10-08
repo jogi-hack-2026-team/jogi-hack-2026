@@ -33,14 +33,23 @@ export function GoalListPage() {
   const query = useQuery({ queryKey: goalKeys.list(), queryFn: ({ signal }) => goalsHttp.listGoals(signal), ...fetchPolicy });
 
   return (
-    <div className="fr fr-page">
+    <div className="fr fr-page fr-page--list">
       <PageTitle title={c.listTitle} />
       {/* 上のバー：アプリ名とアカウント（デザイン B-home・B-account） */}
       <AppBar title={appCopy.name} trailing={<AccountMenu />} />
-      <section className="fr-goals__top">
-        <p className="fr-goals__date">{longDate(browserToday())}</p>
-        <h1 className="fr-goals__heading">{c.listTitle}</h1>
-      </section>
+      <div className="fr-goals__head">
+        <section className="fr-goals__top">
+          <p className="fr-goals__date">{longDate(browserToday())}</p>
+          <h1 className="fr-goals__heading">{c.listTitle}</h1>
+        </section>
+        {/* デスクトップ幅では「Goalを追加」を見出しの右に置く（デザイン Desk-home）。Goal があるときだけ */}
+        {query.data && query.data.length > 0 ? (
+          <Link to="/goals/new" className="fr-btn fr-btn--secondary fr-goals__add-top">
+            <Icon name="plus" size={18} />
+            {c.add}
+          </Link>
+        ) : null}
+      </div>
 
       {query.isPending ? (
         <ListLoading />
@@ -57,7 +66,7 @@ export function GoalListPage() {
               <GoalRow key={goal.id} goal={goal} />
             ))}
           </ul>
-          <div className="fr-goals__pad">
+          <div className="fr-goals__pad fr-goals__add-bottom">
             <Link to="/goals/new" className="fr-btn fr-btn--secondary fr-btn--block">
               <Icon name="plus" size={18} />
               {c.add}
