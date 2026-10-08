@@ -92,13 +92,15 @@ export function editLocks(s: {
   todayChoicesShown: boolean;
   todaySaving: boolean;
   yesterdayEditing: boolean;
-}): { todayAmountEditing: boolean; yesterdayLocked: boolean; todayLocked: boolean } {
+}): { todayAmountEditing: boolean; yesterdayLocked: boolean; todayLocked: boolean; cancelChangeLocked: boolean } {
   // 量の入力は2択を出しているときだけ開いている（別のタブで記録されて2択が消えたら、昨日を止めたままにしない）
   const todayAmountEditing = s.todayAmountEditing && s.todayChoicesShown;
   return {
     todayAmountEditing,
     yesterdayLocked: s.changingToday || todayAmountEditing || s.todaySaving,
     todayLocked: s.yesterdayEditing,
+    // 今日の保存中は「変更をやめる」で選び直しを閉じない。閉じて保存の状態を消すと、遅れて届いた失敗と再試行を見失う
+    cancelChangeLocked: s.todaySaving,
   };
 }
 

@@ -135,7 +135,9 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   };
 
   // 今日の記録の選び直しをやめる（上部の「変更をやめる」、デザイン D5-change）
+  // 保存中はやめない。保存の状態を消すと、遅れて届いた失敗と「もう一度保存」を見失う（ボタンも押せなくしている）
   const cancelChange = () => {
+    if (locks.cancelChangeLocked) return;
     focusAfterSave.current = true;
     todaySaver.reset();
     setChanging(false);
@@ -239,6 +241,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
             today={snapshot.today}
             logs={snapshot.logs}
             changing={changing}
+            cancelChangeDisabled={locks.cancelChangeLocked}
             onCancelChange={cancelChange}
             onChange={startTodayChange}
           />
@@ -281,6 +284,7 @@ function TodayContent({
   today,
   logs,
   changing,
+  cancelChangeDisabled,
   onChange,
   onCancelChange,
 }: {
@@ -289,6 +293,8 @@ function TodayContent({
   logs: Log[];
   /** 今日の記録を選び直している（上部を「今日の記録を変更」に切り替える、デザイン D5-change）。 */
   changing: boolean;
+  /** 今日の保存中は「変更をやめる」を押せなくする。 */
+  cancelChangeDisabled: boolean;
   onChange: () => void;
   onCancelChange: () => void;
 }) {
@@ -303,7 +309,9 @@ function TodayContent({
     ) : null;
   const outlookTitle = todayCopy.outlookTitle(goal.totalRequired, unit);
   const changeHeader =
-    changing && today.todayLog ? <ChangeHeader log={today.todayLog} sessionAmount={goal.sessionAmount} unit={unit} onCancel={onCancelChange} /> : null;
+    changing && today.todayLog ? (
+      <ChangeHeader log={today.todayLog} sessionAmount={goal.sessionAmount} unit={unit} cancelDisabled={cancelChangeDisabled} onCancel={onCancelChange} />
+    ) : null;
 
   switch (view.kind) {
     case 'completed':

@@ -12,8 +12,6 @@ export const goalsCopy = {
     SKIPPED: '今日：休んだ',
     UNRECORDED: '今日：まだ記録していません',
   },
-  /** 一覧の2行目。Goal API は現在の累計を返さないため、設定（1回の量と総量）を出す。 */
-  settingsLine: (sessionAmount: string, totalRequired: string) => `1回の量 ${sessionAmount}・総量 ${totalRequired}`,
   /** 一覧の累計の進捗バーの読み上げ名（デザイン B-home）。 */
   progressLabel: (title: string) => `${title}の累計`,
   empty: {
