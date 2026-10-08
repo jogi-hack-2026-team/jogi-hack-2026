@@ -8,6 +8,7 @@ import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
+import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
@@ -143,6 +144,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
   return (
     <div className="fr fr-page">
+      <PageTitle title={recordGoal?.title} />
       <AppBar
         title={recordGoal?.title ?? ''}
         leading={
@@ -317,6 +319,7 @@ function FetchError({ error, onRetry, canRecordToday }: { error: unknown; onRetr
 function SignedOutPage() {
   return (
     <div className="fr fr-page">
+      <PageTitle title={todayCopy.signedOutTitle} />
       <AppBar
         title=""
         leading={
@@ -370,6 +373,7 @@ function SavedButStale({ onRetry }: { onRetry: () => void }) {
 function NotFound() {
   return (
     <div className="fr fr-page">
+      <PageTitle title={todayCopy.notFoundTitle} />
       <AppBar title="" />
       <div className="fr-today__top">
         <h1 className="fr-today__question">{todayCopy.notFoundTitle}</h1>
@@ -397,7 +401,7 @@ function SignedOut() {
       <ErrorPanel
         title={todayCopy.signedOutTitle}
         action={
-          <Link to="/login" search={{ redirect: location.href }} className="fr-btn fr-btn--secondary">
+          <Link to="/login" search={{ redirect: location.href, reason: 'expired' }} className="fr-btn fr-btn--secondary">
             {todayCopy.signIn}
           </Link>
         }

@@ -1,29 +1,12 @@
+/*
+ * 全体の基本。画面の見た目は .fr（ui/tokens.css）の中で決め、ここでは余白の初期化と背景だけを決める。
+ * 以前の開発用の枠（Layout の見出し・ナビ）用の指定は #146 で外した。
+ */
 :root {
-  font-family: system-ui, sans-serif;
   color-scheme: light dark;
 }
 
-main {
-  max-width: 40rem;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
-nav a {
-  margin-right: 0.75rem;
-}
-
-form label {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-form input {
-  font: inherit;
-  padding: 0.25rem 0.5rem;
-}
-
-[role='alert']:empty {
-  display: none;
+body {
+  margin: 0;
+  background: Canvas;
 }

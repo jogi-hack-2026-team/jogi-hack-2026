@@ -10,6 +10,7 @@ import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
 import { unitLabel } from '../../copy/today.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
+import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ConfirmDialog } from '../../ui/components/ConfirmDialog.tsx';
 import { Field, fieldAria, NumberInput, SegmentedControl, SelectInput, TextInput } from '../../ui/components/FormField.tsx';
@@ -87,6 +88,7 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
 function FormShell({ title, body }: { title: string; body: ReactNode }) {
   return (
     <div className="fr fr-page">
+      <PageTitle title={title} />
       <AppBar title={title} leading={<CloseLink />} />
       <div className="fr-goals__pad">{body}</div>
     </div>
@@ -262,6 +264,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
 
   return (
     <div className="fr fr-page">
+      <PageTitle title={mode === 'create' ? f.createTitle : f.editTitle} />
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
       <form ref={formRef} className="fr-goalform" noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">

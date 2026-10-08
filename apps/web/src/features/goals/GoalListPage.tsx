@@ -2,12 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Goal } from '@contracts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
+import { appCopy } from '../../copy/app.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
 import { unitLabel } from '../../copy/today.ts';
+import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
+import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { StatusBadge } from '../../ui/components/StatusBadge.tsx';
 import { Band } from '../../ui/components/Section.tsx';
+import { AccountMenu } from '../account/AccountMenu.tsx';
 import { fetchPolicy } from '../today/fetch-policy.ts';
 import { LoadErrorPanel } from './GoalStates.tsx';
 import '../../ui/tokens.css';
@@ -30,6 +34,9 @@ export function GoalListPage() {
 
   return (
     <div className="fr fr-page">
+      <PageTitle title={c.listTitle} />
+      {/* 上のバー：アプリ名とアカウント（デザイン B-home・B-account） */}
+      <AppBar title={appCopy.name} trailing={<AccountMenu />} />
       <section className="fr-goals__top">
         <p className="fr-goals__date">{longDate(browserToday())}</p>
         <h1 className="fr-goals__heading">{c.listTitle}</h1>

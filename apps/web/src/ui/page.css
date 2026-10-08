@@ -4,6 +4,8 @@
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  /* 既存の Layout（styles.css の main）の左右 1rem の余白を打ち消し、帯を画面の端まで広げる。Layout の余白を変えたらここも合わせる */
-  margin: 0 calc(-1 * var(--fr-space-4));
+  /* スマートフォンの1列のデザインを、広い画面では中央の列として出す（デスクトップ幅の2列は別に用意する） */
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
 }
