@@ -76,6 +76,12 @@ const paths = {
       <path d="M6 12h10" />
     </>
   ),
+  calendar: (
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M4 10h16M9 3v4M15 3v4" />
+    </>
+  ),
   alert: (
     <>
       <circle cx="12" cy="12" r="9" />

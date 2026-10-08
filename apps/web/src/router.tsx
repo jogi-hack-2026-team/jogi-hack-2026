@@ -9,6 +9,7 @@ import { NotFoundPage, RouteErrorPage, RoutePendingPage } from './routes/RouteSt
 import { TodayPage } from './features/today/TodayPage.tsx';
 import { GoalCreatePage, GoalEditPage } from './features/goals/GoalFormPage.tsx';
 import { GoalListPage } from './features/goals/GoalListPage.tsx';
+import { HistoryPage } from './features/history/HistoryPage.tsx';
 
 /*
  * ルートの構成（#146）。
@@ -21,6 +22,7 @@ import { GoalListPage } from './features/goals/GoalListPage.tsx';
  *     /goals/new               Goalの作成
  *     /goals/$goalId           Today
  *     /goals/$goalId/edit      Goalの編集
+ *     /goals/$goalId/history   記録の履歴（カレンダー）
  *   /health                    接続確認（開発用。画面からはリンクしない）
  *   定義していないURL・読み込みの失敗・読込中は、ルーター全体の既定の画面で扱う
  *
@@ -102,12 +104,21 @@ const todayRoute = createRoute({
   },
 });
 
+const historyRoute = createRoute({
+  getParentRoute: () => appLayout,
+  path: '/goals/$goalId/history',
+  component: function HistoryRoute() {
+    const { goalId } = historyRoute.useParams();
+    return <HistoryPage goalId={goalId} />;
+  },
+});
+
 const healthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/health', component: HealthPage });
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   authLayout.addChildren([loginRoute, registerRoute]),
-  appLayout.addChildren([goalsRoute, goalNewRoute, goalEditRoute, todayRoute]),
+  appLayout.addChildren([goalsRoute, goalNewRoute, goalEditRoute, todayRoute, historyRoute]),
   healthRoute,
 ]);
 

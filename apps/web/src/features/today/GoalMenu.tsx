@@ -60,6 +60,10 @@ export function GoalMenu({ goalId, onCorrectYesterday }: { goalId: string; onCor
             <Icon name="edit" size={20} />
             {todayCopy.menuEdit}
           </Link>
+          <Link to="/goals/$goalId/history" params={{ goalId }} role="menuitem" className="fr-menu__item" onClick={() => setOpen(false)}>
+            <Icon name="calendar" size={20} />
+            {todayCopy.menuHistory}
+          </Link>
           {onCorrectYesterday ? (
             <button
               type="button"

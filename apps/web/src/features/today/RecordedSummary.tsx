@@ -53,9 +53,11 @@ export function AchievedPanel({ done, total, unit }: { done: number; total: numb
 
 /** 達成済みの記録開始日・届いた日と、一覧へ戻る（デザイン D6 の下部）。 */
 export function AchievedFacts({
+  goalId,
   recordStartDate,
   reached,
 }: {
+  goalId: string;
   recordStartDate: string;
   /** 届いた日。null は記録開始前（初期量）で届いていた、undefined は記録からたどれなかった。 */
   reached: string | null | undefined;
@@ -74,6 +76,10 @@ export function AchievedFacts({
           </div>
         ) : null}
       </dl>
+      <Link to="/goals/$goalId/history" params={{ goalId }} className="fr-btn fr-btn--text">
+        <Icon name="calendar" size={18} />
+        {todayCopy.historyLink}
+      </Link>
       <Link to="/goals" className="fr-btn fr-btn--secondary fr-btn--block">
         {todayCopy.backToList}
       </Link>

@@ -19,6 +19,7 @@ import { RecordChoiceBar } from '../logs/RecordChoiceBar.tsx';
 import { YesterdayPrompt } from '../logs/YesterdayPrompt.tsx';
 import { CoreMetric } from './CoreMetric.tsx';
 import { GoalMenu } from './GoalMenu.tsx';
+import { RecentDays } from '../history/RecentDays.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
@@ -112,6 +113,14 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
         }
       : undefined;
 
+  // 記録済みの今日を選び直す（「記録を変更」と直近7日の帯の今日から）
+  const startTodayChange = () => {
+    if (yesterdayEdit) return;
+    setAmountEditing(false);
+    setChanging(true);
+    setTodayEditDate(today?.today);
+  };
+
   // 今日の記録の選び直しをやめる（上部の「変更をやめる」、デザイン D5-change）
   const cancelChange = () => {
     todaySaver.reset();
@@ -188,6 +197,17 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       </nav>
       {/* スマートフォン幅では中身をそのまま縦に並べ、デスクトップ幅では左右2列にする（today.css） */}
       <div className="fr-today-layout">
+      {/* 直近7日の帯（デザイン P1）。押せるのは記録を変えられる今日と昨日だけ */}
+      {goal && today && snapshot ? (
+        <RecentDays
+          today={today.today}
+          yesterday={today.yesterday}
+          recordStartDate={goal.recordStartDate}
+          logs={snapshot.logs}
+          onYesterday={startYesterdayCorrection}
+          onToday={today.todayLog && !changing && !yesterdayEdit ? startTodayChange : undefined}
+        />
+      ) : null}
       {yesterdayArea}
 
       {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
@@ -206,12 +226,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
             logs={snapshot.logs}
             changing={changing}
             onCancelChange={cancelChange}
-            onChange={() => {
-              if (yesterdayEdit) return;
-              setAmountEditing(false);
-              setChanging(true);
-              setTodayEditDate(today?.today);
-            }}
+            onChange={startTodayChange}
           />
         </ForecastBoundary>
       ) : (
@@ -286,7 +301,7 @@ function TodayContent({
             <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} unit={unit} onChange={onChange} />
           ) : null}
           {progress}
-          <AchievedFacts recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
+          <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
         </>
       );
     case 'today-recorded':

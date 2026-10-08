@@ -47,6 +47,18 @@ export const todayCopy = {
   // Goalのメニュー（デザインキャンバス D1・P3）
   goalMenu: 'Goalのメニュー',
   breadcrumb: '現在の場所',
+  menuHistory: '記録の履歴',
+  historyLink: '記録の履歴を見る',
+  // 記録の履歴（デザインキャンバス F1）と直近7日の帯（P1）
+  historyTitle: '記録の履歴',
+  backToGoal: 'Goalへ戻る',
+  prevMonth: '前の月',
+  nextMonth: '次の月',
+  monthLabel: (month: string) => `${Number(month.slice(0, 4))}年${Number(month.slice(5, 7))}月`,
+  dayStateLabel: { done: 'やった', rest: '休んだ', unrecorded: '未記録', outside: '' } as const,
+  legendUnrecorded: '未記録（休んだとは別）',
+  recentDays: '直近7日の記録',
+  recentToday: '今日',
   breadcrumbTrail: (title: string) => `Goal一覧 / ${title}`,
   menuEdit: 'Goalを編集',
   menuCorrectYesterday: '昨日の記録を訂正',
