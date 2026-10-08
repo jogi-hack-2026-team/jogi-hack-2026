@@ -6,6 +6,8 @@ import { AuthForm } from './routes/AuthForm.tsx';
 import { HealthPage } from './routes/HealthPage.tsx';
 import { Home } from './routes/Home.tsx';
 import { TodayPage } from './features/today/TodayPage.tsx';
+import { GoalCreatePage, GoalEditPage } from './features/goals/GoalFormPage.tsx';
+import { GoalListPage } from './features/goals/GoalListPage.tsx';
 
 function Layout() {
   const session = authClient.useSession();
@@ -87,11 +89,25 @@ const registerRoute = createRoute({
 
 const healthRoute = createRoute({ getParentRoute: () => rootRoute, path: '/health', component: HealthPage });
 
-// Goal の画面は実APIを使うので、未ログインはホームと同じくログイン画面へ送る。
+// Goal の画面（一覧・作成・編集は#78、Todayは#81）は実APIを使うので、未ログインはホームと同じくログイン画面へ送る。
 const requireSignIn = async ({ location }: { location: { href: string } }) => {
   const session = await authClient.getSession();
   if (!session.data) throw redirect({ to: '/login', search: { redirect: location.href } });
 };
+
+const goalsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/goals', beforeLoad: requireSignIn, component: GoalListPage });
+
+const goalNewRoute = createRoute({ getParentRoute: () => rootRoute, path: '/goals/new', beforeLoad: requireSignIn, component: GoalCreatePage });
+
+const goalEditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/goals/$goalId/edit',
+  beforeLoad: requireSignIn,
+  component: function GoalEditRoute() {
+    const { goalId } = goalEditRoute.useParams();
+    return <GoalEditPage goalId={goalId} />;
+  },
+});
 
 // Today Decision（#81）。
 const todayRoute = createRoute({
@@ -104,7 +120,7 @@ const todayRoute = createRoute({
   },
 });
 
-export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute, loginRoute, registerRoute, healthRoute, todayRoute]) });
+export const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute, loginRoute, registerRoute, healthRoute, todayRoute, goalsRoute, goalNewRoute, goalEditRoute]) });
 
 declare module '@tanstack/react-router' {
   interface Register {

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { Icon, type IconName } from './Icon.tsx';
 import { Spinner } from './Spinner.tsx';
 import './Button.css';
@@ -12,6 +12,8 @@ type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'style'
   busy?: boolean;
   /** 横幅いっぱいに広げる。 */
   block?: boolean;
+  /** フォーカスを移すときに使う（確認ダイアログの取り消しボタンなど）。 */
+  ref?: Ref<HTMLButtonElement>;
   children: ReactNode;
 };
 
