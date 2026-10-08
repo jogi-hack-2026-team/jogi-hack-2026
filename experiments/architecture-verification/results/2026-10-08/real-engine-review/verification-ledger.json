@@ -1,0 +1,87 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "verificationOnly": true,
+  "performanceMeasured": false,
+  "at": "2026-10-08T00:33:28.204Z",
+  "node": "v24.21.0",
+  "platform": "win32-x64",
+  "candidateBaseHead": "0d59f224539976d44db0ae42820eb1e351b115ab",
+  "candidateDiffFile": "verification.candidate.diff",
+  "candidateDiffBytes": 22953,
+  "candidateDiffSha256": "fda29f8203bf7bd7ac485fdd62b15cd21d6cfde9b99c69c0fea56cb5cc414ee8",
+  "candidateUntrackedFiles": "",
+  "engineRepositoryHead": "9ee0d1a40b879bd6ac6f5210e8881b97102dff41",
+  "engineSourceTree": "5fb64f192b965b22b4597c9ace473e0e7bbe150f",
+  "checks": [
+    {
+      "name": "engine-tests",
+      "command": "node.exe <fixed-runtime>/npm-cli.js run test --workspace=@futureroi/prediction",
+      "cwd": "separate main reference checkout",
+      "startedAt": "2026-10-08T00:33:28.507Z",
+      "endedAt": "2026-10-08T00:33:31.860Z",
+      "exitCode": 0,
+      "signal": null,
+      "log": "engine-tests.log"
+    },
+    {
+      "name": "candidate-typecheck",
+      "command": "node.exe <fixed-runtime>/npm-cli.js run typecheck",
+      "cwd": "candidate",
+      "startedAt": "2026-10-08T00:33:31.864Z",
+      "endedAt": "2026-10-08T00:33:46.551Z",
+      "exitCode": 0,
+      "signal": null,
+      "log": "candidate-typecheck.log"
+    },
+    {
+      "name": "candidate-regression",
+      "command": "node.exe <fixed-runtime>/npm-cli.js run verify:real-regression",
+      "cwd": "candidate",
+      "startedAt": "2026-10-08T00:33:46.553Z",
+      "endedAt": "2026-10-08T00:33:49.863Z",
+      "exitCode": 0,
+      "signal": null,
+      "log": "candidate-regression.log"
+    },
+    {
+      "name": "ledger-regression",
+      "command": "pwsh.exe -NoProfile -File verify/measurement-ledger.test.ps1",
+      "cwd": "candidate",
+      "startedAt": "2026-10-08T00:33:49.865Z",
+      "endedAt": "2026-10-08T00:33:51.031Z",
+      "exitCode": 0,
+      "signal": null,
+      "log": "ledger-regression.log"
+    },
+    {
+      "name": "diff-transfer-regression",
+      "command": "pwsh.exe -NoProfile -File verify/diff-evidence.test.ps1",
+      "cwd": "candidate",
+      "startedAt": "2026-10-08T00:33:51.034Z",
+      "endedAt": "2026-10-08T00:33:52.471Z",
+      "exitCode": 0,
+      "signal": null,
+      "log": "diff-transfer-regression.log"
+    },
+    {
+      "name": "foundation",
+      "command": "pwsh.exe -NoProfile -File scripts/check-foundation.ps1",
+      "cwd": "PR checkout root",
+      "startedAt": "2026-10-08T00:33:52.472Z",
+      "endedAt": "2026-10-08T00:34:05.110Z",
+      "exitCode": 1,
+      "signal": null,
+      "log": "foundation.log"
+    },
+    {
+      "name": "foundation-final",
+      "command": "pwsh -NoProfile -File scripts/check-foundation.ps1",
+      "startedAt": "2026-10-08T00:36:02.377Z",
+      "endedAt": "2026-10-08T00:36:10.427Z",
+      "exitCode": 0,
+      "log": "foundation-final.log"
+    }
+  ],
+  "initialFoundationFailure": "Git whitespace validation interpreted opaque diff payload syntax as code whitespace. Diff payloads are binary Git attributes; displayed logs have trailing whitespace normalized. Original failure retained.",
+  "finalVerificationExitCode": 0
+}

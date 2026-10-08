@@ -1,0 +1,18 @@
+✔ explicit reference engine path is used; no checkout-local dist fallback (0.9067ms)
+✔ future DONE uses actual progress and today state once (unrecorded, DONE, SKIPPED, completed) (2.099ms)
+✔ fraction 10.5 and unsafe integers are rejected for every quantity; accumulated overflow is rejected (1.1537ms)
+✔ real worker rejects Engine date exception and fractional input, then computes a normal job (83.5069ms)
+✔ worker exit fails closed: running + queued + later jobs all reject (55.0715ms)
+✔ worker error fails closed: running + queued + later jobs all reject (51.2054ms)
+✔ malformed envelope fails closed: running + queued + later jobs all reject (50.8198ms)
+✔ postMessage clone failure and close settle running/queued promises; close is idempotent (16.2533ms)
+✔ late warmup completions cannot enter measured cohort; success and failures reconcile per kind (1.1226ms)
+✔ HTTP real-mode invalid inputs return 422; worker death returns 503 while health stays available (302.5126ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1066.3875

@@ -1,0 +1,24 @@
+warning: in the working copy of 'experiments/architecture-verification/candidate-1.7.7/README.md', LF will be replaced by CRLF the next time Git touches it
+2026-10-07T11:40:28.092Z ERROR [Better Auth]: Database schema mismatch
+
+  Missing tables
+    user, session, account, verification, rateLimit
+
+  help: Run `npx auth migrate` to add the missing tables and columns.
+placeholder inline  4/s | crud p95     11ms | session p95   16.4ms | today p95   13.3ms (unfinished 0) | compute max      -ms | loop max   31.6ms | cpu 0.12 | errors 0
+real        inline  1/s | crud p95    279ms | session p95  236.1ms | today p95  410.2ms (unfinished 0) | compute max 398.72ms | loop max 409.99ms | cpu 0.35 | errors 0
+real        worker  1/s | crud p95      9ms | session p95     14ms | today p95  442.7ms (unfinished 0) | compute max 396.89ms | loop max  27.66ms | cpu 0.28 | errors 0
+real        inline  4/s | crud p95  365.1ms | session p95  344.5ms | today p95  409.4ms (unfinished 1) | compute max 404.75ms | loop max 409.73ms | cpu 0.86 | errors 0
+real        worker  4/s | crud p95   10.1ms | session p95   17.3ms | today p95  445.1ms (unfinished 1) | compute max 468.45ms | loop max  30.13ms | cpu 0.91 | errors 0
+real        inline 10/s | crud p95   5798ms | session p95 9272.9ms | today p95 6016.3ms (unfinished 33) | compute max 428.34ms | loop max 737.67ms | cpu 1.07 | errors 0
+real        worker 10/s | crud p95    7.8ms | session p95    9.2ms | today p95  410.4ms (unfinished 1) | compute max 374.34ms | loop max  27.66ms | cpu 1.64 | errors 0
+PASS  E0  T-14 on this runtime: every required real predict call is under 500 ms (engine benchmark, unmodified)
+PASS  E1  wiring: /today matches independent DB oracle, today unrecorded
+PASS  E2  no request failed in any scenario, including baseline
+PASS  E3  every measured /today matches its independent oracle and entry point, covering all three sizes
+PASS  E4  in-service compute: every real predict call measured inside the server is under 500 ms
+INFO  E5  mixed-load runs (baseline without compute, then real engine inline vs worker pool)
+PASS  E6  all cohorts settle: sent=success+failure per kind; server compute count equals measured today successes
+PASS  R11  public predictWithQuestionPrior measured separately with strength-4 mapping
+
+verification-2 mixed load with the real prediction engine: 7 pass, 0 fail, 1 info -> results/post-fix/v8-predictWithQuestionPrior-20261007T114010Z-run1.json

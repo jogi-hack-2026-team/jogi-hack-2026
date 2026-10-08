@@ -1,0 +1,17 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "at": "2026-10-08T00:30:55.215Z",
+  "command": "git diff 93a4efd 0d59f22 -- experiments/architecture-verification/candidate-1.7.7/README.md",
+  "raw": {
+    "file": "README-reconstructed.diff",
+    "bytes": 2730,
+    "sha256": "054fefa4c2cde97773eb80ef18401b0c09b3451f94e4bb02b700e34fd1e60bfb"
+  },
+  "historicalTrim": {
+    "file": "README-reconstructed-trimmed.diff",
+    "bytes": 2729,
+    "sha256": "c7b029bc4adb336f800a3c69cd4f4474c1591227d8ba2d2ed42f2c5828d32644"
+  },
+  "matchesHistoricalRunHash": true,
+  "limitation": "README reconstruction, not recovery of the complete historical working tree."
+}
