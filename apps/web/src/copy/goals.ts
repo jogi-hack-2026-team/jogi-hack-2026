@@ -14,6 +14,8 @@ export const goalsCopy = {
   },
   /** 一覧の2行目。Goal API は現在の累計を返さないため、設定（1回の量と総量）を出す。 */
   settingsLine: (sessionAmount: string, totalRequired: string) => `1回の量 ${sessionAmount}・総量 ${totalRequired}`,
+  /** 一覧の累計の進捗バーの読み上げ名（デザイン B-home）。 */
+  progressLabel: (title: string) => `${title}の累計`,
   empty: {
     title: '最初のGoalをつくりましょう',
     body: '毎日1回、量で表せる行動を1つ登録します。記録がたまると、今日やらなかった場合にゴールが何日遠ざかるかの目安を表示します。',

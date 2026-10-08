@@ -69,23 +69,46 @@ export function GoalListPage() {
   );
 }
 
+/**
+ * 一覧の1行（デザイン B-home）。行全体で Today を開く。編集は Today の上のバーから。
+ * 累計は API の progressDone（Today の予測の累計と同じ数え方）をそのまま出し、FE で計算しない。
+ * 進捗バーは総量を超えたら満杯で止める（数字は超えた値のまま出す、R-08）。
+ */
 function GoalRow({ goal }: { goal: Goal }) {
   const unit = unitLabel(goal.unit);
-  const amount = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
+  const percent = Math.min(100, Math.floor((goal.progressDone / goal.totalRequired) * 100));
   return (
     <li className="fr-goals__row">
       <Link to="/goals/$goalId" params={{ goalId: goal.id }} className="fr-goals__open">
         <span className="fr-goals__row-top">
           <span className="fr-goals__title">{goal.title}</span>
-          <StatusBadge status={badge[goal.todayStatus]} />
+          <span className="fr-goals__row-end">
+            <StatusBadge status={badge[goal.todayStatus]} />
+            <span className="fr-goals__chevron" aria-hidden="true">
+              <Icon name="chevronRight" size={18} />
+            </span>
+          </span>
         </span>
         <span className="fr-goals__row-sub">
           <span>{c.todayStatus[goal.todayStatus]}</span>
-          <span className="fr-goals__amount">{c.settingsLine(amount(goal.sessionAmount), amount(goal.totalRequired))}</span>
+          <span className="fr-goals__amount">
+            {goal.progressDone.toLocaleString('ja-JP')}{' '}
+            <span className="fr-goals__amount-total">
+              / {goal.totalRequired.toLocaleString('ja-JP')}
+              {unit}
+            </span>
+          </span>
         </span>
-      </Link>
-      <Link to="/goals/$goalId/edit" params={{ goalId: goal.id }} className="fr-icon-btn fr-goals__edit" aria-label={`「${goal.title}」を編集`}>
-        <Icon name="edit" size={20} />
+        <span
+          className="fr-goals__track"
+          role="progressbar"
+          aria-label={c.progressLabel(goal.title)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+        >
+          <span className="fr-goals__fill" style={{ width: `${percent}%` }} />
+        </span>
       </Link>
     </li>
   );

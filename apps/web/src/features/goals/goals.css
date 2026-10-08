@@ -47,15 +47,14 @@
   align-items: center;
   gap: var(--fr-space-1);
   border-bottom: 1px solid var(--fr-line);
-  padding-right: var(--fr-space-2);
 }
 .fr-goals__open {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 0 18px var(--fr-gutter-band);
+  gap: 10px;
+  padding: 18px var(--fr-gutter-band);
   color: inherit;
   text-decoration: none;
   min-height: var(--fr-tap);
@@ -80,10 +79,39 @@
   color: var(--fr-ink-2);
 }
 .fr-goals__amount {
+  font-size: var(--fr-fs-body);
+  font-weight: 700;
+  color: var(--fr-ink);
   font-variant-numeric: tabular-nums;
 }
-.fr-goals__edit {
+.fr-goals__amount-total {
+  font-weight: 500;
   color: var(--fr-ink-2);
+}
+.fr-goals__row-end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fr-space-1);
+  flex-shrink: 0;
+}
+.fr-goals__chevron {
+  display: inline-flex;
+  color: var(--fr-ink-2);
+}
+/* 累計の進捗バー（デザイン B-home） */
+.fr-goals__track {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--fr-surface-2);
+  box-shadow: inset 0 0 0 1px var(--fr-line);
+  overflow: hidden;
+}
+.fr-goals__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--fr-rec);
 }
 .fr-goals__row--skeleton {
   flex-direction: column;
