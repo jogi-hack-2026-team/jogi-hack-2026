@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証・Goal・記録・Today APIはローカル実装済みで、Today APIに純粋Engineを結合済みです。Goal・記録・Today画面と公開配置は未完了です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行mainのAPI・Engine・業務画面の実装と、製品受入・公開配置等の残条件は[現在地の読み方](change-map.md#現在地の読み方)を参照します。[保存から予測・表示を追うtrace](change-map.md#コードを読むための短いtrace)もあります。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---

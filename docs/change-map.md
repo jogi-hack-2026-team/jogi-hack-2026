@@ -1,6 +1,65 @@
 # 仕様・実装・確認方法の対応表
 
-現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。**Goal・記録・Today APIはローカル実装済みで、Today APIへ純粋Prediction Engineを結合済み。業務画面と公開配置は未実装。** 下表のパスと[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)は[Repository構成](architecture.md#repository構成)から確認する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
+現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。この対応表は実装を調べる入口で、正式仕様の追加正本ではない。下表のパスと[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)は[Repository構成](architecture.md#repository構成)から確認する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
+
+## 現在地の読み方
+
+2026-10-08のmain `25f473fe` を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
+
+[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)（確認時HEAD `9a87a2c`）の画面・ルート変更とGoal一覧の`progressDone`はこの基準mainに含まれない（確認時は未merge）。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
+
+## コードを読むための短いtrace
+
+### 記録の入力からDB・予測・表示まで
+
+1. [RecordChoiceBar](../apps/web/src/features/logs/RecordChoiceBar.tsx)の選択 → [useSaveLog](../apps/web/src/features/logs/useSaveLog.ts) → [record-log.ts](../apps/web/src/features/logs/record-log.ts)の`toLogPut` → [today-http.ts](../apps/web/src/api/today-http.ts)の`putLog`。初回DONEの量省略はAPIへ任せ、量変更は明示して送る。
+2. `PUT /api/goals/:goalId/logs/:localDate` → [logs/routes.ts](../apps/api/src/logs/routes.ts)の契約・日付検査 → [logs/store.ts](../apps/api/src/logs/store.ts)の`putLog`。本人のGoal行をロックしてからclockを読み、Goalのtimezoneで今日／昨日と開始日を判定する。DONEの省略量はそのGoalの`sessionAmount`で補い、`action_log`の同じGoal・日付を上書きし、commit後に保存行を返す。
+3. PUT成功 → `useSaveLog`が`goalKeys.all`を無効化 → 画面で利用中のGoal・Today・記録を再取得。[useTodayData](../apps/web/src/features/today/useTodayData.ts)が[snapshot.ts](../apps/web/src/features/today/snapshot.ts)の`isSameSnapshot`で照合する。**保存成功は最新表示の成功とは別。** Today・記録の再取得失敗を`refreshFailed`の判定対象とし、[TodayPage](../apps/web/src/features/today/TodayPage.tsx)が保存失敗と分けて知らせる。
+4. 画面の`GET /api/goals/:goalId/today?view=r11` → [prediction/routes.ts](../apps/api/src/prediction/routes.ts) → [loadTodaySnapshot](../apps/api/src/prediction/store.ts)。repeatable readで最初のGoal SELECT（保存回答も含む）を終えてからclockを1回読み、同じDB snapshotの全ログを取得し、commit・接続返却を終える。
+5. [buildR11Today](../apps/api/src/prediction/r11.ts)が保存mappingと実ログを渡す → [engine.ts](../apps/api/src/prediction/engine.ts)の`runQuestionPrediction` → [predictWithQuestionPrior](../packages/prediction/src/question-prior.ts)。`question-prior-adapter-candidate.ts`は名前にcandidateが残るが、現公開wrapperが呼ぶ内部実装であり、未使用の実験として除外しない。queryなしの旧GETは`runPrediction` → `predict`という別入口。
+6. APIの`prediction`・`provenance`・`plan` → [forecast-view.ts](../apps/web/src/features/today/forecast-view.ts)の`toForecastView` → `TodayPage.tsx`内の`TodayContent` → 表示部品。FEは予測を再計算しない。
+
+FEの「整合snapshot」は別GET間の日付・設定・累計・今日のログ・昨日の有無等、**重複するfieldsが一致した組**を指す。`isSameSnapshot`のtrueは全fieldsの一致や同一DB transactionの証明ではない。不一致時は最後に一致した組を保持して取り直す。APIの単一`loadTodaySnapshot`の保証とは分ける。
+
+### 回答revisionの409から再保存まで
+
+1. [GoalFormPage](../apps/web/src/features/goals/GoalFormPage.tsx)は編集開始時のGoalを`baseline`に保持する。[goal-form.ts](../apps/web/src/features/goals/goal-form.ts)の`toPatchBody`が回答／文脈変更に`expectedAnswerRevision`を付け、[goals-http.ts](../apps/web/src/api/goals-http.ts)からPATCHする。
+2. [Goal store](../apps/api/src/goals/store.ts)の`updateGoal`は本人のGoal lock後に版を照合。不一致なら全体rollbackし、[Goal routes](../apps/api/src/goals/routes.ts)が409 `ANSWER_CONFLICT`を返す。入力は残し、画面は古い版での再送を止める。
+3. 利用者が読み直す → `reloadLatestGoal` → `GET /api/goals/:goalId?view=r11`。中断・503等の失敗時にcacheの古い`data`が残っても成功扱いしない。入力・競合・baselineを保持して、再取得成功を待つ。
+4. 成功結果だけを`rebaseValues`へ渡し、触った項目は保持、触っていない項目は最新へ合わせ、baselineを差し替えて競合を解除する。利用者が再び保存を押すと最新の回答版でPATCHする。自動再送やGETだけによる保存成功の判定はしない。[版・撤回・snapshotの正式契約](architecture.md#2026-10-07の保存予測接続133)を参照。
+
+### 用語をコードの値へ対応させる
+
+| 用語 | 読み方・参照先 |
+| --- | --- |
+| 実量 `Log.amount` | その日に実際にDONEと記録した量。予定量で過去ログを置換しない。SKIPPEDのamountはnull。[記録契約](../apps/api/src/contracts/log.ts) |
+| 予定1回量 `sessionAmount` | DONE省略量の補完と、将来の1回の仮実行に使う設定。今日のDONE実量をもう一度足す値ではない。[completion-scenario.ts](../packages/prediction/src/completion-scenario.ts) |
+| 初期進捗 `initialProgress`／記録開始日 `recordStartDate` | 開始日前日までの累計と、日々のログを追加できる固定境界。初回ログ日から開始日を推測しない。[初期進捗と日々の記録の境界](architecture.md#初期進捗と日々の記録の境界) |
+| 回答revision `answerRevision` | 回答・単位・1回量の実変更を検出する版。Goal全体やログの更新版ではない。送信時は`expectedAnswerRevision`。[D-26](architecture.md#2026-10-07の保存予測接続133) |
+| 保存回答snapshot／整合snapshot | 前者は回答時のmapping・文脈の保存値。APIの読取snapshotとFEのfields照合もそれぞれ別の保証。上の2つのtraceと[D-26](architecture.md#2026-10-07の保存予測接続133)を参照 |
+| `a`／`b` | DONE翌日のDONE確率／SKIP翌日のDONE確率。`nDD,nDS`／`nSD,nSS`が実遷移。回答は初期分布を与え、実量・実遷移件数へ加算しない。[Prediction Engine](architecture.md#prediction-engine) |
+| `g50`／`g80` | 今日SKIPとしたとき、次のDONEへ戻るまでの待ち日数の50%／80%分位点。中心指標のモデル値で、因果効果・完了日そのものではない。[recovery.ts](../packages/prediction/src/recovery.ts) |
+| `p50Days`／`p80Days` | 設定した総量への初到達日数の50%／80%分位点。今日未記録ならTODAY_DONE、記録済みならCURRENT_STATE。明日が1日目で、今日の仮実行で届くなら0日。H（`horizonDays`、計算上限）内に届かない分位点はnull。不足／達成済み状態を0日へ読み替えない。[Engineの利用条件](../packages/prediction/README.md#計算の利用条件と処理) |
+| UNKNOWN／SKIP／SKIPPED | 日々のUNKNOWNはログがない日で、SKIPへ補完しない。SKIPはモデル上の休み、保存statusはSKIPPED。質問のUNKNOWNは「わからない」という回答で、numeric回答の材料とは分ける。[observations.ts](../packages/prediction/src/observations.ts)、[R-11公開入口](../packages/prediction/README.md#r-11の公開入口133) |
+
+### 変更前に読む境界とテスト入口
+
+- **lockとclock**：Log PUTとGoal PATCHは同じGoal行をロックして順序づける。PATCHはlock待ち後の別SQLでログの有無を調べる。Today GETは排他lockではなく読取snapshot確定後のclockを使う。[実装時の対策](architecture.md#実装時に必要な対策)、[record-concurrency.test.ts](../apps/api/tests/record-concurrency.test.ts)、[goals-concurrency.test.ts](../apps/api/tests/goals-concurrency.test.ts)で追う。
+- **量と欠測**：[observations.ts](../packages/prediction/src/observations.ts)が初期進捗＋各DONE実量を一度ずつ集計する。今日未記録の仮sessionだけを将来必要回数から控除する。UNKNOWNを跨ぐ2日を隣接遷移にしない。[logs.test.ts](../apps/api/tests/logs.test.ts)、[predict.test.mjs](../packages/prediction/tests/predict.test.mjs)を読む。
+- **数値核**：`recovery.ts`はBigIntの整数比で50%／80%境界（等号を含む）を比較する。[completion.ts](../packages/prediction/src/completion.ts)のDP（動的計画法）はDONE回数・直前状態から初到達確率を運ぶ。到達不能状態だけを刈り込み、微小確率は捨てず、Hより先の質量を除いて再正規化しない。[recovery.test.mjs](../packages/prediction/tests/recovery.test.mjs)・[completion.test.mjs](../packages/prediction/tests/completion.test.mjs)・[completion-deadline.test.mjs](../packages/prediction/tests/completion-deadline.test.mjs)と[計算正本](architecture.md#prediction-engine)を先に確認する。
+- **保存と表示の境界**：[record-log.test.mjs](../apps/web/tests/record-log.test.mjs)・[today-data.test.mjs](../apps/web/tests/today-data.test.mjs)・[today-presentation.test.mjs](../apps/web/tests/today-presentation.test.mjs)。409は[goal-form.test.mjs](../apps/web/tests/goal-form.test.mjs)と[question-prior-http.test.ts](../apps/api/tests/question-prior-http.test.ts)。実行の前提・コマンドは[アプリの検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)・[Engineの検証手順](../packages/prediction/README.md#ローカル検証)に集約する。文書変更には[Foundation](../README.md#開発基盤のセットアップと確認)を使う。
+
+### 読解チェック（実人試験は未実施）
+
+コードと説明の照合用。人間に読んでもらった結果や可読性の改善効果を測定した記録ではない。
+
+| 問い | コード上の確認先・答え |
+| --- | --- |
+| DONEのamountを省略すると、どの値で、いつ補うか？ | traceの2。Goal lock後、その時点の`sessionAmount`で補って保存する |
+| 回答409後のGETが503／中断でも、cacheの旧版で再保存できるか？ | 回答traceの3〜4。できない。成功した取得結果でbaselineを差し替えるまで競合を保持する |
+| 未記録UNKNOWNと明示SKIPを同じ遷移として数えてよいか？ | 用語と`observations.ts`。数えない。欠けた日を跨ぐ遷移も除外する |
+| 今日DONEの実量は、累計と完了予測で何回加算するか？ | 量の境界。実量は累計に1回。記録済みなら仮sessionを追加控除しない |
+| g50は総量の完了日、または因果的な遅延量か？ | 用語と`recovery.ts`。どちらでもなく、今日SKIPから次のDONEまでの待ち日数の中央値 |
 
 ## アプリの仕様と実装
 
@@ -13,10 +72,10 @@
 | Today Decision（R-05〜R-08、APIと表示はローカル実装済み） | [表示仕様](product-spec.md#today-decision画面の表示仕様)、[記録・Today APIの実装案](architecture.md#2026-10-06の記録today-api77) | API: [prediction/routes.ts](../apps/api/src/prediction/routes.ts) → [prediction/store.ts](../apps/api/src/prediction/store.ts)（1 snapshot）→ [engine.ts](../apps/api/src/prediction/engine.ts) → `@futureroi/prediction`の`predict`（#77）。画面は`/goals/$goalId`の[TodayPage](../apps/web/src/features/today/TodayPage.tsx) → [today-http.ts](../apps/web/src/api/today-http.ts)・[goals-http.ts](../apps/web/src/api/goals-http.ts)（実API。GoalとTodayはR-11の読み取り`?view=r11`を専用schema・表現別のキーで取得）→ [snapshot.ts](../apps/web/src/features/today/snapshot.ts)（Goal・Today・記録の照合。予測に使った1回の量・単位・記録開始日、昨日の記録の有無を含む）→ [forecast-view.ts](../apps/web/src/features/today/forecast-view.ts)（`PredictionResult`と出所・planを表示データへ。FEは計算しない）→ 各部品（#81）。記録の保存は#79・#80（上の記録行を参照） | [record-concurrency.test.ts](../apps/api/tests/record-concurrency.test.ts)（pool・最初のSELECT待ちとsnapshot時計）、[today.test.ts](../apps/api/tests/today.test.ts)（`yesterdayMissing`、`predict`との一致、再計算、達成済み）、[コンテナsmoke test](../scripts/smoke-container.sh)。画面は[today-presentation.test.mjs](../apps/web/tests/today-presentation.test.mjs)（Engineの実出力13件の変換と検査、進捗と状態の食い違いの拒否、達成済みの超過の受入、「後で答える」の対象日、R-11の出所とplanの受け渡し、出所に合わせた注釈）、[fetch-policy.test.mjs](../apps/web/tests/fetch-policy.test.mjs)（失敗した取得をやり直す場面：focusではやり直さず、mount・reconnectではやり直す）、[today-data.test.mjs](../apps/web/tests/today-data.test.mjs)（Goal・Today・記録の取得時点のずれ、予測に使った1回の量などとGoalの照合（初回・作り直し・遅着・逆順）、昨日の記録の有無の照合、Goalのtimezoneでの日付の切り替わりとAPIの日付が進むまでの取り直し、利用者が変わったときのキャッシュの中断と消去・保持した表示の破棄）と、実API・DBでの実ブラウザ確認（PR記録）。Engineの固定例は[tests/fixtures](../apps/web/tests/fixtures/engine-examples.json)。E2Eは未実施 |
 | Prediction Engine（#77で`/today`から結合） | [Prediction Engine](architecture.md#prediction-engine)、[承認範囲・利用条件](../packages/prediction/README.md) | [predict](../packages/prediction/src/predict.ts) → 観測・BigInt中心・RNG・DP | [T-01〜T-15の実テストと計測](../packages/prediction/README.md#ローカル検証)。[検証CI](../.github/workflows/prediction.yml)で型検査と実Engine T-14。既存47＋prior候補9＋adapter候補5＋handoff例3＋n=H回帰2＝66件の回帰に、#133の公開入口4件を加えた70テストと、独立CDF oracle3件を実行する。PR #119の[同HEAD CI証跡](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/119)で最新HEADを確認する。旧HEAD `783ebb4`のNode22／24・Dockerは64件で成功確認済み。[11境界例と30日合成2入力](../packages/prediction/examples/README.md)も同じCIで実行する。runnerはNode標準。#70でroot workspace・lockfileへ統合済み。#77で`exports`と`build`（dist）を追加し、APIのworkspace依存にした |
 | デモデータ（R-09、CLI実装） | [R-09](product-spec.md#requirementsmvp)、[所有権とresetのD-27](architecture.md#d-27)、[実行手順](operations/demo-seed.md) | [seed-demo-cli.ts](../apps/api/src/db/seed-demo-cli.ts) → [seed-demo.ts](../apps/api/src/db/seed-demo.ts)、[合成入力](../apps/api/src/db/demo-data.ts)、[marker 0004](../apps/api/migrations/0004_demo_seed_goal.sql)。既存認証userIdへ専用2Goalを作成・新IDでreset。Compose自動投入なし | [demo-data.test.ts](../apps/api/tests/demo-data.test.ts)（fixture・暦日・Engine一致）、[demo-seed.test.ts](../apps/api/tests/demo-seed.test.ts)（保全・rollback・並行・DELETE競合・日またぎ・Today・古いID404・CLI）、[seed-r11-compatibility.test.ts](../apps/api/tests/seed-r11-compatibility.test.ts)（回答snapshot保全・新ID reset・0004→0003の後着）。公開DB／恒久アカウント・Web通し確認は残る |
-| Goal別priorの内部候補（レビュー用、D-26契約待ち） | [候補の境界・残判断](../packages/prediction/GOAL_PRIOR_CANDIDATE.md)、PR #115・#71〜#73 | [goal-prior-candidate.ts](../packages/prediction/src/goal-prior-candidate.ts) → 既存の純粋計算。公開入口・UI／APIは変更しない | [9候補回帰テスト](../packages/prediction/tests/goal-prior-candidate.test.mjs)、[型負例](../packages/prediction/tests/type-contracts.ts)、[候補性能計測](../packages/prediction/scripts/benchmark-goal-prior-candidate.mjs)。写像・強度・表示gateは未採択 |
-| PR118質問priorの候補adapter（当時のSupporting） | [受け渡し・エラー・残る採択](../packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md)、[独立CDF再現](../experiments/question-prior-engine-candidate/README.md)、PR #118・#71〜#73・#107 | [question-prior-adapter-candidate.ts](../packages/prediction/src/question-prior-adapter-candidate.ts)：raw回答＋保存mapping → prior・出所・材料gate・実残量のconditionalPlan。当時は公開predict／DB／HTTP／UIへ接続せず、#133で承認範囲を公開ラッパーへ接続する | [5 adapterテスト](../packages/prediction/tests/question-prior-adapter-candidate.test.mjs)で18例・13接続差。[snapshot／worker接続例3件](../packages/prediction/tests/question-prior-handoff.test.mjs)も含め既存56＋5＋3＋n=H回帰2＝66、独立[oracle 3件](../experiments/question-prior-engine-candidate/oracle.test.mjs)・9 DP golden。具体契約の採択とAPI／UI結合は残る |
+| Goal別priorの内部核（当時の候補） | [候補の境界・残判断](../packages/prediction/GOAL_PRIOR_CANDIDATE.md)、PR #115・#71〜#73 | [goal-prior-candidate.ts](../packages/prediction/src/goal-prior-candidate.ts) → 既存の純粋計算。当時は公開入口・UI／APIを変更せず、現wrapperからの利用は上のtraceを参照 | [9候補回帰テスト](../packages/prediction/tests/goal-prior-candidate.test.mjs)、[型負例](../packages/prediction/tests/type-contracts.ts)、[候補性能計測](../packages/prediction/scripts/benchmark-goal-prior-candidate.mjs)。当時は写像・強度・表示gateが未採択。現承認範囲はD-26と#133の表を参照 |
+| PR118質問priorの候補adapter（当時のSupporting） | [受け渡し・エラー・残る採択](../packages/prediction/QUESTION_PRIOR_ADAPTER_CANDIDATE.md)、[独立CDF再現](../experiments/question-prior-engine-candidate/README.md)、PR #118・#71〜#73・#107 | [question-prior-adapter-candidate.ts](../packages/prediction/src/question-prior-adapter-candidate.ts)：raw回答＋保存mapping → prior・出所・材料gate・実残量のconditionalPlan。当時は公開predict／DB／HTTP／UIへ接続せず、#133で承認範囲を公開ラッパーへ接続済み（上のtraceを参照） | [5 adapterテスト](../packages/prediction/tests/question-prior-adapter-candidate.test.mjs)で18例・13接続差。[snapshot／worker接続例3件](../packages/prediction/tests/question-prior-handoff.test.mjs)も含め既存56＋5＋3＋n=H回帰2＝66、独立[oracle 3件](../experiments/question-prior-engine-candidate/oracle.test.mjs)・9 DP golden。当時の回帰記録。現公開経路・FE結合は上のtraceと下の#133／#137の表を参照し、製品受入とは分ける |
 | 公開（R-10） | [Deployment](architecture.md#deployment) | 未定 | 公開URLで主要Flow |
-| 質問由来の見通し（R-11、Must採択済み） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[Scope・分担の採択P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 2026-10-05、PR #115でMust追加・分担を採択。追加UIは#117。#133では2026-10-07の依頼者承認範囲の保存・回答版・純粋Engine接続境界を実装し、チームレビュー対象とする。明示queryによるGoal/Today公開読取も依頼者承認範囲で接続し、FE結合・画面表示・製品受入は残条件 | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
+| 質問由来の見通し（R-11、Must採択済み） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[Scope・分担の採択P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 2026-10-05、PR #115でMust追加・分担を採択。追加UIは#117。#133では2026-10-07の依頼者承認範囲の保存・回答版・純粋Engine接続境界を実装し、チームレビュー対象とする。明示queryによるGoal/Today公開読取も依頼者承認範囲で接続済み。FE結合・出所表示は#137・#81でmainにあり、製品受入は残条件 | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
 
