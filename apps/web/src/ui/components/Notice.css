@@ -1,0 +1,44 @@
+.fr-insuf {
+  border: 1.5px dashed var(--fr-btn-line);
+  border-radius: var(--fr-radius-notice);
+  padding: var(--fr-space-4) 18px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+}
+.fr-insuf > svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--fr-ink-2);
+}
+.fr-insuf__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-1);
+}
+.fr-insuf__title {
+  font-weight: 700;
+}
+
+.fr-error {
+  background: var(--fr-warn-soft);
+  border: 1.5px solid var(--fr-warn-line);
+  border-radius: var(--fr-radius-notice);
+  padding: 18px var(--fr-space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--fr-space-3);
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+}
+.fr-error__title {
+  font-size: var(--fr-fs-button);
+  font-weight: 700;
+  display: flex;
+  gap: var(--fr-space-2);
+  align-items: center;
+  color: var(--fr-warn);
+}

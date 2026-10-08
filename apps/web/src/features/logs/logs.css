@@ -1,0 +1,34 @@
+.fr-yesterday {
+  background: var(--fr-surface);
+  border-bottom: 1px solid var(--fr-line);
+  padding: 18px var(--fr-gutter) 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}
+.fr-yesterday__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--fr-space-2);
+}
+.fr-yesterday__title {
+  font-size: var(--fr-fs-dialog-title);
+  font-weight: 700;
+}
+.fr-yesterday__date,
+.fr-yesterday__amount {
+  font-size: var(--fr-fs-help);
+  color: var(--fr-ink-2);
+}
+.fr-yesterday__amount {
+  text-align: center;
+}
+.fr-yesterday__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fr-space-3);
+}
+.fr-yesterday > .fr-btn--text {
+  align-self: center;
+}

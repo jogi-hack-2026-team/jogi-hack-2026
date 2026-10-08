@@ -1,0 +1,43 @@
+.fr-dialog {
+  width: min(calc(100vw - 2 * var(--fr-space-5)), 420px);
+  border: 0;
+  border-radius: var(--fr-radius-dialog);
+  padding: var(--fr-space-6);
+  background: var(--fr-surface);
+  color: var(--fr-ink);
+  font-family: var(--fr-font);
+  box-shadow: var(--fr-shadow-dialog);
+}
+.fr-dialog::backdrop {
+  background: var(--fr-scrim);
+}
+.fr-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fr-dialog__title {
+  margin: 0;
+  font-size: var(--fr-fs-dialog-title);
+  font-weight: 700;
+  line-height: 1.5;
+}
+.fr-dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-2);
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+  color: var(--fr-ink-2);
+}
+.fr-dialog__body p {
+  margin: 0;
+}
+.fr-dialog__body b {
+  color: var(--fr-ink);
+}
+.fr-dialog__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}
