@@ -1,24 +1,23 @@
 import { Link } from '@tanstack/react-router';
 import { authClient } from '../auth/client.ts';
+import '../ui/tokens.css';
+import '../ui/components/Button.css';
 
-// ログイン後のホーム。Goal・記録・予測の画面は#78〜#81で追加する。
+// 公開の入口。Goalの取得と認証ガードは遷移先に任せる。
 export function Home() {
   const session = authClient.useSession();
-  if (session.isPending) return <p>確認中</p>;
-  if (!session.data) {
-    // 画面表示中にセッションが切れた場合（期限切れ・別タブでのログアウト）
-    return (
-      <p role="alert">
-        ログインが必要です。<Link to="/login" search={{ redirect: '/' }}>ログイン</Link>
-      </p>
-    );
-  }
   return (
-    <section>
-      <p>今日サボると、ゴールは何日遠ざかる？</p>
-      <p>
-        <strong>{session.data.user.email}</strong> でログインしています。Goal・記録・予測の画面はこれから実装します。
-      </p>
+    <section className="fr">
+      <h2>今日サボると、ゴールは何日遠ざかる？</h2>
+      <p>Goalを決めて、日々の記録とゴールまでの見通しを確認できます。</p>
+      {session.isPending ? <p role="status">確認中</p> : session.data ? (
+        <p><Link to="/goals" className="fr-btn fr-btn--primary">Goal一覧を開く</Link></p>
+      ) : (
+        <>
+          <p><Link to="/register" search={{ redirect: '/goals' }} className="fr-btn fr-btn--primary">登録してはじめる</Link></p>
+          <p>登録済みの方は <Link to="/login" search={{ redirect: '/goals' }}>ログイン</Link></p>
+        </>
+      )}
     </section>
   );
 }

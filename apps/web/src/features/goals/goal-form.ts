@@ -1,4 +1,4 @@
-import type { Goal, GoalCreate, GoalPatch, GoalUnit } from '@contracts';
+import type { Goal, GoalCreate, GoalPatch, GoalUnit, QuestionAnswers } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 
@@ -16,22 +16,29 @@ export type FormValues = {
   sessionAmount: string;
   initialProgress: string;
   timezone: string;
+  /** R-11の2問の回答（任意。null は回答しない、UNKNOWN は経験がない・思い出せない）。 */
+  questionPrior: QuestionAnswers;
 };
+
+/** 編集の比較元。R-11 の読み取り（?view=r11）で得た回答と版を持つ。 */
+export type GoalWithAnswers = Goal & { questionPrior?: QuestionAnswers; answerRevision?: number };
+
+export const NO_ANSWERS: QuestionAnswers = { a: null, b: null };
 export type FieldName = keyof FormValues;
 export type FieldErrors = Partial<Record<FieldName, string>>;
 
 /** 画面に並ぶ順。エラーの件数を数え、最初のエラー項目へ移るときに使う。 */
-export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'timezone'];
+export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'timezone', 'questionPrior'];
 
 const INT4_MAX = 2_147_483_647;
 export const TITLE_MAX = 100;
 const e = goalsCopy.errors;
 
 export function emptyValues(timezone: string): FormValues {
-  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone };
+  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, questionPrior: NO_ANSWERS };
 }
 
-export function valuesFromGoal(goal: Goal): FormValues {
+export function valuesFromGoal(goal: GoalWithAnswers): FormValues {
   return {
     title: goal.title,
     unit: goal.unit,
@@ -39,6 +46,7 @@ export function valuesFromGoal(goal: Goal): FormValues {
     sessionAmount: String(goal.sessionAmount),
     initialProgress: String(goal.initialProgress),
     timezone: goal.timezone,
+    questionPrior: goal.questionPrior ?? NO_ANSWERS,
   };
 }
 
@@ -99,14 +107,67 @@ export function toCreateBody(values: FormValues): GoalCreate {
     sessionAmount: int(values.sessionAmount),
     initialProgress: int(values.initialProgress),
     timezone: values.timezone,
+    // 回答しない問いは null のまま送る（POST は版を送らない。初版は 0）
+    questionPrior: values.questionPrior,
   };
+}
+
+const sameAnswers = (x: QuestionAnswers, y: QuestionAnswers) => x.a === y.a && x.b === y.b;
+
+/** 編集で、単位か1回の量を変えるか。変えると保存済みの回答は API が取り消す（R-11、#133）。 */
+export function changesAnswerContext(values: FormValues, goal: Goal): boolean {
+  return values.unit !== goal.unit || int(values.sessionAmount) !== goal.sessionAmount;
+}
+
+/**
+ * 編集で、回答の欄を押せなくする理由（R-11、#133）。単位か1回の量を変えている間は、回答を送れない（同時に送ると 422）。
+ * - withdrawn：保存済みの回答を API が取り消す
+ * - notSaved：保存済みの回答はないが、入力しても一緒には保存できない
+ */
+export function answersLockReason(values: FormValues, goal: GoalWithAnswers): 'withdrawn' | 'notSaved' | null {
+  if (!changesAnswerContext(values, goal)) return null;
+  return sameAnswers(goal.questionPrior ?? NO_ANSWERS, NO_ANSWERS) ? 'notSaved' : 'withdrawn';
+}
+
+/**
+ * 古い版で保存できなかった（409）後に最新の Goal を読み直したとき、入力を新しい比較元へ合わせる。
+ * 触っていない項目（入力が古い比較元と同じ）は最新の値にし、別の画面での変更を古い値で巻き戻さない。触った項目は入力を残す。
+ */
+export function rebaseValues(values: FormValues, previous: GoalWithAnswers, latest: GoalWithAnswers): FormValues {
+  const before = valuesFromGoal(previous);
+  const after = valuesFromGoal(latest);
+  const pick = <K extends FieldName>(name: K, edited: boolean): FormValues[K] => (edited ? values[name] : after[name]);
+  return {
+    title: pick('title', values.title !== before.title),
+    unit: pick('unit', values.unit !== before.unit),
+    totalRequired: pick('totalRequired', int(values.totalRequired) !== previous.totalRequired),
+    sessionAmount: pick('sessionAmount', int(values.sessionAmount) !== previous.sessionAmount),
+    initialProgress: pick('initialProgress', int(values.initialProgress) !== previous.initialProgress),
+    timezone: pick('timezone', values.timezone !== before.timezone),
+    questionPrior: pick('questionPrior', !sameAnswers(values.questionPrior, before.questionPrior)),
+  };
+}
+
+/** 失敗した再取得にも古いdataが残るため、成功した結果だけを409の新しい比較元にする。 */
+export async function reloadLatestGoal(refetch: () => Promise<{ isSuccess: boolean; data: GoalWithAnswers | undefined }>): Promise<GoalWithAnswers | undefined> {
+  try {
+    const result = await refetch();
+    return result.isSuccess ? result.data : undefined;
+  } catch {
+    // 取得が中断・失敗した場合は入力と競合を保持し、再取得の成功を待つ。
+    return undefined;
+  }
 }
 
 /**
  * 編集で送る内容。変えた項目だけを送る（API は空の変更を 422 にするため、変更がなければ null）。
  * 記録があるGoalでは timezone と initialProgress を送らない。
+ * R-11 の回答（#133 の契約）：
+ * - 回答を変えたら、両方の問い（変えていない方も）と、比較元の版（expectedAnswerRevision）を送る。撤回は両方 null
+ * - 単位か1回の量を変えるときは、回答は送らず（API が取り消す）、版だけを送る。回答を同時に送ると 422
+ * - 回答にも単位・1回の量にも触れていなければ、版は送らない（無関係な更新に版を付けると 422）
  */
-export function toPatchBody(values: FormValues, goal: Goal): GoalPatch | null {
+export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatch | null {
   const patch: { -readonly [K in keyof GoalPatch]: GoalPatch[K] } = {};
   if (values.title !== goal.title) patch.title = values.title;
   if (values.unit !== goal.unit) patch.unit = values.unit;
@@ -115,6 +176,14 @@ export function toPatchBody(values: FormValues, goal: Goal): GoalPatch | null {
   if (!goal.hasLogs) {
     if (int(values.initialProgress) !== goal.initialProgress) patch.initialProgress = int(values.initialProgress);
     if (values.timezone !== goal.timezone) patch.timezone = values.timezone;
+  }
+  if (goal.answerRevision !== undefined) {
+    if (changesAnswerContext(values, goal)) {
+      patch.expectedAnswerRevision = goal.answerRevision;
+    } else if (!sameAnswers(values.questionPrior, goal.questionPrior ?? NO_ANSWERS)) {
+      patch.questionPrior = values.questionPrior;
+      patch.expectedAnswerRevision = goal.answerRevision;
+    }
   }
   return Object.keys(patch).length > 0 ? patch : null;
 }
@@ -126,6 +195,7 @@ const serverMessage: Record<FieldName, string> = {
   sessionAmount: e.positiveInteger,
   initialProgress: e.nonNegativeInteger,
   timezone: e.timezone,
+  questionPrior: e.server,
 };
 
 /**
@@ -137,7 +207,9 @@ export function fieldErrorsFromApi(error: unknown): FieldErrors | null {
   const errors: FieldErrors = {};
   const locked = error.body.error.code === 'GOAL_HAS_LOGS';
   for (const field of error.body.error.fields ?? []) {
-    const name = field.path.replace(/^body\//, '').split('/')[0] as FieldName;
+    // 回答の版（expectedAnswerRevision）の誤りも、回答の欄のエラーとして出す
+    const raw = field.path.replace(/^body\//, '').split('/')[0];
+    const name = (raw === 'expectedAnswerRevision' ? 'questionPrior' : raw) as FieldName;
     if (FIELD_ORDER.includes(name) && !errors[name]) errors[name] = locked ? e.locked : serverMessage[name];
   }
   return errors;
