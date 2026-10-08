@@ -148,6 +148,17 @@ export function rebaseValues(values: FormValues, previous: GoalWithAnswers, late
   };
 }
 
+/** 失敗した再取得にも古いdataが残るため、成功した結果だけを409の新しい比較元にする。 */
+export async function reloadLatestGoal(refetch: () => Promise<{ isSuccess: boolean; data: GoalWithAnswers | undefined }>): Promise<GoalWithAnswers | undefined> {
+  try {
+    const result = await refetch();
+    return result.isSuccess ? result.data : undefined;
+  } catch {
+    // 取得が中断・失敗した場合は入力と競合を保持し、再取得の成功を待つ。
+    return undefined;
+  }
+}
+
 /**
  * 編集で送る内容。変えた項目だけを送る（API は空の変更を 422 にするため、変更がなければ null）。
  * 記録があるGoalでは timezone と initialProgress を送らない。

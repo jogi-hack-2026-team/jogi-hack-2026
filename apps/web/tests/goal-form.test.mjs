@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { MutationObserver, QueryClient } from '@tanstack/react-query';
+import { MutationObserver, QueryClient, QueryObserver } from '@tanstack/react-query';
 import { ApiError } from '../src/api/client.ts';
 import { goalsCopy } from '../src/copy/goals.ts';
-import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
+import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, reloadLatestGoal, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
 
 const e = goalsCopy.errors;
 const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', questionPrior: { a: null, b: null } };
@@ -147,4 +147,36 @@ test('単位か1回の量を変えている間は、保存済みの回答がな�
   assert.deepEqual(toPatchBody(changed, unanswered), { sessionAmount: 30, expectedAnswerRevision: 0 });
   assert.equal(answersLockReason({ ...valuesFromGoal(answered), unit: 'sessions' }, answered), 'withdrawn');
   assert.equal(answersLockReason({ ...valuesFromGoal(unanswered), totalRequired: '4000' }, unanswered), null);
+});
+
+test('409後の再取得は通信中断・503の古いcacheを採用せず、成功した最新の版でだけ再保存できる', async () => {
+  for (const failure of [new TypeError('Failed to fetch'), new ApiError(503, null)]) {
+    const client = new QueryClient();
+    const previous = { ...goal, questionPrior: { a: 'MID', b: 'LOW' }, answerRevision: 0 };
+    const latest = { ...previous, title: '別の画面のタイトル', questionPrior: { a: 'LOW', b: 'LOW' }, answerRevision: 1 };
+    const edited = { ...valuesFromGoal(previous), questionPrior: { a: 'HIGH', b: 'HIGH' } };
+    let failed = true;
+    const observer = new QueryObserver(client, {
+      queryKey: ['goal', failure.name], initialData: previous, retry: false,
+      queryFn: async () => { if (failed) throw failure; return latest; },
+    });
+    try {
+      assert.equal(await reloadLatestGoal(() => observer.refetch()), undefined);
+      // 固定版React Queryは失敗結果にも古いdataを保持するが、比較元に採用しない。
+      assert.equal(observer.getCurrentResult().data, previous);
+      assert.equal(observer.getCurrentResult().isError, true);
+      assert.deepEqual(edited.questionPrior, { a: 'HIGH', b: 'HIGH' });
+      failed = false;
+      const loaded = await reloadLatestGoal(() => observer.refetch());
+      assert.deepEqual(loaded, latest);
+      assert.deepEqual(toPatchBody(rebaseValues(edited, previous, loaded), loaded), {
+        questionPrior: { a: 'HIGH', b: 'HIGH' }, expectedAnswerRevision: 1,
+      });
+    } finally { client.clear(); }
+  }
+});
+
+test('最新取得のPromiseがrejectしても成功扱いせず、未取得なら比較元を返さない', async () => {
+  assert.equal(await reloadLatestGoal(async () => { throw new Error('aborted'); }), undefined);
+  assert.equal(await reloadLatestGoal(async () => ({ isSuccess: true, data: undefined })), undefined);
 });

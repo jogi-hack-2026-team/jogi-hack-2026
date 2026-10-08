@@ -27,6 +27,7 @@ import {
   FIELD_ORDER,
   fieldErrorsFromApi,
   rebaseValues,
+  reloadLatestGoal,
   TITLE_MAX,
   titleLength,
   toCreateBody,
@@ -78,7 +79,7 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
       goal={query.data}
       refreshError={query.isError ? query.error : null}
       onRetryRefresh={() => void query.refetch()}
-      onReloadLatest={async () => (await query.refetch()).data}
+      onReloadLatest={() => reloadLatestGoal(() => query.refetch())}
     />
   );
 }
@@ -142,6 +143,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   const [baseline, setBaseline] = useState(goal);
   // 最新を読み直したときの回答。入力中の回答で上書きする前に確かめられるよう、知らせとして出す
   const [latestAnswers, setLatestAnswers] = useState<GoalWithAnswers['questionPrior'] | null>(null);
+  const [reloadingLatest, setReloadingLatest] = useState(false);
+  const reloadInFlight = useRef(false);
   // この画面がまだ表示されているか。保存の途中で離れた後に、別の画面を一覧へ移さないために使う
   const mounted = useRef(true);
   useEffect(() => {
@@ -202,7 +205,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
     // 送信中は二重に送らない（ボタンも押せなくしている）
-    if (saving.current) return;
+    if (saving.current || reloadInFlight.current || (save.isError && isAnswerConflict(save.error))) return;
     setSubmitted(true);
     setServerErrors({});
     const found = validate(values, { locked });
@@ -240,13 +243,21 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   // 保存済みの回答の有無にかかわらず回答の欄は押せなくし、そのことを伝える（入力した回答が黙って保存されないことを防ぐ）
   const answersLock = mode === 'edit' && baseline !== undefined ? answersLockReason(values, baseline) : null;
   const reloadLatest = async () => {
-    const latest = await onReloadLatest?.();
-    if (!latest || !mounted.current) return;
-    // 触っていない項目は最新の値にする（古い値のまま送って、別の画面での変更を巻き戻さない）。触った項目の入力は残す
-    if (baseline) setValues((current) => rebaseValues(current, baseline, latest));
-    setBaseline(latest);
-    setLatestAnswers(latest.questionPrior ?? NO_ANSWERS);
-    save.reset();
+    if (reloadInFlight.current || saving.current) return;
+    reloadInFlight.current = true;
+    setReloadingLatest(true);
+    try {
+      const latest = await onReloadLatest?.();
+      if (!latest || !mounted.current) return;
+      // 成功した取得だけで比較元を更新する。触った項目は残し、触っていない項目は最新にする。
+      if (baseline) setValues((current) => rebaseValues(current, baseline, latest));
+      setBaseline(latest);
+      setLatestAnswers(latest.questionPrior ?? NO_ANSWERS);
+      save.reset();
+    } finally {
+      reloadInFlight.current = false;
+      if (mounted.current) setReloadingLatest(false);
+    }
   };
 
   return (
@@ -254,7 +265,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
       <form ref={formRef} className="fr-goalform" noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">
-          {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={onRetryRefresh} /> : null}
+          {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isAnswerConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} answerConflict={isAnswerConflict(save.error)} /> : null}
           {count > 0 ? (
             <div className="fr-goalform__summary" role="alert">
               <Icon name="alert" size={20} />
@@ -359,8 +370,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
 
         <StickyActionBar>
           <div className="fr-goalform__actions">
-            {showSaveFailure ? <SaveFailure error={saveFailure} mode={mode} onReloadLatest={reloadLatest} /> : null}
-            <Button type="submit" variant="primary" block busy={busy} {...(canRetry ? { icon: 'retry' as const } : {})}>
+            {showSaveFailure ? <SaveFailure error={saveFailure} mode={mode} onReloadLatest={reloadLatest} reloadingLatest={reloadingLatest} /> : null}
+            <Button type="submit" variant="primary" block busy={busy} disabled={reloadingLatest || isAnswerConflict(saveFailure)} {...(canRetry ? { icon: 'retry' as const } : {})}>
               {busy ? f.saving : canRetry ? f.saveFailed.retry : mode === 'create' ? f.save : f.saveEdit}
             </Button>
           </div>
@@ -412,7 +423,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
 }
 
 /** 表示した後の再取得の失敗。フォームと入力はそのまま残す。 */
-function RefreshFailed({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+function RefreshFailed({ error, onRetry, answerConflict }: { error: unknown; onRetry: () => void; answerConflict: boolean }) {
   if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
   return (
     <ErrorPanel
@@ -423,7 +434,7 @@ function RefreshFailed({ error, onRetry }: { error: unknown; onRetry: () => void
         </Button>
       }
     >
-      {isNotFound(error) ? f.refreshFailed.notFound : f.refreshFailed.body}
+      {isNotFound(error) ? f.refreshFailed.notFound : answerConflict ? f.refreshFailed.conflictBody : f.refreshFailed.body}
     </ErrorPanel>
   );
 }
@@ -464,7 +475,7 @@ function LockedNote({ children }: { children: string }) {
 }
 
 /** 保存の失敗。失敗したのに保存済みに見せない（入力は残し、まだ保存されていないことを書く）。 */
-function SaveFailure({ error, mode, onReloadLatest }: { error: unknown; mode: 'create' | 'edit'; onReloadLatest: () => Promise<void> }) {
+function SaveFailure({ error, mode, onReloadLatest, reloadingLatest }: { error: unknown; mode: 'create' | 'edit'; onReloadLatest: () => Promise<void>; reloadingLatest: boolean }) {
   if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
   if (isAnswerConflict(error)) {
     // ほかの画面で回答や単位が変わった（R-11 の回答の版が古い）。保存済みに見せず、入力を残したまま最新を読み直してもらう
@@ -472,7 +483,7 @@ function SaveFailure({ error, mode, onReloadLatest }: { error: unknown; mode: 'c
       <ErrorPanel
         title={f.answerConflict.title}
         action={
-          <Button icon="retry" onClick={() => void onReloadLatest()}>
+          <Button icon="retry" busy={reloadingLatest} onClick={() => void onReloadLatest()}>
             {f.answerConflict.reload}
           </Button>
         }
