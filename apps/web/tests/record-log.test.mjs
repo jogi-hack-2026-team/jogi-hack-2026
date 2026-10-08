@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
-import { choiceFromLog, classifySaveError, describeChoice, editLocks, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
+import { choiceFromLog, classifySaveError, describeChoice, editLocks, reachedDate, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
@@ -110,4 +110,19 @@ test('今日の保存は API の今日だけ。Goal/Todayの到着順・初回To
   assert.equal(isCurrentToday(next, next, undefined), true); // 初回Today失敗時のGoal fallback
   assert.equal(isCurrentToday(d, undefined, d), false);
   assert.equal(classifySaveError(new TodayDateChangedError()), 'day-changed');
+});
+
+test('達成済みの「届いた日」は、初期量にDONEの量を日付順に足して総量に届いた最初の日（初期量だけなら記録開始前）', () => {
+  const logs = [
+    { localDate: '2026-10-07', status: 'DONE', amount: 30 },
+    { localDate: '2026-10-05', status: 'DONE', amount: 50 },
+    { localDate: '2026-10-06', status: 'SKIPPED', amount: null },
+  ];
+  // 20＋50（10/5）＝70、＋30（10/7）＝100 で届く。並びが日付順でなくても日付順にたどる
+  assert.equal(reachedDate(20, 100, logs), '2026-10-07');
+  assert.equal(reachedDate(20, 70, logs), '2026-10-05');
+  // 初期量だけで届いていた
+  assert.equal(reachedDate(100, 100, logs), null);
+  // 記録から届いた日をたどれない（総量を下げて達成済みになったなど）
+  assert.equal(reachedDate(0, 1000, logs), undefined);
 });

@@ -42,6 +42,8 @@ export const goalsCopy = {
   },
   form: {
     createTitle: 'Goalを作成',
+    /** 初期質問の見出し（開閉の見出し。PR #120 の部品と同じ文言）。 */
+    priorTitle: '最初の見通しを調整する（任意）',
     editTitle: 'Goalを編集',
     close: '閉じる',
     title: 'タイトル',

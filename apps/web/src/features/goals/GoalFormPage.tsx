@@ -145,6 +145,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   const [baseline, setBaseline] = useState(goal);
   // 最新を読み直したときの回答。入力中の回答で上書きする前に確かめられるよう、知らせとして出す
   const [latestAnswers, setLatestAnswers] = useState<GoalWithAnswers['questionPrior'] | null>(null);
+  // 初期質問の開閉。保存済みの回答がある編集では開いた状態から始める
+  const [priorOpen, setPriorOpen] = useState(() => values.questionPrior.a !== null || values.questionPrior.b !== null);
   const [reloadingLatest, setReloadingLatest] = useState(false);
   const reloadInFlight = useRef(false);
   // この画面がまだ表示されているか。保存の途中で離れた後に、別の画面を一覧へ移さないために使う
@@ -346,13 +348,25 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             </SelectInput>
           </Field>
 
-          <div className="fr-goalform__prior">
+          {/* 初期質問は任意なので、開閉できる形で閉じて置く（デザイン C1・R1）。回答・エラー・お知らせがあるときは開いておく */}
+          <details
+            className="fr-goalform__prior"
+            open={priorOpen || Boolean(errors.questionPrior) || latestAnswers !== null || answersLock !== null}
+            onToggle={(event) => setPriorOpen(event.currentTarget.open)}
+          >
+            <summary className="fr-goalform__prior-summary">
+              <h2 id="fr-goalform-prior-title" className="fr-goalform__prior-title">
+                {f.priorTitle}
+              </h2>
+              <Icon name="chevronDown" size={20} />
+            </summary>
             {latestAnswers ? (
               <p className="fr-goalform__latest" role="status">
                 {f.latestAnswers(answerLabel(latestAnswers.a), answerLabel(latestAnswers.b))}
               </p>
             ) : null}
             <QuestionPriorFields
+              externalHeadingId="fr-goalform-prior-title"
               value={answersLock ? NO_ANSWERS : values.questionPrior}
               onChange={(next) => update('questionPrior', next)}
               disabled={busy || answersLock !== null}
@@ -360,7 +374,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             />
             {answersLock ? <LockedNote>{answersLock === 'withdrawn' ? f.answersWithdrawn : f.answersNotSavedWithContext}</LockedNote> : null}
             <p className="fr-goals__help">{f.answersNotRecords}</p>
-          </div>
+          </details>
 
           {mode === 'edit' ? (
             <div>

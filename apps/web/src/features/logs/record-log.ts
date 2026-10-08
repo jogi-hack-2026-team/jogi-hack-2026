@@ -101,3 +101,19 @@ export function editLocks(s: {
     todayLocked: s.yesterdayEditing,
   };
 }
+
+/**
+ * 決めた総量に届いた日（デザイン D6）。初期量から記録の DONE を日付順に足し、総量に届いた最初の日。
+ * 初期量だけで届いていれば null（記録開始前に届いていた）。届いていなければ undefined。
+ * 記録の事実をたどるだけで、予測の計算はしない。
+ */
+export function reachedDate(initialProgress: number, totalRequired: number, logs: readonly Log[]): string | null | undefined {
+  if (initialProgress >= totalRequired) return null;
+  let done = initialProgress;
+  for (const log of [...logs].sort((a, b) => (a.localDate < b.localDate ? -1 : a.localDate > b.localDate ? 1 : 0))) {
+    if (log.status !== 'DONE') continue;
+    done += log.amount ?? 0;
+    if (done >= totalRequired) return log.localDate;
+  }
+  return undefined;
+}

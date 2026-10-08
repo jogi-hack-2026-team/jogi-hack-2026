@@ -3,7 +3,8 @@ import { StatusBadge } from '../../ui/components/StatusBadge.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { todayCopy } from '../../copy/today.ts';
-import { longDate, parseLocalDate, shortDate } from '../../copy/date.ts';
+import { Link } from '@tanstack/react-router';
+import { fullDate, longDate, parseLocalDate, shortDate } from '../../copy/date.ts';
 import { choiceFromLog, describeChoice } from '../logs/record-log.ts';
 
 /** 今日は記録済み（R-07）。比較（中心指標）は出さず、記録内容を出す。「記録を変更」で下の2択を選び直せるようにする（#79）。 */
@@ -31,8 +32,9 @@ export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; u
   );
 }
 
-/** 達成済み（R-08）。予測は出さない。 */
-export function AchievedPanel({ total, unit }: { total: number; unit: string }) {
+/** 達成済み（R-08、デザイン D6）。予測は出さない。累計（総量を超えることがある）と総量を出す。 */
+export function AchievedPanel({ done, total, unit }: { done: number; total: number; unit: string }) {
+  const amount = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
   return (
     <section className="fr-today__top fr-achieved" aria-labelledby="fr-achieved-title">
       <span className="fr-achieved__emblem" aria-hidden="true">
@@ -42,9 +44,55 @@ export function AchievedPanel({ total, unit }: { total: number; unit: string }) 
         {todayCopy.achievedTitle}
       </h1>
       <p className="fr-today__summary">
-        {total.toLocaleString('ja-JP')}
-        {unit}。{todayCopy.achievedBody}
+        {todayCopy.achievedAmount(amount(done), amount(total))}
+        {todayCopy.achievedBody}
       </p>
+    </section>
+  );
+}
+
+/** 達成済みの記録開始日・届いた日と、一覧へ戻る（デザイン D6 の下部）。 */
+export function AchievedFacts({
+  recordStartDate,
+  reached,
+}: {
+  recordStartDate: string;
+  /** 届いた日。null は記録開始前（初期量）で届いていた、undefined は記録からたどれなかった。 */
+  reached: string | null | undefined;
+}) {
+  return (
+    <section className="fr-achieved-facts" aria-label={todayCopy.achievedTitle}>
+      <dl className="fr-achieved-facts__list">
+        <div>
+          <dt>{todayCopy.achievedStart}</dt>
+          <dd>{fullDate(recordStartDate)}</dd>
+        </div>
+        {reached !== undefined ? (
+          <div>
+            <dt>{todayCopy.achievedReached}</dt>
+            <dd>{reached === null ? todayCopy.achievedBeforeStart : fullDate(reached)}</dd>
+          </div>
+        ) : null}
+      </dl>
+      <Link to="/goals" className="fr-btn fr-btn--secondary fr-btn--block">
+        {todayCopy.backToList}
+      </Link>
+    </section>
+  );
+}
+
+/** 今日の記録を選び直している間の上部（デザイン D5-change）。いまの記録を見せ、「変更をやめる」で元に戻す。 */
+export function ChangeHeader({ log, sessionAmount, unit, onCancel }: { log: Log; sessionAmount: number; unit: string; onCancel: () => void }) {
+  const record = describeChoice(choiceFromLog(log), sessionAmount, unit, todayCopy.recordedRest);
+  return (
+    <section className="fr-today__top" aria-labelledby="fr-change-title">
+      <h1 id="fr-change-title" className="fr-today__question">
+        {todayCopy.changeTitle}
+      </h1>
+      <p className="fr-today__summary">{todayCopy.changeCurrent(record)}</p>
+      <Button variant="text" onClick={onCancel}>
+        {todayCopy.cancelChange}
+      </Button>
     </section>
   );
 }
