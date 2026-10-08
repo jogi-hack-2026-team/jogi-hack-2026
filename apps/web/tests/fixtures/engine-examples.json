@@ -1,0 +1,1351 @@
+{
+  "source": {
+    "note": "Engineの実出力（FEで計算しない）。値を手で書き換えない。更新するときは下のコマンドを実行し直して置き換える。",
+    "commit": "545f5f7",
+    "commands": [
+      "npm run build --workspace=@futureroi/prediction",
+      "node packages/prediction/examples/recalculate.mjs",
+      "node packages/prediction/examples/demo-inputs.mjs"
+    ],
+    "node": "v24.21.0"
+  },
+  "cases": [
+    {
+      "name": "unknown-gap",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 4,
+          "observedDays": 7,
+          "recordedDays": 6
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 5,
+          "p80Days": 8
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "backfill",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-08",
+            "status": "DONE",
+            "amount": 15
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 75,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 3,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 6,
+          "observedDays": 7,
+          "recordedDays": 7
+        },
+        "posterior": {
+          "a": {
+            "alpha": 5,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 3,
+          "p80Days": 5
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "correct-backfill",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-08",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 2,
+          "nSD": 2,
+          "nSS": 1,
+          "effectiveTransitions": 6,
+          "observedDays": 7,
+          "recordedDays": 7
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 4
+          },
+          "b": {
+            "alpha": 4,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 6,
+          "p80Days": 8
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "today-actual",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-10",
+            "status": "DONE",
+            "amount": 3
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "DONE",
+        "progress": {
+          "done": 63,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 2,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 5,
+          "observedDays": 8,
+          "recordedDays": 7
+        },
+        "posterior": {
+          "a": {
+            "alpha": 4,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "not_applicable",
+          "reason": "TODAY_RECORDED"
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "CURRENT_STATE",
+          "p50Days": 7,
+          "p80Days": 10
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "completed",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-10",
+            "status": "DONE",
+            "amount": 40
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "DONE",
+        "progress": {
+          "done": 100,
+          "total": 100,
+          "completed": true
+        },
+        "observations": {
+          "nDD": 2,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 5,
+          "observedDays": 8,
+          "recordedDays": 7
+        },
+        "posterior": {
+          "a": {
+            "alpha": 4,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "not_applicable",
+          "reason": "COMPLETED"
+        },
+        "completion": {
+          "status": "completed"
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "today-skipped",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-10",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "SKIPPED",
+        "progress": {
+          "done": 60,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 2,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 5,
+          "observedDays": 8,
+          "recordedDays": 7
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 4
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "not_applicable",
+          "reason": "TODAY_RECORDED"
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "CURRENT_STATE",
+          "p50Days": 8,
+          "p80Days": 12
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "empty-history",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": []
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 20,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 0,
+          "observedDays": 0,
+          "recordedDays": 0
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "coreMetric": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_DONE_ORIGIN_TRANSITION"
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "done-origin-only",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-08",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 40,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 0,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 2
+          }
+        },
+        "coreMetric": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_SKIP_ORIGIN_TRANSITION"
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "skip-origin-only",
+      "input": {
+        "goal": {
+          "totalRequired": 100,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-08",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 20,
+          "total": 100,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 0,
+          "nSD": 0,
+          "nSS": 1,
+          "effectiveTransitions": 1,
+          "observedDays": 2,
+          "recordedDays": 2
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 2
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 2,
+          "g80": 5
+        },
+        "completion": {
+          "status": "insufficient",
+          "reason": "NO_DONE_ORIGIN_TRANSITION"
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "available-null",
+      "input": {
+        "goal": {
+          "totalRequired": 11030,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 11030,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 4,
+          "observedDays": 7,
+          "recordedDays": 6
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": null,
+          "p80Days": null
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "available-zero",
+      "input": {
+        "goal": {
+          "totalRequired": 70,
+          "initialProgress": 20,
+          "sessionAmount": 10
+        },
+        "today": "2026-10-10",
+        "logs": [
+          {
+            "localDate": "2026-10-03",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-04",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-05",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-10-07",
+            "status": "DONE",
+            "amount": 10
+          },
+          {
+            "localDate": "2026-10-09",
+            "status": "DONE",
+            "amount": 10
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-10",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 60,
+          "total": 70,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 1,
+          "nDS": 1,
+          "nSD": 1,
+          "nSS": 1,
+          "effectiveTransitions": 4,
+          "observedDays": 7,
+          "recordedDays": 6
+        },
+        "posterior": {
+          "a": {
+            "alpha": 3,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 3,
+            "beta": 3
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 3
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 0,
+          "p80Days": 0
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "fast-resumption",
+      "input": {
+        "goal": {
+          "totalRequired": 60,
+          "initialProgress": 0,
+          "sessionAmount": 1
+        },
+        "today": "2026-10-01",
+        "logs": [
+          {
+            "localDate": "2026-09-01",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-02",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-03",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-04",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-05",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-06",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-07",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-08",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-09",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-10",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-11",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-12",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-13",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-14",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-15",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-16",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-17",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-18",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-19",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-20",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-21",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-22",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-23",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-24",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-25",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-26",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-27",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-28",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-29",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-30",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-01",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 15,
+          "total": 60,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 0,
+          "nDS": 15,
+          "nSD": 14,
+          "nSS": 0,
+          "effectiveTransitions": 29,
+          "observedDays": 30,
+          "recordedDays": 30
+        },
+        "posterior": {
+          "a": {
+            "alpha": 2,
+            "beta": 17
+          },
+          "b": {
+            "alpha": 16,
+            "beta": 2
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 1,
+          "g80": 1
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 88,
+          "p80Days": 92
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    },
+    {
+      "name": "slow-resumption",
+      "input": {
+        "goal": {
+          "totalRequired": 60,
+          "initialProgress": 0,
+          "sessionAmount": 1
+        },
+        "today": "2026-10-01",
+        "logs": [
+          {
+            "localDate": "2026-09-01",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-02",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-03",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-04",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-05",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-06",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-07",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-08",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-09",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-10",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-11",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-12",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-13",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-14",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-15",
+            "status": "DONE",
+            "amount": 1
+          },
+          {
+            "localDate": "2026-09-16",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-17",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-18",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-19",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-20",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-21",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-22",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-23",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-24",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-25",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-26",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-27",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-28",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-29",
+            "status": "SKIPPED",
+            "amount": null
+          },
+          {
+            "localDate": "2026-09-30",
+            "status": "SKIPPED",
+            "amount": null
+          }
+        ]
+      },
+      "prediction": {
+        "modelVersion": "behavior-persistence-m1-v1",
+        "today": "2026-10-01",
+        "todayStatus": "UNRECORDED",
+        "progress": {
+          "done": 15,
+          "total": 60,
+          "completed": false
+        },
+        "observations": {
+          "nDD": 14,
+          "nDS": 1,
+          "nSD": 0,
+          "nSS": 14,
+          "effectiveTransitions": 29,
+          "observedDays": 30,
+          "recordedDays": 30
+        },
+        "posterior": {
+          "a": {
+            "alpha": 16,
+            "beta": 3
+          },
+          "b": {
+            "alpha": 2,
+            "beta": 16
+          }
+        },
+        "coreMetric": {
+          "status": "available",
+          "g50": 7,
+          "g80": 21
+        },
+        "completion": {
+          "status": "available",
+          "scenario": "TODAY_DONE",
+          "p50Days": 102,
+          "p80Days": 183
+        },
+        "config": {
+          "prior": 2,
+          "samples": 200,
+          "horizonDays": 1095,
+          "seed": 20261012
+        }
+      }
+    }
+  ]
+}
