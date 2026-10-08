@@ -1,0 +1,434 @@
+
+> @futureroi/prediction@0.0.0 test
+> node scripts/check.mjs test
+
+TAP version 13
+# Subtest: n=H has exactly the all-DONE path, including endpoints and H=1
+ok 1 - n=H has exactly the all-DONE path, including endpoints and H=1
+  ---
+  duration_ms: 19.1852
+  type: 'test'
+  ...
+# Subtest: zero/beyond-horizon returns and n=H-1 keep their original semantics
+ok 2 - zero/beyond-horizon returns and n=H-1 keep their original semantics
+  ---
+  duration_ms: 1.014
+  type: 'test'
+  ...
+# Subtest: DP agrees with exhaustive rational paths, with and without unreachable pruning
+ok 3 - DP agrees with exhaustive rational paths, with and without unreachable pruning
+  ---
+  duration_ms: 126.8753
+  type: 'test'
+  ...
+# Subtest: T10 partial horizon retains an available median and null 80% tail
+ok 4 - T10 partial horizon retains an available median and null 80% tail
+  ---
+  duration_ms: 0.2916
+  type: 'test'
+  ...
+# Subtest: T06 skip first passage is conditional convolution for the same posterior draw
+ok 5 - T06 skip first passage is conditional convolution for the same posterior draw
+  ---
+  duration_ms: 1.1641
+  type: 'test'
+  ...
+# Subtest: T10 tiny masses, exact threshold equality, tail and zero-day completion
+ok 6 - T10 tiny masses, exact threshold equality, tail and zero-day completion
+  ---
+  duration_ms: 1.0402
+  type: 'test'
+  ...
+# Subtest: Published connection examples distinguish UNKNOWN, recorded, insufficient, completed, null and zero
+ok 7 - Published connection examples distinguish UNKNOWN, recorded, insufficient, completed, null and zero
+  ---
+  duration_ms: 227.0638
+  type: 'test'
+  ...
+# Subtest: Demo handoff: two 30-day synthetic inputs isolate resumption patterns with equal actual progress
+ok 8 - Demo handoff: two 30-day synthetic inputs isolate resumption patterns with equal actual progress
+  ---
+  duration_ms: 477.2443
+  type: 'test'
+  ...
+# Subtest: candidate: symmetric default prior reproduces all 11 existing connection calculations
+ok 9 - candidate: symmetric default prior reproduces all 11 existing connection calculations
+  ---
+  duration_ms: 372.5254
+  type: 'test'
+  ...
+# Subtest: candidate: DD/DS update a and SD/SS update b independently; UNKNOWN adds no pairs or prior observations
+ok 10 - candidate: DD/DS update a and SD/SS update b independently; UNKNOWN adds no pairs or prior observations
+  ---
+  duration_ms: 1.0616
+  type: 'test'
+  ...
+# Subtest: candidate: prior-only and one-origin histories keep existing insufficient and terminal precedence
+ok 11 - candidate: prior-only and one-origin histories keep existing insufficient and terminal precedence
+  ---
+  duration_ms: 3.5811
+  type: 'test'
+  ...
+# Subtest: candidate: backfill/correction recomputes from the original snapshot without accumulation
+ok 12 - candidate: backfill/correction recomputes from the original snapshot without accumulation
+  ---
+  duration_ms: 1.5959
+  type: 'test'
+  ...
+# Subtest: candidate: recorded today actual amount stays 7; DP begins with zero future DONEs
+ok 13 - candidate: recorded today actual amount stays 7; DP begins with zero future DONEs
+  ---
+  duration_ms: 0.8343
+  type: 'test'
+  ...
+# Subtest: candidate: asymmetric recovery boundaries match an independent integer-alpha survival identity
+ok 14 - candidate: asymmetric recovery boundaries match an independent integer-alpha survival identity
+  ---
+  duration_ms: 1.1835
+  type: 'test'
+  ...
+# Subtest: candidate: source/version are detached provenance and do not alter counts or seeded draws
+ok 15 - candidate: source/version are detached provenance and do not alter counts or seeded draws
+  ---
+  duration_ms: 6.149
+  type: 'test'
+  ...
+# Subtest: candidate: unsupported shape domain, missing parameters and incomplete provenance fail explicitly
+ok 16 - candidate: unsupported shape domain, missing parameters and incomplete provenance fail explicitly
+  ---
+  duration_ms: 2.0014
+  type: 'test'
+  ...
+# Subtest: candidate: independent a changes completion but not b-driven core; source remains actual snapshot
+ok 17 - candidate: independent a changes completion but not b-driven core; source remains actual snapshot
+  ---
+  duration_ms: 1.0428
+  type: 'test'
+  ...
+# Subtest: window facts cover empty, today, yesterday, UNKNOWN, reverse order and initial-only progress
+ok 18 - window facts cover empty, today, yesterday, UNKNOWN, reverse order and initial-only progress
+  ---
+  duration_ms: 17.277
+  type: 'test'
+  ...
+# Subtest: window facts include leap days and do not turn gaps into transitions
+ok 19 - window facts include leap days and do not turn gaps into transitions
+  ---
+  duration_ms: 0.4553
+  type: 'test'
+  ...
+# Subtest: input errors preserve original field paths and reject invalid facts before completed
+ok 20 - input errors preserve original field paths and reject invalid facts before completed
+  ---
+  duration_ms: 2.8529
+  type: 'test'
+  ...
+# Subtest: config errors are separate from caller data errors and carry no HTTP mapping
+ok 21 - config errors are separate from caller data errors and carry no HTTP mapping
+  ---
+  duration_ms: 2.7159
+  type: 'test'
+  ...
+# Subtest: T-01: actual observations exclude both pairs around UNKNOWN; input order is irrelevant
+ok 22 - T-01: actual observations exclude both pairs around UNKNOWN; input order is irrelevant
+  ---
+  duration_ms: 12.1292
+  type: 'test'
+  ...
+# Subtest: T-01: Gregorian adjacency includes leap/year boundaries and excludes missing days
+ok 23 - T-01: Gregorian adjacency includes leap/year boundaries and excludes missing days
+  ---
+  duration_ms: 0.7062
+  type: 'test'
+  ...
+# Subtest: T-04: core depends only on SKIPPED-origin counts, independent of DONE-origin and goal quantities
+ok 24 - T-04: core depends only on SKIPPED-origin counts, independent of DONE-origin and goal quantities
+  ---
+  duration_ms: 42.7383
+  type: 'test'
+  ...
+# Subtest: T-07: identical input/config is exactly deterministic and does not mutate caller data
+ok 25 - T-07: identical input/config is exactly deterministic and does not mutate caller data
+  ---
+  duration_ms: 1.6481
+  type: 'test'
+  ...
+# Subtest: T-08/T-12: today actual amount is counted once; CURRENT_STATE counts only future DONEs
+ok 26 - T-08/T-12: today actual amount is counted once; CURRENT_STATE counts only future DONEs
+  ---
+  duration_ms: 1.0493
+  type: 'test'
+  ...
+# Subtest: T-08: unrecorded today uses one hypothetical session; remaining one gives0, two gives future need1
+ok 27 - T-08: unrecorded today uses one hypothetical session; remaining one gives0, two gives future need1
+  ---
+  duration_ms: 0.9341
+  type: 'test'
+  ...
+# Subtest: T-09/T-10: goal monotonicity and horizon nulls with fixed posterior draws
+ok 28 - T-09/T-10: goal monotonicity and horizon nulls with fixed posterior draws
+  ---
+  duration_ms: 17.8462
+  type: 'test'
+  ...
+# Subtest: T-12: CURRENT_STATE first-future-DONE quantiles match an independent closed CDF
+ok 29 - T-12: CURRENT_STATE first-future-DONE quantiles match an independent closed CDF
+  ---
+  duration_ms: 3.4571
+  type: 'test'
+  ...
+# Subtest: T-11/T-12: priority completed > today recorded > insufficient; never publish prior-only completion
+ok 30 - T-11/T-12: priority completed > today recorded > insufficient; never publish prior-only completion
+  ---
+  duration_ms: 5.0974
+  type: 'test'
+  ...
+# Subtest: T-13: future and duplicate errors precede completed; invalid quantities/calendar/status reject
+ok 31 - T-13: future and duplicate errors precede completed; invalid quantities/calendar/status reject
+  ---
+  duration_ms: 2.9435
+  type: 'test'
+  ...
+# Subtest: integer ceil and technical config errors remain separate from HTTP error mapping
+ok 32 - integer ceil and technical config errors remain separate from HTTP error mapping
+  ---
+  duration_ms: 3.272
+  type: 'test'
+  ...
+# Subtest: adapter candidate: all 18 PR118 examples connect raw input through posterior and evidence metadata
+ok 33 - adapter candidate: all 18 PR118 examples connect raw input through posterior and evidence metadata
+  ---
+  duration_ms: 295.9673
+  type: 'test'
+  ...
+# Subtest: adapter candidate: 13 previously different gates have concrete center and completion expectations
+ok 34 - adapter candidate: 13 previously different gates have concrete center and completion expectations
+  ---
+  duration_ms: 167.4679
+  type: 'test'
+  ...
+# Subtest: adapter candidate: missing/UNKNOWN are not MID; material is determined per actual origin
+ok 35 - adapter candidate: missing/UNKNOWN are not MID; material is determined per actual origin
+  ---
+  duration_ms: 109.7922
+  type: 'test'
+  ...
+# Subtest: adapter candidate: raw/mapping/real-log failures are classified without success fallback or HTTP decisions
+ok 36 - adapter candidate: raw/mapping/real-log failures are classified without success fallback or HTTP decisions
+  ---
+  duration_ms: 3.6414
+  type: 'test'
+  ...
+# Subtest: adapter candidate: correction, clear, frozen input, output mutation and seed replay do not retain state
+ok 37 - adapter candidate: correction, clear, frozen input, output mutation and seed replay do not retain state
+  ---
+  duration_ms: 185.499
+  type: 'test'
+  ...
+# Subtest: handoff example: saved initial mapping and same snapshot context reach adapter without posterior or quantity recomputation
+ok 38 - handoff example: saved initial mapping and same snapshot context reach adapter without posterior or quantity recomputation
+  ---
+  duration_ms: 369.9246
+  type: 'test'
+  ...
+# Subtest: handoff example: known candidate and Engine errors retain classification through plain object worker copy
+ok 39 - handoff example: known candidate and Engine errors retain classification through plain object worker copy
+  ---
+  duration_ms: 255.8296
+  type: 'test'
+  ...
+# Subtest: handoff example: an unknown worker failure rejects instead of becoming an input error or successful result
+ok 40 - handoff example: an unknown worker failure rejects instead of becoming an input error or successful result
+  ---
+  duration_ms: 72.2902
+  type: 'test'
+  ...
+# Subtest: 公開R-11: 未回答とUNKNOWNは材料ではなく、MIDは同じBetaでも材料になる
+ok 41 - 公開R-11: 未回答とUNKNOWNは材料ではなく、MIDは同じBetaでも材料になる
+  ---
+  duration_ms: 93.1807
+  type: 'test'
+  ...
+# Subtest: 公開R-11: 実記録の遷移を一度だけ足し、回答と記録の由来を別々に示す
+ok 42 - 公開R-11: 実記録の遷移を一度だけ足し、回答と記録の由来を別々に示す
+  ---
+  duration_ms: 100.3967
+  type: 'test'
+  ...
+# Subtest: 公開R-11: 達成と今日記録済みの優先順位、残量のPlanを保つ
+ok 43 - 公開R-11: 達成と今日記録済みの優先順位、残量のPlanを保つ
+  ---
+  duration_ms: 1.0526
+  type: 'test'
+  ...
+# Subtest: 公開R-11: rawの不正は構造化した公開例外で失敗する
+ok 44 - 公開R-11: rawの不正は構造化した公開例外で失敗する
+  ---
+  duration_ms: 1.133
+  type: 'test'
+  ...
+# Subtest: T15 adopted integer and Beta vectors fix consumption order
+ok 45 - T15 adopted integer and Beta vectors fix consumption order
+  ---
+  duration_ms: 18.2649
+  type: 'test'
+  ...
+# Subtest: uniform stays strictly inside endpoints
+ok 46 - uniform stays strictly inside endpoints
+  ---
+  duration_ms: 0.387
+  type: 'test'
+  ...
+# Subtest: T15 Gamma and Beta moments including supported shape boundary
+ok 47 - T15 Gamma and Beta moments including supported shape boundary
+  ---
+  duration_ms: 258.1038
+  type: 'test'
+  ...
+# Subtest: backfill then correction rebuilds both adjacent pairs and actual progress from each full snapshot
+ok 48 - backfill then correction rebuilds both adjacent pairs and actual progress from each full snapshot
+  ---
+  duration_ms: 12.951
+  type: 'test'
+  ...
+# Subtest: today amount correction and later session edits do not rewrite actual historical amounts
+ok 49 - today amount correction and later session edits do not rewrite actual historical amounts
+  ---
+  duration_ms: 7.7548
+  type: 'test'
+  ...
+# Subtest: a late actual-log correction can enter and leave COMPLETED without stale state
+ok 50 - a late actual-log correction can enter and leave COMPLETED without stale state
+  ---
+  duration_ms: 0.8998
+  type: 'test'
+  ...
+# Subtest: 120 reproducible generated histories agree with a dense calendar oracle and preserve frozen inputs
+ok 51 - 120 reproducible generated histories agree with a dense calendar oracle and preserve frozen inputs
+  ---
+  duration_ms: 102.2349
+  type: 'test'
+  ...
+# Subtest: rejecting frozen duplicate snapshots does not mutate inputs or contaminate the next calculation
+ok 52 - rejecting frozen duplicate snapshots does not mutate inputs or contaminate the next calculation
+  ---
+  duration_ms: 2.2162
+  type: 'test'
+  ...
+# Subtest: T-02 exact inclusive median and 80% boundaries and fixture
+ok 53 - T-02 exact inclusive median and 80% boundaries and fixture
+  ---
+  duration_ms: 8.798
+  type: 'test'
+  ...
+# Subtest: T-02 factorial oracle covers normalization and minimal quantiles
+ok 54 - T-02 factorial oracle covers normalization and minimal quantiles
+  ---
+  duration_ms: 357.4485
+  type: 'test'
+  ...
+# Subtest: T-03 added resumptions cannot delay and added skips cannot accelerate recovery
+ok 55 - T-03 added resumptions cannot delay and added skips cannot accelerate recovery
+  ---
+  duration_ms: 7.9017
+  type: 'test'
+  ...
+# Subtest: T-15 alpha=2 closed survival oracle handles many skips beyond completion horizon
+ok 56 - T-15 alpha=2 closed survival oracle handles many skips beyond completion horizon
+  ---
+  duration_ms: 10.2323
+  type: 'test'
+  ...
+# Subtest: T-15 safe shapes retain exact arithmetic when their sum is unsafe
+ok 57 - T-15 safe shapes retain exact arithmetic when their sum is unsafe
+  ---
+  duration_ms: 0.6922
+  type: 'test'
+  ...
+# Subtest: invalid shapes are rejected instead of entering the survival calculation
+ok 58 - invalid shapes are rejected instead of entering the survival calculation
+  ---
+  duration_ms: 1.7021
+  type: 'test'
+  ...
+# Subtest: T-05 posterior Beta then Geometric Monte Carlo supports exact quantiles
+ok 59 - T-05 posterior Beta then Geometric Monte Carlo supports exact quantiles
+  ---
+  duration_ms: 291.6739
+  type: 'test'
+  ...
+# Subtest: Result contract: calendar days include UNKNOWN and explicit counts end at today or yesterday
+ok 60 - Result contract: calendar days include UNKNOWN and explicit counts end at today or yesterday
+  ---
+  duration_ms: 5.7004
+  type: 'test'
+  ...
+# Subtest: Result contract: Gregorian leap/century/year boundaries preserve the UNKNOWN rule
+ok 61 - Result contract: Gregorian leap/century/year boundaries preserve the UNKNOWN rule
+  ---
+  duration_ms: 1.4982
+  type: 'test'
+  ...
+# Subtest: Result contract: initial progress and completed state never fabricate an observation origin
+ok 62 - Result contract: initial progress and completed state never fabricate an observation origin
+  ---
+  duration_ms: 0.5735
+  type: 'test'
+  ...
+# Subtest: Result contract: extending the window with isolated SKIPPED changes metadata alone
+ok 63 - Result contract: extending the window with isolated SKIPPED changes metadata alone
+  ---
+  duration_ms: 3.4978
+  type: 'test'
+  ...
+# Subtest: Error contract: public classes classify input/config/derived paths without a transport response
+ok 64 - Error contract: public classes classify input/config/derived paths without a transport response
+  ---
+  duration_ms: 2.1716
+  type: 'test'
+  ...
+# Subtest: Config error: unsafe posterior identifies prior plus transition count without rejecting safe boundary shapes
+ok 65 - Config error: unsafe posterior identifies prior plus transition count without rejecting safe boundary shapes
+  ---
+  duration_ms: 1.6304
+  type: 'test'
+  ...
+# Subtest: Result contract: recording or correcting today recomputes the complete result without retained state
+ok 66 - Result contract: recording or correcting today recomputes the complete result without retained state
+  ---
+  duration_ms: 6.3799
+  type: 'test'
+  ...
+# Subtest: package: documented defaults and a real pure calculation entry
+ok 67 - package: documented defaults and a real pure calculation entry
+  ---
+  duration_ms: 2.49
+  type: 'test'
+  ...
+# Subtest: scaffold: source imports stay inside the pure package; no ambient platform inputs
+ok 68 - scaffold: source imports stay inside the pure package; no ambient platform inputs
+  ---
+  duration_ms: 12.8972
+  type: 'test'
+  ...
+# Subtest: fixture audit: known recovery quantiles match independent integer factorial ratios
+ok 69 - fixture audit: known recovery quantiles match independent integer factorial ratios
+  ---
+  duration_ms: 0.6948
+  type: 'test'
+  ...
+# Subtest: fixture audit: UNKNOWN gap, actual today amount, and shared DP regression remain explicit
+ok 70 - fixture audit: UNKNOWN gap, actual today amount, and shared DP regression remain explicit
+  ---
+  duration_ms: 0.384
+  type: 'test'
+  ...
+1..70
+# tests 70
+# suites 0
+# pass 70
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1168.0221

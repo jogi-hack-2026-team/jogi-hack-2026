@@ -27,9 +27,23 @@ export function describeChoice(choice: RecordChoice, sessionAmount: number, unit
  * - date：記録できる日（今日・昨日、記録開始日以降）から外れた。日付が変わった後に古い画面で押した場合など
  * - failed：通信・サーバーの失敗。同じ内容で再試行できる
  */
-export type SaveFailureKind = 'signed-out' | 'date' | 'failed';
+export type SaveFailureKind = 'signed-out' | 'date' | 'day-changed' | 'failed';
+
+/** Today の操作は API で分かった今日だけに送る。昨日の補完・訂正には適用しない。
+ * Goal が先に翌日へ進んだ場合も、Today が先に進んだ場合も、古い表示の日へ送らない。
+ * 初回 Today 取得失敗時は、取得できた Goal の今日で記録できる。
+ */
+export function isCurrentToday(date: string, goalToday?: string, todayDate?: string): boolean {
+  return date === goalToday && (todayDate === undefined || date >= todayDate);
+}
+
+/** 送信直前に日付が変わった場合も、HTTP を送らず選び直しを案内する。 */
+export class TodayDateChangedError extends Error {
+  constructor() { super('Today date changed'); }
+}
 
 export function classifySaveError(error: unknown): SaveFailureKind {
+  if (error instanceof TodayDateChangedError) return 'day-changed';
   if (isUnauthenticated(error)) return 'signed-out';
   if (error instanceof ApiError && error.status === 422) {
     const code = error.body?.error.code;

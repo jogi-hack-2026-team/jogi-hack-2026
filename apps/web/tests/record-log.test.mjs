@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
-import { choiceFromLog, classifySaveError, describeChoice, editLocks, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
+import { choiceFromLog, classifySaveError, describeChoice, editLocks, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
@@ -98,4 +98,16 @@ test('今日の保存が失敗した後に昨日の訂正を始めたら、今�
   // 昨日の訂正を終えれば、再試行できる
   unlessLocked(editLocks(failedToday).todayLocked, retryToday)();
   assert.deepEqual(sent, ['today']);
+});
+
+test('今日の保存は API の今日だけ。Goal/Todayの到着順・初回Today失敗・翌日へ更新後の旧日retryを区別する', () => {
+  const d = '2026-10-07', next = '2026-10-08';
+  assert.equal(isCurrentToday(d, d, d), true);
+  assert.equal(isCurrentToday(d, next, d), false); // Goal先着・古いlastGoodの通常保存／量入力
+  assert.equal(isCurrentToday(d, d, next), false); // Today先着
+  assert.equal(isCurrentToday(d, next, next), false); // 全取得成功後でも失敗した旧日のretryは禁止
+  assert.equal(isCurrentToday(next, next, next), true);
+  assert.equal(isCurrentToday(next, next, undefined), true); // 初回Today失敗時のGoal fallback
+  assert.equal(isCurrentToday(d, undefined, d), false);
+  assert.equal(classifySaveError(new TodayDateChangedError()), 'day-changed');
 });

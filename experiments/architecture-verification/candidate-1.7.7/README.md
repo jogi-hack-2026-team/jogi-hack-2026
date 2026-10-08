@@ -11,3 +11,11 @@ Linux検証は既存のDocker Desktop Linux engineが使える場合だけ、`no
 ローカルHTTP試験だけ`NODE_ENV=test`を指定する。productionのHTTPS gateは変更しない。Containerの`DATABASE_URL`/`BETTER_AUTH_SECRET`/`BASE_URL`不足は拒否し、embedded DBへfallbackしない。本番利用は未承認。[復元後session失効手順](RESTORE-PROCEDURE.md) は loopback合成DB限定で、本番復旧を代行しない。
 
 終了回帰は `node verify/v7-shutdown-regression.mjs`。正常keep-aliveのidle/処理中/並列worker/SQL書込と反復起動9条件。専用tmpfs DB、合成2人、worker1・代用CPU2000ms・書込lock4秒、Docker猶予10秒、全応答200・終了後SQL・resource解放を確認する。実Engine/クラウド試験ではない。WindowsからDockerへはユーザー設定を読まない空の専用DOCKER_CONFIGと既存Linux endpointを指定する。Dockerへの権限がなければ停止し、新認可/設定変更をしない。
+
+実Engineの混合負荷は `npm run verify:real-engine`。現mainの参照checkoutのrootで `npm ci` → `npm run build:prediction` を済ませ、本候補内で独立した `npm ci` を行う。`SPIKE_ENGINE_ROOT` に参照checkoutの `packages/prediction` の絶対パスを指定する。旧同梱distを現mainとして測らない。入力・worker・cohort回帰は同じ環境で `npm run verify:real-regression`（14件）。手順・結果・限界は[2026-10-07の追加報告](../REAL-ENGINE-2026-10-07.md)。旧報告・旧JSONは履歴として保持する。
+
+`SPIKE_PREDICT_ENGINE=real` のときだけ `/today` が実Engineを呼び、既定は代用計算のまま。`SPIKE_PREDICT_ENTRY=question-prior` は既存strength-4 mapping（LOW 1/3、MID 2/2、HIGH 3/1）と合成回答HIGH/LOWで公開 `predictWithQuestionPrior` を別測定する。採択値や本体Algorithm/DTOは変更しない。loopback HTTPでは `NODE_ENV=test` を使う。HTTP3230、PGの既定55592、Windows予約範囲の場合は `SPIKE_PG_PORT`（今回は65392）を明示する。
+
+Windowsでは `pwsh -NoProfile -File verify-real-engine.ps1 -EngineRoot <参照Engine絶対パス> -PgPort 65392` で、旧predictと公開R-11の7条件を各2回逐次実行する。既存JSONを上書きせず、UTC日時の新規フォルダへ生JSON・ログ・exit code ledgerを保存する。CPU測定中は別のtests/buildを実行しない。
+
+再レビューのURL移植性・公開R11入力境界・diff証拠保存・pool停止後の限界は[2026-10-08の対応報告](../REAL-ENGINE-2026-10-08.md)。候補のhealthはDB疎通のみで、worker poolは死亡後に自動復旧せずprocess再起動まで予測503となる。次回測定するsrc/verifyはcommitまたはstageし、JSONと同じfolderの `*.candidate.diff` を保存する。diff移送の軽量回帰は `pwsh -NoProfile -File verify/diff-evidence.test.ps1`。

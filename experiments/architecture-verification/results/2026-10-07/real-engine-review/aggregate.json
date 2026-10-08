@@ -1,0 +1,77 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth",
+  "at": "2026-10-07T11:46:37.2307863+00:00",
+  "runs": [
+    {
+      "file": "20261007T113320Z/predict-run1.json",
+      "entry": "predict",
+      "iteration": 1,
+      "at": "2026-10-07T11:35:04.518Z",
+      "pass": 6,
+      "assertionFailures": 0,
+      "exitCode": 0,
+      "scenarios": 7,
+      "requestFailures": 0.0,
+      "failures": [],
+      "candidateHead": "93a4efd4e80cdef3811a47880d6bd520257e94e1",
+      "engineHead": "e55d3cea9fc97860191939e6aa7173215b3df29b",
+      "distHash": "b8b3c4b7c2c8ca2c8dc57daae4b4079f6c6c2d762533d140932f50f149681ab5"
+    },
+    {
+      "file": "20261007T113320Z/predict-run2.json",
+      "entry": "predict",
+      "iteration": 2,
+      "at": "2026-10-07T11:36:45.893Z",
+      "pass": 5,
+      "assertionFailures": 1,
+      "exitCode": 1,
+      "scenarios": 7,
+      "requestFailures": 0.0,
+      "failures": [
+        {
+          "id": "E4",
+          "name": "in-service compute: every real predict call measured inside the server is under 500 ms"
+        }
+      ],
+      "candidateHead": "93a4efd4e80cdef3811a47880d6bd520257e94e1",
+      "engineHead": "e55d3cea9fc97860191939e6aa7173215b3df29b",
+      "distHash": "b8b3c4b7c2c8ca2c8dc57daae4b4079f6c6c2d762533d140932f50f149681ab5"
+    },
+    {
+      "file": "20261007T114010Z/question-prior-run1.json",
+      "entry": "predictWithQuestionPrior",
+      "iteration": 1,
+      "at": "2026-10-07T11:41:55.323Z",
+      "pass": 7,
+      "assertionFailures": 0,
+      "exitCode": 0,
+      "scenarios": 7,
+      "requestFailures": 0.0,
+      "failures": [],
+      "candidateHead": "b7fb21c1af973041e93aa1b982cd6be119219c3b",
+      "engineHead": "e55d3cea9fc97860191939e6aa7173215b3df29b",
+      "distHash": "b8b3c4b7c2c8ca2c8dc57daae4b4079f6c6c2d762533d140932f50f149681ab5"
+    },
+    {
+      "file": "20261007T114010Z/question-prior-run2.json",
+      "entry": "predictWithQuestionPrior",
+      "iteration": 2,
+      "at": "2026-10-07T11:43:39.497Z",
+      "pass": 7,
+      "assertionFailures": 0,
+      "exitCode": 0,
+      "scenarios": 7,
+      "requestFailures": 0.0,
+      "failures": [],
+      "candidateHead": "b7fb21c1af973041e93aa1b982cd6be119219c3b",
+      "engineHead": "e55d3cea9fc97860191939e6aa7173215b3df29b",
+      "distHash": "b8b3c4b7c2c8ca2c8dc57daae4b4079f6c6c2d762533d140932f50f149681ab5"
+    }
+  ],
+  "completedRuns": 4,
+  "completedScenarios": 28.0,
+  "pass": 25.0,
+  "fail": 1.0,
+  "overallExitCode": 1,
+  "note": "Valid performance FAIL remains FAIL; later PASS runs do not erase earlier failures."
+}

@@ -1,0 +1,306 @@
+diff --git a/experiments/architecture-verification/candidate-1.7.7/README.md b/experiments/architecture-verification/candidate-1.7.7/README.md
+index a089fb1..f64427c 100644
+--- a/experiments/architecture-verification/candidate-1.7.7/README.md
++++ b/experiments/architecture-verification/candidate-1.7.7/README.md
+@@ -12,8 +12,10 @@ Linux検証は既存のDocker Desktop Linux engineが使える場合だけ、`no
+ 
+ 終了回帰は `node verify/v7-shutdown-regression.mjs`。正常keep-aliveのidle/処理中/並列worker/SQL書込と反復起動9条件。専用tmpfs DB、合成2人、worker1・代用CPU2000ms・書込lock4秒、Docker猶予10秒、全応答200・終了後SQL・resource解放を確認する。実Engine/クラウド試験ではない。WindowsからDockerへはユーザー設定を読まない空の専用DOCKER_CONFIGと既存Linux endpointを指定する。Dockerへの権限がなければ停止し、新認可/設定変更をしない。
+ 
+-実Engineの混合負荷は `npm run verify:real-engine`。現mainの参照checkoutのrootで `npm ci` → `npm run build:prediction` を済ませ、本候補内で独立した `npm ci` を行う。`SPIKE_ENGINE_ROOT` に参照checkoutの `packages/prediction` の絶対パスを指定する。旧同梱distを現mainとして測らない。入力・worker・cohort回帰は同じ環境で `npm run verify:real-regression`（10件）。手順・結果・限界は[2026-10-07の追加報告](../REAL-ENGINE-2026-10-07.md)。旧報告・旧JSONは履歴として保持する。
++実Engineの混合負荷は `npm run verify:real-engine`。現mainの参照checkoutのrootで `npm ci` → `npm run build:prediction` を済ませ、本候補内で独立した `npm ci` を行う。`SPIKE_ENGINE_ROOT` に参照checkoutの `packages/prediction` の絶対パスを指定する。旧同梱distを現mainとして測らない。入力・worker・cohort回帰は同じ環境で `npm run verify:real-regression`（14件）。手順・結果・限界は[2026-10-07の追加報告](../REAL-ENGINE-2026-10-07.md)。旧報告・旧JSONは履歴として保持する。
+ 
+ `SPIKE_PREDICT_ENGINE=real` のときだけ `/today` が実Engineを呼び、既定は代用計算のまま。`SPIKE_PREDICT_ENTRY=question-prior` は既存strength-4 mapping（LOW 1/3、MID 2/2、HIGH 3/1）と合成回答HIGH/LOWで公開 `predictWithQuestionPrior` を別測定する。採択値や本体Algorithm/DTOは変更しない。loopback HTTPでは `NODE_ENV=test` を使う。HTTP3230、PGの既定55592、Windows予約範囲の場合は `SPIKE_PG_PORT`（今回は65392）を明示する。
+ 
+ Windowsでは `pwsh -NoProfile -File verify-real-engine.ps1 -EngineRoot <参照Engine絶対パス> -PgPort 65392` で、旧predictと公開R-11の7条件を各2回逐次実行する。既存JSONを上書きせず、UTC日時の新規フォルダへ生JSON・ログ・exit code ledgerを保存する。CPU測定中は別のtests/buildを実行しない。
++
++再レビューのURL移植性・公開R11入力境界・diff証拠保存・pool停止後の限界は[2026-10-08の対応報告](../REAL-ENGINE-2026-10-08.md)。候補のhealthはDB疎通のみで、worker poolは死亡後に自動復旧せずprocess再起動まで予測503となる。次回測定するsrc/verifyはcommitまたはstageし、JSONと同じfolderの `*.candidate.diff` を保存する。diff移送の軽量回帰は `pwsh -NoProfile -File verify/diff-evidence.test.ps1`。
+diff --git a/experiments/architecture-verification/candidate-1.7.7/src/predict-real.ts b/experiments/architecture-verification/candidate-1.7.7/src/predict-real.ts
+index 8d49575..64853a7 100644
+--- a/experiments/architecture-verification/candidate-1.7.7/src/predict-real.ts
++++ b/experiments/architecture-verification/candidate-1.7.7/src/predict-real.ts
+@@ -62,12 +62,13 @@ export function validateRealInput(input: PredictionInput) {
+ 
+ export function runReal(input: RealInput): RealSummary {
+   validateRealInput(input);
++  const { questionPrior, ...prediction } = input;
+   const t0 = performance.now();
+-  const entryPoint = input.questionPrior ? 'predictWithQuestionPrior' : 'predict';
+-  if (input.questionPrior && !engine.predictWithQuestionPrior) throw new Error('Selected engine has no public question-prior entry');
+-  const r = input.questionPrior
+-    ? engine.predictWithQuestionPrior!({ prediction: input, ...input.questionPrior }).prediction
+-    : engine.predict(input);
++  const entryPoint = questionPrior ? 'predictWithQuestionPrior' : 'predict';
++  if (questionPrior && !engine.predictWithQuestionPrior) throw new Error('Selected engine has no public question-prior entry');
++  const r = questionPrior
++    ? engine.predictWithQuestionPrior!({ prediction, ...questionPrior }).prediction
++    : engine.predict(prediction);
+   const computeMs = performance.now() - t0;
+   // Actual today DONE is already in progress.done. Only UNRECORDED uses one virtual session.
+   const remainingAmount = Math.max(0, r.progress.total - r.progress.done -
+diff --git a/experiments/architecture-verification/candidate-1.7.7/verify-real-engine.ps1 b/experiments/architecture-verification/candidate-1.7.7/verify-real-engine.ps1
+index 0ca8bed..44a1d6c 100644
+--- a/experiments/architecture-verification/candidate-1.7.7/verify-real-engine.ps1
++++ b/experiments/architecture-verification/candidate-1.7.7/verify-real-engine.ps1
+@@ -5,6 +5,7 @@ param([Parameter(Mandatory)][string]$EngineRoot, [ValidateRange(1024,65535)][int
+ $ErrorActionPreference = 'Stop'
+ $candidateRoot = [IO.Path]::GetFullPath($PSScriptRoot)
+ . (Join-Path $candidateRoot 'verify\measurement-ledger.ps1')
++. (Join-Path $candidateRoot 'verify\diff-evidence.ps1')
+ $env:SPIKE_ENGINE_ROOT = [IO.Path]::GetFullPath($EngineRoot)
+ $env:SPIKE_PG_PORT = [string]$PgPort
+ $nodeBinary = Join-Path $candidateRoot 'node_modules\node\bin\node.exe'
+@@ -31,6 +32,7 @@ try {
+         $result = Get-Content -LiteralPath $source -Raw | ConvertFrom-Json
+         if ([DateTimeOffset]$result.at -lt $started) { throw 'Stale result JSON.' }
+         $failures = $result.summary.fail
++        Copy-DiffEvidence $result.engineProvenance (Join-Path $candidateRoot 'results\post-fix') $evidenceRoot
+         Copy-Item -LiteralPath $source -Destination (Join-Path $evidenceRoot ($entry + '-run' + $iteration + '.json'))
+       }
+       $ledger += @{ entry=$publicEntry; iteration=$iteration; startedAt=$started.ToString('o'); endedAt=[DateTimeOffset]::UtcNow.ToString('o'); exitCode=$code; assertionFailures=$failures }
+diff --git a/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.ps1 b/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.ps1
+new file mode 100644
+index 0000000..356db15
+--- /dev/null
++++ b/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.ps1
+@@ -0,0 +1,13 @@
++# Supporting Artifact / Not a Source of Truth. Carry the exact hashed payload into the run evidence.
++function Copy-DiffEvidence($Provenance, [string]$SourceDirectory, [string]$DestinationDirectory) {
++  $name = [string]$Provenance.candidateDiffFile
++  if ($name -ne [IO.Path]::GetFileName($name) -or $name -notmatch '^[a-zA-Z0-9_-]+\.candidate\.diff$') { throw 'Invalid diff evidence filename.' }
++  $source = Join-Path $SourceDirectory $name
++  if ((Get-FileHash -LiteralPath $source -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant() -ne $Provenance.candidateDiffSha256) { throw 'Diff evidence hash mismatch.' }
++  if ((Get-Item -LiteralPath $source -ErrorAction Stop).Length -ne $Provenance.candidateDiffBytes) { throw 'Diff evidence byte count mismatch.' }
++  $destination = Join-Path $DestinationDirectory $name
++  if (Test-Path -LiteralPath $destination) { throw 'Diff evidence exists; refusing to overwrite.' }
++  Copy-Item -LiteralPath $source -Destination $destination -ErrorAction Stop
++  if ((Get-FileHash -LiteralPath $destination -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant() -ne $Provenance.candidateDiffSha256 -or
++      (Get-Item -LiteralPath $destination -ErrorAction Stop).Length -ne $Provenance.candidateDiffBytes) { throw 'Copied diff evidence mismatch.' }
++}
+diff --git a/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.test.ps1 b/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.test.ps1
+new file mode 100644
+index 0000000..e945514
+--- /dev/null
++++ b/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.test.ps1
+@@ -0,0 +1,34 @@
++# Supporting Artifact / Not a Source of Truth. No server, DB, or performance measurement.
++$ErrorActionPreference = 'Stop'
++. (Join-Path $PSScriptRoot 'diff-evidence.ps1')
++$temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
++$directory = Join-Path $temporaryRoot ('pr131-diff-' + [guid]::NewGuid())
++New-Item -ItemType Directory -Path $directory | Out-Null
++function MustReject([scriptblock]$Action) {
++  $rejected = $false
++  try { & $Action } catch { $rejected = $true }
++  if (-not $rejected) { throw 'Invalid diff evidence was accepted.' }
++}
++try {
++  $target = Join-Path $directory 'evidence'
++  New-Item -ItemType Directory -Path $target | Out-Null
++  $name = 'v8-predict-test.candidate.diff'
++  $source = Join-Path $directory $name
++  $bytes = [Text.Encoding]::UTF8.GetBytes("diff --git a/日.txt b/日.txt`r`n+line`r`n")
++  [IO.File]::WriteAllBytes($source, $bytes)
++  $provenance = @{ candidateDiffFile=$name; candidateDiffBytes=$bytes.Length; candidateDiffSha256=(Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() }
++  Copy-DiffEvidence $provenance $directory $target
++  if (-not [Linq.Enumerable]::SequenceEqual([byte[]]$bytes, [byte[]][IO.File]::ReadAllBytes((Join-Path $target $name)))) { throw 'Copied bytes changed.' }
++  MustReject { Copy-DiffEvidence $provenance $directory $target }
++  MustReject { Copy-DiffEvidence (@{candidateDiffFile='../escape.candidate.diff'}) $directory $target }
++  MustReject { Copy-DiffEvidence (@{candidateDiffFile='missing.candidate.diff';candidateDiffSha256='bad';candidateDiffBytes=0}) $directory $target }
++  $empty = Join-Path $directory 'empty'
++  New-Item -ItemType Directory -Path $empty | Out-Null
++  MustReject { Copy-DiffEvidence (@{candidateDiffFile=$name;candidateDiffSha256='bad';candidateDiffBytes=$bytes.Length}) $directory $empty }
++  MustReject { Copy-DiffEvidence (@{candidateDiffFile=$name;candidateDiffSha256=$provenance.candidateDiffSha256;candidateDiffBytes=0}) $directory $empty }
++  Write-Output 'PASS diff evidence: exact UTF-8 bytes, overwrite/path/missing/hash/length rejection'
++} finally {
++  $resolved = [IO.Path]::GetFullPath($directory)
++  if (-not $resolved.StartsWith($temporaryRoot, [StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetFileName($resolved) -notlike 'pr131-diff-*') { throw 'Unexpected cleanup path.' }
++  Remove-Item -LiteralPath $resolved -Recurse -Force
++}
+diff --git a/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.ts b/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.ts
+new file mode 100644
+index 0000000..621e280
+--- /dev/null
++++ b/experiments/architecture-verification/candidate-1.7.7/verify/diff-evidence.ts
+@@ -0,0 +1,11 @@
++// Supporting Artifact / Not a Source of Truth. Preserve the bytes used by provenance hashes.
++import { createHash } from 'node:crypto';
++import { mkdirSync, writeFileSync } from 'node:fs';
++import { basename, join } from 'node:path';
++
++export function saveDiffPayload(directory: string, file: string, payload: Uint8Array) {
++  if (basename(file) !== file || !/^[a-zA-Z0-9_.-]+$/.test(file)) throw new Error('Invalid diff evidence filename');
++  mkdirSync(directory, { recursive: true });
++  writeFileSync(join(directory, file), payload, { flag: 'wx' });
++  return { file, bytes: payload.byteLength, sha256: createHash('sha256').update(payload).digest('hex') };
++}
+diff --git a/experiments/architecture-verification/candidate-1.7.7/verify/v8-real-engine-mixed-load.ts b/experiments/architecture-verification/candidate-1.7.7/verify/v8-real-engine-mixed-load.ts
+index 82ab2ce..7a6ddb3 100644
+--- a/experiments/architecture-verification/candidate-1.7.7/verify/v8-real-engine-mixed-load.ts
++++ b/experiments/architecture-verification/candidate-1.7.7/verify/v8-real-engine-mixed-load.ts
+@@ -19,6 +19,7 @@ import { rootDir, startPg } from '../src/pg-embedded.ts';
+ import { client, goalInput, newCredentials, newSecret, Report } from './lib.ts';
+ import { startServer } from './proc.ts';
+ import { LoadCohort, type Timed } from './load-cohort.ts';
++import { saveDiffPayload } from './diff-evidence.ts';
+ 
+ const report = new Report('verification-2 mixed load with the real prediction engine');
+ const secret = newSecret();
+@@ -38,13 +39,24 @@ const engineDir = resolve(process.env.SPIKE_ENGINE_ROOT ?? join(repoRoot, 'packa
+ const engineRepo = resolve(engineDir, '..', '..');
+ const entryPoint = process.env.SPIKE_PREDICT_ENTRY === 'question-prior' ? 'predictWithQuestionPrior' : 'predict';
+ if (!existsSync(join(engineDir, 'dist', 'src', 'index.js'))) {
+-  throw new Error('Build the engine first: node packages/prediction/scripts/check.mjs test (from the repository root).');
++  throw new Error('Build the reference engine first: npm ci --no-audit --no-fund then npm run build:prediction (from its repository root); run independent npm ci in the candidate directory.');
+ }
++const resultTag = process.env.SPIKE_RESULT_TAG ?? new Date().toISOString().replace(/[-:.]/g, '');
++if (!/^[a-zA-Z0-9_-]+$/.test(resultTag)) throw new Error('Invalid result tag');
++const resultStem = `v8-${entryPoint}-${resultTag}`;
++// Preserve exactly the stdout bytes being hashed, including the final newline. This is
++// tracked changes relative to HEAD, not a snapshot of ignored/untracked files.
++const candidateDiff = saveDiffPayload(join(rootDir, 'results', 'post-fix'), `${resultStem}.candidate.diff`,
++  execFileSync('git', ['diff', '--no-ext-diff', '--no-color', 'HEAD', '--', 'experiments/architecture-verification/candidate-1.7.7'], { cwd: repoRoot }));
+ const gitAt = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+ const git = (...args: string[]) => gitAt(repoRoot, ...args);
+ const engineProvenance = {
+   repositoryHead: git('rev-parse', 'HEAD'),
+-  candidateDiffSha256: createHash('sha256').update(git('diff', 'HEAD', '--', 'experiments/architecture-verification/candidate-1.7.7')).digest('hex'),
++  candidateDiffSha256: candidateDiff.sha256,
++  candidateDiffFile: candidateDiff.file,
++  candidateDiffBytes: candidateDiff.bytes,
++  candidateDiffScope: 'git diff HEAD tracked candidate files; exact stdout bytes, no trim',
++  candidateUntrackedFiles: git('ls-files', '--others', '--exclude-standard', '--', 'experiments/architecture-verification/candidate-1.7.7'),
+   engineRepositoryHead: gitAt(engineRepo, 'rev-parse', 'HEAD'),
+   engineLastCommit: gitAt(engineRepo, 'log', '-1', '--format=%H', '--', 'packages/prediction'),
+   engineSourceTree: gitAt(engineRepo, 'rev-parse', 'HEAD:packages/prediction'),
+@@ -301,9 +313,7 @@ if (r11Cases) report.add('R11', 'public predictWithQuestionPrior measured separa
+ 
+ await admin.end();
+ await db.stop();
+-const resultTag = process.env.SPIKE_RESULT_TAG ?? 'latest';
+-if (!/^[a-zA-Z0-9_-]+$/.test(resultTag)) throw new Error('Invalid result tag');
+-const s = report.save(`v8-${entryPoint}-${resultTag}.json`, {
++const s = report.save(`${resultStem}.json`, {
+   engineProvenance,
+   engineBenchmarkRaw: benchJson,
+   setup: {
+diff --git a/experiments/architecture-verification/candidate-1.7.7/verify/v9-real-engine-regression.test.ts b/experiments/architecture-verification/candidate-1.7.7/verify/v9-real-engine-regression.test.ts
+index 1e33569..8b93283 100644
+--- a/experiments/architecture-verification/candidate-1.7.7/verify/v9-real-engine-regression.test.ts
++++ b/experiments/architecture-verification/candidate-1.7.7/verify/v9-real-engine-regression.test.ts
+@@ -1,12 +1,19 @@
+ // Supporting Artifact / Not a Source of Truth. Synthetic jobs and in-memory HTTP boundary checks.
+ import assert from 'node:assert/strict';
+ import test from 'node:test';
++import { fileURLToPath } from 'node:url';
++import { join, resolve, sep } from 'node:path';
++import { execFileSync } from 'node:child_process';
++import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { createHash } from 'node:crypto';
+ import type { Pool } from 'pg';
+ import type { Auth } from '../src/auth.ts';
+ import { buildApp } from '../src/app.ts';
+ import { PredictPool } from '../src/predict-pool.ts';
+ import { runReal, validateRealInput, realQuantity, engineUrl } from '../src/predict-real.ts';
+ import { LoadCohort } from './load-cohort.ts';
++import { saveDiffPayload } from './diff-evidence.ts';
+ 
+ const input = { goal: { totalRequired: 100, initialProgress: 0, sessionAmount: 10 }, logs: [], today: '2026-10-07' };
+ const fixture = new URL('./fixtures/worker-lifecycle.ts', import.meta.url);
+@@ -16,8 +23,94 @@ async function settles<T>(promise: Promise<T>): Promise<T> {
+   finally { clearTimeout(timer!); }
+ }
+ test('explicit reference engine path is used; no checkout-local dist fallback', () => {
+-  if (process.env.SPIKE_ENGINE_ROOT) assert.equal(engineUrl.pathname.replace(/\\/g, '/').toLowerCase(),
+-    new URL('file:///' + process.env.SPIKE_ENGINE_ROOT.replace(/\\/g, '/') + '/dist/src/index.js').pathname.toLowerCase());
++  if (process.env.SPIKE_ENGINE_ROOT) assert.equal(fileURLToPath(engineUrl),
++    resolve(process.env.SPIKE_ENGINE_ROOT, 'dist/src/index.js'));
++});
++
++test('file URL decoding preserves POSIX case and escaped characters; Windows drive round trips', () => {
++  assert.equal(fileURLToPath(new URL('file:///private/Engine%20%E6%97%A5%23%25/dist/src/index.js'), { windows: false }),
++    '/private/Engine 日#%/dist/src/index.js');
++  assert.notEqual(fileURLToPath(new URL('file:////private/Engine/dist/src/index.js'), { windows: false }),
++    '/private/Engine/dist/src/index.js');
++  assert.equal(fileURLToPath(new URL('file:///C:/Engine%20%E6%97%A5%23%25/dist/src/index.js'), { windows: true }),
++    'C:\\Engine 日#%\\dist\\src\\index.js');
++});
++
++test('selected engine in escaped native path receives prediction keys separately from question prior', () => {
++  const directory = mkdtempSync(join(tmpdir(), 'pr131-Engine 日#%-'));
++  try {
++    const dist = join(directory, 'dist', 'src');
++    mkdirSync(dist, { recursive: true });
++    writeFileSync(join(directory, 'package.json'), '{"type":"module"}');
++    writeFileSync(join(dist, 'index.js'), `
++      import assert from 'node:assert/strict';
++      export function predict(input) {
++        assert.deepEqual(Object.keys(input).sort(), ['goal', 'logs', 'today']);
++        return { modelVersion: 'boundary-fixture', progress: { total: 100, done: 0 },
++          todayStatus: 'UNRECORDED', completion: { status: 'ACTIVE' }, coreMetric: { status: 'READY' } };
++      }
++      export function predictWithQuestionPrior(input) {
++        assert.deepEqual(Object.keys(input).sort(), ['answers', 'mapping', 'prediction']);
++        return { prediction: predict(input.prediction) };
++      }
++    `);
++    const wrapper = new URL('../src/predict-real.ts', import.meta.url).href;
++    execFileSync(process.execPath, ['--input-type=module', '-e', `
++      import assert from 'node:assert/strict';
++      import { fileURLToPath } from 'node:url';
++      import { resolve } from 'node:path';
++      const { runReal, engineUrl } = await import(${JSON.stringify(wrapper)});
++      assert.equal(fileURLToPath(engineUrl), resolve(process.env.SPIKE_ENGINE_ROOT, 'dist/src/index.js'));
++      const input = ${JSON.stringify(input)};
++      assert.equal(runReal(input).requiredFutureDone, 9);
++      const result = runReal({ ...input, questionPrior: { answers: { a: 'HIGH', b: 'LOW' },
++        mapping: { version: 'r11-strength4-v1', values: { LOW: { alpha: 1, beta: 3 }, MID: { alpha: 2, beta: 2 }, HIGH: { alpha: 3, beta: 1 } } } } });
++      assert.equal(result.entryPoint, 'predictWithQuestionPrior');
++      assert.equal(result.requiredFutureDone, 9);
++    `], { env: { ...process.env, SPIKE_ENGINE_ROOT: directory }, timeout: 10000 });
++  } finally {
++    assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
++    rmSync(directory, { recursive: true, force: true });
++  }
++});
++
++test('diff evidence hashes exact saved UTF-8 bytes including final newline and refuses overwrite', () => {
++  const directory = mkdtempSync(join(tmpdir(), 'pr131-diff-'));
++  try {
++    const bytes = Buffer.from('diff --git a/日.txt b/日.txt\r\n+line\r\n', 'utf8');
++    const evidence = saveDiffPayload(directory, 'candidate.diff', bytes);
++    const saved = readFileSync(join(directory, evidence.file));
++    assert.deepEqual(saved, bytes);
++    assert.equal(evidence.sha256, createHash('sha256').update(saved).digest('hex'));
++    assert.equal(evidence.bytes, saved.length);
++    assert.notEqual(evidence.sha256, createHash('sha256').update(saved.toString().trim()).digest('hex'));
++    assert.throws(() => saveDiffPayload(directory, 'candidate.diff', bytes), { code: 'EEXIST' });
++    assert.throws(() => saveDiffPayload(directory, '../escape.diff', bytes));
++    const empty = saveDiffPayload(directory, 'empty.diff', Buffer.alloc(0));
++    assert.equal(empty.bytes, 0);
++    assert.equal(readFileSync(join(directory, empty.file)).length, 0);
++    assert.equal(empty.sha256, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
++  } finally {
++    assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
++    rmSync(directory, { recursive: true, force: true });
++  }
++});
++
++test('public R11 inline and worker use the existing mapping and agree with the selected Engine', async () => {
++  const questionPrior = { answers: { a: 'HIGH', b: 'LOW' }, mapping: { version: 'r11-strength4-v1',
++    values: { LOW: { alpha: 1, beta: 3 }, MID: { alpha: 2, beta: 2 }, HIGH: { alpha: 3, beta: 1 } } } } as const;
++  const engine = await import(engineUrl.href);
++  const expected = engine.predictWithQuestionPrior({ prediction: input, ...questionPrior }).prediction;
++  const pool = new PredictPool(1);
++  try {
++    for (const result of [runReal({ ...input, questionPrior }), (await settles(pool.runReal({ ...input, questionPrior }))).real]) {
++      assert.equal(result.entryPoint, 'predictWithQuestionPrior');
++      assert.equal(result.modelVersion, expected.modelVersion);
++      assert.equal(result.completionStatus, expected.completion.status);
++      assert.equal(result.coreMetricStatus, expected.coreMetric.status);
++      assert.equal(result.requiredFutureDone, 9);
++    }
++  } finally { await pool.close(); }
+ });
+ test('future DONE uses actual progress and today state once (unrecorded, DONE, SKIPPED, completed)', () => {
+   for (const n of [120, 400, 1095]) {
