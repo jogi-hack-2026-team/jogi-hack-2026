@@ -32,3 +32,78 @@
 .fr-yesterday > .fr-btn--text {
   align-self: center;
 }
+
+/* やった量の確認・変更（D1-sheet・E2） */
+.fr-amount {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}
+.fr-amount__stepper {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--fr-space-2);
+}
+.fr-amount__stepper > .fr-icon-btn {
+  margin-top: 30px;
+  border: 1.5px solid var(--fr-btn-line);
+  border-radius: 50%;
+}
+.fr-amount__actions,
+.fr-savefail__actions {
+  display: grid;
+  /* 主ボタン（この量で記録・もう一度保存）を広めにし、320px幅でも折り返さないようにする */
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--fr-space-3);
+  width: 100%;
+}
+.fr-amount__actions .fr-btn,
+.fr-savefail__actions .fr-btn {
+  padding: 0 var(--fr-space-3);
+  white-space: nowrap;
+}
+
+/* 記録の2択の上の一行（やった量・量を変更・変更をやめる） */
+.fr-record__note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.fr-record__note .fr-btn--text,
+.fr-yesterday__amount .fr-btn--text {
+  min-height: var(--fr-tap);
+  padding: 0 var(--fr-space-2);
+  font-size: var(--fr-fs-help);
+}
+
+/* 記録済みの昨日（R-04、#80）：要約の1行と訂正 */
+.fr-yesterday--summary {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-2);
+  padding-top: var(--fr-space-2);
+  padding-bottom: var(--fr-space-2);
+}
+.fr-yesterday__summary {
+  font-size: var(--fr-fs-body);
+  color: var(--fr-ink-2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fr-yesterday__note {
+  font-size: var(--fr-fs-help);
+  line-height: 1.75;
+  color: var(--fr-ink-2);
+}
+.fr-yesterday__pair .fr-btn[aria-pressed='true'] {
+  background: var(--fr-dot-soft);
+  border-color: var(--fr-dot);
+  border-width: 2px;
+}
+.fr-yesterday--summary > .fr-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

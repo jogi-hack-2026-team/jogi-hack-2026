@@ -1,3 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { goalKeys } from '../../api/goals-http.ts';
+import { todayKeys } from '../../api/today-http.ts';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
@@ -17,10 +20,13 @@ import { CoreMetric } from './CoreMetric.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
 import { OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressSummary } from './ProgressSummary.tsx';
-import { AchievedPanel, RecordedSummary } from './RecordedSummary.tsx';
+import { AchievedPanel, RecordedSummary, TodayRecordLine } from './RecordedSummary.tsx';
 import { useTodayData } from './useTodayData.ts';
 import { toForecastView } from './forecast-view.ts';
+import { useSaveLog } from '../logs/useSaveLog.ts';
 import { showYesterdayPrompt } from './yesterday-later.ts';
+import { YesterdayCorrection } from '../logs/YesterdayCorrection.tsx';
+import { editLocks, isCurrentToday, yesterdayRecord } from '../logs/record-log.ts';
 import '../../ui/tokens.css';
 import '../../ui/page.css';
 import './today.css';
@@ -28,7 +34,7 @@ import './today.css';
 /**
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
  * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
- * 「後で答える」や開発用の案内を別の Goal へ持ち越さない。
+ * 「後で答える」や記録の変更中の状態を別の Goal へ持ち越さない。
  * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
@@ -39,11 +45,32 @@ export function TodayPage({ goalId }: { goalId: string }) {
 function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number }) {
   // Goal・Today・記録は同じ時点の材料がそろったものだけを使う（snapshot）。日付の切り替わりでも取り直す
   const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId, notBefore);
-  // 保存の動き（#79・#80）はまだつないでいない。押したことが分かるよう、開発用の案内だけを出す。
-  const [devNotice, setDevNotice] = useState<string | null>(null);
+  // 今日の記録（#79）と昨日の補完・訂正（#80）。保存の状態は別々に持つ
+  // 記録済みの今日を選び直している（D5-change）。保存に成功したら戻す
+  const [changing, setChanging] = useState(false);
+  // 今日の量の入力を開いている。開いている間は昨日の訂正を始めない（今日と昨日を同時に編集しない、#88）
+  const [amountEditing, setAmountEditing] = useState(false);
+  // 開いた量の入力・記録変更は開始した日を保持する。翌日の入力へ黙って付け替えない
+  const [todayEditDate, setTodayEditDate] = useState<string | undefined>();
+  const queryClient = useQueryClient();
+  // 記録済みの昨日を訂正している。訂正を始めた時点の記録（対象日）を固定して持つ。今日と同時には編集しない
+  const [yesterdayEdit, setYesterdayEdit] = useState<Log | null>(null);
+  // 保存中の状態は Goal・日付ごとに見る（画面を作り直しても、同じ日の保存が残っていれば保存中のまま）
+  const todaySaver = useSaveLog(goalId, {
+    onSaved: () => {
+      setChanging(false);
+      setAmountEditing(false);
+      setTodayEditDate(undefined);
+    },
+    localDate: todayEditDate ?? snapshot?.today.today ?? goalQuery.data?.today,
+    // 再描画前のクリックでも、QueryClient に到着済みの API 日付を検査する
+    canSaveDate: (date) => isCurrentToday(date,
+      queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today,
+      queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today),
+  });
+  const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
-  const notConnected = () => setDevNotice(todayCopy.saveNotConnected);
 
   if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound />;
   // ログインが切れたら、キャッシュに残る前の表示（タイトル・昨日の案内・記録の帯）を出さず、画面全体をログイン切れにする
@@ -51,16 +78,68 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
   const goal = snapshot?.goal;
   const today = snapshot?.today;
-  // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日の状態で記録の2択を出す
-  // （「今日の記録はこのまま付けられます」の案内と合わせる。401・404は上で画面全体を切り替えている）
+  const unit = goal ? unitLabel(goal.unit) : '';
+  // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）。記録済みでも選び直し中なら出す
+  const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
+  // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日・今日の状態で、今日の記録を付けられるようにする
+  // （401・404は上で画面全体を切り替えているので、ここに来るのは計算・通信・サーバーの失敗）
   const fallbackGoal = !today && todayQuery.isError ? goalQuery.data : undefined;
   const recordGoal = goal ?? fallbackGoal;
-  const unit = recordGoal ? unitLabel(recordGoal.unit) : '';
-  const sessionLabel = recordGoal ? `${recordGoal.sessionAmount.toLocaleString('ja-JP')}${unit}` : '';
-  // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）
-  const showChoices = today
-    ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed
-    : fallbackGoal?.todayStatus === 'UNRECORDED';
+  const recordDate = todayEditDate ?? today?.today ?? fallbackGoal?.today;
+  const canRecordToday = recordDate !== undefined && todaySaver.canSaveDate(recordDate)
+    && (!todaySaver.failure?.vars || todaySaver.canSaveDate(todaySaver.failure.vars.localDate));
+  const showChoices = today && goal ? unrecorded || (changing && today.todayLog != null) : fallbackGoal?.todayStatus === 'UNRECORDED';
+  // 今日と昨日を同時に編集しない（#88）
+  const locks = editLocks({
+    changingToday: changing,
+    todayAmountEditing: amountEditing,
+    todayChoicesShown: !!showChoices,
+    todaySaving: todaySaver.isSaving,
+    yesterdayEditing: yesterdayEdit !== null,
+  });
+  // 保存は成功したが、Today・記録の取り直しに失敗している（「保存できなかった」と区別して伝える）
+  const savedButStale = (todaySaver.refreshFailed || yesterdaySaver.refreshFailed) && (todayQuery.isError || logsQuery.isError);
+
+  let yesterdayArea = null;
+  if (goal && today) {
+    const common = { sessionAmount: goal.sessionAmount, unit, saver: yesterdaySaver, onRefresh: refresh };
+    if (yesterdayEdit) {
+      yesterdayArea = (
+        <YesterdayCorrection
+          // 訂正を始めるたびに作り直し、選択の初期値を保存済みの記録から取り直す
+          key="edit"
+          {...common}
+          log={yesterdayEdit}
+          currentYesterday={today.yesterday}
+          editing
+          disabled={false}
+          onStart={() => {}}
+          onEnd={() => setYesterdayEdit(null)}
+        />
+      );
+    } else if (showYesterdayPrompt(today, yesterdayLaterFor)) {
+      yesterdayArea = <YesterdayPrompt {...common} yesterday={today.yesterday} onLater={() => setYesterdayLaterFor(today.yesterday)} />;
+    } else if (snapshot) {
+      const record = yesterdayRecord(today.yesterday, goal.recordStartDate, snapshot.logs);
+      if (record.kind === 'recorded') {
+        yesterdayArea = (
+          <YesterdayCorrection
+            key="view"
+            {...common}
+            log={record.log}
+            currentYesterday={today.yesterday}
+            editing={false}
+            disabled={locks.yesterdayLocked}
+            onStart={() => {
+              yesterdaySaver.reset();
+              setYesterdayEdit(record.log);
+            }}
+            onEnd={() => setYesterdayEdit(null)}
+          />
+        );
+      }
+    }
+  }
 
   return (
     <div className="fr fr-page">
@@ -79,28 +158,64 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
           ) : undefined
         }
       />
-      {today && showYesterdayPrompt(today, yesterdayLaterFor) ? (
-        <YesterdayPrompt yesterday={today.yesterday} sessionLabel={sessionLabel} onAnswer={notConnected} onLater={() => setYesterdayLaterFor(today.yesterday)} />
-      ) : null}
+      {yesterdayArea}
 
       {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
-        <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={refresh} />
+        savedButStale ? (
+          <SavedButStale onRetry={refresh} />
+        ) : (
+          <FetchError error={todayQuery.error ?? goalQuery.error ?? logsQuery.error} onRetry={refresh} canRecordToday={canRecordToday} />
+        )
       ) : resyncFailed ? (
         <Inconsistent onRetry={retryResync} />
       ) : snapshot ? (
         <ForecastBoundary key={todayQuery.dataUpdatedAt}>
-          <TodayContent goal={snapshot.goal} today={snapshot.today} logs={snapshot.logs} onChange={notConnected} />
+          <TodayContent
+            goal={snapshot.goal}
+            today={snapshot.today}
+            logs={snapshot.logs}
+            onChange={() => {
+              if (yesterdayEdit) return;
+              setAmountEditing(false);
+              setChanging(true);
+              setTodayEditDate(today?.today);
+            }}
+          />
         </ForecastBoundary>
       ) : (
         <Loading />
       )}
 
-      {devNotice ? (
-        <p className="fr-dev-notice" role="status">
-          {devNotice}
-        </p>
+      {showChoices && recordGoal && recordDate ? (
+        <RecordChoiceBar
+          // 選び直しを始めたとき・やめたときに、量の入力などを持ち越さない
+          key={changing ? 'change' : 'new'}
+          today={recordDate}
+          sessionAmount={recordGoal.sessionAmount}
+          unit={unitLabel(recordGoal.unit)}
+          current={changing && today ? today.todayLog : null}
+          saver={todaySaver}
+          locked={locks.todayLocked}
+          editingAmount={locks.todayAmountEditing}
+          onEditingAmountChange={(editing) => {
+            setAmountEditing(editing);
+            setTodayEditDate(editing || changing ? recordDate : undefined);
+          }}
+          onCancelChange={() => {
+            todaySaver.reset();
+            setChanging(false);
+            setAmountEditing(false);
+            setTodayEditDate(undefined);
+          }}
+          onRefresh={() => {
+            todaySaver.reset();
+            setChanging(false);
+            setAmountEditing(false);
+            setTodayEditDate(undefined);
+            refresh();
+          }}
+        />
       ) : null}
-      {showChoices ? <RecordChoiceBar sessionLabel={sessionLabel} onSelect={notConnected} /> : null}
     </div>
   );
 }
@@ -122,6 +237,8 @@ function TodayContent({ goal, today, logs, onChange }: { goal: Goal; today: Toda
       return (
         <>
           <AchievedPanel total={view.progress.total} unit={unit} />
+          {/* 達成済みでも、今日の記録の誤りを直せるようにする（R-03の当日の変更と R-08 の達成表示の両立） */}
+          {today.todayLog ? <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} unit={unit} onChange={onChange} /> : null}
           {progress}
         </>
       );
@@ -164,7 +281,7 @@ function Loading() {
   );
 }
 
-function FetchError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+function FetchError({ error, onRetry, canRecordToday }: { error: unknown; onRetry: () => void; canRecordToday: boolean }) {
   if (isUnauthenticated(error)) return <SignedOut />;
   // 計算の失敗（500 PREDICTION_FAILED）と通信の失敗を分け、どちらもデータ不足とは別の見た目にする
   const calc = error instanceof ApiError && error.body?.error.code === 'PREDICTION_FAILED';
@@ -179,7 +296,7 @@ function FetchError({ error, onRetry }: { error: unknown; onRetry: () => void })
           </Button>
         }
       >
-        {calc ? todayCopy.calcError : todayCopy.networkError}
+        {calc ? (canRecordToday ? todayCopy.calcError : todayCopy.calcErrorRecordBlocked) : todayCopy.networkError}
       </ErrorPanel>
     </div>
   );
@@ -216,6 +333,24 @@ function Inconsistent({ onRetry }: { onRetry: () => void }) {
         }
       >
         {todayCopy.inconsistent}
+      </ErrorPanel>
+    </div>
+  );
+}
+
+/** 保存は成功したが、見通しの取り直しに失敗した。保存できなかったと誤解させない。 */
+function SavedButStale({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="fr-today__top">
+      <ErrorPanel
+        title={todayCopy.savedButStaleTitle}
+        action={
+          <Button icon="retry" onClick={onRetry}>
+            {todayCopy.reload}
+          </Button>
+        }
+      >
+        {todayCopy.savedButStale}
       </ErrorPanel>
     </div>
   );

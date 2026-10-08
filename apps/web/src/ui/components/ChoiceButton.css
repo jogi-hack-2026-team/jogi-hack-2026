@@ -34,3 +34,7 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.fr-choice--busy:disabled {
+  opacity: 1;
+  cursor: progress;
+}
