@@ -5,6 +5,7 @@ param([Parameter(Mandatory)][string]$EngineRoot, [ValidateRange(1024,65535)][int
 $ErrorActionPreference = 'Stop'
 $candidateRoot = [IO.Path]::GetFullPath($PSScriptRoot)
 . (Join-Path $candidateRoot 'verify\measurement-ledger.ps1')
+. (Join-Path $candidateRoot 'verify\diff-evidence.ps1')
 $env:SPIKE_ENGINE_ROOT = [IO.Path]::GetFullPath($EngineRoot)
 $env:SPIKE_PG_PORT = [string]$PgPort
 $nodeBinary = Join-Path $candidateRoot 'node_modules\node\bin\node.exe'
@@ -31,6 +32,7 @@ try {
         $result = Get-Content -LiteralPath $source -Raw | ConvertFrom-Json
         if ([DateTimeOffset]$result.at -lt $started) { throw 'Stale result JSON.' }
         $failures = $result.summary.fail
+        Copy-DiffEvidence $result.engineProvenance (Join-Path $candidateRoot 'results\post-fix') $evidenceRoot
         Copy-Item -LiteralPath $source -Destination (Join-Path $evidenceRoot ($entry + '-run' + $iteration + '.json'))
       }
       $ledger += @{ entry=$publicEntry; iteration=$iteration; startedAt=$started.ToString('o'); endedAt=[DateTimeOffset]::UtcNow.ToString('o'); exitCode=$code; assertionFailures=$failures }

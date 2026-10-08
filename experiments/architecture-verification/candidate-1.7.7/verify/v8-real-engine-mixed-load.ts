@@ -19,6 +19,7 @@ import { rootDir, startPg } from '../src/pg-embedded.ts';
 import { client, goalInput, newCredentials, newSecret, Report } from './lib.ts';
 import { startServer } from './proc.ts';
 import { LoadCohort, type Timed } from './load-cohort.ts';
+import { saveDiffPayload } from './diff-evidence.ts';
 
 const report = new Report('verification-2 mixed load with the real prediction engine');
 const secret = newSecret();
@@ -38,13 +39,24 @@ const engineDir = resolve(process.env.SPIKE_ENGINE_ROOT ?? join(repoRoot, 'packa
 const engineRepo = resolve(engineDir, '..', '..');
 const entryPoint = process.env.SPIKE_PREDICT_ENTRY === 'question-prior' ? 'predictWithQuestionPrior' : 'predict';
 if (!existsSync(join(engineDir, 'dist', 'src', 'index.js'))) {
-  throw new Error('Build the engine first: node packages/prediction/scripts/check.mjs test (from the repository root).');
+  throw new Error('Build the reference engine first: npm ci --no-audit --no-fund then npm run build:prediction (from its repository root); run independent npm ci in the candidate directory.');
 }
+const resultTag = process.env.SPIKE_RESULT_TAG ?? new Date().toISOString().replace(/[-:.]/g, '');
+if (!/^[a-zA-Z0-9_-]+$/.test(resultTag)) throw new Error('Invalid result tag');
+const resultStem = `v8-${entryPoint}-${resultTag}`;
+// Preserve exactly the stdout bytes being hashed, including the final newline. This is
+// tracked changes relative to HEAD, not a snapshot of ignored/untracked files.
+const candidateDiff = saveDiffPayload(join(rootDir, 'results', 'post-fix'), `${resultStem}.candidate.diff`,
+  execFileSync('git', ['diff', '--no-ext-diff', '--no-color', 'HEAD', '--', 'experiments/architecture-verification/candidate-1.7.7'], { cwd: repoRoot }));
 const gitAt = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 const git = (...args: string[]) => gitAt(repoRoot, ...args);
 const engineProvenance = {
   repositoryHead: git('rev-parse', 'HEAD'),
-  candidateDiffSha256: createHash('sha256').update(git('diff', 'HEAD', '--', 'experiments/architecture-verification/candidate-1.7.7')).digest('hex'),
+  candidateDiffSha256: candidateDiff.sha256,
+  candidateDiffFile: candidateDiff.file,
+  candidateDiffBytes: candidateDiff.bytes,
+  candidateDiffScope: 'git diff HEAD tracked candidate files; exact stdout bytes, no trim',
+  candidateUntrackedFiles: git('ls-files', '--others', '--exclude-standard', '--', 'experiments/architecture-verification/candidate-1.7.7'),
   engineRepositoryHead: gitAt(engineRepo, 'rev-parse', 'HEAD'),
   engineLastCommit: gitAt(engineRepo, 'log', '-1', '--format=%H', '--', 'packages/prediction'),
   engineSourceTree: gitAt(engineRepo, 'rev-parse', 'HEAD:packages/prediction'),
@@ -301,9 +313,7 @@ if (r11Cases) report.add('R11', 'public predictWithQuestionPrior measured separa
 
 await admin.end();
 await db.stop();
-const resultTag = process.env.SPIKE_RESULT_TAG ?? 'latest';
-if (!/^[a-zA-Z0-9_-]+$/.test(resultTag)) throw new Error('Invalid result tag');
-const s = report.save(`v8-${entryPoint}-${resultTag}.json`, {
+const s = report.save(`${resultStem}.json`, {
   engineProvenance,
   engineBenchmarkRaw: benchJson,
   setup: {

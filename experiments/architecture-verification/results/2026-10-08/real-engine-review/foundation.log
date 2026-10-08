@@ -1,0 +1,14 @@
+experiments/architecture-verification/results/2026-10-08/real-engine-review/README-reconstructed-trimmed.diff:6: trailing whitespace.
++
+experiments/architecture-verification/results/2026-10-08/real-engine-review/README-reconstructed-trimmed.diff:8: trailing whitespace.
++
+experiments/architecture-verification/results/2026-10-08/real-engine-review/README-reconstructed.diff:6: trailing whitespace.
++
+experiments/architecture-verification/results/2026-10-08/real-engine-review/README-reconstructed.diff:8: trailing whitespace.
++
+ERROR: Staged whitespace check failed.
+Exception: <task-workspace>\pr131\scripts\check-foundation.ps1:75
+Line |
+  75 |          throw "$($failures.Count) foundation check(s) failed."
+     |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 1 foundation check(s) failed.

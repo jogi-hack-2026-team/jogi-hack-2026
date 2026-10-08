@@ -62,12 +62,13 @@ export function validateRealInput(input: PredictionInput) {
 
 export function runReal(input: RealInput): RealSummary {
   validateRealInput(input);
+  const { questionPrior, ...prediction } = input;
   const t0 = performance.now();
-  const entryPoint = input.questionPrior ? 'predictWithQuestionPrior' : 'predict';
-  if (input.questionPrior && !engine.predictWithQuestionPrior) throw new Error('Selected engine has no public question-prior entry');
-  const r = input.questionPrior
-    ? engine.predictWithQuestionPrior!({ prediction: input, ...input.questionPrior }).prediction
-    : engine.predict(input);
+  const entryPoint = questionPrior ? 'predictWithQuestionPrior' : 'predict';
+  if (questionPrior && !engine.predictWithQuestionPrior) throw new Error('Selected engine has no public question-prior entry');
+  const r = questionPrior
+    ? engine.predictWithQuestionPrior!({ prediction, ...questionPrior }).prediction
+    : engine.predict(prediction);
   const computeMs = performance.now() - t0;
   // Actual today DONE is already in progress.done. Only UNRECORDED uses one virtual session.
   const remainingAmount = Math.max(0, r.progress.total - r.progress.done -

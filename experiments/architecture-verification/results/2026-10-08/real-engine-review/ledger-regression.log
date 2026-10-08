@@ -1,0 +1,1 @@
+PASS: saved FAIL collects later runs and keeps final exit1; execution/missing/empty results fail; all-PASS exits0.

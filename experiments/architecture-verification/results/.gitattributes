@@ -1,0 +1,2 @@
+# Keep hashed diff payload bytes identical on Windows and POSIX checkouts.
+*.diff binary

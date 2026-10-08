@@ -1,0 +1,26 @@
+
+> @jogi/architecture-verification@0.0.0 verify:real-regression
+> node --test verify/v9-real-engine-regression.test.ts
+
+✔ explicit reference engine path is used; no checkout-local dist fallback (2.4924ms)
+✔ file URL decoding preserves POSIX case and escaped characters; Windows drive round trips (0.6131ms)
+✔ selected engine in escaped native path receives prediction keys separately from question prior (159.3466ms)
+✔ diff evidence hashes exact saved UTF-8 bytes including final newline and refuses overwrite (15.879ms)
+✔ public R11 inline and worker use the existing mapping and agree with the selected Engine (252.938ms)
+✔ future DONE uses actual progress and today state once (unrecorded, DONE, SKIPPED, completed) (0.9714ms)
+✔ fraction 10.5 and unsafe integers are rejected for every quantity; accumulated overflow is rejected (1.3044ms)
+✔ real worker rejects Engine date exception and fractional input, then computes a normal job (127.7585ms)
+✔ worker exit fails closed: running + queued + later jobs all reject (65.6193ms)
+✔ worker error fails closed: running + queued + later jobs all reject (67.0897ms)
+✔ malformed envelope fails closed: running + queued + later jobs all reject (69.8409ms)
+✔ postMessage clone failure and close settle running/queued promises; close is idempotent (17.3977ms)
+✔ late warmup completions cannot enter measured cohort; success and failures reconcile per kind (0.7865ms)
+✔ HTTP real-mode invalid inputs return 422; worker death returns 503 while health stays available (557.3604ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2550.586

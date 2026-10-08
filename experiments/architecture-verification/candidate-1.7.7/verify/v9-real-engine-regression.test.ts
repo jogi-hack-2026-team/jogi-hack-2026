@@ -1,12 +1,19 @@
 // Supporting Artifact / Not a Source of Truth. Synthetic jobs and in-memory HTTP boundary checks.
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { join, resolve, sep } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import type { Pool } from 'pg';
 import type { Auth } from '../src/auth.ts';
 import { buildApp } from '../src/app.ts';
 import { PredictPool } from '../src/predict-pool.ts';
 import { runReal, validateRealInput, realQuantity, engineUrl } from '../src/predict-real.ts';
 import { LoadCohort } from './load-cohort.ts';
+import { saveDiffPayload } from './diff-evidence.ts';
 
 const input = { goal: { totalRequired: 100, initialProgress: 0, sessionAmount: 10 }, logs: [], today: '2026-10-07' };
 const fixture = new URL('./fixtures/worker-lifecycle.ts', import.meta.url);
@@ -16,8 +23,94 @@ async function settles<T>(promise: Promise<T>): Promise<T> {
   finally { clearTimeout(timer!); }
 }
 test('explicit reference engine path is used; no checkout-local dist fallback', () => {
-  if (process.env.SPIKE_ENGINE_ROOT) assert.equal(engineUrl.pathname.replace(/\\/g, '/').toLowerCase(),
-    new URL('file:///' + process.env.SPIKE_ENGINE_ROOT.replace(/\\/g, '/') + '/dist/src/index.js').pathname.toLowerCase());
+  if (process.env.SPIKE_ENGINE_ROOT) assert.equal(fileURLToPath(engineUrl),
+    resolve(process.env.SPIKE_ENGINE_ROOT, 'dist/src/index.js'));
+});
+
+test('file URL decoding preserves POSIX case and escaped characters; Windows drive round trips', () => {
+  assert.equal(fileURLToPath(new URL('file:///private/Engine%20%E6%97%A5%23%25/dist/src/index.js'), { windows: false }),
+    '/private/Engine 日#%/dist/src/index.js');
+  assert.notEqual(fileURLToPath(new URL('file:////private/Engine/dist/src/index.js'), { windows: false }),
+    '/private/Engine/dist/src/index.js');
+  assert.equal(fileURLToPath(new URL('file:///C:/Engine%20%E6%97%A5%23%25/dist/src/index.js'), { windows: true }),
+    'C:\\Engine 日#%\\dist\\src\\index.js');
+});
+
+test('selected engine in escaped native path receives prediction keys separately from question prior', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'pr131-Engine 日#%-'));
+  try {
+    const dist = join(directory, 'dist', 'src');
+    mkdirSync(dist, { recursive: true });
+    writeFileSync(join(directory, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dist, 'index.js'), `
+      import assert from 'node:assert/strict';
+      export function predict(input) {
+        assert.deepEqual(Object.keys(input).sort(), ['goal', 'logs', 'today']);
+        return { modelVersion: 'boundary-fixture', progress: { total: 100, done: 0 },
+          todayStatus: 'UNRECORDED', completion: { status: 'ACTIVE' }, coreMetric: { status: 'READY' } };
+      }
+      export function predictWithQuestionPrior(input) {
+        assert.deepEqual(Object.keys(input).sort(), ['answers', 'mapping', 'prediction']);
+        return { prediction: predict(input.prediction) };
+      }
+    `);
+    const wrapper = new URL('../src/predict-real.ts', import.meta.url).href;
+    execFileSync(process.execPath, ['--input-type=module', '-e', `
+      import assert from 'node:assert/strict';
+      import { fileURLToPath } from 'node:url';
+      import { resolve } from 'node:path';
+      const { runReal, engineUrl } = await import(${JSON.stringify(wrapper)});
+      assert.equal(fileURLToPath(engineUrl), resolve(process.env.SPIKE_ENGINE_ROOT, 'dist/src/index.js'));
+      const input = ${JSON.stringify(input)};
+      assert.equal(runReal(input).requiredFutureDone, 9);
+      const result = runReal({ ...input, questionPrior: { answers: { a: 'HIGH', b: 'LOW' },
+        mapping: { version: 'r11-strength4-v1', values: { LOW: { alpha: 1, beta: 3 }, MID: { alpha: 2, beta: 2 }, HIGH: { alpha: 3, beta: 1 } } } } });
+      assert.equal(result.entryPoint, 'predictWithQuestionPrior');
+      assert.equal(result.requiredFutureDone, 9);
+    `], { env: { ...process.env, SPIKE_ENGINE_ROOT: directory }, timeout: 10000 });
+  } finally {
+    assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('diff evidence hashes exact saved UTF-8 bytes including final newline and refuses overwrite', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'pr131-diff-'));
+  try {
+    const bytes = Buffer.from('diff --git a/日.txt b/日.txt\r\n+line\r\n', 'utf8');
+    const evidence = saveDiffPayload(directory, 'candidate.diff', bytes);
+    const saved = readFileSync(join(directory, evidence.file));
+    assert.deepEqual(saved, bytes);
+    assert.equal(evidence.sha256, createHash('sha256').update(saved).digest('hex'));
+    assert.equal(evidence.bytes, saved.length);
+    assert.notEqual(evidence.sha256, createHash('sha256').update(saved.toString().trim()).digest('hex'));
+    assert.throws(() => saveDiffPayload(directory, 'candidate.diff', bytes), { code: 'EEXIST' });
+    assert.throws(() => saveDiffPayload(directory, '../escape.diff', bytes));
+    const empty = saveDiffPayload(directory, 'empty.diff', Buffer.alloc(0));
+    assert.equal(empty.bytes, 0);
+    assert.equal(readFileSync(join(directory, empty.file)).length, 0);
+    assert.equal(empty.sha256, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+  } finally {
+    assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('public R11 inline and worker use the existing mapping and agree with the selected Engine', async () => {
+  const questionPrior = { answers: { a: 'HIGH', b: 'LOW' }, mapping: { version: 'r11-strength4-v1',
+    values: { LOW: { alpha: 1, beta: 3 }, MID: { alpha: 2, beta: 2 }, HIGH: { alpha: 3, beta: 1 } } } } as const;
+  const engine = await import(engineUrl.href);
+  const expected = engine.predictWithQuestionPrior({ prediction: input, ...questionPrior }).prediction;
+  const pool = new PredictPool(1);
+  try {
+    for (const result of [runReal({ ...input, questionPrior }), (await settles(pool.runReal({ ...input, questionPrior }))).real]) {
+      assert.equal(result.entryPoint, 'predictWithQuestionPrior');
+      assert.equal(result.modelVersion, expected.modelVersion);
+      assert.equal(result.completionStatus, expected.completion.status);
+      assert.equal(result.coreMetricStatus, expected.coreMetric.status);
+      assert.equal(result.requiredFutureDone, 9);
+    }
+  } finally { await pool.close(); }
 });
 test('future DONE uses actual progress and today state once (unrecorded, DONE, SKIPPED, completed)', () => {
   for (const n of [120, 400, 1095]) {
