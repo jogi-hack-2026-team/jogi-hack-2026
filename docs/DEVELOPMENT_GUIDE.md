@@ -595,6 +595,8 @@ docker volume rm "$volume"
 
 Windowsのembeddedテストは各回に独立clusterを作成し、`.local/`へ証跡を保持します。旧clusterを再利用・削除しない分、初期化時間とディスク使用量が増えます。embedded初期化は`UTF8`・`C` localeを明示し、`LANG`未設定でも日本語・絵文字を文字数で検証します。[encoding回帰](../apps/api/tests/database-encoding.test.ts)は子プロセスだけで`DATABASE_URL`とlocale変数を外して実embedded DBを確認します。CIの他のDBテストはPostgreSQL serviceを利用します。`npm ci --ignore-scripts`は維持し、embedded起動前だけ固定platform配布物のmanifestから`native/lib/`内のリンクを検査・復元します（外部path・異なる既存linkは失敗し、依存scriptは実行しません）。システムlocale・外部DB・既存clusterは変更しません。
 
+Windowsの合成clusterは、poolの終了・残存接続の検査・専用DBの削除後、固定配布物の公開`pg_ctl`で全workerの正常停止を待ちます。親PIDだけの強制終了で`io_worker`が残る経路を避け、[停止helper](../apps/api/tests/helpers/windows-embedded-stop.ts)は同時・再停止を同じPromiseへまとめます。停止の非zero・timeoutは失敗のまま返し、終了hookだけに停止を任せません。[停止の失敗・再要求の回帰](../apps/api/tests/windows-embedded-stop.test.ts)と[実clusterのlifecycle回帰](../apps/api/tests/database-lifecycle.test.ts)で、PID fileの除去・所有postmaster/workerの消失・子Nodeの自然終了を検査します。後者は外部`DATABASE_URL`を子だけで外し、Linuxでも元のsignal停止を同じ条件で検証します。
+
 ### 本番向けの約束事
 
 - 環境変数は`DATABASE_URL`（必須）、`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`（任意）。`DATABASE_URL`が未設定なら起動せず、値はログへ出しません。コンテナ内の既定は`HOST=0.0.0.0`・`PORT=8080`・`WEB_DIST=/app/apps/web/dist`。

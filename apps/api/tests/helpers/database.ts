@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { restoreEmbeddedLinks } from './embedded-binaries.ts';
+import { createWindowsEmbeddedStop } from './windows-embedded-stop.ts';
 
 export type TestDatabase = {
   connectionString: string;
@@ -63,6 +64,11 @@ async function startEmbedded(): Promise<AdminConnection> {
   });
   if (isNew) await server.initialise();
   await server.start();
+  if (process.platform === 'win32') {
+    // 固定platform配布物の公開binaryだけを使う。Linuxのsignal停止・外部DBには適用しない。
+    const { pg_ctl } = await import(`@embedded-postgres/windows-${process.arch}`) as { pg_ctl: string };
+    server.stop = createWindowsEmbeddedStop(pg_ctl, dataDir);
+  }
   return {
     url: `postgres://${credential.user}:${encodeURIComponent(credential.password)}@127.0.0.1:${port}/postgres`,
     stop: () => server.stop(),
