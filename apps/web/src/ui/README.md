@@ -11,6 +11,7 @@
 | 入力欄・単位の切り替え・項目ごとのエラー（Goal の作成・編集） | [FormField](components/FormField.tsx) と [FormField.css](components/FormField.css) |
 | 削除などの確認ダイアログ | [ConfirmDialog](components/ConfirmDialog.tsx)（ブラウザ標準の `<dialog>`。開くと「キャンセル」にフォーカスし、閉じたら元の場所へ戻す） |
 | 画面の外枠（左右の余白の打ち消し） | [page.css](page.css) |
+| 記録の2択・やった量の変更・昨日の問いかけ・保存の失敗 | [features/logs/](../features/logs/) の `logs.css`。2択のボタンは [ChoiceButton](components/ChoiceButton.tsx)（保存中の表示を含む） |
 | Goal の一覧・作成・編集の並び | [features/goals/](../features/goals/) の `goals.css` |
 | Today 画面の並び・図 | [features/today/](../features/today/)。図の座標は [chart-geometry.ts](../features/today/chart-geometry.ts)。図は [useElementWidth](useElementWidth.ts) で測った実際の幅で描く（縮めて表示しないので、文字は狭い幅でも指定の大きさのまま） |
 | 画面の文言 | [copy/](../copy/)（仕様の固定文言を変える場合は Product Spec の改訂として記録する） |

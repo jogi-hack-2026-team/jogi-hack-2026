@@ -76,16 +76,33 @@ export const Today = Type.Object(
     yesterday: Type.String(),
     todayLog: Type.Union([Log, Type.Null()]),
     yesterdayMissing: Type.Boolean(),
-    // Placeholder only. The real PredictionResult is defined by #71/#72.
-    prediction: Type.Object(
-      {
-        placeholder: Type.Literal(true),
-        observedDays: Type.Number(),
-        computeMode: Type.String(),
-        requestedBurnMs: Type.Number(),
-      },
-      strict,
-    ),
+    // Neither variant is the Product DTO. The first is the placeholder; the second is a
+    // load-observation summary of the real engine (packages/prediction), not its PredictionResult.
+    prediction: Type.Union([
+      Type.Object(
+        {
+          placeholder: Type.Literal(true),
+          observedDays: Type.Number(),
+          computeMode: Type.String(),
+          requestedBurnMs: Type.Number(),
+        },
+        strict,
+      ),
+      Type.Object(
+        {
+          placeholder: Type.Literal(false),
+          observedDays: Type.Number(),
+          computeMode: Type.String(),
+          modelVersion: Type.String(),
+          completionStatus: Type.String(),
+          coreMetricStatus: Type.String(),
+          requiredFutureDone: Type.Number(),
+          entryPoint: Type.String(),
+          computeMs: Type.Number(),
+        },
+        strict,
+      ),
+    ]),
   },
   strict,
 );

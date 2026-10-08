@@ -1,9 +1,9 @@
-import { LogList, TodayR11 as TodaySchema } from '@contracts';
-import type { Log, TodayR11 } from '@contracts';
+import { Log as LogSchema, LogList, TodayR11 as TodaySchema } from '@contracts';
+import type { Log, LogPut, TodayR11 } from '@contracts';
 import { requestJson } from './http.ts';
 
 /**
- * Today API と記録の一覧（#77）を実際に呼ぶ。Today Decision 画面（#81）が使う。
+ * Today API と記録の一覧・保存（#77）を実際に呼ぶ。Today Decision 画面（#81）と、記録の保存（#79・#80）が使う。
  * 取得のキーは Goal と同じ ['goals', …] の下に置き、Goal の作成・編集・削除で取り直す対象に含める。
  * Today は R-11 の読み取り（?view=r11）なので、読み取りの表現をキーに含める。
  */
@@ -17,6 +17,9 @@ export const todayHttp = {
   getToday: (goalId: string, signal?: AbortSignal): Promise<TodayR11> => requestJson(TodaySchema, `${base(goalId)}/today?view=r11`, { signal }),
   /** 全期間の記録（累計の図に使う）。 */
   listLogs: (goalId: string, signal?: AbortSignal): Promise<Log[]> => requestJson(LogList, `${base(goalId)}/logs`, { signal }),
+  /** 記録の作成・上書き（同じ日は上書き）。DONE で amount を省くと API が1回の量で補う。 */
+  putLog: (goalId: string, localDate: string, body: LogPut): Promise<Log> =>
+    requestJson(LogSchema, `${base(goalId)}/logs/${encodeURIComponent(localDate)}`, { method: 'PUT', body }),
 };
 
 export const todayKeys = {
