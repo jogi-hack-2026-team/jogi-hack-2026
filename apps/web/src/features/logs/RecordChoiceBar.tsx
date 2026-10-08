@@ -1,3 +1,5 @@
+import { longDate } from '../../copy/date.ts';
+import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import type { Log } from '@contracts';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
@@ -46,6 +48,19 @@ export function RecordChoiceBar({
   // 昨日を訂正している間は、量の入力からも送らない
   const save = (choice: RecordChoice) => (locked ? undefined : saver.save({ localDate: today, choice }));
   const saving = saver.saving?.choice;
+
+  // 失敗した保存の再試行は、その variables の日付も検査する（表示が翌日へ更新された後も）。
+  const staleDate = !saver.canSaveDate(today) ? today
+    : saver.failure?.vars && !saver.canSaveDate(saver.failure.vars.localDate) ? saver.failure.vars.localDate : undefined;
+  if (staleDate && !saver.isSaving) {
+    return (
+      <StickyActionBar>
+        <ErrorPanel title={todayCopy.dateChangedTitle} action={<Button variant="primary" block onClick={onRefresh}>{todayCopy.refresh}</Button>}>
+          {todayCopy.dateChanged(longDate(staleDate))}
+        </ErrorPanel>
+      </StickyActionBar>
+    );
+  }
 
   if (saver.failure?.vars) {
     const failed = saver.failure.vars.choice;

@@ -49,17 +49,17 @@ export function SaveFailure({
       </ErrorPanel>
     );
   }
-  if (kind === 'date') {
+  if (kind === 'date' || kind === 'day-changed') {
     return (
       <ErrorPanel
-        title={todayCopy.dateFailedTitle}
+        title={kind === 'day-changed' ? todayCopy.dateChangedTitle : todayCopy.dateFailedTitle}
         action={
           <Button variant="primary" block onClick={onRefresh}>
             {todayCopy.refresh}
           </Button>
         }
       >
-        {todayCopy.dateFailed(longDate(localDate))}
+        {kind === 'day-changed' ? todayCopy.dateChanged(longDate(localDate)) : todayCopy.dateFailed(longDate(localDate))}
       </ErrorPanel>
     );
   }

@@ -2,7 +2,7 @@ import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-q
 import { useRef, useState } from 'react';
 import { goalKeys } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
-import { toLogPut, type RecordChoice } from './record-log.ts';
+import { TodayDateChangedError, toLogPut, type RecordChoice } from './record-log.ts';
 
 export type SaveVars = { localDate: string; choice: RecordChoice };
 
@@ -24,13 +24,25 @@ export const isSaveFor = (localDate: string, vars: unknown) => (vars as SaveVars
  *
  * localDate を渡すと、その日の保存（別の画面で始めたものを含む）を「保存中」として扱う。
  */
-export function useSaveLog(goalId: string, { onSaved, localDate }: { onSaved?: () => void; localDate?: string | undefined } = {}) {
+export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate }: {
+  onSaved?: () => void;
+  localDate?: string | undefined;
+  /** 今日の操作だけに渡す送信日付の検査。通常保存・量変更・失敗後の再試行に共通で効く。 */
+  canSaveDate?: (date: string) => boolean;
+} = {}) {
   const queryClient = useQueryClient();
   const inFlight = useRef(false);
+  const canSaveDateRef = useRef(canSaveDate);
+  canSaveDateRef.current = canSaveDate;
+  const dateAllowed = (date: string) => canSaveDateRef.current?.(date) ?? true;
   const [refreshFailed, setRefreshFailed] = useState(false);
   const mutation = useMutation({
     mutationKey: saveLogKey(goalId),
-    mutationFn: ({ localDate: date, choice }: SaveVars) => todayHttp.putLog(goalId, date, toLogPut(choice)),
+    mutationFn: ({ localDate: date, choice }: SaveVars) => {
+      // mutate から実際の送信までに新しい API 応答が届いても、古い日付へ送らない
+      if (!dateAllowed(date)) throw new TodayDateChangedError();
+      return todayHttp.putLog(goalId, date, toLogPut(choice));
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
       const failed = [todayKeys.today(goalId), todayKeys.logs(goalId)].some((key) => queryClient.getQueryState(key)?.status === 'error');
@@ -50,7 +62,7 @@ export function useSaveLog(goalId: string, { onSaved, localDate }: { onSaved?: (
   const pendingForDate = localDate === undefined ? undefined : pending.find((vars) => vars?.localDate === localDate);
 
   const save = (vars: SaveVars) => {
-    if (inFlight.current) return;
+    if (!dateAllowed(vars.localDate) || inFlight.current) return;
     // 同じ日の保存が残っている間は送らない（画面を作り直しても効くよう、QueryClient の記録で確かめる）
     if (queryClient.isMutating({ mutationKey: saveLogKey(goalId), predicate: (m) => isSaveFor(vars.localDate, m.state.variables) }) > 0) return;
     inFlight.current = true;
@@ -59,6 +71,7 @@ export function useSaveLog(goalId: string, { onSaved, localDate }: { onSaved?: (
   };
   return {
     save,
+    canSaveDate: dateAllowed,
     /** 失敗した内容で、もう一度保存する。 */
     retry: () => {
       if (mutation.variables) save(mutation.variables);
