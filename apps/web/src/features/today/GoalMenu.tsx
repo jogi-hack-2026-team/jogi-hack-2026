@@ -55,7 +55,31 @@ export function GoalMenu({ goalId, onCorrectYesterday }: { goalId: string; onCor
         <Icon name="more" />
       </button>
       {open ? (
-        <div ref={menuRef} id={menuId} className="fr-menu__list" role="menu" aria-label={todayCopy.goalMenu}>
+        <div
+          ref={menuRef}
+          id={menuId}
+          className="fr-menu__list"
+          role="menu"
+          aria-label={todayCopy.goalMenu}
+          onKeyDown={(event) => {
+            // メニューの作法どおり、↑↓・Home・End で項目を移り、Tab では閉じる（ボタンの次へ進む）
+            if (event.key === 'Tab') {
+              setOpen(false);
+              return;
+            }
+            const items = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+            const at = items.indexOf(document.activeElement as HTMLElement);
+            const next =
+              event.key === 'ArrowDown' ? (at + 1) % items.length
+              : event.key === 'ArrowUp' ? (at - 1 + items.length) % items.length
+              : event.key === 'Home' ? 0
+              : event.key === 'End' ? items.length - 1
+              : null;
+            if (next === null || items.length === 0) return;
+            event.preventDefault();
+            items[next]?.focus();
+          }}
+        >
           <Link to="/goals/$goalId/edit" params={{ goalId }} role="menuitem" className="fr-menu__item" onClick={() => setOpen(false)}>
             <Icon name="edit" size={20} />
             {todayCopy.menuEdit}

@@ -435,3 +435,8 @@
     background: none;
   }
 }
+
+/* 場所を引き継ぐためにだけフォーカスする見出し（操作できないので枠は出さない） */
+.fr-today__question[tabindex='-1']:focus {
+  outline: none;
+}

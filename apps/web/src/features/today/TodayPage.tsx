@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { goalKeys } from '../../api/goals-http.ts';
 import { todayKeys } from '../../api/today-http.ts';
 import { Link, useLocation } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
@@ -59,8 +59,12 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   // 記録済みの昨日を訂正している。訂正を始めた時点の記録（対象日）を固定して持つ。今日と同時には編集しない
   const [yesterdayEdit, setYesterdayEdit] = useState<Log | null>(null);
   // 保存中の状態は Goal・日付ごとに見る（画面を作り直しても、同じ日の保存が残っていれば保存中のまま）
+  // 今日の記録を保存したとき・選び直しをやめたときは、押したボタンが消えるので、記録済み（または達成済み）の見出しへ
+  // フォーカスを移す（キーボード・読み上げで場所を見失わない）
+  const focusAfterSave = useRef(false);
   const todaySaver = useSaveLog(goalId, {
     onSaved: () => {
+      focusAfterSave.current = true;
       setChanging(false);
       setAmountEditing(false);
       setTodayEditDate(undefined);
@@ -74,6 +78,15 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
+
+  // 取り直した見出しが出たら、そこへフォーカスを移す（保存の直後だけ）
+  useEffect(() => {
+    if (!focusAfterSave.current) return;
+    const heading = document.getElementById('fr-recorded-title') ?? document.getElementById('fr-achieved-title');
+    if (!heading) return;
+    focusAfterSave.current = false;
+    heading.focus();
+  });
 
   if (isNotFound(goalQuery.error) || isNotFound(todayQuery.error)) return <NotFound />;
   // ログインが切れたら、キャッシュに残る前の表示（タイトル・昨日の案内・記録の帯）を出さず、画面全体をログイン切れにする
@@ -123,6 +136,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
   // 今日の記録の選び直しをやめる（上部の「変更をやめる」、デザイン D5-change）
   const cancelChange = () => {
+    focusAfterSave.current = true;
     todaySaver.reset();
     setChanging(false);
     setAmountEditing(false);
@@ -219,7 +233,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       ) : resyncFailed ? (
         <Inconsistent onRetry={retryResync} />
       ) : snapshot ? (
-        <ForecastBoundary key={todayQuery.dataUpdatedAt}>
+        <ForecastBoundary resetKey={todayQuery.dataUpdatedAt}>
           <TodayContent
             goal={snapshot.goal}
             today={snapshot.today}

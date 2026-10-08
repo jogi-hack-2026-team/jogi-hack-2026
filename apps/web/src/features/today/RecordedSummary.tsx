@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Log } from '@contracts';
 import { StatusBadge } from '../../ui/components/StatusBadge.tsx';
 import { Button } from '../../ui/components/Button.tsx';
@@ -11,7 +12,7 @@ import { choiceFromLog, describeChoice } from '../logs/record-log.ts';
 export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; unit: string; onChange: () => void }) {
   return (
     <section className="fr-today__top" aria-labelledby="fr-recorded-title">
-      <h1 id="fr-recorded-title" className="fr-today__question">
+      <h1 id="fr-recorded-title" className="fr-today__question" tabIndex={-1}>
         {todayCopy.recordedTitle}
       </h1>
       <div className="fr-recorded">
@@ -40,7 +41,7 @@ export function AchievedPanel({ done, total, unit }: { done: number; total: numb
       <span className="fr-achieved__emblem" aria-hidden="true">
         <Icon name="check" size={36} strokeWidth={2.2} />
       </span>
-      <h1 id="fr-achieved-title" className="fr-today__question">
+      <h1 id="fr-achieved-title" className="fr-today__question" tabIndex={-1}>
         {todayCopy.achievedTitle}
       </h1>
       <p className="fr-today__summary">
@@ -90,9 +91,12 @@ export function AchievedFacts({
 /** 今日の記録を選び直している間の上部（デザイン D5-change）。いまの記録を見せ、「変更をやめる」で元に戻す。 */
 export function ChangeHeader({ log, sessionAmount, unit, onCancel }: { log: Log; sessionAmount: number; unit: string; onCancel: () => void }) {
   const record = describeChoice(choiceFromLog(log), sessionAmount, unit, todayCopy.recordedRest);
+  // 「記録を変更」を押すとそのボタンが消えるので、この見出しへフォーカスを移す
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus(), []);
   return (
     <section className="fr-today__top" aria-labelledby="fr-change-title">
-      <h1 id="fr-change-title" className="fr-today__question">
+      <h1 id="fr-change-title" className="fr-today__question" tabIndex={-1} ref={headingRef}>
         {todayCopy.changeTitle}
       </h1>
       <p className="fr-today__summary">{todayCopy.changeCurrent(record)}</p>
