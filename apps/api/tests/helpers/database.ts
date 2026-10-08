@@ -6,6 +6,8 @@ import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { restoreEmbeddedLinks } from './embedded-binaries.ts';
+import { createWindowsEmbeddedStop } from './windows-embedded-stop.ts';
 
 export type TestDatabase = {
   connectionString: string;
@@ -31,6 +33,7 @@ async function freePort(): Promise<number> {
 }
 
 async function startEmbedded(): Promise<AdminConnection> {
+  await restoreEmbeddedLinks();
   const { default: EmbeddedPostgres } = await import('embedded-postgres');
   mkdirSync(localDir, { recursive: true });
   // Windowsの停止後のworkerが旧data dirを保持していても、新しいテストのschemaを混ぜない。
@@ -53,11 +56,19 @@ async function startEmbedded(): Promise<AdminConnection> {
     password: credential.password,
     port,
     persistent: true,
+    // LANGのないシェルでもSQL_ASCIIへ落とさず、titleのUnicode文字数契約を実DBで検証する。
+    // CはOSに追加localeを導入せず使える。既存cluster・外部DATABASE_URLの設定は変更しない。
+    initdbFlags: ['--encoding=UTF8', '--locale=C'],
     onLog: () => {},
     onError: (message) => console.error(String(message).replaceAll(credential.password, '[redacted]')),
   });
   if (isNew) await server.initialise();
   await server.start();
+  if (process.platform === 'win32') {
+    // 固定platform配布物の公開binaryだけを使う。Linuxのsignal停止・外部DBには適用しない。
+    const { pg_ctl } = await import(`@embedded-postgres/windows-${process.arch}`) as { pg_ctl: string };
+    server.stop = createWindowsEmbeddedStop(pg_ctl, dataDir);
+  }
   return {
     url: `postgres://${credential.user}:${encodeURIComponent(credential.password)}@127.0.0.1:${port}/postgres`,
     stop: () => server.stop(),
