@@ -1,5 +1,5 @@
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useRouter } from '@tanstack/react-router';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
 import { ApiError } from '../../api/client.ts';
@@ -62,25 +62,33 @@ function useInterruptedOperation(ready: boolean, operationKey: readonly unknown[
 /** Formが確認中にunmountされても、確定成功だけは同じページの親へ伝える。 */
 function useConfirmedSave(current: PrivateEpoch, generation: number, scope: string) {
   const navigate = useNavigate();
+  const router = useRouter();
   const mounted = useRef(false);
   const activeScope = useRef(scope);
+  const visit = useRef({ scope, token: {} });
+  if (visit.current.scope !== scope) visit.current = { scope, token: {} };
   activeScope.current = scope;
-  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string }>();
+  const token = visit.current.token;
+  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object }>();
   const delivered = useRef<typeof saved>(undefined);
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  // 同routeのGoal1→Goal2→Goal1でも親は再利用される。commit前の離脱開始も旧訪問を失効させる。
+  useLayoutEffect(() => router.subscribe('onBeforeNavigate', ({ pathChanged }) => {
+    if (pathChanged) visit.current = { ...visit.current, token: {} };
+  }), [router]);
   const owner = current.owner;
   const onSaved = useCallback(() => {
-    if (mounted.current && typeof owner === 'string' && activeScope.current === scope && window.location.pathname === scope && isDraftOwner(owner, generation))
-      setSaved({ owner, generation, scope });
-  }, [owner, generation, scope]);
-  const confirmed = saved !== undefined && saved.scope === scope && window.location.pathname === scope && saved.generation === generation &&
+    if (mounted.current && visit.current.token === token && typeof owner === 'string' && activeScope.current === scope && window.location.pathname === scope && isDraftOwner(owner, generation))
+      setSaved({ owner, generation, scope, token });
+  }, [owner, generation, scope, token]);
+  const confirmed = saved !== undefined && saved.token === visit.current.token && saved.scope === scope && window.location.pathname === scope && saved.generation === generation &&
     isDraftOwner(saved.owner, saved.generation) && current.owner === saved.owner && privateDataReady(current);
   useEffect(() => {
-    if (confirmed && delivered.current !== saved) {
+    if (confirmed && saved?.token === visit.current.token && window.location.pathname === scope && isDraftOwner(saved.owner, saved.generation) && delivered.current !== saved) {
       delivered.current = saved;
       void navigate({ to: '/goals' });
     }
-  }, [confirmed, saved, navigate]);
+  }, [confirmed, saved, scope, navigate]);
   return { onSaved, confirmed };
 }
 

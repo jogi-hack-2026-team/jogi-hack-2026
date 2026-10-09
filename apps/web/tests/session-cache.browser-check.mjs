@@ -50,7 +50,7 @@ async function runBrowser(t, entry, mockAuth, realRouter = false) {
   const dir = await mkdtemp(join(tmpdir(), 'futureroi-session-test-'));
   t.after(() => {
     if (!dir.startsWith(join(tmpdir(), 'futureroi-session-test-'))) throw new Error('refusing cleanup outside test temp directory');
-    return rm(dir, { recursive: true, force: true });
+    return rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   });
   const bundle = await build({
     configFile: false, logLevel: 'silent',
@@ -62,7 +62,7 @@ async function runBrowser(t, entry, mockAuth, realRouter = false) {
       resolveId: (id) => id === 'test:router' ? '\0test:router' : mockAuth && id.endsWith('/auth/client.ts') ? '\0test:auth' : null,
       load: (id) => id === '\0test:auth' ? 'export const authClient = {}; export const describeAuthError = (_code, fallback) => fallback;' : id === '\0test:router' ? `import {createElement} from 'react';
         export const Link=({to,params,search,children,...props})=>createElement('a',{href:to,...props},children);
-        export const useNavigate=()=>()=>{}; export const useLocation=()=>({href:'/goals'});` : null,
+        export const useNavigate=()=>()=>{}; export const useRouter=()=>({subscribe:()=>()=>{}}); export const useLocation=()=>({href:'/goals'});` : null,
     }],
     build: { write: false, minify: false, lib: { entry: fileURLToPath(new URL(entry, import.meta.url)), formats: ['iife'], name: 'SessionTests' } },
   });
@@ -77,7 +77,7 @@ async function runBrowser(t, entry, mockAuth, realRouter = false) {
   await writeFile(page, html);
   const server = createServer((_, res) => { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(html); });
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
-  t.after(() => new Promise((resolve) => server.close(resolve)));
+  t.after(() => new Promise((resolve) => { server.closeAllConnections(); server.close(resolve); }));
   const { port } = server.address();
   const { stdout, stderr } = await promisify(execFile)(browser, [
     '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
@@ -107,7 +107,7 @@ test('Better Auth 1.7.7: visibility refetch failure masks draft and successful r
 test('same-owner draft: actual router/hooks preserve idle input only across successful continuous checks', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-draft.browser.tsx', false, true);
   assert.equal(result.operations.length, 15);
-  assert.equal(result.safety.length, 20);
-  assert.equal(result.writes, 11);
+  assert.equal(result.safety.length, 22);
+  assert.equal(result.writes, 13);
   t.diagnostic(JSON.stringify(result));
 });
