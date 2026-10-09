@@ -111,3 +111,10 @@ test('same-owner draft: actual router/hooks preserve idle input only across succ
   assert.equal(result.writes, 29);
   t.diagnostic(JSON.stringify(result));
 });
+
+test('YesterdayPrompt: same-day refetch keeps draft and next-day refetch requires a new amount', { timeout: 180000 }, async (t) => {
+  const result = await runBrowser(t, './yesterday-rollover.browser.tsx', true);
+  assert.equal(result.results.length, 3);
+  assert.equal(result.writes.length, 2);
+  t.diagnostic(JSON.stringify(result));
+});

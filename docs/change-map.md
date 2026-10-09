@@ -19,6 +19,7 @@
 ### 記録の入力からDB・予測・表示まで
 
 1. [RecordChoiceBar](../apps/web/src/features/logs/RecordChoiceBar.tsx)の選択 → [useSaveLog](../apps/web/src/features/logs/useSaveLog.ts) → [record-log.ts](../apps/web/src/features/logs/record-log.ts)の`toLogPut` → [today-http.ts](../apps/web/src/api/today-http.ts)の`putLog`。DONEは初回も訂正も表示量を`amount`へ固定し、`expectedGoalSettingsRevision`とともに明示送信する。
+   昨日の補完は[YesterdayPrompt](../apps/web/src/features/logs/YesterdayPrompt.tsx)の内側componentを昨日の日付で区切り、同日再取得では未保存量を保持し、日付変更時は旧入力を新しい日の保存に流用しない（#193、[実ブラウザ回帰](../apps/web/tests/yesterday-rollover.browser.tsx)）。
 2. `PUT /api/goals/:goalId/logs/:localDate` → [logs/routes.ts](../apps/api/src/logs/routes.ts)の契約・日付検査 → [logs/store.ts](../apps/api/src/logs/store.ts)の`putLog`。本人のGoal行をロックしてからclockを読み、Goalのtimezoneで今日／昨日と開始日を判定する。設定版を照合し（不一致は409）、DONEは必須の明示量を使い（省略は422）、`action_log`の同じGoal・日付を上書きし、commit後に保存行を返す。
 3. PUT成功 → `useSaveLog`が`goalKeys.all`を無効化 → 画面で利用中のGoal・Today・記録を再取得。[useTodayData](../apps/web/src/features/today/useTodayData.ts)が[snapshot.ts](../apps/web/src/features/today/snapshot.ts)の`isSameSnapshot`で照合する。**保存成功は最新表示の成功とは別。** Today・記録の再取得失敗を`refreshFailed`の判定対象とし、[TodayPage](../apps/web/src/features/today/TodayPage.tsx)が保存失敗と分けて知らせる。
 4. 画面の`GET /api/goals/:goalId/today?view=r11` → [prediction/routes.ts](../apps/api/src/prediction/routes.ts) → [loadTodaySnapshot](../apps/api/src/prediction/store.ts)。repeatable readで最初のGoal SELECT（保存回答も含む）を終えてからclockを1回読み、同じDB snapshotの全ログを取得し、commit・接続返却を終える。
