@@ -1,8 +1,12 @@
-# Prediction Engineの限定先行実装（Refs #71・#72・#73）
+# Prediction Engine（Refs #71・#72・#73）
 
-**Supporting Doc / Not a Source of Truth.** 正式仕様は[Prediction Engine D-19〜D-22](../../docs/architecture.md#prediction-engine)と[Test Strategy T-01〜T-15](../../docs/architecture.md#test-strategy)。このpackageはDB・HTTP・UI・時計から独立した計算本体とローカルテストを持つ。アプリ結合・正式受入まで完了したものではない。純粋Engineの型検査・数値テストCIは[検証CI](#検証ci)を参照する。
+**Supporting Doc / Not a Source of Truth.** 正式仕様は[Prediction Engine D-19〜D-22](../../docs/architecture.md#prediction-engine)と[Test Strategy T-01〜T-15](../../docs/architecture.md#test-strategy)。このpackageはDB・HTTP・UI・時計から独立した計算本体とローカルテストを持つ。現在はAPIへ結合済みで、公開環境・製品受入の完了とは区別する。純粋Engineの型検査・数値テストCIは[検証CI](#検証ci)を参照する。
 
 ## 承認範囲と現在の状態
+
+**現在の結合：** [Today route](../../apps/api/src/prediction/routes.ts)から[API adapter](../../apps/api/src/prediction/engine.ts)の`runPrediction`を、[R-11変換](../../apps/api/src/prediction/r11.ts)から`runQuestionPrediction`を呼ぶ。Goalのtimezone・DB snapshot・DTOはAPI側の責務で、Engineの拒否はadapterの`PredictionFailed`を経て[appのHTTP 500処理](../../apps/api/src/app.ts)へ接続済み。純粋packageのテスト成功だけでFE・公開環境・実ユーザーの受入まで保証しない。
+
+**限定先行時点の履歴（2026-10-03〜04）：** 以下2段落は当時の承認・未完了状態の記録で、現在のAPI未結合を意味しない。
 
 2026-10-03の依頼者承認を[#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)・[#72](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/72)・[#73](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/73)の「承認済みの限定先行」へ記録した。独立ローカルBranchでEngine計算本体と関連テストを先行できる。正式なアプリへの組み込みは#70完了後で、#70のBLOCKED、FE／BEの依存、正式結合・レビュー・Merge・完了判定のHard依存は維持する。
 
@@ -12,7 +16,7 @@
 
 2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストとsnapshot／worker接続例の3テストを加え、n=H限定の境界回帰2件と合わせて当時66テストへ拡張した。#133時点の公開入口4件を含む70件を保持し、#188の公開結果契約・再帰収集の回帰3件を加え、現在は73件を同じCIで実行する。独立CDFオラクル3テストは別コマンドで確認する。Supporting候補全体の採択と、下記#133の依頼者承認範囲を分ける。
 
-[src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映したが、正式API結合済みではない。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
+[src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映し、現在は上のAPI adapterから利用する。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
 
 1. [observations.ts](src/observations.ts)は整数のGregorian日付演算で入力を検証し、コピーを整列する。未来・重複・不正な日付や量は達成判定前に拒否する。隣接した記録だけを数え、欠けたUNKNOWN日を跨がない。実績は初期量＋全DONEの実量で、今日の量も1回だけ含む。内部事実として最古記録日〜今日／昨日のordinal範囲・暦日数と有効記録件数を返す。ログ0では観測開始日を決められないため窓はnullで、初期進捗から開始日を推測しない。
 2. [predict.ts](src/predict.ts)は正式な優先順「入力エラー → 達成済み → 今日記録済み／データ不足」を適用し、各遷移へ既定prior=2を加えて事後分布を作る。達成済みのcompletionは`completed`、未達成で起点状態の遷移がない場合は`insufficient`。0日やnullで不足を隠さない。

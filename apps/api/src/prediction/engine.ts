@@ -9,7 +9,8 @@ import type { PredictionR11 } from '../contracts/r11.ts';
 // 呼び出しをこの関数に閉じ込め、workerへ移す場合もroute側を変えずに済むようにする。
 
 type SchemaResult = Static<typeof PredictionResultSchema>;
-// 契約のschemaとEngineの型の双方向の互換を型検査する。どちらかに項目が増減するとここが型エラーになる。
+// schemaとEngineの型の双方向の代入互換を検査する。
+// 任意項目の追加などは両方向に代入できるため、項目集合まで完全一致を保証する検査ではない。
 export const predictionResultSchemaMatchesEngine: [SchemaResult extends PredictionResult ? true : false, PredictionResult extends SchemaResult ? true : false] = [true, true];
 type R11SchemaResult = Static<typeof PredictionR11>;
 export const questionPredictionSchemaMatchesEngine: [R11SchemaResult extends QuestionPriorPredictionResult ? true : false, QuestionPriorPredictionResult extends R11SchemaResult ? true : false] = [true, true];
