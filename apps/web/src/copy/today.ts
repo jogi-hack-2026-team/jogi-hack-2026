@@ -16,7 +16,7 @@ export const todayCopy = {
   completionLabelCurrent: '現在の状態からの完了の目安',
   completionP50: (week: string) => `${week}ごろ`,
   completionP80: (week: string) => `10回中8回は${week}まで`,
-  completionP80Over3Years: '10回中8回は3年以上先',
+  completionP80Over3Years: '10回中8回の完了時期の目安は、計算範囲の約3年以内には収まりません。',
   /** 補助指標2の注釈（Product Spec の固定文言）。 */
   completionNote: '完了の目安は、同じ記録から推定した継続傾向でシミュレーションした見込みです。',
   axisNote: '日付は、その週の月曜日で表しています。',
