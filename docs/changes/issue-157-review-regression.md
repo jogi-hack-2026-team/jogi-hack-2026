@@ -20,7 +20,9 @@ Supporting Artifact / Not a Source of Truth
 
 ## 検証結果
 
-Node 24.21.0 / npm 11.19.0でnpm ci・npm run typecheck・npm test・npm run buildが成功。全276件（Engine70、API130、Web76）、失敗・skip0。APIは専用PostgreSQLの管理接続からテストごとの隔離DBを作成・終了時に削除した。Windowsのembedded DBを毎回起動する初回実行は準備遅延のため中断し、成功扱いには含めない。Foundationはpwsh -NoProfile -File scripts/check-foundation.ps1で成功（アプリ検証とは別）。
+作者が追加したa0f8739069b00cd9c0ec19de3864c7bd1d054de1を統合する前のローカル確認: Node 24.21.0 / npm 11.19.0でnpm ci・npm run typecheck・npm test・npm run buildが成功。全276件（Engine70、API130、Web76）、失敗・skip0。APIは専用PostgreSQLの管理接続からテストごとの隔離DBを作成・終了時に削除した。Windowsのembedded DBを毎回起動する初回実行は準備遅延のため中断し、成功扱いには含めない。Foundationはpwsh -NoProfile -File scripts/check-foundation.ps1で成功（アプリ検証とは別）。
+
+作者のtargetDateChecksとその回帰も保持して統合した。API境界ケースは、titleを含む全Goalの不変検査へまとめた。表示と送信で毎回その共通条件を使い、日付をまたいだ送信では現在の時計から再検査する。統合後は型検査、Web77件、到達予定日API5件、build、Foundation（140ファイル・1872リンク）が成功。専用imageを再build・reloadし、過去日で1件のsummary・日付エラー・aria-invalid=true・入力保持を実画面でも再確認した。全体の最終HEAD検証はPRのCIで追跡する。
 
 実ブラウザはKaitoLaptopの専用Brave（PC dark）とIAB（390px light）で確認した。Braveの検証タブが途中で接続を失い閉じられたため、残る変更・削除をIABで継続した。日付の自動fillだけではReactへ変更が伝わらない操作ツールの制約があり、日付欄の実キー操作も行い、inputのvalue属性と画面を照合した。これはアプリの通常日付入力の不具合として報告しない。
 

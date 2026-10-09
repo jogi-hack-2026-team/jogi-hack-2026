@@ -83,7 +83,7 @@ test('編集：記録があっても到達予定日を変更・削除でき、�
   assert.deepEqual((await a.call('GET', `/api/goals/${goal.id}`)).json, before);
 });
 
-test('timezoneと到達予定日を同時に変えると、変更後timezoneの今日で検査し、拒否時は全体を戻す', async (t) => {
+test('編集：timezoneと到達予定日を一緒に変えるときは、変更後のtimezoneの今日で検査し、拒否時は全体を戻す', async (t) => {
   const { stack } = await setup(t, { now: () => NOW });
   const a = await signedInClient(stack.app, 'target-timezone-patch');
   const goal = (await a.call('POST', '/api/goals', { ...base, targetDate: null })).json as unknown as Goal;

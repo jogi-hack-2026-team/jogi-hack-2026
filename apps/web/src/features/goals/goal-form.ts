@@ -110,13 +110,18 @@ export function validate(
   return errors;
 }
 
+/** 到達予定日の条件。表示・送信の両経路から使い、検査のたびに選択中timezoneの今日を求める。 */
+export function targetDateChecks(timezone: string, savedTargetDate: string | null | undefined, now: Date): { today?: string; savedTargetDate?: string } {
+  const today = localDateIn(timezone, now);
+  return { ...(today ? { today } : {}), ...(savedTargetDate !== undefined ? { savedTargetDate: savedTargetDate ?? '' } : {}) };
+}
+
 /** 表示時と送信時で同じ検査を使う。選択中のtimezoneと編集の比較元から、日付の条件を毎回組み立てる。 */
 export function validateGoalForm(
   values: FormValues,
   { locked = false, baseline, now = new Date() }: { locked?: boolean; baseline?: GoalWithAnswers | undefined; now?: Date } = {},
 ): FieldErrors {
-  const today = localDateIn(values.timezone, now) ?? undefined;
-  return validate(values, { locked, ...(today ? { today } : {}), ...(baseline ? { savedTargetDate: baseline.targetDate ?? '' } : {}) });
+  return validate(values, { locked, ...targetDateChecks(values.timezone, baseline?.targetDate, now) });
 }
 
 export const errorCount = (errors: FieldErrors) => FIELD_ORDER.filter((name) => errors[name]).length;
