@@ -619,21 +619,13 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 ### D-28
 
-Context: Today APIは[engine.ts](../apps/api/src/prediction/engine.ts)で純粋Engineを同期で呼び、計算中は同じprocessの記録PUT・Goal一覧・session確認が待つ。[#77記録](#2026-10-06の記録today-api77)は「workerへ移すかは#84の残判断」としたが、#84は2026-10-08にworker不採択のままCloseし、判断の持ち主がなかった（[#160](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/160)）。公開先は[D-25](#d-25)の第一候補のまま未採用で、Code Freezeは2026-10-12。
-
-Decision（提案）: MVPでは同期実行を維持する。予測は要求ごとにDB接続を返してから純粋Engineを最大1回同期で呼び、HTTP・DB・時計をEngineへ混ぜない（現状維持）。同じprocessで先行する予測要求の計算時間の合計だけ、他操作も待ち得ることをKnown Limitationとして記録する。公開先の計測経路（公開先への送信手順と公開先側の計測）は未提供・未検証で、[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)の受入条件として残す。採択は[#162](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/162)の文書PRへの別メンバー2人のApproveとし、決定者・日付・根拠を同Issueへ残す。
+2026-10-09 / **PROPOSED** / MVPでは同期実行を維持する案。公開先の計測経路と受入は#83の残条件。採択条件・状態反映は下記手順に従う。[比較理由・代替案・再検討条件・Evidence](prediction/decision-log.md#d-28)を一度だけ記録する。
 
 #### D-28の採択状態を反映する手順
 
 現在はPROPOSEDで、COMMENT reviewやAIの自己レビューを採択のApproveに数えない。Issue #162の担当者（引き継ぎを依頼者が承認した場合はその担当者）が、PR #172の最終変更を取り込んだPR #173の提案HEADへの別メンバー2人のHuman APPROVED reviewを確認した時点で、Issue #162へ採択対象SHA・2人の名前とreviewリンク・実際の採択日・根拠を記録する。提案内容の変更があれば、変更後の内容で採択の確認をやり直す。
 
 その担当者がMerge前に状態反映用commitを作り、本書のD-28索引と本文を実際の採択日を添えたDECIDEDへ更新する。同じcommitで#77の実行方式欄とKnown Limitationの「提案中」、change-mapの「チームApprove待ち」を採択済みへ揃え、Issue #162の判断コメントへリンクする。Supporting Docの正式状態はArchitectureを参照させる。検証値・T-14・#83の未検証条件は状態変更だけでは変えない。push後に最終HEADのCIとrequired reviewを再確認し、古いApproveがdismissされた場合は状態反映後HEADへのHuman Approveを取り直してから人間がMergeする。提案HEADと状態反映commitは別々に記録し、状態反映push以前のreviewを最終HEADの承認として報告しない。このPRでは上記条件を満たしておらず、PROPOSEDのまま保持する。
-
-Alternatives: 同一process内のworker pool（候補spikeの`predict-pool.ts`相当を`runPrediction`の内側に置き、routeとDTOは変えない）。旧候補spikeの条件（Windows端末、CRUD 20 req/s、worker 2本、[10-07報告](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)）ではCRUD p95が約8〜13ms（session p95は約11〜23ms）だったが、今回のM5計測にはworkerとの比較がなく、公開runtimeでも未検証。worker死亡時の復旧（再生成か503か）・SIGTERM時のqueue drain・healthへの反映・回帰が必要で、Function環境でのworker_threadsの挙動も未確認。Freeze前3日で新しい失敗経路を増やす。「保留」は同期のまま判断を記録しない状態であり、再検討条件を明記する本案に吸収する。
-
-Reason: [現行APIの実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)（Apple M5、同一多コア端末、各条件1回、[#161](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/161)）では、3人がthink time（1秒・0.5秒・1秒）を挟んで操作し続けるclosed loop（予測GoalのToday約1.13 req/s＋軽いDemo GoalのToday約1.13 req/s＝Today合計約2.26 req/s（CRUD／sessionを含む全要求は約5.65 req/s））で、Todayのp95が約0.12〜0.2秒・最大約0.3秒、他操作のp95は約10ms。この条件ではworker追加を必要とする結果は得ていない。一方、全要求が重い入力のopen loop（CRUD 20 req/s併走）ではToday 4 req/sで他操作のp95が約1回の計算時間（約90ms）に張り付き、10 req/sでCPU 0.96となるため、workerの効果が見込める領域は存在する。3人closed loopとopen loop 4 req/sは条件が異なり、「3人なら4 req/sまで余裕」とは一般化しない。要求失敗・DBの事実から同じEngine入口を直接呼んだwiring比較の不一致はない。独立した数学的oracleによる計算の再検証ではない。現在の利用想定（開発者3人の機能QAとデモ）に対しては、実装・運用コストが利点を上回ると判断する。
-
-Consequences / Reconsider When: 公開runtimeの単コア性能が遅いほど同期ブロックは比例して伸びる（未測定）。再検討条件（提案値であり、実測で確定した公開SLO・容量限界ではない）は次のいずれかで、満たせばworker poolを再提案する。(1) 公開先のAPI processで観測した同期ブロックの最長が500ms以上。T-14の単体判定値と同じ値で、1回の同期ブロックがT-14の上限に達する状態を指す。(2) 3人closed loop相当で記録・一覧・session確認のp95が1秒以上。1操作の体感として許容する目安で、UX上の判断基準。(3) APIのprocess（instance）1つあたりで、重い入力中心のToday到着率が4 req/s相当以上の利用を想定する場合。今回のopen loopで他操作p95が約90msに張り付いた条件に対応する。同期ブロックの観測には[計測preload](../experiments/api-mixed-load/server-metrics-preload.mjs)の`monitorEventLoopDelay`のmax（タイマーで観測したevent-loop遅延）を近似として使い、predict 1回の所要時間そのものではない。Engine単体の掃引（この端末・60日の合成記録1種類・既定Engine設定・回答なしR-11）では`requiredFutureDone` 548は84.94ms、700は83.6ms、800は75.0msで、この追加条件の最大は約85msだった。T-14の1095はhorizon短絡で約4.3〜4.8msだったため、T-14既定3入力より重いケースがあることは確認できている。全入力・回答ありR-11の最悪条件は確定していない。T-14の判定値は変えず、[公開前の最小検証](operations/release-demo.md#公開候補の採用前に行う最小検証)で公開先の計測経路が整った時点に、T-14既定入力と`MIXED_LOAD_SIZES=548,700,800`相当の追加条件を区別して記録する。候補spikeの[旧結果](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)（546.83ms FAIL、CRUD p95 5秒超）はWindows端末の値として保持し、解消済みとしない。Evidence: [計測ハーネス](../experiments/api-mixed-load/README.md)と生結果JSON（LOCAL_POC。localhost専用で公開先URLを指定できない。1 vCPU・実Cloud・長時間・多人数は未検証）。
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
