@@ -46,6 +46,8 @@ export function AuthPage({ mode, redirectTo, reason }: { mode: AuthMode; redirec
   }, [retryAt, wait]);
 
   const action = mode === 'login' ? c.login : c.register;
+  // ログイン／新規登録を切り替えても、戻り先とログイン切れの理由を引き継ぐ（新規登録から戻っても案内を消さない）
+  const switchSearch = reason ? { redirect: redirectTo, reason } : { redirect: redirectTo };
   const errorCount = Object.keys(fieldErrors).length;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -99,10 +101,10 @@ export function AuthPage({ mode, redirectTo, reason }: { mode: AuthMode; redirec
       {reason === 'expired' ? <InsufficientNotice role="status">{c.expired}</InsufficientNotice> : null}
 
       <nav className="fr-auth__seg" aria-label={c.tabs}>
-        <Link to="/login" search={{ redirect: redirectTo }} replace aria-current={mode === 'login' ? 'page' : undefined}>
+        <Link to="/login" search={switchSearch} replace aria-current={mode === 'login' ? 'page' : undefined}>
           {c.login}
         </Link>
-        <Link to="/register" search={{ redirect: redirectTo }} replace aria-current={mode === 'register' ? 'page' : undefined}>
+        <Link to="/register" search={switchSearch} replace aria-current={mode === 'register' ? 'page' : undefined}>
           {c.register}
         </Link>
       </nav>

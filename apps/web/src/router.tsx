@@ -63,8 +63,8 @@ const registerRoute = createRoute({
   getParentRoute: () => authLayout,
   path: '/register',
   component: function RegisterRoute() {
-    const { redirect: redirectTo } = registerRoute.useSearch();
-    return <AuthPage mode="register" redirectTo={redirectTo} />;
+    const { redirect: redirectTo, reason } = registerRoute.useSearch();
+    return <AuthPage mode="register" redirectTo={redirectTo} reason={reason} />;
   },
 });
 
