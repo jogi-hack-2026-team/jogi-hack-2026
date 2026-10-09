@@ -1,0 +1,65 @@
+/* 下から出るシート（デザイン B-account）。色・大きさは tokens.css の値だけを使う。 */
+.fr-sheet {
+  width: min(100vw, 480px);
+  max-width: 100vw;
+  margin: auto auto 0;
+  border: 0;
+  border-radius: var(--fr-radius-sheet) var(--fr-radius-sheet) 0 0;
+  padding: var(--fr-space-3) var(--fr-space-6) var(--fr-space-7);
+  background: var(--fr-surface);
+  color: var(--fr-ink);
+  font-family: var(--fr-font);
+  box-shadow: var(--fr-shadow-dialog);
+}
+.fr-sheet::backdrop {
+  background: var(--fr-scrim);
+}
+.fr-sheet[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-4);
+}
+.fr-sheet__grab {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fr-btn-line);
+  align-self: center;
+}
+.fr-sheet__title {
+  margin: 0;
+  font-size: var(--fr-fs-dialog-title);
+  font-weight: 700;
+  line-height: 1.5;
+}
+.fr-account__info {
+  margin: 0;
+}
+.fr-account__kv {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--fr-space-3);
+  padding: var(--fr-space-2) 0;
+  font-size: var(--fr-fs-body);
+}
+.fr-account__kv dt {
+  color: var(--fr-ink-2);
+}
+.fr-account__kv dd {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.fr-account__error {
+  margin: 0;
+  font-size: var(--fr-fs-help);
+  font-weight: 700;
+  color: var(--fr-warn);
+}
+.fr-account__email {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

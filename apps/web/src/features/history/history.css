@@ -1,0 +1,149 @@
+/* 日ごとの記録の印（デザインキャンバス F1・P1）。色だけで伝えないよう、やった＝塗り＋チェック、休んだ＝淡い塗り＋月、未記録＝破線＋「?」 */
+.fr-daymark {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.fr-daymark--done {
+  background: var(--fr-rec);
+  color: var(--fr-surface);
+}
+.fr-daymark--rest {
+  background: var(--fr-rest-soft);
+  color: var(--fr-rest);
+}
+.fr-daymark--unrecorded {
+  border: 1.5px dashed var(--fr-btn-line);
+  color: var(--fr-ink-2);
+  font-weight: 700;
+}
+.fr-daymark--outside {
+  visibility: hidden;
+}
+
+/* 記録の履歴（F1） */
+.fr-history__top {
+  padding: var(--fr-space-2) var(--fr-gutter) var(--fr-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fr-history__month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fr-history__month h1 {
+  font-size: var(--fr-fs-dialog-title);
+  font-weight: 700;
+}
+.fr-history__month .fr-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.fr-history__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fr-space-2) var(--fr-space-4);
+  font-size: var(--fr-fs-help);
+  color: var(--fr-ink-2);
+}
+.fr-history__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fr-history__cal {
+  padding: var(--fr-space-4) var(--fr-space-3);
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--fr-space-1);
+  text-align: center;
+  margin: 0;
+  list-style: none;
+}
+.fr-history__wd {
+  font-size: var(--fr-fs-caption);
+  font-weight: 700;
+  color: var(--fr-ink-2);
+  padding: var(--fr-space-1) 0;
+}
+.fr-history__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
+  font-size: 12px;
+  color: var(--fr-ink-2);
+}
+.fr-history__pad {
+  padding: 0 var(--fr-gutter);
+}
+
+/* 直近7日の帯（P1） */
+.fr-recent {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--fr-space-1);
+  padding: var(--fr-space-1) var(--fr-space-4) var(--fr-space-3);
+  margin: 0;
+  list-style: none;
+}
+.fr-recent__day {
+  min-height: var(--fr-tap);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fr-space-1);
+  padding: 6px 0;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  font-size: 12px;
+  color: var(--fr-ink-2);
+}
+button.fr-recent__day:hover {
+  background: var(--fr-dot-soft);
+}
+.fr-recent__day--today {
+  color: var(--fr-ink);
+  font-weight: 700;
+}
+
+/* デスクトップ幅の記録の履歴（デザイン Desk-history）。月の切り替え・凡例・カレンダーを角丸の箱に入れ、印を大きくする */
+.fr-history__box {
+  display: contents;
+}
+@media (min-width: 960px) {
+  .fr-history__box {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-dialog);
+    padding: 28px var(--fr-space-8) var(--fr-space-8);
+  }
+  .fr-history__box .fr-history__top {
+    padding: 0;
+    gap: 20px;
+  }
+  .fr-history__box .fr-history__month h1 {
+    font-size: 20px;
+  }
+  .fr-history__box .fr-history__cal {
+    padding: 0;
+    row-gap: var(--fr-space-2);
+  }
+  .fr-history__box .fr-history__day {
+    --fr-daymark-size: 48px;
+    gap: var(--fr-space-1);
+    font-size: 13px;
+  }
+  .fr-history__box .fr-history__wd {
+    font-size: 14px;
+  }
+}

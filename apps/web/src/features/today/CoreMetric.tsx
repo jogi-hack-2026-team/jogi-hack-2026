@@ -2,14 +2,15 @@ import { InsufficientNotice } from '../../ui/components/Notice.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { coreNoteFor, todayCopy } from '../../copy/today.ts';
 import { sourceLabel, sourceNote } from '../prior/PriorForecast.tsx';
-import type { Counts, CorePresentation, SufficientSource } from '../prior/presentation-types.ts';
+import type { CorePresentation, SufficientSource } from '../prior/presentation-types.ts';
 
 /**
  * 問い・中心の数字・要約・計算の根拠（デザイン案Bの上部）。
  * R-11 で回答由来の数字のときは、出所（「回答」「回答＋実績」）を数字の下に出し、要約も出所に合わせる（デザインキャンバス R2・R3）。
  * 記録だけのときは、Product Spec P-12 の固定文言のまま。
+ * 補助指標1「休んだ翌日にやれたのは ○回中○回」は出さない（2026-10-08、依頼者判断による P-12 の改訂。#146）。
  */
-export function CoreMetric({ core, resumed }: { core: CorePresentation; resumed: Counts }) {
+export function CoreMetric({ core }: { core: CorePresentation }) {
   if (core.kind === 'insufficient') {
     return <InsufficientNotice>{core.message ?? todayCopy.insufficientCore}</InsufficientNotice>;
   }
@@ -29,20 +30,8 @@ export function CoreMetric({ core, resumed }: { core: CorePresentation; resumed:
         </p>
       )}
       <p className="fr-today__summary">{core.source === 'RECORDS' ? todayCopy.coreSummary : sourceNote(core.source)}</p>
-      <ResumedLine resumed={resumed} />
       <WhyDetails source={core.source} />
     </>
-  );
-}
-
-/** 補助指標1「休んだ翌日にやれたのは {nSD+nSS}回中{nSD}回」（Product Spec P-12）。0件のときは出さない（中心指標が不足になるため）。 */
-export function ResumedLine({ resumed }: { resumed: Counts }) {
-  if (resumed.total === 0) return null;
-  return (
-    <p className="fr-resumed">
-      <span>{todayCopy.resumedLabel}</span>
-      <strong>{todayCopy.resumed(resumed.success, resumed.total)}</strong>
-    </p>
   );
 }
 

@@ -43,20 +43,6 @@
 }
 
 /* 補助指標1 */
-.fr-resumed {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--fr-space-3);
-  font-size: var(--fr-fs-body);
-  padding-top: var(--fr-space-1);
-  border-top: 1px solid var(--fr-line);
-}
-.fr-resumed strong {
-  font-size: var(--fr-fs-section);
-  white-space: nowrap;
-}
-
 /* 計算の根拠 */
 .fr-why {
   border-top: 1px solid var(--fr-grid);
@@ -306,4 +292,151 @@
   font-size: var(--fr-fs-body);
   font-weight: 700;
   text-underline-offset: 3px;
+}
+
+/* Goalのメニュー（デザインキャンバス D1・P3）。上のバーの右から下へ開く */
+.fr-menu {
+  position: relative;
+}
+.fr-menu__list {
+  position: absolute;
+  right: 4px;
+  top: calc(100% - 4px);
+  z-index: 3;
+  width: 250px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  background: var(--fr-surface);
+  border: 1px solid var(--fr-line);
+  border-radius: var(--fr-radius-notice);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+.fr-menu__item {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--fr-ink);
+  font-size: var(--fr-fs-body);
+  text-align: left;
+  text-decoration: none;
+}
+.fr-menu__item:hover,
+.fr-menu__item:focus-visible {
+  background: var(--fr-dot-soft);
+}
+
+/* 今日から記録を始めたGoalの案内（デザインキャンバス E4） */
+.fr-first-day {
+  padding: var(--fr-space-2) var(--fr-gutter) 0;
+}
+
+/* 達成済みの記録開始日・届いた日と、一覧へ戻る（デザインキャンバス D6） */
+.fr-achieved-facts {
+  padding: var(--fr-space-6) var(--fr-gutter) var(--fr-space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-4);
+}
+.fr-achieved-facts__list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.fr-achieved-facts__list > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: var(--fr-space-3);
+}
+.fr-achieved-facts__list > div + div {
+  border-left: 1px solid var(--fr-line);
+  padding: 0 0 0 14px;
+}
+.fr-achieved-facts__list dt {
+  font-size: var(--fr-fs-help);
+  font-weight: 700;
+  color: var(--fr-ink-2);
+}
+.fr-achieved-facts__list dd {
+  margin: 0;
+  font-size: var(--fr-fs-section);
+  font-weight: 700;
+}
+
+/*
+ * デスクトップ幅（デザイン Desk-today）。スマートフォン幅では .fr-today-layout と .fr-today__right を箱にせず（display: contents）、
+ * これまでどおり縦に並べて記録の2択を下に固定する。デスクトップ幅では左の列に問い・数字・記録の2択、右の列に見通しと積み上げを置く。
+ */
+.fr-today__desknav {
+  display: none;
+}
+.fr-today-layout,
+.fr-today__right {
+  display: contents;
+}
+@media (min-width: 960px) {
+  .fr-page--today {
+    max-width: 1152px;
+    padding: var(--fr-space-4) var(--fr-space-4) var(--fr-space-8);
+  }
+  .fr-page--today > .fr-appbar {
+    display: none;
+  }
+  .fr-today__desknav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--fr-space-3);
+  }
+  .fr-today__crumb {
+    padding: 0 var(--fr-space-1);
+  }
+  .fr-today-layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 1fr) minmax(0, 1.45fr);
+    /* 左の列の行は中身の高さだけにし、右の列の高さの余りは最後の行で受ける（左の要素の間を空けない） */
+    grid-template-rows: repeat(8, auto) 1fr;
+    column-gap: var(--fr-space-8);
+    align-items: start;
+  }
+  .fr-today-layout > * {
+    grid-column: 1;
+    min-width: 0;
+  }
+  .fr-today-layout > .fr-today__right {
+    display: flex;
+    flex-direction: column;
+    grid-column: 2;
+    grid-row: 1 / -1;
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-dialog);
+    overflow: hidden;
+  }
+  /* 達成済みなど右の列がないときは1列 */
+  .fr-today-layout:not(:has(> .fr-today__right)) {
+    grid-template-columns: minmax(0, 40rem);
+    justify-content: center;
+  }
+  .fr-today-layout > .fr-today__top {
+    padding: var(--fr-space-4) 0 var(--fr-gutter);
+  }
+  /* 記録の2択は下に固定せず、左の列の中に置く */
+  .fr-today-layout > .fr-actionbar {
+    position: static;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 0;
+    background: none;
+  }
+}
+
+/* 場所を引き継ぐためにだけフォーカスする見出し（操作できないので枠は出さない） */
+.fr-today__question[tabindex='-1']:focus {
+  outline: none;
 }
