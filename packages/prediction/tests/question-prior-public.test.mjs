@@ -51,3 +51,28 @@ test('公開R-11: rawの不正は構造化した公開例外で失敗する', ()
   assert.throws(() => predictWithQuestionPrior({ prediction, answers: { a: 'INVALID', b: null }, mapping }), error =>
     error instanceof QuestionPriorError && error.kind === 'input' && error.reason === 'INVALID_ANSWER' && error.path.join('/') === 'answers/a');
 });
+
+test('公開R-11: 公開key順と状態別の形を固定し、内部候補の追加項目を公開しない', () => {
+  const config = { modelVersion: 'behavior-persistence-m1-v1', samples: 8, horizonDays: 20, seed: 20261012 };
+  for (const [answers, source] of [
+    [{ a: null, b: 'UNKNOWN' }, { a: 'NONE', b: 'NONE' }],
+    [{ a: 'HIGH', b: 'MID' }, { a: 'QUESTION', b: 'QUESTION' }],
+  ]) {
+    for (const input of [prediction,
+      { ...prediction, goal: { ...prediction.goal, initialProgress: 100 } },
+      { ...prediction, logs: [{ localDate: prediction.today, status: 'DONE', amount: 13 }] }]) {
+      const result = predictWithQuestionPrior({ prediction: input, answers, mapping }, config);
+      assert.deepEqual(Object.keys(result), ['prediction', 'provenance', 'plan']);
+      assert.deepEqual(Object.keys(result.prediction), ['modelVersion', 'today', 'todayStatus', 'progress',
+        'observations', 'posterior', 'coreMetric', 'completion', 'config']);
+      assert.deepEqual(Object.keys(result.prediction.config), ['samples', 'horizonDays', 'seed']);
+      assert.deepEqual(result.provenance, source);
+      assert.deepEqual(Object.keys(result.prediction.completion), result.prediction.completion.status === 'available'
+        ? ['status', 'scenario', 'p50Days', 'p80Days']
+        : result.prediction.completion.status === 'completed' ? ['status'] : ['status', 'reason']);
+      if (result.plan !== null) {
+        assert.deepEqual(Object.keys(result.plan), ['remainingAmount', 'remainingSessions', 'lastSessionAmount']);
+      }
+    }
+  }
+});

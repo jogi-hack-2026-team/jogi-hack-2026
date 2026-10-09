@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import * as entry from '../dist/src/index.js';
 import { recoveryExamples, unknownGapInput, unknownGapExpected, todayDoneInput,
   todayDoneExpected, dpBoundaryExample } from '../dist/tests/fixtures.js';
@@ -16,9 +19,17 @@ test('package: documented defaults and a real pure calculation entry', () => {
   assert.ok(Object.isFrozen(entry.DEFAULT_CONFIG));
 });
 
-test('scaffold: source imports stay inside the pure package; no ambient platform inputs', () => {
-  const src = new URL('../src/', import.meta.url);
-  for (const name of readdirSync(src).filter(name => name.endsWith('.ts'))) {
+function* sourceFiles(directory, prefix = '') {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const name = prefix + entry.name;
+    assert.ok(!entry.isSymbolicLink(), `Source audit cannot follow symlink: ${name}`);
+    if (entry.isDirectory()) yield* sourceFiles(new URL(entry.name + '/', directory), name + '/');
+    else if (entry.isFile() && name.endsWith('.ts')) yield name;
+  }
+}
+
+function auditSource(src) {
+  for (const name of sourceFiles(src)) {
     const code = readFileSync(new URL(name, src), 'utf8').replace(/\/\/[^\n]*/g, '');
     for (const match of code.matchAll(/\b(?:from\s*|import\s*\(\s*|import\s*)['"]([^'"]+)['"]/g)) {
       assert.match(match[1], /^\.\.?\/.+\.js$/, name);
@@ -28,8 +39,33 @@ test('scaffold: source imports stay inside the pure package; no ambient platform
     }
     assert.doesNotMatch(code, /\b(?:Date|fetch|process|window|document|require)\b|Math\.random|import\s*\(/, name);
   }
+}
+
+test('scaffold: source imports stay inside the pure package; no ambient platform inputs', () => {
+  auditSource(new URL('../src/', import.meta.url));
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   assert.deepEqual(pkg.dependencies ?? {}, {});
+});
+
+test('scaffold: nested sources allow local imports and reject platform or escaping dependencies', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'prediction-source-audit-'));
+  assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
+  try {
+    const src = join(directory, 'src');
+    mkdirSync(join(src, 'nested'), { recursive: true });
+    writeFileSync(join(src, 'types.ts'), 'export type Value = number;');
+    const nested = join(src, 'nested', 'entry.ts');
+    const url = pathToFileURL(src + sep);
+    writeFileSync(nested, "import type { Value } from '../types.js';");
+    assert.doesNotThrow(() => auditSource(url));
+    for (const code of ["import fs from 'node:fs';", 'export const value = Math.random();',
+      "import type { Value } from '../../outside.js';"]) {
+      writeFileSync(nested, code);
+      assert.throws(() => auditSource(url), assert.AssertionError, code);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('fixture audit: known recovery quantiles match independent integer factorial ratios', () => {

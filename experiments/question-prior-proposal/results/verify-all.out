@@ -1,7 +1,0 @@
-PASS: prototype-test (exit 0)
-PASS: typecheck (exit 0)
-PASS: analysis (exit 0)
-PASS: bgq-boundary (exit 0)
-PASS: dp-regression (exit 0)
-PASS: historical580-reproduced (exit 0)
-PASS: all local checks; original repository and historical artifacts unchanged.

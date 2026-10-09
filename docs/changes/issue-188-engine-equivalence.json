@@ -1,0 +1,73 @@
+{
+  "base": "77c71a5f248a4dce4ce9fb8af6619b41541be9d8",
+  "checkedAt": "2026-10-09T16:18:13.261Z",
+  "total": 1430,
+  "success": 1402,
+  "errors": 28,
+  "groups": {
+    "legacy predict": 27,
+    "public R11": 675,
+    "candidate deep import": 675,
+    "default config": 25,
+    "error paths": 24,
+    "config errors": 4
+  },
+  "checks": [
+    "full recursive own keys including undefined/optional, values, descriptors, prototype names and frozen flags match",
+    "input/config not mutated",
+    "error name/message/kind/reason/path/descriptors match (stack locations excluded)",
+    "runtime exports and candidate deep imports preserved",
+    "11 calculation/config/export source files byte-equivalent to base",
+    "compiled adapter execution statements identical after removing comments",
+    "public .d.ts has no candidate dependency"
+  ],
+  "resultDigest": "3294c6d3501992b4bb3f6ae17db138fc907b33f128a26c6117cfa7a3980f5d2b",
+  "sourceHead": "4f5523a8e2775562206951234155007e3b6a0e7d",
+  "protectedGitBlobs": [
+    {
+      "path": "packages/prediction/src/completion.ts",
+      "blob": "5c7e0f719f3625d4eeae0f330adea97d1eb73b72"
+    },
+    {
+      "path": "packages/prediction/src/completion-scenario.ts",
+      "blob": "9c1d1b649f89d7db5118b7c96d592ab6423ed8ee"
+    },
+    {
+      "path": "packages/prediction/src/recovery.ts",
+      "blob": "9df31ea0e9e86f8ee31391263bececeaa2943152"
+    },
+    {
+      "path": "packages/prediction/src/random.ts",
+      "blob": "4cf1e73695fe0983591ed980c9421d010198864b"
+    },
+    {
+      "path": "packages/prediction/src/predict.ts",
+      "blob": "d92897448db774602252aed2b069dedfe42fa857"
+    },
+    {
+      "path": "packages/prediction/src/config.ts",
+      "blob": "10a487c9d68c241418b31081c8b96aa46e5d6dd6"
+    },
+    {
+      "path": "packages/prediction/src/observations.ts",
+      "blob": "1072956e0d031b0e76126002b95a8f1f573e5ba1"
+    },
+    {
+      "path": "packages/prediction/src/errors.ts",
+      "blob": "b9e97899aaa9e96d1de2d03eb18f8eccde73d6c1"
+    },
+    {
+      "path": "packages/prediction/src/goal-prior-candidate.ts",
+      "blob": "eaddf4e6f5b8582cbd16656b2595ab66c501d380"
+    },
+    {
+      "path": "packages/prediction/src/index.ts",
+      "blob": "54ec875a195bc1f1edf19409dde64e54931da107"
+    },
+    {
+      "path": "packages/prediction/src/types.ts",
+      "blob": "de9ecfc0467c4f294192365b99f9499db2814a63"
+    }
+  ],
+  "stackLocationsCompared": false
+}

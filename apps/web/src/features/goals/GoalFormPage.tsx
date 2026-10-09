@@ -1,29 +1,29 @@
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useRouter } from '@tanstack/react-router';
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
 import { authClient } from '../../auth/client.ts';
+import { browserTimezone } from '../../calendar.ts';
 import { clearCreateAttempt, loadCreateAttempt, prepareCreateAttempt, CreateRecoveryError, createFailureKind, type CreateAttempt } from './create-attempt.ts';
 import { ApiError } from '../../api/client.ts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { privateDataReady, usePrivateEpoch, type PrivateEpoch } from '../../api/session-cache.ts';
-import { isDraftOwner, useMemoryDraft } from '../../api/session-draft.ts';
+import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { useMemoryDraft } from '../../api/session-draft.ts';
 import { goalsCopy } from '../../copy/goals.ts';
-import { longDate } from '../../copy/date.ts';
+import { GoalFormFields } from './form/GoalFormFields.tsx';
+import { useConfirmedGoalSave } from './navigation/useConfirmedGoalSave.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { DeskHeader } from '../../ui/components/DeskHeader.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ConfirmDialog } from '../../ui/components/ConfirmDialog.tsx';
-import { Field, fieldAria, NumberInput, SegmentedControl, SelectInput, TextInput } from '../../ui/components/FormField.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
 import { StickyActionBar } from '../../ui/components/StickyActionBar.tsx';
 import { fetchPolicy } from '../today/fetch-policy.ts';
-import { QuestionPriorFields } from '../prior/QuestionPriorFields.tsx';
 import '../prior/question-prior.css';
 import {
   answersLockReason,
@@ -33,8 +33,6 @@ import {
   fieldErrorsFromApi,
   rebaseValues,
   reloadLatestGoal,
-  TITLE_MAX,
-  titleLength,
   toCreateBody,
   toPatchBody,
   validateGoalForm,
@@ -53,7 +51,6 @@ import './goals.css';
 
 const c = goalsCopy;
 const f = goalsCopy.form;
-const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 function useInterruptedOperation(ready: boolean, operationKey: readonly unknown[]) {
   const pending = useIsMutating({ mutationKey: operationKey }) > 0;
   const interrupted = useRef(false);
@@ -62,53 +59,12 @@ function useInterruptedOperation(ready: boolean, operationKey: readonly unknown[
   return interrupted.current && pending;
 }
 
-/** Formが確認中にunmountされても、確定成功だけは同じページの親へ伝える。 */
-function useConfirmedSave(current: PrivateEpoch, generation: number, scope: string) {
-  const navigate = useNavigate();
-  const router = useRouter();
-  const instance = useId();
-  const mounted = useRef(false);
-  const activeScope = useRef(scope);
-  const visit = useRef({ scope, token: {}, generation: 0 });
-  if (visit.current.scope !== scope) visit.current = { scope, token: {}, generation: visit.current.generation + 1 };
-  activeScope.current = scope;
-  const token = visit.current.token;
-  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object; complete?: () => boolean }>();
-  const [failedCompletion, setFailedCompletion] = useState<{ receipt: typeof saved; error: unknown }>();
-  const delivered = useRef<typeof saved>(undefined);
-  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  // 同routeのGoal1→Goal2→Goal1でも親は再利用される。commit前の離脱開始も旧訪問を失効させる。
-  useLayoutEffect(() => router.subscribe('onBeforeNavigate', ({ pathChanged }) => {
-    if (pathChanged) visit.current = { ...visit.current, token: {}, generation: visit.current.generation + 1 };
-  }), [router]);
-  const owner = current.owner;
-  const onSaved = useCallback((complete?: () => boolean) => {
-    if (mounted.current && visit.current.token === token && typeof owner === 'string' && activeScope.current === scope && window.location.pathname === scope && isDraftOwner(owner, generation))
-      setSaved({ owner, generation, scope, token, ...(complete ? { complete } : {}) });
-  }, [owner, generation, scope, token]);
-  const confirmed = saved !== undefined && saved.token === visit.current.token && saved.scope === scope && window.location.pathname === scope && saved.generation === generation &&
-    isDraftOwner(saved.owner, saved.generation) && current.owner === saved.owner && privateDataReady(current);
-  const error = confirmed && failedCompletion?.receipt === saved ? failedCompletion.error : null;
-  useEffect(() => {
-    if (confirmed && !error && saved?.token === visit.current.token && window.location.pathname === scope && isDraftOwner(saved.owner, saved.generation) && delivered.current !== saved) {
-      // 確認中の一時unmountでも、この訪問の確定成功を採用するときは該当操作を終了する。
-      // 離脱/owner変更後の旧成功では呼ばない。K2へ置換済みならK2を残してそのフォームへ戻す。
-      try {
-        if (saved.complete && !saved.complete()) { setSaved(undefined); return; }
-      } catch (error) { setFailedCompletion({ receipt: saved, error }); return; }
-      delivered.current = saved;
-      void navigate({ to: '/goals' });
-    }
-  }, [confirmed, error, saved, scope, navigate]);
-  return { onSaved, confirmed, error, operationVisit: [instance, visit.current.generation] as const };
-}
-
 /** Goal の作成（R-02、#78）。/goals/new */
 export function GoalCreatePage() {
   // ログインしている人が替わったら作り直し、前の人の入力を持ち越さない
   const current = usePrivateEpoch();
   const draft = useMemoryDraft<FormDraft>(current, 'create');
-  const completion = useConfirmedSave(current, draft.generation, '/goals/new');
+  const completion = useConfirmedGoalSave(current, draft.generation, '/goals/new');
   // 同キーを別訪問で確認済みなら、旧訪問の保留応答で次の作成を待たせない。
   // 未確定K1の再訪は175のattemptを復元し、同じ訪問中のsession確認は引き続き待つ。
   const operationKey = ['goal-form', current.owner, 'create', ...completion.operationVisit];
@@ -133,7 +89,7 @@ export function GoalCreatePage() {
 export function GoalEditPage({ goalId }: { goalId: string }) {
   const current = usePrivateEpoch();
   const draft = useMemoryDraft<FormDraft>(current, `edit:${goalId}`);
-  const completion = useConfirmedSave(current, draft.generation, `/goals/${goalId}/edit`);
+  const completion = useConfirmedGoalSave(current, draft.generation, `/goals/${goalId}/edit`);
   const operationKey = ['goal-form', current.owner, 'edit', goalId];
   const operating = useInterruptedOperation(privateDataReady(current), operationKey);
   const { owner } = current;
@@ -466,152 +422,14 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
       <DeskHeader back={goal ? <GoalCrumb goal={goal} /> : <ListCrumb />} title={mode === 'create' ? f.createTitle : f.editTitle} />
       <form ref={formRef} className={`fr-goalform fr-goalform--${mode}`} noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
-        <div className="fr-goalform__fields">
-          {discardedDraft ? <p role="status">別の更新があったため最新のGoalを表示しています。未保存の入力は復元していません。</p> : null}
-          {attempt ? <p role="status">{f.createRecovery.pending}</p> : null}
-          {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isEditConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} editConflict={isEditConflict(save.error)} /> : null}
-          {count > 0 ? (
-            <div className="fr-goalform__summary" role="alert">
-              <Icon name="alert" size={20} />
-              {f.summary(count)}
-            </div>
-          ) : null}
-
-          <Field id="goal-title" label={f.title} counter={`${titleLength(values.title)} / ${TITLE_MAX}`} error={errors.title}>
-            <TextInput
-              id="goal-title"
-              value={values.title}
-              onChange={(event) => update('title', event.target.value)}
-              disabled={inputDisabled}
-              invalid={Boolean(errors.title)}
-              autoComplete="off"
-              {...fieldAria('goal-title', { error: errors.title })}
-            />
-          </Field>
-
-          <Field id="goal-unit" label={f.unit} group error={errors.unit} help={mode === 'edit' && goal.unitLocked ? (
-            <>
-              <LockedNote>{goalsCopy.errors.unitLocked}</LockedNote>
-              {values.unit !== goal.unit ? <Button variant="secondary" disabled={inputDisabled} onClick={() => update('unit', goal.unit)}>{f.restoreSavedUnit}</Button> : null}
-              <Link to="/goals/new">{f.createNewGoal}</Link>
-            </>
-          ) : undefined}>
-            <SegmentedControl
-              labelledBy="goal-unit-label"
-              options={[
-                { value: 'minutes', label: f.units.minutes },
-                { value: 'sessions', label: f.units.sessions },
-              ]}
-              value={values.unit}
-              onChange={(value) => update('unit', value)}
-              disabled={inputDisabled || (mode === 'edit' && goal.unitLocked)}
-            />
-          </Field>
-
-          {/* デスクトップ幅では2列に並べる（デザイン Desk-create）。スマートフォン幅では1列のまま */}
-          <div className="fr-goalform__pair">
-            <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={inputDisabled} onChange={(v) => update('totalRequired', v)} />
-            <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={inputDisabled} onChange={(v) => update('sessionAmount', v)} />
-          </div>
-          <AmountField
-            id="goal-initialProgress"
-            label={f.initialProgress}
-            unit={unit}
-            value={values.initialProgress}
-            error={errors.initialProgress}
-            disabled={inputDisabled || locked}
-            onChange={(v) => update('initialProgress', v)}
-            help={
-              <>
-                <p>{goal ? f.initialProgressHelp(longDate(goal.recordStartDate)) : f.initialProgressHelpNew}</p>
-                {locked ? <LockedNote>{f.lockedInitialProgress}</LockedNote> : null}
-              </>
-            }
-          />
-
-          <div className="fr-goalform__pair">
-            {/* 到達予定日（任意、#157、P-19）。記録があっても変えられる */}
-            <Field
-              id="goal-targetDate"
-              label={f.targetDate}
-              counter={f.targetDateOptional}
-              error={errors.targetDate}
-              help={<p>{mode === 'edit' ? f.targetDateEditHelp : f.targetDateHelp}</p>}
-            >
-              <TextInput
-                id="goal-targetDate"
-                type="date"
-                value={values.targetDate}
-                onChange={(event) => update('targetDate', event.target.value)}
-                disabled={inputDisabled}
-                invalid={Boolean(errors.targetDate)}
-                {...fieldAria('goal-targetDate', { help: true, error: errors.targetDate })}
-              />
-            </Field>
-            <Field
-              id="goal-timezone"
-              label={f.timezone}
-              error={errors.timezone}
-              help={
-                <>
-                  <p>{f.timezoneHelp}</p>
-                  {locked ? <LockedNote>{f.lockedTimezone}</LockedNote> : null}
-                </>
-              }
-            >
-              <SelectInput
-                id="goal-timezone"
-                value={values.timezone}
-                onChange={(event) => update('timezone', event.target.value)}
-                disabled={inputDisabled || locked}
-                invalid={Boolean(errors.timezone)}
-                {...fieldAria('goal-timezone', { help: true, error: errors.timezone })}
-              >
-                {timezones.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz === browserTimezone() ? f.browserTimezone(tz) : tz}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
-          </div>
-
-          {/* 初期質問は任意なので、開閉できる形で閉じて置く（デザイン C1・R1）。回答・エラー・お知らせがあるときは開いておく */}
-          <details
-            className="fr-goalform__prior"
-            open={priorOpen || Boolean(errors.questionPrior) || latestAnswers !== null || answersLock !== null}
-            onToggle={(event) => setPriorOpen(event.currentTarget.open)}
-          >
-            <summary className="fr-goalform__prior-summary">
-              <h2 id="fr-goalform-prior-title" className="fr-goalform__prior-title">
-                {f.priorTitle}
-              </h2>
-              <Icon name="chevronDown" size={20} />
-            </summary>
-            {latestAnswers ? (
-              <p className="fr-goalform__latest" role="status">
-                {f.latestAnswers(answerLabel(latestAnswers.a), answerLabel(latestAnswers.b))}
-              </p>
-            ) : null}
-            <QuestionPriorFields
-              externalHeadingId="fr-goalform-prior-title"
-              value={answersLock ? NO_ANSWERS : values.questionPrior}
-              onChange={(next) => update('questionPrior', next)}
-              disabled={inputDisabled || answersLock !== null}
-              fieldErrors={errors.questionPrior ? { a: errors.questionPrior } : {}}
-            />
-            {answersLock ? <LockedNote>{answersLock === 'withdrawn' ? f.answersWithdrawn : f.answersNotSavedWithContext}</LockedNote> : null}
-            <p className="fr-goals__help">{f.answersNotRecords}</p>
-          </details>
-
-          {mode === 'edit' ? (
-            <div className="fr-goalform__delete-mobile">
-              <Button variant="text" icon="trash" disabled={inputDisabled} onClick={() => setDeleteOpen(true)}>
-                {f.delete}
-              </Button>
-            </div>
-          ) : null}
-        </div>
+        <GoalFormFields
+          {...(mode === 'create' ? { mode } : { mode, goal })}
+          values={values} errors={errors} count={count} unit={unit} timezones={timezones}
+          discardedDraft={discardedDraft} pendingCreate={attempt !== null}
+          refreshNotice={refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isEditConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} editConflict={isEditConflict(save.error)} /> : null}
+          inputDisabled={inputDisabled} locked={locked} priorOpen={priorOpen} latestAnswers={latestAnswers}
+          answersLock={answersLock} update={update} onPriorToggle={setPriorOpen} onDeleteOpen={() => setDeleteOpen(true)}
+        />
 
         <StickyActionBar>
           <div className="fr-goalform__actions">
@@ -704,41 +522,6 @@ function RefreshFailed({ error, onRetry, editConflict }: { error: unknown; onRet
   );
 }
 
-function AmountField({
-  id,
-  label,
-  unit,
-  value,
-  error,
-  disabled,
-  onChange,
-  help,
-}: {
-  id: string;
-  label: string;
-  unit: string;
-  value: string;
-  error: string | undefined;
-  disabled: boolean;
-  onChange: (value: string) => void;
-  help?: ReactNode;
-}) {
-  return (
-    <Field id={id} label={label} error={error} help={help}>
-      <NumberInput id={id} suffix={unit} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} invalid={Boolean(error)} {...fieldAria(id, { help, error })} />
-    </Field>
-  );
-}
-
-function LockedNote({ children }: { children: string }) {
-  return (
-    <p className="fr-goalform__locked">
-      <Icon name="info" size={16} />
-      {children}
-    </p>
-  );
-}
-
 /** 保存の失敗。失敗したのに保存済みに見せない（入力は残し、まだ保存されていないことを書く）。 */
 function SaveFailure({ error, mode, onReloadLatest, reloadingLatest, onRestartCreate }: { error: unknown; mode: 'create' | 'edit'; onReloadLatest: () => Promise<void>; reloadingLatest: boolean; onRestartCreate?: (() => void) | undefined }) {
   if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
@@ -788,7 +571,6 @@ function isCreateResultDeleted(error: unknown): boolean {
   return error instanceof ApiError && error.status === 410 && error.body?.error.code === 'CREATE_RESULT_DELETED';
 }
 
-const answerLabel = (answer: NonNullable<GoalWithAnswers['questionPrior']>['a']) => f.answerLabels[answer ?? 'none'];
 
 /** 選べるタイムゾーン。ブラウザが知っている IANA 名に、今の値（ブラウザ設定・保存済みの値）を必ず含める。 */
 function useTimezones(current: string): string[] {

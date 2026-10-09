@@ -3,7 +3,7 @@
 Supporting Artifact / Not a Source of Truth。正式な状態と結論は[Architecture](../architecture.md#architecture-decision-log)のD-19〜D-22、モデル仕様は[Prediction Engine](../architecture.md#prediction-engine)を正本とする。[判断記録](decision-log.md)は比較理由・代替案・影響を説明するSupporting Doc。
 
 - **種別**：LOCAL_POC（合成データによる数値実験）。実ユーザーデータでの検証は未実施。
-- **実施日・環境**：2026-09-30にNode 25.2.0で実施。2026-10-02、PR #86のレビューで見つかった分位点の境界誤差とDPの微小確率の打ち切りを直し、全スクリプトを候補Runtime（Node 24.21.0）で再実行した。`results/`はこの再実行の出力。スクリプトは[実験フォルダ](../../experiments/prediction-model-validation/README.md)に保存。
+- **実施日・環境**：2026-09-30にNode 25.2.0で実施。2026-10-02、PR #86のレビューで見つかった分位点の境界誤差とDPの微小確率の打ち切りを直し、全スクリプトを候補Runtime（Node 24.21.0）で再実行した。`results/`はこの再実行の出力。スクリプトは[実験フォルダ](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/prediction-model-validation/README.md)に保存。
 - **共通条件**：必要回数 `N = 120`（例：30分×120回）。記録なし（UNKNOWN）をランダムに10%混ぜる。「連続中」の文脈（昨日まで2日以上続けていた状態で今日を判断）で差が出やすいので、主にこの文脈で評価した。
 - **支持しない主張**：人の行動がMarkov連鎖であること、実ユーザーでの精度、表示が行動を変える効果。
 
@@ -113,11 +113,11 @@ M1・各300人。反転P95＝過去の1日を反転した時の変化の95パー
 
 ## 質問由来priorの局所検証（2026-10-04）
 
-**Supporting Artifact / LOCAL_POC / 未採択**。[提案](question-prior-proposal.md)のための合成数値・局所adapter検証で、本番Engine/APIの完了や精度・人の理解／行動への効果の証拠ではない。一次研究の支持範囲は[資料台帳](../../experiments/question-prior-proposal/SOURCES.md)。
+**Supporting Artifact / LOCAL_POC / 未採択**。[提案](question-prior-proposal.md)のための合成数値・局所adapter検証で、本番Engine/APIの完了や精度・人の理解／行動への効果の証拠ではない。一次研究の支持範囲は[資料台帳](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/SOURCES.md)。
 
-- 元の2026-10-03調査は独立ハーネス580チェック。実行時Node24.21.0、K=200、H=1095、seed20261012。原本report/source/raw/summaryとSHAを[実験フォルダ](../../experiments/question-prior-proposal/README.md)に保存。sourceRepoHeadはaf001c6e797b9833a63234bd1646171ac8e8c542。元reportの10/7は歴史的判断で、現在の期限へ読み替えない。
+- 元の2026-10-03調査は独立ハーネス580チェック。実行時Node24.21.0、K=200、H=1095、seed20261012。原本report/source/raw/summaryとSHAを[実験フォルダ](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/README.md)に保存。sourceRepoHeadはaf001c6e797b9833a63234bd1646171ac8e8c542。元reportの10/7は歴史的判断で、現在の期限へ読み替えない。
 - a/b別18候補（3形状×3形状×strength4/8）を既存DPへ与えた数値比較。b=(1,3)はg50/g80=3/12で平均待ちは無限。(2,6)は3/8。同平均でも強度が裾を変える。
 - 未校正のb=(3,1)へSS12件という独立した起点ストレスを与えると(3,13)、平均.1875、g50/g80=4/10。strength8の(6,2)なら(6,14)、平均.30、2/6。観測による更新方向は正しいが、誤ったpriorが短期で消えるとはいえない。このストレスを実ユーザーのrawログへ追加しない。
 - 原調査のDPと独立全経路オラクルPMF最大差2.78×10⁻16、独立Beta積分とK=200事後抽選CDF最大差3.15ポイント。演算誤差と抽選誤差を分ける。
-- 今回の純粋TypeScript試作は同じ行動の経験gate、独立a/b対応、source/revision validation、raw再構築、条件付き計画、baseline不足規則を検証。[局所テスト](../../experiments/question-prior-proposal/test/prototype.test.mjs)と[type contract](../../experiments/question-prior-proposal/test/type-contract.ts)。試作テスト件数と580を合算しない。再現・実行記録は[検証結果](../../experiments/question-prior-proposal/results/VERIFICATION.md)。
+- 今回の純粋TypeScript試作は同じ行動の経験gate、独立a/b対応、source/revision validation、raw再構築、条件付き計画、baseline不足規則を検証。[局所テスト](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/test/prototype.test.mjs)と[type contract](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/test/type-contract.ts)。試作テスト件数と580を合算しない。再現・実行記録は[検証結果](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/results/VERIFICATION.md)。
 - 自己申告を実記録とは扱わない。質問による精度向上や動機づけ、非dailyへの適用、実EngineのT-14、Cloud性能、正式仕様採択は未検証。回答訂正でも同じ観測を新priorに再利用する統計的リスクを消せたとは主張しない。

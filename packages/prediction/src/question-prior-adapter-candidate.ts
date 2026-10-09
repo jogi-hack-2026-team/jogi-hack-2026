@@ -4,24 +4,20 @@ import { evaluateGoalPriorCandidate } from './goal-prior-candidate.js';
 import type { GoalPriorCandidate, GoalPriorCandidateConfig, GoalPriorCandidateResult } from './goal-prior-candidate.js';
 import { recoveryQuantiles } from './recovery.js';
 import { completionFromValidatedState } from './completion-scenario.js';
-import type { Completion, PredictionInput } from './types.js';
+import type { Completion } from './types.js';
+import type { QuestionPriorAnswer, QuestionPriorEvidenceSource, QuestionPriorMapping,
+  QuestionPriorPredictionInput, QuestionPriorValidationCause } from './question-prior-types.js';
 
 // Candidateという名前はPR118の候補接続として追加した経緯を残している。現在は
 // question-prior.tsの公開wrapper predictWithQuestionPrior（#133 / D-26）がここを使う。
 // このadapter自体はindex.tsから直接公開せず、旧predictの共通prior・材料条件も変えない。
 // 候補全体の採択や予測精度の検証済みを名前から判断せず、承認範囲はD-26を参照する。
-export type NumericAnswerCandidate = 'LOW' | 'MID' | 'HIGH';
-export type RawAnswerCandidate = NumericAnswerCandidate | 'UNKNOWN' | null;
-export type EvidenceSourceCandidate = 'NONE' | 'QUESTION' | 'RECORDS' | 'QUESTION_AND_RECORDS';
-export interface QuestionPriorMappingCandidate {
-  readonly version: string;
-  readonly values: Readonly<Record<NumericAnswerCandidate, { readonly alpha: number; readonly beta: number }>>;
-}
-export interface QuestionPriorAdapterInputCandidate {
-  readonly prediction: PredictionInput;
-  readonly answers: { readonly a: RawAnswerCandidate; readonly b: RawAnswerCandidate };
-  readonly mapping: QuestionPriorMappingCandidate;
-}
+// 既存deep importの名前を保持し、型の所有は安定した公開契約へ向ける。
+export type NumericAnswerCandidate = Exclude<QuestionPriorAnswer, 'UNKNOWN' | null>;
+export type RawAnswerCandidate = QuestionPriorAnswer;
+export type EvidenceSourceCandidate = QuestionPriorEvidenceSource;
+export interface QuestionPriorMappingCandidate extends QuestionPriorMapping {}
+export interface QuestionPriorAdapterInputCandidate extends QuestionPriorPredictionInput {}
 export interface QuestionPriorAdapterResultCandidate extends GoalPriorCandidateResult {
   readonly rawAnswers: QuestionPriorAdapterInputCandidate['answers'];
   readonly mappingVersion: string;
@@ -37,9 +33,9 @@ export interface QuestionPriorAdapterResultCandidate extends GoalPriorCandidateR
 // raw/snapshotの構造不正をmessage解析なしで区別する内部分類。公開wrapperは
 // QuestionPriorErrorへ変換してkind/reason/pathを渡し、HTTPコードはAPI側で決める。
 export class QuestionPriorAdapterCandidateError extends TypeError {
-  readonly kind: 'input' | 'config';
-  readonly reason: 'INVALID_ANSWERS' | 'INVALID_ANSWER' | 'INVALID_MAPPING';
-  readonly path: readonly (string | number)[];
+  readonly kind: QuestionPriorValidationCause['kind'];
+  readonly reason: QuestionPriorValidationCause['reason'];
+  readonly path: QuestionPriorValidationCause['path'];
   constructor(kind: 'input' | 'config', reason: QuestionPriorAdapterCandidateError['reason'],
     path: readonly (string | number)[]) {
     super(`Invalid question-prior candidate ${kind}`);

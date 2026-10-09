@@ -1,2 +1,0 @@
-# Preserve copied research bytes; treat CRLF as line endings while checking real whitespace.
-* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

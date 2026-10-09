@@ -16,6 +16,7 @@ concurrency:
 env:
   # Node 24.21.0 は package.json engines・mise.toml・Dockerfile と同じ版。
   NODE_VERSION: '24.21.0'
+  CI_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
   application:
@@ -45,34 +46,41 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           package-manager-cache: false
       - name: Install locked workspace dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: node .github/scripts/ci-report.mjs run install -- npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test CI diagnostics
+        run: node .github/scripts/ci-report.mjs run diagnostic-tests -- node --test .github/scripts/ci-report.test.mjs
       - name: Show versions
         run: |
           node --version
           npm --version
       - name: Typecheck
-        run: npm run typecheck
+        run: node .github/scripts/ci-report.mjs run typecheck -- npm run typecheck
       - name: Test
         # APIテストはCIのPostgreSQL serviceへ接続する（CI専用の合成password。Secretではない）。
         env:
           DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
-        run: npm test
+        run: node .github/scripts/ci-report.mjs run test -- npm test
       - name: Build
-        run: npm run build
+        run: node .github/scripts/ci-report.mjs run build -- npm run build
       - name: Test filesystem migration result checks
-        run: node --test scripts/tests/check-migrations.test.mjs
+        run: node .github/scripts/ci-report.mjs run migration-tests -- node --test scripts/tests/check-migrations.test.mjs
       - name: Run db:migrate on the empty service database, then again (must be a no-op)
         env:
           DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
-        run: |
-          first=$(npm run db:migrate --silent)
-          echo "$first"
-          echo "$first" | node scripts/check-migrations.mjs first
-          second=$(npm run db:migrate --silent)
-          echo "$second"
-          echo "$second" | node scripts/check-migrations.mjs noop
-          # ビルド済み出力からも同じ順序で実行できる（コンテナ内の手順）
-          node apps/api/dist/db/migrate-cli.js all | node scripts/check-migrations.mjs noop
+        run: node .github/scripts/ci-report.mjs run migrate -- bash .github/scripts/check-migrations.sh
+      - name: Summarize verification
+        if: ${{ always() }}
+        run: node .github/scripts/ci-report.mjs summary application
+      - name: Retain safe failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: application-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/ci-report/*.json
+            ${{ runner.temp }}/ci-report/*.log
+          if-no-files-found: warn
+          retention-days: 1
 
   container:
     name: Container build and smoke test
@@ -96,21 +104,35 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
       - name: Validate compose file
         env:
           LOCAL_DB_PASSWORD: ci-only-placeholder
-        run: docker compose config --quiet
+        run: node .github/scripts/ci-report.mjs run compose-config -- docker compose config --quiet
       - name: Verify Compose smoke midnight retry and missing-secret isolation
-        run: |
-          sh scripts/tests/smoke-today.test.sh
-          sh scripts/tests/smoke-env.test.sh
-          bash --posix scripts/tests/smoke-env.test.sh
+        run: node .github/scripts/ci-report.mjs run smoke-script-tests -- bash .github/scripts/smoke-script-tests.sh
       - name: Build the single SPA/API container
-        run: docker build --tag future-roi:${{ github.run_id }}-${{ github.run_attempt }} .
+        run: node .github/scripts/ci-report.mjs run container-build -- docker build --tag future-roi:${{ github.run_id }}-${{ github.run_attempt }} .
       - name: Start, probe routes and stop with SIGTERM
         env:
           IMAGE: future-roi:${{ github.run_id }}-${{ github.run_attempt }}
           DATABASE_URL: postgres://futureroi:ci-only-placeholder@127.0.0.1:5432/futureroi
-        run: ./scripts/smoke-container.sh
+        run: node .github/scripts/ci-report.mjs run container-smoke -- ./scripts/smoke-container.sh
       - name: Verify default Compose startup, restart, failure gates and volume retention
-        run: ./scripts/smoke-compose.sh
+        run: node .github/scripts/ci-report.mjs run compose-smoke -- ./scripts/smoke-compose.sh
+      - name: Summarize verification
+        if: ${{ always() }}
+        run: node .github/scripts/ci-report.mjs summary container
+      - name: Retain safe failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: container-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/ci-report/*.json
+            ${{ runner.temp }}/ci-report/*.log
+          if-no-files-found: warn
+          retention-days: 1

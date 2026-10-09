@@ -16,7 +16,7 @@ import { Icon } from '../../ui/components/Icon.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
 import { amountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
-import { assertForecastPresentation } from '../prior/PriorForecast.tsx';
+import { assertForecastPresentation } from '../prior/forecast-validation.ts';
 import { RecordChoiceBar } from '../logs/RecordChoiceBar.tsx';
 import { YesterdayPrompt } from '../logs/YesterdayPrompt.tsx';
 import { CoreMetric } from './CoreMetric.tsx';

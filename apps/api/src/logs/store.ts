@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
 import type { Log, LogPut } from '../contracts/log.ts';
-import { isGoalId } from '../goals/store.ts';
+import { isGoalId } from '../goals/goal-id.ts';
 import { localDateIn, shiftLocalDate } from '../goals/local-date.ts';
 
 // 記録のSQL。所有者条件（goal.user_id）を全ての読み書きに付け、他人のGoalは「存在しない」として扱う。

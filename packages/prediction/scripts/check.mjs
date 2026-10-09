@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readdirSync } from 'node:fs';
+import { collectTestFiles } from './test-files.mjs';
 
 // 導入済みのコンパイラを明示して使い、自動installや秘密の環境設定ファイルの参照は行わない。
 const [mode, flag, compilerPath, ...extra] = process.argv.slice(2);
@@ -28,6 +28,5 @@ function run(args) {
 // build: 型検査してdist（JSと.d.ts）を出す。apps/apiはpackageのexports経由でこのdistを読む（#77）。testも同じ出力を使う。
 run([compiler, '--project', 'tsconfig.json', ...(mode === 'typecheck' ? ['--noEmit'] : [])]);
 if (mode === 'test') {
-  const tests = readdirSync(resolve(root, 'tests')).filter(name => name.endsWith('.test.mjs'));
-  run(['--test', ...tests.map(name => `tests/${name}`)]);
+  run(['--test', ...collectTestFiles(resolve(root, 'tests'))]);
 }

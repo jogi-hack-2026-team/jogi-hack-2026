@@ -81,11 +81,11 @@ Goal ID・所有者チェック、POST/PATCH DTO、DB column、トランザク�
 | 他ユーザーから学ぶ共有prior | 同等行動の実履歴・母集団設計・偏り／漏洩対策・同意等が必要。収集学習運用費用 | 個人への転用条件と母集団の差の説明が必要 | 大：学習・評価用分割・校正・更新運用・data governance | 今回データなし。短期実装対象にしない |
 | LLMでpriorを作る | 回答／行動情報、モデルとprompt version。外部サービスなら推論費用・通信が増える | 形状を選ぶ根拠と再現性の確認が難しい | 大：構造化出力・fallback・校正・個人情報・費用／失敗・regression | 現行P-11の予測禁止に触れる。採らない案を推奨 |
 
-人口知識をオフラインで学んだpriorとオンラインの質問更新を分ける研究は設計上の類似例として参考になる。推薦や嗜好の研究結果を、習慣行動のD/S予測へ移す根拠にはしない。意図・自己申告と行動の区別、質問自体が与える影響、elicitationの不確実性の出典は[資料台帳](../../experiments/question-prior-proposal/SOURCES.md)に記録した。どの一次研究もこの3択mapping／総強度4・8を校正していない。
+人口知識をオフラインで学んだpriorとオンラインの質問更新を分ける研究は設計上の類似例として参考になる。推薦や嗜好の研究結果を、習慣行動のD/S予測へ移す根拠にはしない。意図・自己申告と行動の区別、質問自体が与える影響、elicitationの不確実性の出典は[資料台帳](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/SOURCES.md)に記録した。どの一次研究もこの3択mapping／総強度4・8を校正していない。
 
 ## 数値Evidenceと限界
 
-[実験README](../../experiments/question-prior-proposal/README.md)と保存rawに再現可能な根拠を置く。元調査580チェックは合成数値の整合性で、実ユーザー・本番Engine/API・プロダクト効果の検証ではない。原本のreport/source/rawとSHAを保存し、新しいprototypeテスト数とは合算しない。recoveryの両起点ストレスを実観測の時系列へ加算しない。
+[実験README](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/README.md)と保存rawに再現可能な根拠を置く。元調査580チェックは合成数値の整合性で、実ユーザー・本番Engine/API・プロダクト効果の検証ではない。原本のreport/source/rawとSHAを保存し、新しいprototypeテスト数とは合算しない。recoveryの両起点ストレスを実観測の時系列へ加算しない。
 
 bの強度4候補g50/g80は多い1/2、半々1/3、少ない3/12日。強度8は1/2、1/3、3/8日。楽観的なb=(3,1)にSS12件だけならb=(3,13)、平均.1875、g50/g80=4/10。一方(6,2)なら(6,14)、平均.30、2/6。観測方向へ更新されても誤設定がすぐ消える保証はない。少ない回答を「13日のサンプルログ」にする理由はない。
 
