@@ -63,6 +63,12 @@ const paths = {
       <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
     </>
   ),
+  flag: (
+    <>
+      <path d="M5 21V4" />
+      <path d="M5 4h11l-2 4 2 4H5" />
+    </>
+  ),
   clock: (
     <>
       <circle cx="12" cy="12" r="9" />

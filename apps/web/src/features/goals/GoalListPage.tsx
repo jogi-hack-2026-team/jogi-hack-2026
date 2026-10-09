@@ -5,7 +5,7 @@ import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { appCopy } from '../../copy/app.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
-import { unitLabel } from '../../copy/today.ts';
+import { amountFormat } from '../../copy/amount.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
@@ -84,7 +84,8 @@ export function GoalListPage() {
  * 進捗バーは総量を超えたら満杯で止める（数字は超えた値のまま出す、R-08）。
  */
 function GoalRow({ goal }: { goal: Goal }) {
-  const unit = unitLabel(goal.unit);
+  // 累計と総量（時間のGoalは時間、#157）
+  const fmt = amountFormat(goal);
   const percent = Math.min(100, Math.floor((goal.progressDone / goal.totalRequired) * 100));
   return (
     <li className="fr-goals__row">
@@ -101,10 +102,9 @@ function GoalRow({ goal }: { goal: Goal }) {
         <span className="fr-goals__row-sub">
           <span>{c.todayStatus[goal.todayStatus]}</span>
           <span className="fr-goals__amount">
-            {goal.progressDone.toLocaleString('ja-JP')}{' '}
+            {fmt.totalNumber(goal.progressDone)}{' '}
             <span className="fr-goals__amount-total">
-              / {goal.totalRequired.toLocaleString('ja-JP')}
-              {unit}
+              / {fmt.total(goal.totalRequired)}
             </span>
           </span>
         </span>

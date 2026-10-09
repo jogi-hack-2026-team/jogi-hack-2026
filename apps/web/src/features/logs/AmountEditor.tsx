@@ -3,6 +3,7 @@ import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { Field, fieldAria, NumberInput } from '../../ui/components/FormField.tsx';
 import { IconButton } from '../../ui/components/Button.tsx';
+import { minutesFromHoursText, type AmountFormat } from '../../copy/amount.ts';
 import { parseInteger } from '../goals/goal-form.ts';
 import './logs.css';
 
@@ -16,7 +17,7 @@ export function AmountEditor({
   label,
   initial,
   sessionAmount,
-  unit,
+  fmt,
   busy,
   onSubmit,
   onCancel,
@@ -26,7 +27,8 @@ export function AmountEditor({
   label: string;
   initial: number;
   sessionAmount: number;
-  unit: string;
+  /** 量の書き方（記録の単位。時間なら時間で入力する、#157）。 */
+  fmt: AmountFormat;
   busy: boolean;
   onSubmit: (amount: number) => void;
   onCancel: () => void;
@@ -35,12 +37,14 @@ export function AmountEditor({
   cancelLabel?: string;
 }) {
   const id = useId();
-  const [text, setText] = useState(String(initial));
+  // 入力欄は記録の単位の数字（時間は小数第1位まで、桁区切りなし）。送る値は分（回）のまま
+  const toText = (n: number) => fmt.recordNumber(n).replace(/,/g, '');
+  const [text, setText] = useState(toText(initial));
   const [error, setError] = useState<string | undefined>();
-  const value = parseInteger(text);
+  const value = fmt.recordInHours ? minutesFromHoursText(text) : parseInteger(text);
   const step = (delta: number) => {
     const next = Math.min(INT4_MAX, Math.max(1, (value ?? 0) + delta));
-    setText(String(next));
+    setText(toText(next));
     setError(undefined);
   };
   const submit = () => {
@@ -50,7 +54,7 @@ export function AmountEditor({
     }
     onSubmit(value);
   };
-  const help = <p>{todayCopy.amountHelp(`${sessionAmount.toLocaleString('ja-JP')}${unit}`)}</p>;
+  const help = <p>{todayCopy.amountHelp(fmt.record(sessionAmount))}</p>;
 
   return (
     <div className="fr-amount">
@@ -59,7 +63,8 @@ export function AmountEditor({
         <Field id={id} label={label} error={error} help={help}>
           <NumberInput
             id={id}
-            suffix={unit}
+            suffix={fmt.recordUnit}
+            decimal={fmt.recordInHours}
             value={text}
             disabled={busy}
             invalid={Boolean(error)}

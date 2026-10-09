@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Log } from '@contracts';
 import { longDate, parseLocalDate, shortDate } from '../../copy/date.ts';
+import type { AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -21,7 +22,7 @@ export function YesterdayCorrection({
   log,
   currentYesterday,
   sessionAmount,
-  unit,
+  fmt,
   saver,
   editing,
   disabled,
@@ -34,7 +35,7 @@ export function YesterdayCorrection({
   /** いまの /today が返す昨日。訂正中にこれが変わったら日付が変わったと判断する。 */
   currentYesterday: string;
   sessionAmount: number;
-  unit: string;
+  fmt: AmountFormat;
   saver: ReturnType<typeof useSaveLog>;
   editing: boolean;
   /** 今日の記録を選び直している間は、同時に編集しない。 */
@@ -44,7 +45,7 @@ export function YesterdayCorrection({
   onRefresh: () => void;
 }) {
   const current = choiceFromLog(log);
-  const currentText = describeChoice(current, sessionAmount, unit, todayCopy.recordedRest);
+  const currentText = describeChoice(current, sessionAmount, fmt.record, todayCopy.recordedRest);
   // 対象日。訂正中は、親（TodayPage）が訂正を始めた時点の記録を固定して渡す
   const target = log.localDate;
   const [draft, setDraft] = useState<RecordChoice>(current);
@@ -95,7 +96,7 @@ export function YesterdayCorrection({
     body = (
       <SaveFailure
         kind={classifySaveError(saver.failure.error)}
-        body={todayCopy.correctFailed(describeChoice(failed, sessionAmount, unit, todayCopy.recordedRest), currentText)}
+        body={todayCopy.correctFailed(describeChoice(failed, sessionAmount, fmt.record, todayCopy.recordedRest), currentText)}
         localDate={target}
         onRetry={saver.retry}
         onReselect={saver.reset}
@@ -127,7 +128,7 @@ export function YesterdayCorrection({
             label={todayCopy.amountYesterdayLabel}
             initial={draft.amount ?? sessionAmount}
             sessionAmount={sessionAmount}
-            unit={unit}
+            fmt={fmt}
             busy={saver.isSaving}
             submitLabel={todayCopy.saveChange}
             cancelLabel={todayCopy.cancel}

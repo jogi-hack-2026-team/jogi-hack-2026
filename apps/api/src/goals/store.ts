@@ -1,5 +1,6 @@
 import type { Pool, PoolClient } from 'pg';
-import type { Goal, GoalCreate, GoalPatch, TodayStatus } from '../contracts/goal.ts';
+import type { Goal, GoalCreate, GoalPatch, RecordUnit, TodayStatus } from '../contracts/goal.ts';
+import { checkGoalFields, GoalFieldsInvalid } from './extras.ts';
 import { localDateIn } from './local-date.ts';
 import type { QuestionPriorAnswers } from '@futureroi/prediction';
 import { EMPTY_ANSWERS, makeQuestionSnapshot, sameAnswers, validateSavedQuestion, type QuestionRow } from '../questions/snapshot.ts';
@@ -19,11 +20,13 @@ type GoalRow = QuestionRow & {
   initial_progress: number;
   timezone: string;
   record_start_date: string;
+  target_date: string | null;
+  record_unit: RecordUnit;
   has_logs: boolean;
 };
 
 const BASE_GOAL_COLUMNS = `g.id, g.title, g.unit, g.total_required, g.session_amount, g.initial_progress, g.timezone,
-  g.record_start_date::text as record_start_date, g.question_prior, g.answer_revision::text as answer_revision, g.question_prior_snapshot`;
+  g.record_start_date::text as record_start_date, g.target_date::text as target_date, g.record_unit, g.question_prior, g.answer_revision::text as answer_revision, g.question_prior_snapshot`;
 const GOAL_COLUMNS = `${BASE_GOAL_COLUMNS},
   exists (select 1 from action_log l where l.goal_id = g.id) as has_logs`;
 
@@ -84,6 +87,9 @@ async function toGoals(db: Queryable, rows: GoalRow[], now: Date): Promise<GoalR
     today: todays[i]!.today,
     todayStatus: statuses.get(r.id) ?? 'UNRECORDED',
     progressDone: r.initial_progress + (done.get(r.id) ?? 0),
+    targetDate: r.target_date,
+    // 回のGoalには時間の単位がないので返さない（DBでは 'minutes' に固定している）
+    recordUnit: r.unit === 'minutes' ? r.record_unit : null,
     questionPrior: saved.answers, answerRevision: saved.revision,
     };
   });
@@ -121,15 +127,19 @@ export async function createGoal(pool: Pool, userId: string, input: GoalCreate, 
     await client.query('begin');
     const now = clock();
     const recordStartDate = localDateIn(now, input.timezone);
+    // 到達予定日は作成時のtimezoneの今日（＝記録開始日）より後だけ。回のGoalに時間の単位は付けられない
+    const invalid = checkGoalFields({ unit: input.unit, today: recordStartDate, targetDate: input.targetDate, recordUnit: input.recordUnit });
+    if (invalid.length) throw new GoalFieldsInvalid(invalid);
+    const recordUnit: RecordUnit = input.unit === 'minutes' ? (input.recordUnit ?? 'minutes') : 'minutes';
     const answers = input.questionPrior ?? EMPTY_ANSWERS;
     const snapshot = makeQuestionSnapshot(answers, { unit: input.unit, sessionAmount: input.sessionAmount, recordStartDate });
     const rows = await client.query<GoalRow>(
       `with inserted as (
-         insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date, created_at, updated_at, question_prior, question_prior_snapshot)
-         values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $9, $10::jsonb, $11::jsonb)
+         insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date, created_at, updated_at, question_prior, question_prior_snapshot, target_date, record_unit)
+         values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $9, $10::jsonb, $11::jsonb, $12::date, $13)
          returning *)
        select ${GOAL_COLUMNS} from inserted g`,
-      [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate, now, JSON.stringify(answers), snapshot === null ? null : JSON.stringify(snapshot)],
+      [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate, now, JSON.stringify(answers), snapshot === null ? null : JSON.stringify(snapshot), input.targetDate ?? null, recordUnit],
     );
     const goal = (await toGoals(client, [rows.rows[0]!], now))[0]!;
     await client.query('commit');
@@ -160,6 +170,18 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
       await client.query('rollback');
       return { kind: 'not_found' };
     }
+    // 到達予定日・記録の単位（#157）は、変更後の単位とtimezoneの今日で検査する。違反は全体をrollbackして422
+    const nextUnit = patch.unit ?? current.unit;
+    const invalid = checkGoalFields({
+      unit: nextUnit,
+      today: localDateIn(now(), patch.timezone ?? current.timezone),
+      targetDate: patch.targetDate,
+      recordUnit: patch.recordUnit,
+    });
+    if (invalid.length) throw new GoalFieldsInvalid(invalid);
+    // 回のGoalは 'minutes' に固定。回から時間へ変えたときは、指定がなければ分で記録する
+    const nextRecordUnit: RecordUnit = nextUnit === 'sessions' ? 'minutes' : (patch.recordUnit ?? (current.unit === 'sessions' ? 'minutes' : current.record_unit));
+    const nextTargetDate = patch.targetDate === undefined ? current.target_date : patch.targetDate;
     const saved = validateSavedQuestion(current, { unit: current.unit, sessionAmount: current.session_amount, recordStartDate: current.record_start_date });
     if (patch.questionPrior !== undefined && patch.expectedAnswerRevision === undefined) {
       await client.query('rollback');
@@ -207,7 +229,9 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
       (patch.totalRequired === undefined || patch.totalRequired === current.total_required) &&
       (patch.sessionAmount === undefined || patch.sessionAmount === current.session_amount) &&
       (patch.initialProgress === undefined || patch.initialProgress === current.initial_progress) &&
-      (patch.timezone === undefined || patch.timezone === current.timezone);
+      (patch.timezone === undefined || patch.timezone === current.timezone) &&
+      nextTargetDate === current.target_date &&
+      nextRecordUnit === current.record_unit;
     if (patch.expectedAnswerRevision !== undefined && !changed && sameGoal) {
       // 回答版付きの全同値再送はSQL UPDATEも省き、updated_atを含む保存metadataを保持する。
       const goal = (await toGoals(client, [{ ...current, has_logs: hasLogs }], now()))[0]!;
@@ -225,12 +249,14 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
            timezone = coalesce($8, timezone),
            question_prior = $9::jsonb,
            answer_revision = $10::bigint,
-           question_prior_snapshot = $11::jsonb
+           question_prior_snapshot = $11::jsonb,
+           target_date = $12::date,
+           record_unit = $13
          where user_id = $1 and id = $2
          returning *)
        select ${GOAL_COLUMNS} from changed g`,
       [userId, goalId, patch.title ?? null, patch.unit ?? null, patch.totalRequired ?? null, patch.sessionAmount ?? null, patch.initialProgress ?? null, patch.timezone ?? null,
-        JSON.stringify(answers), String(revision), questionSnapshot === null ? null : JSON.stringify(questionSnapshot)],
+        JSON.stringify(answers), String(revision), questionSnapshot === null ? null : JSON.stringify(questionSnapshot), nextTargetDate, nextRecordUnit],
     );
     const goal = (await toGoals(client, [updated.rows[0]!], now()))[0]!;
     await client.query('commit');

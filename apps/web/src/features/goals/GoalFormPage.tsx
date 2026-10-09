@@ -8,7 +8,7 @@ import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
-import { unitLabel } from '../../copy/today.ts';
+import { localDateIn } from '../today/day-rollover.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
@@ -27,7 +27,9 @@ import {
   errorCount,
   FIELD_ORDER,
   fieldErrorsFromApi,
+  inputInHours,
   rebaseValues,
+  switchRecordUnit,
   reloadLatestGoal,
   TITLE_MAX,
   titleLength,
@@ -35,6 +37,7 @@ import {
   toPatchBody,
   validate,
   valuesFromGoal,
+  type AmountField,
   type FieldErrors,
   type FieldName,
   type GoalWithAnswers,
@@ -212,7 +215,9 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     if (saving.current || reloadInFlight.current || (save.isError && isAnswerConflict(save.error))) return;
     setSubmitted(true);
     setServerErrors({});
-    const found = validate(values, { locked });
+    // 到達予定日は、選んでいるタイムゾーンの今日より後だけ（APIも同じ検査をする）
+    const today = localDateIn(values.timezone, new Date()) ?? undefined;
+    const found = validate(values, { locked, ...(today ? { today } : {}) });
     if (errorCount(found) > 0) {
       focusFirstError(found);
       return;
@@ -224,7 +229,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   const focusFirstError = (found: FieldErrors) => {
     const first = FIELD_ORDER.find((name) => found[name]);
     if (!first) return;
-    const selector = first === 'unit' ? '[aria-labelledby="goal-unit-label"] button' : first === 'questionPrior' ? '.r11-qp input' : `#goal-${first}`;
+    const selector =
+      first === 'unit' || first === 'recordUnit' ? `[aria-labelledby="goal-${first}-label"] button` : first === 'questionPrior' ? '.r11-qp input' : `#goal-${first}`;
     const target = formRef.current?.querySelector<HTMLElement>(selector);
     target?.focus();
   };
@@ -235,7 +241,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     focusFirstError(focusAfterSave);
     setFocusAfterSave(null);
   }, [focusAfterSave, busy]);
-  const unit = unitLabel(values.unit);
+  // 入力の単位（#157、C案）。時間のGoalは総量・記録開始前の量が時間、1回の量は記録の単位
+  const suffix = (field: AmountField) => (values.unit === 'sessions' ? f.units.sessions : inputInHours(values, field) ? f.recordUnits.hours : f.recordUnits.minutes);
   const timezones = useTimezones(values.timezone);
   // 422 で項目に割り当てられたエラーは各項目に出す。それ以外（通信・サーバー・ログイン切れ）は保存ボタンの上に出す
   const apiFieldErrors = save.isError ? fieldErrorsFromApi(save.error) : null;
@@ -303,12 +310,69 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             />
           </Field>
 
-          <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={busy} onChange={(v) => update('totalRequired', v)} />
-          <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={busy} onChange={(v) => update('sessionAmount', v)} />
+          {/* 時間のGoalだけ、1回の量と日々の記録を分と時間のどちらで入れるかを選ぶ（#157、C案） */}
+          {values.unit === 'minutes' ? (
+            <Field id="goal-recordUnit" label={f.recordUnit} group error={errors.recordUnit} help={<p>{f.recordUnitHelp}</p>}>
+              <SegmentedControl
+                labelledBy="goal-recordUnit-label"
+                options={[
+                  { value: 'minutes', label: f.recordUnits.minutes },
+                  { value: 'hours', label: f.recordUnits.hours },
+                ]}
+                value={values.recordUnit}
+                // 1回の量の入力も新しい単位へ換算して、量を保つ
+                onChange={(value) => setValues((prev) => switchRecordUnit(prev, value))}
+                disabled={busy}
+              />
+            </Field>
+          ) : null}
+
+          <AmountField
+            id="goal-totalRequired"
+            label={f.totalRequired}
+            unit={suffix('totalRequired')}
+            decimal={inputInHours(values, 'totalRequired')}
+            value={values.totalRequired}
+            error={errors.totalRequired}
+            disabled={busy}
+            onChange={(v) => update('totalRequired', v)}
+            {...(values.unit === 'minutes' ? { help: <p>{f.hoursHelp}</p> } : {})}
+          />
+          <AmountField
+            id="goal-sessionAmount"
+            label={f.sessionAmount}
+            unit={suffix('sessionAmount')}
+            decimal={inputInHours(values, 'sessionAmount')}
+            value={values.sessionAmount}
+            error={errors.sessionAmount}
+            disabled={busy}
+            onChange={(v) => update('sessionAmount', v)}
+          />
+
+          {/* 到達予定日（任意、#157、B案）。記録があっても変えられる */}
+          <Field
+            id="goal-targetDate"
+            label={f.targetDate}
+            counter={f.targetDateOptional}
+            error={errors.targetDate}
+            help={<p>{mode === 'edit' ? f.targetDateEditHelp : f.targetDateHelp}</p>}
+          >
+            <TextInput
+              id="goal-targetDate"
+              type="date"
+              value={values.targetDate}
+              onChange={(event) => update('targetDate', event.target.value)}
+              disabled={busy}
+              invalid={Boolean(errors.targetDate)}
+              {...fieldAria('goal-targetDate', { help: true, error: errors.targetDate })}
+            />
+          </Field>
+
           <AmountField
             id="goal-initialProgress"
             label={f.initialProgress}
-            unit={unit}
+            unit={suffix('initialProgress')}
+            decimal={inputInHours(values, 'initialProgress')}
             value={values.initialProgress}
             error={errors.initialProgress}
             disabled={busy || locked}
@@ -460,6 +524,7 @@ function AmountField({
   id,
   label,
   unit,
+  decimal = false,
   value,
   error,
   disabled,
@@ -469,6 +534,7 @@ function AmountField({
   id: string;
   label: string;
   unit: string;
+  decimal?: boolean;
   value: string;
   error: string | undefined;
   disabled: boolean;
@@ -477,7 +543,7 @@ function AmountField({
 }) {
   return (
     <Field id={id} label={label} error={error} help={help}>
-      <NumberInput id={id} suffix={unit} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} invalid={Boolean(error)} {...fieldAria(id, { help, error })} />
+      <NumberInput id={id} suffix={unit} decimal={decimal} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} invalid={Boolean(error)} {...fieldAria(id, { help, error })} />
     </Field>
   );
 }

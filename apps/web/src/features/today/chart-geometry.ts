@@ -26,6 +26,8 @@ export interface OutlookAxis {
   sameWeek: boolean;
   axisLeft: number;
   axisRight: number;
+  /** 到達予定日の位置（#157、B案）。設定がない・今日以前なら null。 */
+  target: { x: number } | null;
 }
 
 /** 印のラベル同士が重なる横の距離（px）。 */
@@ -39,9 +41,11 @@ const MONTH_STEPS = [1, 2, 3, 6, 12] as const;
 const AXIS_LEFT = 20;
 const AXIS_RIGHT_PAD = 16;
 
-export function outlookAxis(today: string, p50Days: number, p80Days: number | null, sameWeek: boolean, width: number): OutlookAxis {
+export function outlookAxis(today: string, p50Days: number, p80Days: number | null, sameWeek: boolean, width: number, targetDays: number | null = null): OutlookAxis {
   const axisRight = width - AXIS_RIGHT_PAD;
-  const last = p80Days ?? p50Days;
+  // 到達予定日が見通しより先なら、軸をそこまで伸ばす
+  const target = targetDays !== null && targetDays > 0 ? targetDays : null;
+  const last = Math.max(p80Days ?? p50Days, target ?? 0);
   // 右端に少し余白を取り、短い期間でも3週間分は見せる
   const span = Math.max(21, Math.ceil(last * 1.15) + 7);
   const x = (days: number) => AXIS_LEFT + ((axisRight - AXIS_LEFT) * days) / span;
@@ -71,7 +75,7 @@ export function outlookAxis(today: string, p50Days: number, p80Days: number | nu
     ticks.push({ x: tickX, label: `${first.getUTCMonth() + 1}月`, yearLabel: year !== lastYear ? `${year}年` : null });
     lastYear = year;
   }
-  return { markers, ticks, sameWeek, axisLeft: AXIS_LEFT, axisRight };
+  return { markers, ticks, sameWeek, axisLeft: AXIS_LEFT, axisRight, target: target === null ? null : { x: x(target) } };
 }
 
 // ---- これまでの積み上げ：記録開始日から今日までの累計（初期量＋DONE の量） ----
@@ -106,6 +110,8 @@ export function cumulativeChart(
   recordStartDate: string,
   today: string,
   width: number,
+  /** 目盛りの値をそろえる刻み（時間のGoalは60分＝1時間刻みにして、16.7時間のような目盛りを出さない。#157）。 */
+  gridUnit = 1,
 ): CumulativeChart {
   const bounds: PlotBounds = { left: PLOT_LEFT, right: width - PLOT_RIGHT_PAD, top: PLOT_TOP, bottom: PLOT_BOTTOM };
   const days = Math.max(1, daysBetween(recordStartDate, today));
@@ -121,7 +127,7 @@ export function cumulativeChart(
     points.push({ x: xAt(d), y: y(sum) });
   }
   const gridLines = [1 / 3, 2 / 3].map((r) => {
-    const value = Math.round(total * r);
+    const value = Math.round((total * r) / gridUnit) * gridUnit;
     return { y: y(value), value };
   });
   return {

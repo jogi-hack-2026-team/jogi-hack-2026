@@ -51,7 +51,7 @@ test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの
   assert.match(goal.id, /^[0-9a-f-]{36}$/);
   assert.deepEqual(
     { ...goal, id: 'x' },
-    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0 },
+    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0, targetDate: null, recordUnit: 'minutes' },
   );
 
   const list = await a.call('GET', '/api/goals');
@@ -81,11 +81,12 @@ test('入力検証: 契約違反はすべて422のfieldsに入り、Goalは作�
     sessionAmount: -1,
     initialProgress: -1,
     timezone: 'Asia/Tokyo',
-    targetDate: '2026-12-31',
+    dueDate: '2026-12-31',
   });
   assert.equal(res.status, 422);
   assert.equal((res.json?.error as { code: string }).code, 'VALIDATION_ERROR');
-  assert.deepEqual(fieldPaths(res.json), ['body/initialProgress', 'body/sessionAmount', 'body/targetDate', 'body/title', 'body/totalRequired', 'body/unit']);
+  // 未知の項目（到達予定日は targetDate。#157で追加）も他の違反と一緒に返す
+  assert.deepEqual(fieldPaths(res.json), ['body/dueDate', 'body/initialProgress', 'body/sessionAmount', 'body/title', 'body/totalRequired', 'body/unit']);
 
   // 型の変換はしない（"30"は数値にしない）、整数以外、空白だけのtitle、101文字のtitle、項目の欠落
   for (const [body, path] of [
@@ -182,7 +183,7 @@ test('編集: 省略は維持、空object・null・未知の項目は422、記�
   assert.equal(renamed.status, 200, renamed.body);
   assert.deepEqual(renamed.json, { ...goal, title: '英語 45分', sessionAmount: 45 });
 
-  for (const body of [{}, { title: null }, { unit: 'count' }, { targetDate: '2026-12-31' }, { totalRequired: 0 }]) {
+  for (const body of [{}, { title: null }, { unit: 'count' }, { dueDate: '2026-12-31' }, { totalRequired: 0 }]) {
     const r = await a.call('PATCH', `/api/goals/${goal.id}`, body);
     assert.equal(r.status, 422, JSON.stringify(body));
   }
