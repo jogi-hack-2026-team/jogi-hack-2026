@@ -8,6 +8,17 @@ Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの�
 
 2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMust追加と分担をPR #115でチーム採択した。当時のOPEN事項と2026-10-07の依頼者承認範囲の保存・予測接続契約は[D-26](#d-26)で区別する。旧`predict`の実績由来Engine契約・D-20の共通priorを保ちながら、別のR-11公開入口を使う。mainのFE接続状況は[対応表](change-map.md#r-11の既存issueへの対応)を参照し、製品受入とは分ける。
 
+## 本書を読む・更新する単位
+
+| 調べる・変更すること | 現行の説明・確認方法 | 判断・過去の記録 |
+| --- | --- | --- |
+| 構成・責務・採用版・起動 | [System構成](#system構成) → [Technology Stack](#technology-stack) → [起動手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する) | D-23と[基本構成合意の記録](#2026-10-03の技術構成合意) |
+| Auth・Goal・記録の契約 | Technology Stack内の各API節 → [Data Model](#data-model)・[API契約](#api契約) → [対応表のコード・テスト](change-map.md#アプリの仕様と実装) | D-24・D-26・D-27と既存の検証記録。現行契約を履歴ファイルだけへ移さない |
+| 予測・計算の境界 | [Prediction Engine](#prediction-engine) → [Test Strategy](#test-strategy) → [Engineの理由・不変条件](../packages/prediction/README.md) | D-19〜D-22・D-26。実測は既存のexperiment／operations資料を参照する |
+| 公開・デモ・運用 | [Deployment](#deployment) → [Demo Seed](#demo-seedの所有権とreset82) → [リリース手順](operations/release-demo.md) | D-25・D-27。候補・ローカル検証・未実施・公開受入を分ける |
+
+Decision LogのD番号は判断の索引として維持する。現行本文と詳細な実施記録の更新先は[共通の文書運用規則](../CONTRIBUTING.md#変更に伴う文書更新)で決め、履歴は[Issue単位のフォルダ](changes/)から探す。
+
 ## System構成
 
 Productと予測仕様から必要になる性質は「本人だけが記録を操作できる認証・記録と予測の整合・純粋な計算モジュール・決定的なテスト」。[D-23](#d-23)で、これを満たす基本構成として**1つのNodeアプリ（API＋静的配信）＋PostgreSQL** を採用し、コード上はモジュールで責務を分ける（モジュラーモノリス）。配備するサービスを増やさず、計算だけを切り離して検証・改善できる形を狙う。Microservices、Queue、Cache、ML frameworkは現時点で追加する根拠がない。下図のReact／Fastify／PostgreSQLはD-23の採用範囲、認証ライブラリ・テーブルは[D-24](#d-24)の条件付き第一候補。確定しているのは「Prediction EngineをUI・DB・HTTPから独立した純粋関数にする」という責務の分け方。[比較理由・弱点・増強の再検討条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)を参照。
@@ -54,23 +65,7 @@ Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 
 ### 2026-10-03の技術構成合意
 
-採用する基本構成と理由は次のとおり。版・追加ツールは今回の合意では確定していない。追加ツールのうちworkspace管理とDB接続ライブラリは[2026-10-05の追加採択](#2026-10-05の追加採択)を参照する。
-
-| 作る部分 | 採用する構成 | この構成にする理由 |
-| --- | --- | --- |
-| 共通の言語と実行環境 | TypeScript／Node | 画面・API・計算の型を共有し、実行環境を分散させない |
-| 画面 | React＋Vite＋TanStack Router／Query | Reactは画面、Viteはビルド、Routerは画面遷移、Queryは取得・更新後の再取得を担当する |
-| APIと共有契約 | Fastify＋TypeBox | 画面とAPIで同じデータ定義を使い、入力を実行時にも検証する |
-| データ保存 | PostgreSQL | 記録の一意性と関連データの整合をDBの制約で守る |
-| 配信 | 単一SPA／APIコンテナ | 画面とAPIを同じorigin（URLのスキーム・ホスト・ポート）で配信し、配備対象を少なくする |
-| 予測 | 独立した純粋計算コア | 入力だけから同じ結果を返し、画面・DB・HTTPと分けて検証する |
-
-**残る作業：** [#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)〜#73の純粋Engineは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みで、#77でToday APIへ結合した。#70の基盤に対するローカル一式起動は#130で補完する。業務画面・公開配置・製品としての正式受入は未完了。FE担当は#78〜#81の具体的な先行範囲・依存変更を各Issueで確認する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。合意だけでHard依存・BLOCKEDを解除せず、[着手前の確認](DEVELOPMENT_GUIDE.md#着手前に読み直す)と対象Issueの承認済み範囲に従う。担当者氏名・ProjectsのStatusは推測しない。
-
-| 2026-10-03時点の条件付き第一候補 | 当時から引き続き残る条件 |
-| --- | --- |
-| Better Auth（D-24） | 採用版、認証更新／DB復旧担当、CSRF／Origin細則・回数制限、復元後の削除user／password／account巻戻し対処、公開HTTPSの確認 |
-| Cloud Run＋Neon（D-25） | 最終受入、regionの組合せ、予算・利用前提・運用担当、実Cloud／proxy／1 vCPU／休止後応答の確認。アカウント・課金・リソース作成と一般公開は別承認 |
+構成・採用理由の表と当時の残件・条件付き候補の表は[全文の保存記録](changes/issue-84-stack-agreement.md#移動した記録)へ移動した。現行の構成は[System構成](#system構成)、追加採択と版固定は本節以降、判断要約は[D-23](#d-23)を読む。下記の更新・契約境界・合意の出所は元の場所に残している。
 
 この表は当時の合意範囲の履歴。**2026-10-08時点の公開第一候補はFE・BEともVercel Hobby、DBはNeon Free、ローカル開発はDocker**へ更新した（[D-25](#d-25)）。D-23の基本構成や当時の採用理由を置換した記録ではなく、公開ランタイムの差は採用前に検証する。
 
@@ -199,6 +194,8 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して、待機後の別SQLでログ有無を確認する。DB接続の既定がREPEATABLE READでも、新しいstatement snapshotでGoal lock保持中にcommitされた初回ログをR-02の判定へ含める。アプリ用poolも取得済みclientのsocket errorとquery期限を処理し、rollback失敗後にerrorなしでreleaseしても期限切れclientを再利用しない（[pool責務の回帰](../apps/api/tests/pool-responsibility.test.ts)）。
 
 含めないもの：記録API・`/today`（#77）、R-11の回答項目（D-26採択後に任意項目として追加）、一覧の件数上限・ページング、時刻列の公開。migration 0002は空のGoal表だけへ必須列を追加する。排他lock下で既存Goalを検出するとtransactionをrollbackし、未合意の開始日をDBサーバーの日付で埋めない。既存Goalの互換・補完方針は人の判断待ちで、旧版0002を適用済みならchecksum差異も自動回避しない。
+
+上のDTO表は#76で具体化した時点の記録。2026-10-09の基準mainでは#146の`progressDone`も共通Goal DTOに追加されている。現行の列は[Goal契約コード](../apps/api/src/contracts/goal.ts)、累計の意味は[API契約](#api契約)を参照する。
 
 ### 2026-10-06の記録・Today API（#77）
 
