@@ -51,7 +51,7 @@ test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの
   assert.match(goal.id, /^[0-9a-f-]{36}$/);
   assert.deepEqual(
     { ...goal, id: 'x' },
-    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0, targetDate: null },
+    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, unitLocked: false, goalSettingsRevision: 0, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0, targetDate: null },
   );
 
   const list = await a.call('GET', '/api/goals');
@@ -181,7 +181,7 @@ test('編集: 省略は維持、空object・null・未知の項目は422、記�
 
   const renamed = await a.call('PATCH', `/api/goals/${goal.id}`, { title: '英語 45分', sessionAmount: 45 });
   assert.equal(renamed.status, 200, renamed.body);
-  assert.deepEqual(renamed.json, { ...goal, title: '英語 45分', sessionAmount: 45 });
+  assert.deepEqual(renamed.json, { ...goal, title: '英語 45分', sessionAmount: 45, goalSettingsRevision: 1 });
 
   for (const body of [{}, { title: null }, { unit: 'count' }, { dueDate: '2026-12-31' }, { totalRequired: 0 }]) {
     const r = await a.call('PATCH', `/api/goals/${goal.id}`, body);
@@ -192,15 +192,15 @@ test('編集: 省略は維持、空object・null・未知の項目は422、記�
   // 記録がない間はtimezone・初期量を変えられる。記録開始日は作成時の値のまま、今日は新しいtimezoneで決まる。
   const moved = await a.call('PATCH', `/api/goals/${goal.id}`, { timezone: 'America/Los_Angeles', initialProgress: 100 });
   assert.equal(moved.status, 200, moved.body);
-  assert.deepEqual(moved.json, { ...goal, title: '英語 45分', sessionAmount: 45, timezone: 'America/Los_Angeles', initialProgress: 100, recordStartDate: '2026-10-06', today: '2026-10-05', progressDone: 100 });
+  assert.deepEqual(moved.json, { ...goal, title: '英語 45分', sessionAmount: 45, timezone: 'America/Los_Angeles', initialProgress: 100, unitLocked: true, goalSettingsRevision: 2, recordStartDate: '2026-10-06', today: '2026-10-05', progressDone: 100 });
 });
 
 test('記録があるGoalはtimezoneとinitialProgressを変更できない（同じ値の再送は通る）。一覧は今日の記録状態を含む', async (t) => {
   const { db, stack } = await setup(t, { now: () => NOW });
   const a = await signedInClient(stack.app, 'locked');
   const goal = (await a.call('POST', '/api/goals', validGoal)).json as unknown as Goal;
-  // 記録API（#77）はまだないので、今日（Asia/Tokyoの10/6）の記録を直接入れる
-  await db.pool.query(`insert into action_log (goal_id, local_date, status, amount) values ($1, '2026-10-06', 'DONE', 30)`, [goal.id]);
+  // 通常APIで今日のDONEと永続単位markerを同じtransactionに保存する。
+  assert.equal((await a.call('PUT', `/api/goals/${goal.id}/logs/2026-10-06`, { status: 'DONE', amount: 30 })).status, 200);
 
   const after = (await a.call('GET', `/api/goals/${goal.id}`)).json as unknown as Goal;
   assert.equal(after.hasLogs, true);
@@ -217,7 +217,7 @@ test('記録があるGoalはtimezoneとinitialProgressを変更できない（�
   // 同じ値の再送（フォーム全体の送信）と、他の項目の変更は通る
   const same = await a.call('PATCH', `/api/goals/${goal.id}`, { ...validGoal, initialProgress: 0, title: '英語' });
   assert.equal(same.status, 200, same.body);
-  assert.deepEqual(same.json, { ...after, title: '英語' });
+  assert.deepEqual(same.json, { ...after, title: '英語', goalSettingsRevision: 1 });
 
   // 昨日の記録だけなら today は UNRECORDED のまま
   await db.pool.query(`delete from action_log where goal_id = $1`, [goal.id]);

@@ -89,9 +89,10 @@ export function isValidTimezone(timezone: string): boolean {
  */
 export function validate(
   values: FormValues,
-  { locked = false, today, savedTargetDate }: { locked?: boolean; today?: string; savedTargetDate?: string } = {},
+  { locked = false, today, savedTargetDate, goal }: { locked?: boolean; today?: string; savedTargetDate?: string; goal?: Goal } = {},
 ): FieldErrors {
   const errors: FieldErrors = {};
+  if (goal?.unitLocked && values.unit !== goal.unit) errors.unit = e.unitLocked;
   if (!/\S/.test(values.title)) errors.title = e.titleRequired;
   else if (titleLength(values.title) > TITLE_MAX) errors.title = e.titleTooLong;
   const total = amountError(values.totalRequired, 1);
@@ -119,9 +120,11 @@ export function targetDateChecks(timezone: string, savedTargetDate: string | nul
 /** 表示時と送信時で同じ検査を使う。選択中のtimezoneと編集の比較元から、日付の条件を毎回組み立てる。 */
 export function validateGoalForm(
   values: FormValues,
-  { locked = false, baseline, now = new Date() }: { locked?: boolean; baseline?: GoalWithAnswers | undefined; now?: Date } = {},
+  { locked = false, baseline, goal = baseline, recoveryBody, now = new Date() }: { locked?: boolean; baseline?: GoalWithAnswers | undefined; goal?: Goal | undefined; recoveryBody?: GoalCreate | undefined; now?: Date } = {},
 ): FieldErrors {
-  return validate(values, { locked, ...targetDateChecks(values.timezone, baseline?.targetDate, now) });
+  // 結果不明の作成は元bodyのまま再送する。期限経過で新規作成と同じ検査を掛けてreplayを妨げない。
+  const savedTargetDate = baseline ? baseline.targetDate : recoveryBody?.targetDate;
+  return validate(values, { locked, ...(goal ? { goal } : {}), ...targetDateChecks(values.timezone, savedTargetDate, now) });
 }
 
 export const errorCount = (errors: FieldErrors) => FIELD_ORDER.filter((name) => errors[name]).length;
@@ -141,6 +144,12 @@ export function toCreateBody(values: FormValues): GoalCreate {
     // 回答しない問いは null のまま送る（POST は版を送らない。初版は 0）
     questionPrior: values.questionPrior,
   };
+}
+
+/** 回復した作成bodyを入力表示へ戻す。元bodyは変えず、nullable日付と整数量だけを文字列へ正規化する。 */
+export function valuesFromCreateBody(body: GoalCreate): FormValues {
+  return { ...emptyValues(body.timezone), ...body, totalRequired: String(body.totalRequired), sessionAmount: String(body.sessionAmount),
+    initialProgress: String(body.initialProgress ?? 0), targetDate: body.targetDate ?? '', questionPrior: body.questionPrior ?? NO_ANSWERS };
 }
 
 const sameAnswers = (x: QuestionAnswers, y: QuestionAnswers) => x.a === y.a && x.b === y.b;
@@ -200,7 +209,8 @@ export async function reloadLatestGoal(refetch: () => Promise<{ isSuccess: boole
  * - 回答にも単位・1回の量にも触れていなければ、版は送らない（無関係な更新に版を付けると 422）
  */
 export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatch | null {
-  const patch: { -readonly [K in keyof GoalPatch]: GoalPatch[K] } = {};
+  if (goal.unitLocked && values.unit !== goal.unit) throw new Error(e.unitLocked);
+  const patch: Partial<{ -readonly [K in keyof GoalPatch]: GoalPatch[K] }> = {};
   if (values.title !== goal.title) patch.title = values.title;
   if (values.unit !== goal.unit) patch.unit = values.unit;
   if (int(values.totalRequired) !== goal.totalRequired) patch.totalRequired = int(values.totalRequired);
@@ -219,7 +229,7 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
       patch.expectedAnswerRevision = goal.answerRevision;
     }
   }
-  return Object.keys(patch).length > 0 ? patch : null;
+  return Object.keys(patch).length > 0 ? { ...patch, expectedGoalSettingsRevision: goal.goalSettingsRevision } : null;
 }
 
 const serverMessage: Record<FieldName, string> = {
@@ -240,7 +250,10 @@ const serverMessage: Record<FieldName, string> = {
 export function fieldErrorsFromApi(error: unknown): FieldErrors | null {
   if (!(error instanceof ApiError) || error.status !== 422 || !error.body) return null;
   const errors: FieldErrors = {};
+
   const locked = error.body.error.code === 'GOAL_HAS_LOGS';
+  const unitLocked = error.body.error.code === 'GOAL_UNIT_LOCKED';
+  if (unitLocked) return { unit: e.unitLocked };
   for (const field of error.body.error.fields ?? []) {
     // 回答の版（expectedAnswerRevision）の誤りも、回答の欄のエラーとして出す
     const raw = field.path.replace(/^body\//, '').split('/')[0];

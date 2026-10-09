@@ -30,11 +30,17 @@ export function AccountMenu({ variant = 'icon' }: { variant?: 'icon' | 'email' }
   // useSession の状態が失敗のまま空になっている（ルートの確認は取り直しても、こちらは取り直されない）ので、1回だけ取り直す
   // （取り直しても失敗したときに繰り返さないよう、きっかけは「空になった」ことだけにする）
   const refetchSession = useRef(session.refetch);
+  const attemptedMissing = useRef(false);
   refetchSession.current = session.refetch;
   const sessionMissing = !session.isPending && !session.data;
   useEffect(() => {
-    if (sessionMissing) void refetchSession.current();
-  }, [sessionMissing]);
+    if (session.data) attemptedMissing.current = false;
+    if (sessionMissing && !attemptedMissing.current) {
+      // null → 取得中 → null でも同じ欠落の回復は1回。別タブlogout時の再取得ループを防ぐ。
+      attemptedMissing.current = true;
+      void refetchSession.current();
+    }
+  }, [sessionMissing, session.data]);
 
   useEffect(() => {
     const dialog = ref.current;

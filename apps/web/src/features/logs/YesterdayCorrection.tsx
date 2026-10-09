@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Log } from '@contracts';
 import { longDate, parseLocalDate, shortDate } from '../../copy/date.ts';
-import type { AmountFormat } from '../../copy/amount.ts';
+import { amountFormat, type AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -95,8 +95,9 @@ export function YesterdayCorrection({
     const failed = saver.failure.vars.choice;
     body = (
       <SaveFailure
+          settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
         kind={classifySaveError(saver.failure.error)}
-        body={todayCopy.correctFailed(describeChoice(failed, sessionAmount, fmt.record, todayCopy.recordedRest), currentText)}
+        body={todayCopy.correctFailed(describeChoice(failed, sessionAmount, amountFormat({ unit: saver.failure.vars.unit }).record, todayCopy.recordedRest), currentText)}
         localDate={target}
         onRetry={saver.retry}
         onReselect={saver.reset}
@@ -115,7 +116,7 @@ export function YesterdayCorrection({
             icon="check"
             aria-pressed={draft.status === 'DONE'}
             disabled={saver.isSaving}
-            onClick={() => setDraft({ status: 'DONE', amount: current.status === 'DONE' ? current.amount : null })}
+            onClick={() => setDraft({ status: 'DONE', amount: current.status === 'DONE' ? current.amount : sessionAmount })}
           >
             {todayCopy.yesterdayDone}
           </Button>

@@ -8,8 +8,8 @@ import { answersLockReason, changesAnswerContext, emptyValues, errorCount, field
 const e = goalsCopy.errors;
 const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', targetDate: '', questionPrior: { a: null, b: null } };
 const goal = {
-  id: 'g1', title: '英単語アプリ', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 400, timezone: 'Asia/Tokyo',
-  recordStartDate: '2026-08-17', hasLogs: false, today: '2026-10-07', todayStatus: 'UNRECORDED', targetDate: null,
+  id: 'g1', title: '英単語アプリ', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 0, timezone: 'Asia/Tokyo',
+  recordStartDate: '2026-08-17', hasLogs: false, unitLocked: false, goalSettingsRevision: 0, today: '2026-10-07', todayStatus: 'UNRECORDED', targetDate: null,
 };
 
 test('数の入力は全角数字と桁区切りを受け付け、整数でなければ拒否する', () => {
@@ -34,13 +34,13 @@ test('記録があるGoalでは、変更できない2項目を検査も送信も
   const locked = { ...valid, initialProgress: 'x', timezone: '' };
   assert.deepEqual(validate(locked, { locked: true }), {});
   const patch = toPatchBody({ ...valuesFromGoal(goal), title: '新しい名前', initialProgress: '999', timezone: 'UTC' }, { ...goal, hasLogs: true });
-  assert.deepEqual(patch, { title: '新しい名前' });
+  assert.deepEqual(patch, { expectedGoalSettingsRevision: 0, title: '新しい名前' });
 });
 
 test('作成は全項目を整数で送り、編集は変えた項目だけを送る（変更がなければ送らない）', () => {
   assert.deepEqual(toCreateBody({ ...valid, totalRequired: '３,０００' }), { title: '英単語アプリ', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 0, timezone: 'Asia/Tokyo', questionPrior: { a: null, b: null } });
   assert.equal(toPatchBody(valuesFromGoal(goal), goal), null);
-  assert.deepEqual(toPatchBody({ ...valuesFromGoal(goal), unit: 'sessions', sessionAmount: '25', timezone: 'UTC' }, goal), { unit: 'sessions', sessionAmount: 25, timezone: 'UTC' });
+  assert.deepEqual(toPatchBody({ ...valuesFromGoal(goal), unit: 'sessions', sessionAmount: '25', timezone: 'UTC' }, goal), { expectedGoalSettingsRevision: 0, unit: 'sessions', sessionAmount: 25, timezone: 'UTC' });
   assert.equal(emptyValues('Asia/Tokyo').initialProgress, '0');
 });
 
@@ -61,9 +61,9 @@ test('編集を始めた時点の値と比べ、別のタブでの変更を触�
   const refreshed = { ...goal, sessionAmount: 30 };
   const values = { ...valuesFromGoal(baseline), title: '英単語アプリ（朝）' };
   // 比較元を編集開始時に固定していれば、タイトルだけを送る
-  assert.deepEqual(toPatchBody(values, baseline), { title: '英単語アプリ（朝）' });
+  assert.deepEqual(toPatchBody(values, baseline), { expectedGoalSettingsRevision: 0, title: '英単語アプリ（朝）' });
   // 比較元を再取得後のGoalにすると、触っていない sessionAmount=20 まで送って巻き戻してしまう（直す前の動き）
-  assert.deepEqual(toPatchBody(values, refreshed), { title: '英単語アプリ（朝）', sessionAmount: 20 });
+  assert.deepEqual(toPatchBody(values, refreshed), { expectedGoalSettingsRevision: 0, title: '英単語アプリ（朝）', sessionAmount: 20 });
 });
 
 test('保存の途中で画面を離れたら、mutateに渡した一覧への移動は呼ばれず、取り直しだけは行われる', async () => {
@@ -95,23 +95,23 @@ test('R-11の回答は、変えたときだけ両方の問いと版を送り、�
   const base = valuesFromGoal(answered);
   assert.deepEqual(base.questionPrior, { a: 'MID', b: null });
   // 回答に触れない無関係な更新には版を付けない（付けると422）
-  assert.deepEqual(toPatchBody({ ...base, title: '新しい名前' }, answered), { title: '新しい名前' });
+  assert.deepEqual(toPatchBody({ ...base, title: '新しい名前' }, answered), { expectedGoalSettingsRevision: 0, title: '新しい名前' });
   // 片方だけ変えても、もう片方を含めて両方送る
-  assert.deepEqual(toPatchBody({ ...base, questionPrior: { a: 'MID', b: 'UNKNOWN' } }, answered), {
+  assert.deepEqual(toPatchBody({ ...base, questionPrior: { a: 'MID', b: 'UNKNOWN' } }, answered), { expectedGoalSettingsRevision: 0,
     questionPrior: { a: 'MID', b: 'UNKNOWN' }, expectedAnswerRevision: 3,
   });
   // 撤回は両方null
-  assert.deepEqual(toPatchBody({ ...base, questionPrior: { a: null, b: null } }, answered), {
+  assert.deepEqual(toPatchBody({ ...base, questionPrior: { a: null, b: null } }, answered), { expectedGoalSettingsRevision: 0,
     questionPrior: { a: null, b: null }, expectedAnswerRevision: 3,
   });
   // 1回の量を変えるときは回答を送らず（APIが取り消す）、版だけを送る
-  assert.deepEqual(toPatchBody({ ...base, sessionAmount: '30', questionPrior: { a: 'HIGH', b: 'HIGH' } }, answered), {
+  assert.deepEqual(toPatchBody({ ...base, sessionAmount: '30', questionPrior: { a: 'HIGH', b: 'HIGH' } }, answered), { expectedGoalSettingsRevision: 0,
     sessionAmount: 30, expectedAnswerRevision: 3,
   });
   assert.equal(changesAnswerContext({ ...base, unit: 'sessions' }, answered), true);
   assert.equal(changesAnswerContext({ ...base, totalRequired: '9999' }, answered), false);
   // 総量だけの変更は回答を保ち、版も送らない
-  assert.deepEqual(toPatchBody({ ...base, totalRequired: '4000' }, answered), { totalRequired: 4000 });
+  assert.deepEqual(toPatchBody({ ...base, totalRequired: '4000' }, answered), { expectedGoalSettingsRevision: 0, totalRequired: 4000 });
 });
 
 test('回答の版の誤り（422）は回答の欄のエラーとして出す', () => {
@@ -130,12 +130,12 @@ test('409の後に最新を読み直したら、触っていない項目は最�
   assert.equal(rebased.totalRequired, '5000');
   assert.deepEqual(rebased.questionPrior, { a: 'HIGH', b: 'HIGH' });
   // 再保存では、編集した回答と最新の版だけを送り、タイトル・総量を古い値で送らない
-  assert.deepEqual(toPatchBody(rebased, latest), { questionPrior: { a: 'HIGH', b: 'HIGH' }, expectedAnswerRevision: 4 });
+  assert.deepEqual(toPatchBody(rebased, latest), { expectedGoalSettingsRevision: 0, questionPrior: { a: 'HIGH', b: 'HIGH' }, expectedAnswerRevision: 4 });
   // 触った項目（タイトル）は入力を残し、触っていない回答は最新にする
   const titleEdited = rebaseValues({ ...valuesFromGoal(previous), title: '自分の名前' }, previous, latest);
   assert.equal(titleEdited.title, '自分の名前');
   assert.deepEqual(titleEdited.questionPrior, { a: 'LOW', b: 'LOW' });
-  assert.deepEqual(toPatchBody(titleEdited, latest), { title: '自分の名前' });
+  assert.deepEqual(toPatchBody(titleEdited, latest), { expectedGoalSettingsRevision: 0, title: '自分の名前' });
 });
 
 test('単位か1回の量を変えている間は、保存済みの回答がなくても回答の欄を押せなくする（R-11、#137）', () => {
@@ -144,7 +144,7 @@ test('単位か1回の量を変えている間は、保存済みの回答がな�
   const changed = { ...valuesFromGoal(unanswered), sessionAmount: '30', questionPrior: { a: 'HIGH', b: 'LOW' } };
   assert.equal(answersLockReason(changed, unanswered), 'notSaved');
   // 回答の欄が押せない理由と送信内容が一致する（回答は送らない）
-  assert.deepEqual(toPatchBody(changed, unanswered), { sessionAmount: 30, expectedAnswerRevision: 0 });
+  assert.deepEqual(toPatchBody(changed, unanswered), { expectedGoalSettingsRevision: 0, sessionAmount: 30, expectedAnswerRevision: 0 });
   assert.equal(answersLockReason({ ...valuesFromGoal(answered), unit: 'sessions' }, answered), 'withdrawn');
   assert.equal(answersLockReason({ ...valuesFromGoal(unanswered), totalRequired: '4000' }, unanswered), null);
 });
@@ -169,7 +169,7 @@ test('409後の再取得は通信中断・503の古いcacheを採用せず、成
       failed = false;
       const loaded = await reloadLatestGoal(() => observer.refetch());
       assert.deepEqual(loaded, latest);
-      assert.deepEqual(toPatchBody(rebaseValues(edited, previous, loaded), loaded), {
+      assert.deepEqual(toPatchBody(rebaseValues(edited, previous, loaded), loaded), { expectedGoalSettingsRevision: 0,
         questionPrior: { a: 'HIGH', b: 'HIGH' }, expectedAnswerRevision: 1,
       });
     } finally { client.clear(); }
@@ -189,8 +189,8 @@ test('到達予定日：任意で、今日より後だけ。空にすると未�
   const withTarget = { ...goal, targetDate: '2027-03-31', hasLogs: true };
   assert.equal(toPatchBody(valuesFromGoal(withTarget), withTarget), null);
   // 記録があっても変えられる。空にすると null
-  assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '2027-06-30' }, withTarget), { targetDate: '2027-06-30' });
-  assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '' }, withTarget), { targetDate: null });
+  assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '2027-06-30' }, withTarget), { targetDate: '2027-06-30', expectedGoalSettingsRevision: 0 });
+  assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '' }, withTarget), { targetDate: null, expectedGoalSettingsRevision: 0 });
 });
 
 test('保存済みの到達予定日が今日以前になっても、日付を変えない編集は止めない。変えた日付は今日より後だけ（#157、P-19）', () => {
@@ -199,7 +199,7 @@ test('保存済みの到達予定日が今日以前になっても、日付を�
   // 当日・過去日になった保存済みの日付は、送らないので検査しない
   assert.deepEqual(validate(titleOnly, { today: '2026-10-07', savedTargetDate: '2026-10-07' }), {});
   assert.deepEqual(validate(titleOnly, { today: '2026-10-09', savedTargetDate: '2026-10-07' }), {});
-  assert.deepEqual(toPatchBody(titleOnly, passed), { title: '英単語アプリ（改）' });
+  assert.deepEqual(toPatchBody(titleOnly, passed), { title: '英単語アプリ（改）', expectedGoalSettingsRevision: 0 });
   // 当日・過去日へ変えたときは拒否する
   assert.equal(validate({ ...titleOnly, targetDate: '2026-10-09' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }).targetDate, e.targetDatePast);
   assert.equal(validate({ ...titleOnly, targetDate: '2026-10-08' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }).targetDate, e.targetDatePast);
@@ -230,7 +230,7 @@ test('フォーム共通検査は経過した保存日を維持し、別の過�
   const now = new Date('2026-10-09T00:00:00Z');
   const values = { ...valuesFromGoal(baseline), title: '名前だけ変更' };
   assert.deepEqual(validateGoalForm(values, { baseline, now }), {});
-  assert.deepEqual(toPatchBody(values, baseline), { title: '名前だけ変更' });
+  assert.deepEqual(toPatchBody(values, baseline), { title: '名前だけ変更', expectedGoalSettingsRevision: 0 });
   assert.equal(validateGoalForm({ ...values, targetDate: '2026-10-08' }, { baseline, now }).targetDate, e.targetDatePast);
   assert.deepEqual(validateGoalForm({ ...values, targetDate: '' }, { baseline, now }), {});
   assert.deepEqual(validateGoalForm({ ...values, targetDate: '2026-10-10' }, { baseline, now }), {});
@@ -252,4 +252,15 @@ test('画面に出すエラーと送る前の検査は、同じ到達予定日�
   assert.equal(validate({ ...valid, targetDate: '2026-10-09' }, targetDateChecks('Asia/Tokyo', null, now)).targetDate, e.targetDatePast);
   // タイムゾーンが違えば今日も違う（同じ時刻で Honolulu は 2026-10-08）
   assert.deepEqual(targetDateChecks('Pacific/Honolulu', undefined, now), { today: '2026-10-08' });
+});
+
+test('単位固定は単位だけでも名称との同時変更でも全体を拒否し、422の理由を示す（#148 F09）', () => {
+  const locked = { ...goal, initialProgress: 10, unitLocked: true };
+  for (const title of [locked.title, '変更名']) {
+    const input = { ...valuesFromGoal(locked), unit: 'sessions', title };
+    assert.equal(validate(input, { goal: locked }).unit, e.unitLocked);
+    assert.throws(() => toPatchBody(input, locked));
+  }
+  assert.deepEqual(toPatchBody({ ...valuesFromGoal(locked), title: '変更名' }, locked), { expectedGoalSettingsRevision: 0, title: '変更名' });
+  assert.deepEqual(fieldErrorsFromApi(new ApiError(422, { error: { code: 'GOAL_UNIT_LOCKED', message: 'x' } })), { unit: e.unitLocked });
 });

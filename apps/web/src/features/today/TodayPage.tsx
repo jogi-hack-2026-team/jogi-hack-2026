@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { usePrivateEpoch } from '../../api/session-cache.ts';
+import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
@@ -42,7 +42,10 @@ import './today.css';
  * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
-  const { owner, clearedAt } = usePrivateEpoch();
+  const current = usePrivateEpoch();
+  const { owner, clearedAt } = current;
+  if (owner === null) return <SignedOutPage />;
+  if (!privateDataReady(current)) return <Loading />;
   return <TodayScreen key={`${owner ?? ''}:${goalId}`} goalId={goalId} notBefore={clearedAt} />;
 }
 
@@ -64,6 +67,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   // フォーカスを移す（キーボード・読み上げで場所を見失わない）
   const focusAfterSave = useRef(false);
   const todaySaver = useSaveLog(goalId, {
+    context: snapshot?.goal ?? goalQuery.data,
     onSaved: () => {
       focusAfterSave.current = true;
       setChanging(false);
@@ -76,7 +80,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today,
       queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today),
   });
-  const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
+  const yesterdaySaver = useSaveLog(goalId, { context: snapshot?.goal, onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
 

@@ -1,0 +1,205 @@
+{
+  "label": "Supporting Artifact / Not a Source of Truth (Issue #161)",
+  "at": "2026-10-09T02:50:36.865Z",
+  "node": "v24.21.0",
+  "cpu": "Apple M5",
+  "logicalCpus": 10,
+  "config": {
+    "modelVersion": "behavior-persistence-m1-v1",
+    "prior": 2,
+    "samples": 200,
+    "horizonDays": 1095,
+    "seed": 20261012
+  },
+  "logShape": {
+    "logDays": 60,
+    "sessionAmount": 30,
+    "skippedEvery": "(d*7)%3===0",
+    "today": "2026-10-09"
+  },
+  "iterations": 6,
+  "cases": [
+    {
+      "requiredFutureDone": 30,
+      "firstMs": 15.53,
+      "medianWarmMs": 11.56,
+      "maxMs": 15.53,
+      "completion": {
+        "p50Days": 47,
+        "p80Days": 50
+      }
+    },
+    {
+      "requiredFutureDone": 60,
+      "firstMs": 18.92,
+      "medianWarmMs": 18.68,
+      "maxMs": 18.92,
+      "completion": {
+        "p50Days": 93,
+        "p80Days": 99
+      }
+    },
+    {
+      "requiredFutureDone": 120,
+      "firstMs": 32.66,
+      "medianWarmMs": 32.38,
+      "maxMs": 32.82,
+      "completion": {
+        "p50Days": 187,
+        "p80Days": 197
+      }
+    },
+    {
+      "requiredFutureDone": 200,
+      "firstMs": 47.75,
+      "medianWarmMs": 48.12,
+      "maxMs": 49.62,
+      "completion": {
+        "p50Days": 311,
+        "p80Days": 328
+      }
+    },
+    {
+      "requiredFutureDone": 300,
+      "firstMs": 62.73,
+      "medianWarmMs": 63.13,
+      "maxMs": 72.94,
+      "completion": {
+        "p50Days": 466,
+        "p80Days": 491
+      }
+    },
+    {
+      "requiredFutureDone": 400,
+      "firstMs": 72.96,
+      "medianWarmMs": 72.3,
+      "maxMs": 72.96,
+      "completion": {
+        "p50Days": 622,
+        "p80Days": 654
+      }
+    },
+    {
+      "requiredFutureDone": 548,
+      "firstMs": 82.72,
+      "medianWarmMs": 80.3,
+      "maxMs": 84.94,
+      "completion": {
+        "p50Days": 852,
+        "p80Days": 896
+      }
+    },
+    {
+      "requiredFutureDone": 700,
+      "firstMs": 83.6,
+      "medianWarmMs": 79.83,
+      "maxMs": 83.6,
+      "completion": {
+        "p50Days": 1089,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 800,
+      "firstMs": 74.11,
+      "medianWarmMs": 74.29,
+      "maxMs": 75,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 900,
+      "firstMs": 66.28,
+      "medianWarmMs": 65.83,
+      "maxMs": 66.28,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1000,
+      "firstMs": 56.81,
+      "medianWarmMs": 57.22,
+      "maxMs": 57.34,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1050,
+      "firstMs": 42,
+      "medianWarmMs": 43.39,
+      "maxMs": 43.47,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1080,
+      "firstMs": 36.82,
+      "medianWarmMs": 36.29,
+      "maxMs": 36.82,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1090,
+      "firstMs": 34.89,
+      "medianWarmMs": 34.46,
+      "maxMs": 34.89,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1093,
+      "firstMs": 35.17,
+      "medianWarmMs": 33.78,
+      "maxMs": 35.17,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1094,
+      "firstMs": 33.5,
+      "medianWarmMs": 33.61,
+      "maxMs": 33.63,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1095,
+      "firstMs": 4.67,
+      "medianWarmMs": 1.23,
+      "maxMs": 4.67,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    },
+    {
+      "requiredFutureDone": 1200,
+      "firstMs": 0.02,
+      "medianWarmMs": 0.01,
+      "maxMs": 0.07,
+      "completion": {
+        "p50Days": null,
+        "p80Days": null
+      }
+    }
+  ],
+  "heaviest": 548,
+  "limitation": "Single machine, one log shape. The heaviest size here is not a proven worst case over all inputs."
+}

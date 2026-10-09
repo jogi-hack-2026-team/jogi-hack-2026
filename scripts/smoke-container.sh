@@ -75,7 +75,9 @@ curl --silent --cookie "$jar" "$base/api/auth/get-session" | grep -q "\"email\":
 # Goal API（#76）の往復: 空の一覧 → 作成201 → 一覧に含まれる → 削除204 → 一覧が空
 body=$(curl --silent --cookie "$jar" "$base/api/goals")
 [ "$body" = '[]' ] || fail "authenticated /api/goals must start empty: $body"
-created=$(curl --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
+# 実行中imageのNodeを使い、macOS/Windowsにもないhostの/procに依存しない。
+create_key=$(docker exec "$NAME" node --input-type=module -e 'import { randomUUID } from "node:crypto"; console.log(randomUUID());')
+created=$(curl --header "Idempotency-Key: $create_key" --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
   --data '{"title":"smoke goal","unit":"minutes","totalRequired":600,"sessionAmount":30,"timezone":"Asia/Tokyo"}' "$base/api/goals")
 echo "$created" | grep -q '"title":"smoke goal"' || fail "goal creation body: $created"
 echo "$created" | grep -q '"todayStatus":"UNRECORDED"' || fail "created goal must report todayStatus"
@@ -85,14 +87,14 @@ curl --silent --cookie "$jar" "$base/api/goals" | grep -q "\"id\":\"$goal_id\"" 
 # 記録・Today API（#77）: Goalのtimezone（Asia/Tokyo）での今日を記録し、/todayがEngineの結果を返す（コンテナ内のEngine配置の確認を兼ねる）
 today_jst=$(TZ=Asia/Tokyo date +%Y-%m-%d)
 saved=$(curl --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
-  --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/$today_jst")
+  --request PUT --data '{"status":"DONE","expectedGoalSettingsRevision":0,"amount":30}' "$base/api/goals/$goal_id/logs/$today_jst")
 [ "$saved" = "{\"localDate\":\"$today_jst\",\"status\":\"DONE\",\"amount\":30}" ] || fail "log put body: $saved"
 today_body=$(curl --silent --cookie "$jar" "$base/api/goals/$goal_id/today")
 echo "$today_body" | grep -q "\"today\":\"$today_jst\"" || fail "today body: $today_body"
 echo "$today_body" | grep -q '"modelVersion":"behavior-persistence-m1-v1"' || fail "today must include the Engine result: $today_body"
 echo "$today_body" | grep -q '"reason":"TODAY_RECORDED"' || fail "today after a DONE log must report TODAY_RECORDED: $today_body"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
-  --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/2000-01-01")
+  --request PUT --data '{"status":"DONE","expectedGoalSettingsRevision":0,"amount":30}' "$base/api/goals/$goal_id/logs/2000-01-01")
 [ "$status" = "422" ] || fail "log outside the window status $status"
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' --cookie "$jar" --header "origin: $AUTH_URL" --request DELETE "$base/api/goals/$goal_id")
 [ "$status" = "204" ] || fail "goal delete status $status"

@@ -59,7 +59,9 @@ curl --silent --fail --cookie-jar "$JAR" --header "origin: $base" --header 'cont
   "$base/api/auth/sign-up/email" >/dev/null
 curl --silent --fail --cookie "$JAR" "$base/api/auth/get-session" | grep -q "\"email\":\"$email\"" || fail 'session after sign-up'
 # mainに統合されたGoal・記録・Todayを通し、コンテナ内のEngine配置も検証する。
-created=$(curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
+# 検証済みappのNodeで生成し、hostの/procやuuidgenの有無に依存しない。
+create_key=$(dc exec -T app node --input-type=module -e 'import { randomUUID } from "node:crypto"; console.log(randomUUID());')
+created=$(curl --header "Idempotency-Key: $create_key" --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
   --data '{"title":"compose smoke goal","unit":"minutes","totalRequired":600,"sessionAmount":30,"timezone":"Asia/Tokyo"}' "$base/api/goals")
 goal_id=$(echo "$created" | sed -n 's/.*"id":"\([0-9a-f-]*\)".*/\1/p')
 [ -n "$goal_id" ] || fail 'goal creation missing id'
@@ -69,7 +71,7 @@ smoke_today_clock() {
 }
 smoke_save_log() {
   curl --silent --fail --cookie "$JAR" --header "origin: $base" --header 'content-type: application/json' \
-    --request PUT --data '{"status":"DONE"}' "$base/api/goals/$goal_id/logs/$1"
+    --request PUT --data '{"status":"DONE","expectedGoalSettingsRevision":0,"amount":30}' "$base/api/goals/$goal_id/logs/$1"
 }
 smoke_get_today() { curl --silent --fail --cookie "$JAR" "$base/api/goals/$goal_id/today"; }
 verify_recorded_today

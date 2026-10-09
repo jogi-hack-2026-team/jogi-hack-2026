@@ -7,7 +7,7 @@ import { isSameSnapshot } from '../src/features/today/snapshot.ts';
 
 const goal = {
   id: 'g', title: '英単語', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 600, timezone: 'Asia/Tokyo',
-  recordStartDate: '2026-10-04', hasLogs: true, today: '2026-10-07', todayStatus: 'DONE',
+  recordStartDate: '2026-10-04', hasLogs: true, unitLocked: true, goalSettingsRevision: 0, today: '2026-10-07', todayStatus: 'DONE',
 };
 const logs = [
   { localDate: '2026-10-06', status: 'DONE', amount: 15 },
@@ -16,7 +16,7 @@ const logs = [
 const today = {
   today: '2026-10-07', yesterday: '2026-10-06', todayLog: logs[1], yesterdayMissing: false,
   prediction: { today: '2026-10-07', todayStatus: 'DONE', progress: { done: 635, total: 3000, completed: false } },
-  context: { recordStartDate: '2026-10-04', unit: 'minutes', sessionAmount: 20 },
+  context: { goalSettingsRevision: 0, unitLocked: true, recordStartDate: '2026-10-04', unit: 'minutes', sessionAmount: 20 },
 };
 
 test('Goal・Today・記録が同じ時点の材料ならそろっていると判断する', () => {
@@ -60,7 +60,7 @@ test('画面の1回の量と違う量で計算した予測は、取得の順番�
     ...today,
     todayLog: null,
     yesterdayMissing: false,
-    context: { recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount },
+    context: { goalSettingsRevision: 0, unitLocked: true, recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount },
     prediction: { ...today.prediction, todayStatus: 'UNRECORDED', progress: { done: 80, total: 100, completed: false } },
   });
   const today10 = resp(10);

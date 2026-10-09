@@ -55,8 +55,8 @@ export async function seedDemo(pool: Pool, o: { userId: string; timezone: string
     for (const row of data) {
       let id = randomUUID();
       while (oldIds.has(id)) id = randomUUID();
-      await client.query(`insert into goal (id, user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date, created_at, updated_at)
-        values ($1, $2, $3, 'sessions', 60, 0, 1, $4, $5, $6, $6)`, [id, o.userId, TITLE[row.slot], row.timezone, row.recordStartDate, instant]);
+      await client.query(`insert into goal (id, user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date, created_at, updated_at, unit_history_locked)
+        values ($1, $2, $3, 'sessions', 60, 0, 1, $4, $5, $6, $6, true)`, [id, o.userId, TITLE[row.slot], row.timezone, row.recordStartDate, instant]);
       await client.query('insert into demo_seed_goal (user_id, slot, goal_id, seed_version) values ($1, $2, $3, 1)', [o.userId, row.slot, id]);
       for (const log of row.input.logs) {
         await client.query('insert into action_log (goal_id, local_date, status, amount) values ($1, $2, $3, $4)', [id, log.localDate, log.status, log.amount]);

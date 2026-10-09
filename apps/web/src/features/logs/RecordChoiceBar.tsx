@@ -1,7 +1,7 @@
 import { longDate } from '../../copy/date.ts';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import type { Log } from '@contracts';
-import type { AmountFormat } from '../../copy/amount.ts';
+import { amountFormat, type AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { ChoiceButton } from '../../ui/components/ChoiceButton.tsx';
@@ -69,8 +69,9 @@ export function RecordChoiceBar({
     return (
       <StickyActionBar>
         <SaveFailure
+          settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
           kind={classifySaveError(saver.failure.error)}
-          body={todayCopy.saveFailed(describeChoice(failed, sessionAmount, fmt.record, todayCopy.recordedRest))}
+          body={todayCopy.saveFailed(describeChoice(failed, sessionAmount, amountFormat({ unit: saver.failure.vars.unit }).record, todayCopy.recordedRest))}
           localDate={saver.failure.vars.localDate}
           // 昨日を訂正している間は、失敗後の再試行からも送らない（通常の保存と同じ排他）
           onRetry={unlessLocked(locked, saver.retry)}
@@ -133,7 +134,7 @@ export function RecordChoiceBar({
         busy={saving?.status === 'DONE'}
         busyLabel={todayCopy.saving}
         disabled={saver.isSaving || locked}
-        onClick={() => save({ status: 'DONE', amount: current?.status === 'DONE' ? currentAmount : null })}
+        onClick={() => save({ status: 'DONE', amount: current ? currentAmount : sessionAmount })}
       />
       <ChoiceButton
         kind="rest"

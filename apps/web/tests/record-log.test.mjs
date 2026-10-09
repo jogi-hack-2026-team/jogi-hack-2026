@@ -6,23 +6,17 @@ import { ApiError } from '../src/api/client.ts';
 import { amountFormat } from '../src/copy/amount.ts';
 import { choiceFromLog, classifySaveError, describeChoice, editLocks, reachedDate, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
-
-const minutes = amountFormat({ unit: 'minutes' });
-
-test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
-  assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
-  assert.deepEqual(toLogPut({ status: 'DONE', amount: 35 }), { status: 'DONE', amount: 35 });
-  // SKIPPED に amount があると API は 422 にするため、量が残っていても送らない
-  assert.deepEqual(toLogPut({ status: 'SKIPPED', amount: 35 }), { status: 'SKIPPED' });
-  assert.deepEqual(toLogPut({ status: 'SKIPPED', amount: null }), { status: 'SKIPPED' });
+test('DONEは表示量と設定版を明示し、SKIPPEDは設定版だけを送る', () => {
+  assert.deepEqual(toLogPut({ status: 'DONE', amount: 20 }, 3), { status: 'DONE', amount: 20, expectedGoalSettingsRevision: 3 });
+  assert.deepEqual(toLogPut({ status: 'DONE', amount: 35 }, 3), { status: 'DONE', amount: 35, expectedGoalSettingsRevision: 3 });
+  assert.deepEqual(toLogPut({ status: 'SKIPPED', amount: null }, 3), { status: 'SKIPPED', expectedGoalSettingsRevision: 3 });
 });
 
 test('保存できなかった記録を「やった・20分」「休んだ」と書く（量を変えていなければ1回の量）', () => {
-  assert.equal(describeChoice({ status: 'DONE', amount: null }, 20, minutes.record, '休んだ'), 'やった・20分');
-  assert.equal(describeChoice({ status: 'DONE', amount: 1500 }, 20, minutes.record, '休んだ'), 'やった・1,500分');
-  // 日々の記録は時間＋分にせず、分のまま書く（P-18）
-  assert.equal(describeChoice({ status: 'DONE', amount: 90 }, 60, minutes.record, '休んだ'), 'やった・90分');
-  assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, amountFormat({ unit: 'sessions' }).record, '休んだ'), '休んだ');
+  assert.equal(describeChoice({ status: 'DONE', amount: 20 }, 20, amountFormat({unit:'minutes'}).record, '休んだ'), 'やった・20分');
+  assert.equal(describeChoice({ status: 'DONE', amount: 90 }, 60, amountFormat({unit:'minutes'}).record, '休んだ'), 'やった・90分');
+  assert.equal(describeChoice({ status: 'DONE', amount: 1500 }, 20, amountFormat({ unit: 'minutes' }).record, '休んだ'), 'やった・1,500分');
+  assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, amountFormat({unit:'sessions'}).record, '休んだ'), '休んだ');
 });
 
 test('保存の失敗を、ログイン切れ・記録できない日・それ以外（再試行できる）に分ける', () => {
@@ -51,14 +45,14 @@ test('訂正の初期値は保存済みの記録（DONEは保存済みの量の�
   assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), { status: 'DONE', amount: 20 });
   assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'SKIPPED', amount: null }), { status: 'SKIPPED', amount: null });
   // 保存済みの量で要約する（1回の量が30分に変わっていても「20分」）
-  assert.equal(describeChoice(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), 30, minutes.record, '休んだ'), 'やった・20分');
+  assert.equal(describeChoice(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), 30, amountFormat({ unit: 'minutes' }).record, '休んだ'), 'やった・20分');
 });
 test('作り直す前の画面の保存が終わるまで、新しい画面から同じ日の保存は送らない（別の日は送れる）', async () => {
   const client = new QueryClient();
   let finish;
   // 一覧へ戻る前の画面で始めた、今日の「やった」の保存（まだ届いていない）
   const before = new MutationObserver(client, { mutationKey: saveLogKey('g'), mutationFn: () => new Promise((r) => (finish = r)) });
-  const pending = before.mutate({ localDate: '2026-10-07', choice: { status: 'DONE', amount: null } }).catch(() => {});
+  const pending = before.mutate({ localDate: '2026-10-07', choice: { status: 'DONE', amount: 20 } }).catch(() => {});
   while (!finish) await new Promise((r) => setTimeout(r, 1));
 
   // 開き直した新しい画面（useSaveLog の save と同じ確かめ方）
