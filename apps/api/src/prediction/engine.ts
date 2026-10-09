@@ -5,8 +5,8 @@ import type { PredictionResultSchema } from '../contracts/log.ts';
 import type { PredictionR11 } from '../contracts/r11.ts';
 
 // Engine（packages/prediction、純粋関数）との境界。DB・HTTP・時計はここに持ち込まない。
-// 実行方式（同期か同一プロセス内worker）は#84の計測を受けて判断する残件で、MVPは同期で呼ぶ。
-// 呼び出しをこの関数に閉じ込め、workerへ移す場合もroute側を変えずに済むようにする。
+// MVPの同期実行とworker再検討条件はdocs/architecture.mdのD-28で採択済み。公開runtimeの計測は別の残件。
+// 呼び出しをこの関数に閉じ込め、実行方式を再検討するときの差分と回帰を追跡できるようにする。
 
 type SchemaResult = Static<typeof PredictionResultSchema>;
 // schemaとEngineの型の双方向の代入互換を検査する。

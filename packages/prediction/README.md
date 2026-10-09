@@ -4,7 +4,7 @@
 
 ## 承認範囲と現在の状態
 
-**現在の結合：** [Today route](../../apps/api/src/prediction/routes.ts)から[API adapter](../../apps/api/src/prediction/engine.ts)の`runPrediction`を、[R-11変換](../../apps/api/src/prediction/r11.ts)から`runQuestionPrediction`を呼ぶ。Goalのtimezone・DB snapshot・DTOはAPI側の責務で、Engineの拒否はadapterの`PredictionFailed`を経て[appのHTTP 500処理](../../apps/api/src/app.ts)へ接続済み。純粋packageのテスト成功だけでFE・公開環境・実ユーザーの受入まで保証しない。
+**現在の結合：** [Today route](../../apps/api/src/prediction/routes.ts)から[API adapter](../../apps/api/src/prediction/engine.ts)の`runPrediction`を、[R-11変換](../../apps/api/src/prediction/r11.ts)から`runQuestionPrediction`を呼ぶ。Goalのtimezone・DB snapshot・DTOはAPI側の責務。既知の`PredictionInputError`・`PredictionConfigError`（R-11では`QuestionPriorError`も）はadapterの`PredictionFailed`を経て[appのHTTP 500処理](../../apps/api/src/app.ts)へ接続済み。未知例外は再throwし、この既知エラー変換には含めない。純粋packageのテスト成功だけでFE・公開環境・実ユーザーの受入まで保証しない。
 
 **限定先行時点の履歴（2026-10-03〜04）：** 以下2段落は当時の承認・未完了状態の記録で、現在のAPI未結合を意味しない。
 
@@ -16,7 +16,7 @@
 
 2026-10-05の継続指示に基づく[Goal別priorの内部候補](GOAL_PRIOR_CANDIDATE.md)を独立branchで追加した。a/b別の初期snapshotとsource/versionを受け取り、既存の数値経路を共有する。公開`predict`の共通prior=2・入力／出力契約・不足判定は維持する。数値prior候補の9テストを含む従来56テストを保持し、[PR118候補adapter](QUESTION_PRIOR_ADAPTER_CANDIDATE.md)の5テストとsnapshot／worker接続例の3テストを加え、n=H限定の境界回帰2件と合わせて当時66テストへ拡張した。#133時点の公開入口4件を含む70件を保持し、#188の公開結果契約・再帰収集の回帰3件を加え、現在は73件を同じCIで実行する。独立CDFオラクル3テストは別コマンドで確認する。Supporting候補全体の採択と、下記#133の依頼者承認範囲を分ける。
 
-[src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映し、現在は上のAPI adapterから利用する。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・未指定DONE量の補完・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
+[src/index.ts](src/index.ts)の`predict(input, config?)`は正本と同じ必須項目を持つ`PredictionResult`を返す。日数metadataの具体的な集計と公開エラーも依頼者承認を反映し、現在は上のAPI adapterから利用する。呼び出し側がGoalのtimezoneで計算した`today`と実記録を渡す。DONEは実際の正の整数amount、SKIPPEDはnull、Goal量は整数。日付生成・timezone変換・DONE量の入力・HTTPエラーへの変換は外側の責務。型どおりでない外部JSONの構造検証は呼び出し側が行い、EngineがすべてのJavaScript例外を入力エラーへ変換する契約にはしない。
 
 1. [observations.ts](src/observations.ts)は整数のGregorian日付演算で入力を検証し、コピーを整列する。未来・重複・不正な日付や量は達成判定前に拒否する。隣接した記録だけを数え、欠けたUNKNOWN日を跨がない。実績は初期量＋全DONEの実量で、今日の量も1回だけ含む。内部事実として最古記録日〜今日／昨日のordinal範囲・暦日数と有効記録件数を返す。ログ0では観測開始日を決められないため窓はnullで、初期進捗から開始日を推測しない。
 2. [predict.ts](src/predict.ts)は正式な優先順「入力エラー → 達成済み → 今日記録済み／データ不足」を適用し、各遷移へ既定prior=2を加えて事後分布を作る。達成済みのcompletionは`completed`、未達成で起点状態の遷移がない場合は`insufficient`。0日やnullで不足を隠さない。
@@ -60,7 +60,7 @@ package内からは`npm run typecheck -- --tsc '<existing-compiler>'`、`npm tes
 | T-15（乱数） | [random.test.mjs](tests/random.test.mjs)：正式vector、乱数消費順、Gamma／Betaの平均・分散、uniformの開区間 |
 | T-14 | [benchmark.mjs](scripts/benchmark.mjs)：実Engine・K=200／H=1095、必要120／400／1095回。Windows・Node v22.15.1・Intel i7-1360Pで各500ms未満を確認。代表入力はposterior a=(14,7)、b=(7,9)。[2026-10-04の全入力・CPU/メモリ・各6回の計測](verification/benchmark-node22.json)を保存。採用runtime・配備機での結果ではない。548回は情報用で追加ゲートではない |
 | package基盤 | [scaffold.test.mjs](tests/scaffold.test.mjs)、[type-contracts.ts](tests/type-contracts.ts)、[fixtures.ts](tests/fixtures.ts)：依存境界、状態型の負例、既知fixture。テキスト依存監査は補助で、全面的な静的解析を保証しない |
-| metadata／公開errorの契約 | [observations.test.mjs](tests/observations.test.mjs)、[result-contract.test.mjs](tests/result-contract.test.mjs)：空履歴・今日・昨日・UNKNOWN・逆順・初期進捗・達成済み・暦日境界の公開値。未来／重複は結果を返さず、入力／設定／導出値pathを分類。HTTP応答への結合は未完了 |
+| metadata／公開errorの契約 | [observations.test.mjs](tests/observations.test.mjs)、[result-contract.test.mjs](tests/result-contract.test.mjs)：空履歴・今日・昨日・UNKNOWN・逆順・初期進捗・達成済み・暦日境界の公開値。未来／重複は結果を返さず、入力／設定／導出値pathを分類。この行は純粋Engineの契約検証。現在のAPI結合とHTTP応答は[adapter](../../apps/api/src/prediction/engine.ts)、[today.test.ts](../../apps/api/tests/today.test.ts)、[question-prior-http.test.ts](../../apps/api/tests/question-prior-http.test.ts)を参照し、公開環境の受入は別に確認する |
 
 テスト期待値は正本の固定例と独立オラクルに基づく。過去の準備branch（`dcc6440`／`f29e24d`）やmainの実験を本体へ丸ごとコピーせず、lgamma参照値を現在の中心計算のオラクルとして流用していない。テスト成功をAPI／UI結合、公開環境、正式なIssue受入の成功と扱わない。
 
