@@ -148,7 +148,7 @@ P-18の0／1／59／60／61／1240分と達成まで残り1分の固定例、元
 
 表の実装予定は2026-09-30の仕様に基づく。現在のローカルAPI・DB・Engine結合の実装と検証は上表を参照。業務画面・外部Service・公開配置の完成を意味しない。
 
-予測の実行方式（同期／worker）は[#160](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/160)で未決。現行APIを同期のまま動かした混合負荷の実測（[#161](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/161)）は[計測ハーネス](../experiments/api-mixed-load/README.md)と[2026-10-09の報告](../experiments/api-mixed-load/REPORT-2026-10-09.md)にあり、Supporting Artifactとして採択・公開性能の証拠にはしない。
+予測の実行方式（同期／worker）は[#160](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/160)で扱い、同期維持の提案を[D-28](architecture.md#d-28)（[#162](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/162)、チームApprove待ち）に記録する。現行APIを同期のまま動かした混合負荷の実測（[#161](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/161)）は[計測ハーネス](../experiments/api-mixed-load/README.md)と[2026-10-09の報告](../experiments/api-mixed-load/REPORT-2026-10-09.md)にあり、Supporting Artifactとして採択・公開性能の証拠にはしない。
 
 #71〜#73の限定先行承認に沿った純粋Engineとテストを追加した。型・入口は[src](../packages/prediction/src/index.ts)、固定例は[fixtures.ts](../packages/prediction/tests/fixtures.ts)、補完・訂正の実行例は[再計算例](../packages/prediction/README.md#補完訂正後の再計算例)。[検証手順・残条件](../packages/prediction/README.md#70後に合わせる点と残条件)を確認する。predictは必須metadataを持つPredictionResultを返し、依頼者承認済みの日数集計と公開例外の[契約](../packages/prediction/README.md#metadata公開エラーの契約)を反映した。#77でToday APIへ結合し、root workspaceとDockerにビルド済みEngineを含める。純粋Engineの型検査・数値テストCIとApplication CIで検証する。業務画面・公開配置・製品としての正式受入は未完了。
 

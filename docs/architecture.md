@@ -213,7 +213,7 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 | snapshotと時計 | pool取得・BEGIN・最初のGoal SELECTでsnapshotを確定した後に時計を1回読み、Goalと全記録を`repeatable read` / `read only`の1 transactionで取得し、接続を返してから`predict`を呼ぶ（[prediction/store.ts](../apps/api/src/prediction/store.ts)、[routes.ts](../apps/api/src/prediction/routes.ts)） | 日付境界で`today`と記録が食い違わず、途中で挟まる記録の更新と混ざらない。BEGINだけではsnapshotは確定しない。[通常操作の回帰](../apps/api/tests/record-concurrency.test.ts)でpool待ち・最初のSELECT待ち・PATCH／同日PUT待ちの日跨ぎと初回PUT／PATCHの両順序を検証する |
 | Engineの読み込み | `@futureroi/prediction`をAPIのworkspace依存にし、packageの`exports`からビルド済み`dist`（JSと`.d.ts`）を読む。root scriptsは`build:prediction`を`typecheck`・`test`・`dev:api`の前に実行し、`workspaces`の順序でpredictionを先にbuildする。コンテナはbuild stageの`dist`を実行stageへコピーする | packageのsourceは`.js`拡張子でimportしており、Node直接実行では`dist`が要る。Engine package内のコマンド・テスト・検証CIは変えない |
 | Engineのエラー | 保存済みデータから作った入力を`PredictionInputError`／`PredictionConfigError`が拒否した場合は500 `PREDICTION_FAILED`（reason・pathをログに残す） | 利用者の操作では直せない状態で、422にすると画面が入力エラーとして扱ってしまう |
-| 実行方式 | MVPは同期で`predict`を呼ぶ。呼び出しは[engine.ts](../apps/api/src/prediction/engine.ts)の`runPrediction`に閉じる | T-14は実Engineで各回34〜75ms。混合負荷の結果（[2026-10-05の実測](#第一候補の検証状況84--85)）を受けて同一プロセス内のworkerへ移すかは#84の残判断で、移す場合もrouteを変えない |
+| 実行方式 | MVPは同期で`predict`を呼ぶ。呼び出しは[engine.ts](../apps/api/src/prediction/engine.ts)の`runPrediction`に閉じる | T-14は実Engineで各回34〜75ms。同一プロセス内のworkerへ移すかは#84の残判断だったが、#84 Close後は[D-28](#d-28)（#160〜#162）で扱う。現行APIの[混合負荷の実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)を根拠に同期維持を提案中で、移す場合もrouteを変えない |
 
 この#77実装に含めないもの：R-11（[D-26の#133追加](#2026-10-07の保存予測接続133)へ分離）、記録の削除（UNKNOWNへ戻す操作は未採択）、Logの競合revision／409（未採択。同じ日のPUTは最後の保存が残る）、worker実行、staging。
 
@@ -491,6 +491,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 3. やらなかった日ほど未記録になる場合など、欠測が行動状態に依存する（MNAR）と、観測された遷移だけの予測には選択の偏りが残る。UNKNOWNのペアを除くことはその補正ではない。休んだ状態が欠けると楽観的になる可能性があるが、誤差の方向・大きさは欠測の仕組みによる。前日補完は欠測を減らす狙いで、実ユーザーでの効果と予測精度は未検証。
 4. Beta(2,2)により、記録が少ない間は値が中央（確率0.5）側に寄る。
 5. 毎日行うGoalのみ。1回の量は`sessionAmount`で固定して将来を計算する。
+6. 予測計算はAPIのprocessで同期実行する（[D-28](#d-28)、提案中）。同時に予測を要求する人数×1回の計算時間（Apple M5で約0.1秒、公開runtimeでは未測定）が、同じprocessの記録・一覧・session確認の待ち時間に加わる。
 
 [Speekenbrink・Visser（2021）](https://arxiv.org/abs/2109.02770)は隠れMarkovモデルで、状態や時刻に依存する欠測の仕組みを無視すると推定に偏りが生じ得ることと、その仕組みを含むモデルの検証を示す。Future ROIの精度保証や、今日・昨日という編集期間の根拠ではない。
 
@@ -581,7 +582,7 @@ Dockerを廃止せず、開発・再現・配信の確認に使う。公開は�
 
 [`server.ts`](../apps/api/src/server.ts)が作る2つの`pg` pool（アプリ用5＋認証用2）について、[Vercelのpool lifecycleの説明](https://vercel.com/kb/guide/connection-pooling-with-functions)に従い休止前のidle接続解放・復帰・多instance時の総接続数を検証する。常駐サーバーのSIGTERM処理だけでは関数の休止を検証したことにならない。認証用の安全なbigint（`int8`）parser、アプリ用の文字列型、切断時の処理とtimeoutを保全し、単一poolやグローバルparserへ統合しない。[Neonのtransaction poolerはsession advisory lockを扱えない](https://neon.com/docs/connect/connection-pooling)ため、migrationはHTTP用poolと別の実行で**直結URL**を使い、transaction poolerへ流さない。現行runnerの認証→アプリ順・checksum・transaction・session lockを保つ。接続値や設定の変更は今回行わない。
 
-[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)の最大約216.01ms（`predict`）／227.02ms（`predictWithQuestionPrior`）はWindows・Node24でのwall time（経過時間）で、Vercel Active CPUの実測ではない。同資料の旧mixed-loadは25PASS/1FAIL、overallExitCode=1、inline4rpsの546.83msによるE4 FAILとinline10rpsのCRUD p95 5秒超を保持する。[10-08の追加記録](../experiments/architecture-verification/REAL-ENGINE-2026-10-08.md)もこれを解消済みにしていない。単体成功から公開性能・無料枠内・同時利用可能人数を保証しない。T-14の500ms未満を維持し、両経路のCPUと混合負荷を測る。具体的な最小検証と記録先は[公開手順](operations/release-demo.md#公開候補の採用前に行う最小検証)・[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)。
+[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)の最大約216.01ms（`predict`）／227.02ms（`predictWithQuestionPrior`）はWindows・Node24でのwall time（経過時間）で、Vercel Active CPUの実測ではない。同資料の旧mixed-loadは25PASS/1FAIL、overallExitCode=1、inline4rpsの546.83msによるE4 FAILとinline10rpsのCRUD p95 5秒超を保持する。[10-08の追加記録](../experiments/architecture-verification/REAL-ENGINE-2026-10-08.md)もこれを解消済みにしていない。単体成功から公開性能・無料枠内・同時利用可能人数を保証しない。現行`apps/api`を同期のまま同一端末（Apple M5）で測った[2026-10-09の実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)（#161）は同期ブロック最長約0.13秒・3人closed loopでToday p95約0.2秒で、実行方式の提案は[D-28](#d-28)。この値も公開runtimeの性能ではない。T-14の500ms未満を維持し、両経路のCPUと混合負荷を測る。具体的な最小検証と記録先は[公開手順](operations/release-demo.md#公開候補の採用前に行う最小検証)・[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)。
 
 ## Demo Seedの所有権とreset（#82）
 
@@ -605,6 +606,7 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-25 | 2026-09-30 → 2026-10-03 → 2026-10-08 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [FE・BEともVercel Hobby＋Neon Free、ローカルDocker。厳密0円・非商用・検証条件付き](#d-25)。Cloud Runの旧候補記録を保持 |
 | D-26 | 2026-10-05 / 2026-10-07 | 保存・予測接続と明示query読取は依頼者承認・チームレビュー対象。FE結合・製品受入の残条件を分離 | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 | D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
+| D-28 | 2026-10-09 | PROPOSED（別メンバー2人のApproveで採択。採択前は#77記録の同期実行を維持） | [予測計算はMVPでは同期実行を維持し、worker化は再検討条件付きで見送る](#d-28) |
 
 ### D-27
 
@@ -615,6 +617,18 @@ Decision: [所有権marker](#demo-seedの所有権とreset82)で2Goalだけを�
 Alternatives: タイトル／メールで対象を探して削除する方式は通常データを誤認する。ユーザーの全Goal削除は保全条件を満たさない。固定IDのログだけ置換する方式は遅延要求と回答版を引き継ぐ。通常Goal／Logs API経由の30日投入は現行の記録窓を広げる必要があり、Productの記録規則を変える。Compose自動Seedは再起動のたびにデモ操作を消す。
 
 Consequences / Invariants: marker用の最小tableと複合unique制約を追加するが、通常Goal・他ユーザー・認証行を採用／削除しない。SQL途中失敗はrollback、COMMIT応答喪失は確定不明を返して再実行で収束する。reset後は一覧の再取得が必要。seed version追加、pattern追加、schema制約変更、同ID維持が必要になった場合に再検討する。新しい認証方式・一般APIの日付制約変更・公開DB操作・実データ・精度保証は対象外。Evidenceは[fixture／日付回帰](../apps/api/tests/demo-data.test.ts)と[専用DB回帰](../apps/api/tests/demo-seed.test.ts)、実行結果は対象PRへ記録する。
+
+### D-28
+
+Context: Today APIは[engine.ts](../apps/api/src/prediction/engine.ts)で純粋Engineを同期で呼び、計算中は同じprocessの記録PUT・Goal一覧・session確認が待つ。[#77記録](#2026-10-06の記録today-api77)は「workerへ移すかは#84の残判断」としたが、#84は2026-10-08にworker不採択のままCloseし、判断の持ち主がなかった（[#160](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/160)）。公開先は[D-25](#d-25)の第一候補のまま未採用で、Code Freezeは2026-10-12。
+
+Decision（提案）: MVPでは同期実行を維持する。予測は要求ごとにDB接続を返してから純粋Engineを最大1回同期で呼び、HTTP・DB・時計をEngineへ混ぜない（現状維持）。同時に予測を要求する人数×1回の計算時間が同じprocessの他操作の待ち時間に加わることをKnown Limitationとして記録し、公開先が決まったら同じハーネスで1回測る。採択は[#162](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/162)の文書PRへの別メンバー2人のApproveとし、決定者・日付・根拠を同Issueへ残す。
+
+Alternatives: 同一process内のworker pool（候補spikeの`predict-pool.ts`相当を`runPrediction`の内側に置き、routeとDTOは変えない）は、他操作を常に数msに保てるが、worker死亡時の復旧（再生成か503か）・SIGTERM時のqueue drain・healthへの反映・回帰が必要で、Function環境でのworker_threadsの挙動も未確認。Freeze前3日で新しい失敗経路を増やす。「保留」は同期のまま判断を記録しない状態であり、再検討条件を明記する本案に吸収する。
+
+Reason: [現行APIの実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)（Apple M5、[#161](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/161)）では同期ブロック最長が約0.09〜0.13秒、3人が手を止めず操作するclosed loopでもTodayのp95が約0.12〜0.2秒・最大約0.3秒、他操作のp95は約10ms。Today 4 req/s以上で他操作のp95が約1回の計算時間（約90ms）に張り付き、重い入力で10 req/sにするとCPU 0.96でevent loopがほぼ飽和するが、3人デモの頻度（Today約2 req/s）からは余裕がある。要求失敗・独立oracle不一致はない。workerの効果が出る条件は現在の利用想定にも実測にも現れておらず、実装・運用コストが利点を上回る。
+
+Consequences / Reconsider When: 公開runtimeの単コア性能が遅いほど同期ブロックは比例して伸びる（未測定）。再検討条件は、公開runtimeでの同期ブロック最長が500ms以上、3人closed loopで他操作のp95が1秒以上、またはToday 4 req/s相当以上の同時利用を想定する場合のいずれかで、満たせばworker poolを再提案する。Engine単体の掃引では`requiredFutureDone` 548〜800帯が最も重く（約85ms）、T-14の1095はhorizon短絡で約5msのため、T-14既定3入力は最悪入力を含まない。T-14の判定値は変えず、[公開前の最小検証](operations/release-demo.md#公開候補の採用前に行う最小検証)で548〜800帯も1回測る。候補spikeの[旧結果](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)（546.83ms FAIL、CRUD p95 5秒超）はWindows端末の値として保持し、解消済みとしない。Evidence: [計測ハーネス](../experiments/api-mixed-load/README.md)と生結果JSON（LOCAL_POC。同一多コア端末、各条件1回、1 vCPU・実Cloudは未検証）。
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
