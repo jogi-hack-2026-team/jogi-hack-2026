@@ -9,3 +9,18 @@
   max-width: 40rem;
   margin: 0 auto;
 }
+
+/*
+ * デスクトップ幅の作成・編集・履歴（デザイン Desk-create・Desk-edit・Desk-history）。
+ * 上のバーは画面全体のもの（AppShell）1段にし、画面ごとの AppBar は隠して DeskHeader の戻り先と見出しを出す。
+ */
+@media (min-width: 960px) {
+  .fr-page--desk {
+    max-width: 720px;
+    min-height: 0;
+    padding: var(--fr-space-4) var(--fr-space-4) var(--fr-space-8);
+  }
+  .fr-page--desk > .fr-appbar {
+    display: none;
+  }
+}
