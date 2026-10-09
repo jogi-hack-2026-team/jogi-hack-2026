@@ -8,6 +8,7 @@ import type { Auth } from './auth/options.ts';
 import { Health } from './contracts/index.ts';
 import { registerGoalRoutes } from './goals/routes.ts';
 import { isValidTimeZone } from './goals/local-date.ts';
+import { apiBoundary } from './http/api-boundary.ts';
 import { errorBody } from './http/errors.ts';
 import { registerApiGuards } from './http/guards.ts';
 import { registerLogRoutes } from './logs/routes.ts';
@@ -54,7 +55,9 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
     // 信頼するhop数ぶんだけX-Forwarded-Forを遡ってclient IPを決める（回数制限の鍵）。
     trustProxy: o.auth && o.auth.trustProxyHops > 0 ? (_address: string, hop: number) => hop < o.auth!.trustProxyHops : false,
     // routerが拒否する要求（不正なpercent-encoding等）もsetErrorHandlerを通らないため、ここで共通のJSON形式に揃える。
-    frameworkErrors(error, _request, reply) {
+    frameworkErrors(error, request, reply) {
+      // routerで拒否された要求にも、通常のAPI応答と同じ保存禁止を適用する。
+      if (apiBoundary(undefined, request.url ?? '') === 'protected') reply.header('cache-control', 'no-store');
       // route未確定のためreplyの応答型が汎用になっている。送るのは共通エラー形式だけ。
       (reply as FastifyReply).code(error.statusCode ?? 400).send(errorBody('BAD_REQUEST', error.message));
     },
@@ -67,7 +70,10 @@ export async function buildApp(o: AppOptions): Promise<FastifyInstance> {
   });
 
   // 終了処理中に完了した応答がkeep-alive接続を維持しないようにし、処理中の要求を完了させてから閉じる。
-  app.addHook('onSend', async (_request, reply, payload) => {
+  app.addHook('onSend', async (request, reply, payload) => {
+    // 私的APIは成功・失敗とも保存させない。healthとSPA/assetsの既存方針は維持する。
+    const boundary = apiBoundary(request.routeOptions.url, request.url);
+    if (boundary === 'protected' || boundary === 'auth') reply.header('cache-control', 'no-store');
     if (!app.server.listening) reply.header('connection', 'close');
     return payload;
   });

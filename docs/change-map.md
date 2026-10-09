@@ -2,11 +2,13 @@
 
 現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。この対応表は実装を調べる入口で、正式仕様の追加正本ではない。下表のパスと[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)は[Repository構成](architecture.md#repository構成)から確認する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
 
+運用と配置は[共通の文書規則](../CONTRIBUTING.md#変更に伴う文書更新)、草稿・実施結果の保存先は[履歴フォルダ](changes/)を参照する。新しい実測だけを追加する場合は中央表への毎回追記を要しない。現行の契約・処理経路・確認方法が変わる場合は該当行を更新する。
+
 ## 現在地の読み方
 
-2026-10-09のmain `10c1df73`（#147・#176を含む）と本PRの#148追加契約を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
+2026-10-09のmain `48b5f42`（#147・#176・#181を含む）と本PRの#148追加契約を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
 
-[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)の画面・ルート変更とGoal一覧の`progressDone`はmain `685e7d0`で統合済み。本PRはその表示と#148の保存契約を両方保持する。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
+[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)の画面・ルート変更とGoal一覧の`progressDone`はmain `685e7d0`で統合済み。本PRはその表示と#148の保存契約を両方保持する。他の未merge PRの追加契約は取り込まず、各Issue/PRで状態を確認する。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
 
 ## コードを読むための短いtrace
 
@@ -78,6 +80,7 @@ FEの「整合snapshot」は別GET間の日付・設定・累計・今日のロ�
 | 質問由来の見通し（R-11、Must採択済み） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[Scope・分担の採択P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 2026-10-05、PR #115でMust追加・分担を採択。追加UIは#117。#133では2026-10-07の依頼者承認範囲の保存・回答版・純粋Engine接続境界を実装し、チームレビュー対象とする。明示queryによるGoal/Today公開読取も依頼者承認範囲で接続済み。FE結合・出所表示は#137・#81でmainにあり、製品受入は残条件 | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
+| 私的APIのHTTP保存禁止（#153） | [認証実装の方式](architecture.md#2026-10-06の認証実装75)。成功・失敗ともno-store、health／SPA／assetsの既存方針を保持 | [app.ts](../apps/api/src/app.ts)の共通応答hook・router拒否、[apiBoundary](../apps/api/src/http/api-boundary.ts)の既存分類。FE cache消去と本番proxy/CDNの受入とは別 | [cache-control.test.ts](../apps/api/tests/cache-control.test.ts)（Goal／Log／Today旧・r11、auth、401／403／404／422／500、所有者8ケースとDB不変、Cookie）、[auth.test.ts](../apps/api/tests/auth.test.ts)、[spa.test.ts](../apps/api/tests/spa.test.ts)。公開先は未検証 |
 
 ### R-11の既存Issueへの対応
 
