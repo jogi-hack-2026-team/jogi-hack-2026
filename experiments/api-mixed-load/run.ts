@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { cpus, platform, release, totalmem } from 'node:os';
 import { dirname, join } from 'node:path';
 import { performance } from 'node:perf_hooks';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { predict, predictWithQuestionPrior, type PredictionInput } from '@futureroi/prediction';
 import { createTestDatabase } from '../../apps/api/tests/helpers/database.ts';
 import { migrate } from '../../apps/api/src/db/migrate.ts';
@@ -83,7 +83,8 @@ const secret = randomBytes(32).toString('base64url');
 async function startServer(): Promise<Server> {
   const [port, metricsPort] = await distinctLoopbackPorts();
   const url = `http://127.0.0.1:${port}`;
-  const child = spawn(process.execPath, ['--import', join(here, 'server-metrics-preload.mjs'), join(apiDir, 'src', 'server.ts')], {
+  // --importはURLとして解釈されるため、Windowsの絶対パス（C:\...）はfile URLにして渡す
+  const child = spawn(process.execPath, ['--import', pathToFileURL(join(here, 'server-metrics-preload.mjs')).href, join(apiDir, 'src', 'server.ts')], {
     cwd: apiDir,
     env: {
       PATH: process.env.PATH ?? '',
