@@ -286,8 +286,8 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     }
     setPrepareError(null);
     try {
-      // 再表示で復元した操作を優先する。旧画面の遅延成功がstorageを消しても、
-      // 保持中の操作を新しいキーへ切り替えず同じキー・元bodyで結果を確認する。
+      // 再表示で復元した操作を優先し、storageから別の操作を準備し直さない。
+      // 保持中の同じキー・元bodyで結果を確認し、表示中の確定応答で終了する。
       const operation = mode === 'create' ? attempt ?? prepareCreateAttempt(owner!, toCreateBody(values), sessionStorage) : null;
       if (operation) setAttempt(operation);
       saving.current = true;
