@@ -11,11 +11,11 @@
 | 確定 | 開発期間：2026-09-19 ～ 2026-10-12 / コードフリーズ：2026-10-12 |
 | DECIDED | 2026-09-29に音楽探索案を廃止した。旧案の要件・Scopeは現行計画ではない。[Product Spec P-10](docs/product-spec.md#p-10-音楽探索案の廃止) |
 | DECIDED | 2026-09-30にProductを「Future ROI」（今日サボると、ゴールは何日遠ざかる？）に決定し、要件・MVP Scopeを確定した。[Product Spec](docs/product-spec.md#現行状態2026-09-30) |
-| DECIDED（Scope・分担） | 2026-10-05、[R-11のMust追加と責任分界をチーム採択](docs/product-spec.md#p-15-質問由来の見通しのmust追加方針)。MustはR-01〜R-11。KaitoはEngine・[追加質問UI／出所別表示 #117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)、BEは回答保存／API、FEは既存画面・追加UIの組み込み。数値・具体表示・保存編集／API／Engine契約・判断日は[D-26でOPEN](docs/architecture.md#d-26)、未実装 |
+| DECIDED（Scope・分担） | 2026-10-05、[R-11のMust追加と責任分界をチーム採択](docs/product-spec.md#p-15-質問由来の見通しのmust追加方針)。MustはR-01〜R-11。2026-10-07の依頼者承認範囲の回答保存・公開Engine／GETは#133、質問入力・回答版の競合復旧とTodayの出所別表示は#137・#81でmainへ接続済み。[D-26](docs/architecture.md#d-26)の当時のOPEN履歴と現契約を区別し、実装を製品受入・実ユーザーでの校正済みとは扱わない |
 | DECIDED | 現行の実績由来の予測モデル（2状態Bayesian Markov、Beta(2,2)、中心指標はBeta-Geometric分布の中央値）、Data Modelと記載済みの業務API規則。契約の未定義部分・解釈の判断待ちは[Architecture](docs/architecture.md#現行状態2026-09-30)から確認する |
 | DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。2026-10-05に[npm workspacesと`pg`を追加採択](docs/architecture.md#2026-10-05の追加採択)。版・残りの追加ツール・API細則は未確定 |
 | 条件付き第一候補 | Better Authは[D-24](docs/architecture.md#d-24)。公開はFE・BEともVercel Hobby＋Neon Free、ローカルDockerが[D-25](docs/architecture.md#d-25)の第一候補（2026-10-08、本人アカウント・厳密0円・非商用・検証条件付き）。最終採択・配備済み・一般公開や課金の許可ではない |
-| ローカル実装／画面・公開待ち | #71〜#73の承認範囲の[Prediction計算本体・テスト](packages/prediction/README.md)は[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済み。[純粋Engine検証CI](packages/prediction/README.md#検証ci)がある。起動基盤・DB schema/migration・認証・Goal・記録・Today APIはローカル実装済みで、`/today`からEngineを呼ぶ。Goal・記録・Today画面と公開配置は未完了。既存Issueの正式依存・残条件は各Issueで確認する |
+| mainの実装／受入・公開待ち | [Prediction計算本体・テスト](packages/prediction/README.md)、起動基盤・DB schema/migration・認証・Goal・記録・Today APIと実APIを使う業務画面はmainにある。画面の実装・既存ローカル検証記録と、製品受入・E2E・公開配置の残条件は[対応表の現在地](docs/change-map.md#現在地の読み方)で区別する。未mergeの画面変更をmainの説明へ混ぜない |
 | 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
@@ -33,6 +33,7 @@
 現行の未決定事項と当時の検証記録への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
+初めてコードを読む場合は、[記録保存から予測表示までのtrace・用語・テスト入口](docs/change-map.md#コードを読むための短いtrace)から進めます。
 旧音楽案のML Issue向けCodex Harnessは通常の実行タスクとCIから外しました。再利用前の確認事項は[引き継ぎ](docs/operations/reuse-handoff.md)を参照してください。
 
 Demo Seed（#82）は認証で作成済みのuserIdとtimezoneを明示し、専用2Goalだけを作成・resetします。[実行・再実行・保全の手順](docs/operations/demo-seed.md)を参照してください。公開DBと恒久Demo Accountの作成、Webの通し確認は別途必要です。
