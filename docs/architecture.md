@@ -187,7 +187,7 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 
 | 決める部分 | 採用 | 理由 |
 | --- | --- | --- |
-| Goal DTO | 一覧・取得・作成・編集で共通の1形（[goal.ts](../apps/api/src/contracts/goal.ts)）：`id, title, unit, totalRequired, sessionAmount, initialProgress, timezone, recordStartDate, hasLogs, today, todayStatus`。`user_id`・`created_at`・`updated_at`は返さない | 画面が一覧とフォームで必要な導出値（記録の有無、Goalのtimezoneでの今日と記録状態）を同じ形で受け取れる。`hasLogs`は「timezoneと初期量を変更できない」表示（R-02）に、`today`／`todayStatus`は一覧の今日状態に使う |
+| Goal DTO | 一覧・取得・作成・編集で共通の1形（[goal.ts](../apps/api/src/contracts/goal.ts)）：`id, title, unit, totalRequired, sessionAmount, initialProgress, timezone, recordStartDate, hasLogs, unitLocked, goalSettingsRevision, today, todayStatus`。`user_id`・`created_at`・`updated_at`は返さない | 画面が一覧とフォームで必要な導出値（記録の有無、Goalのtimezoneでの今日と記録状態）を同じ形で受け取れる。`hasLogs`は「timezoneと初期量を変更できない」表示（R-02）に、`today`／`todayStatus`は一覧の今日状態に使う |
 | status | `GET` 200、`POST` 201、`PATCH` 200（更新後のGoal）、`DELETE` 204（bodyなし）。他人・存在しない・uuidでないidは404 `NOT_FOUND` | [契約の判断事項](contract-review-proposal.md#apiの未定義部分)の案のうち最も単純な形。uuidでないidはDBへ渡さず、存在を明かさない404へ揃える |
 | 一覧の今日状態 | 配列（wrapperなし）、作成時刻・同時刻ならid順。各Goalに`today`（そのGoalのtimezoneでの暦日）と`todayStatus`（`DONE`／`SKIPPED`／`UNRECORDED`。行がなければ`UNRECORDED`） | Goalと`hasLogs`・今日の記録状態をREPEATABLE READの同じsnapshotで読み、最初のGoal SELECT後に時計を1回取得する。行なしをSKIPPEDにしない（P-14） |
 | 作成 | `initialProgress`省略時は0。timezoneは`地域/都市`形式か`UTC`で、ICUが解決できる名前だけ（略称`JST`・固定オフセット`+09:00`は422）。記録開始日は作成時刻をそのtimezoneで暦日にした値で固定し、`goal.record_start_date`（[migration 0002](../apps/api/migrations/0002_goal_record_start_date.sql)）へ保存して`recordStartDate`で返す | [初期進捗と日々の記録の境界](#初期進捗と日々の記録の境界)の最小案。ブラウザの既定timezoneは画面の責務で、APIは明示送信を受ける |
@@ -207,7 +207,7 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 | 決める部分 | 採用 | 理由 |
 | --- | --- | --- |
 | Log DTO | `{ localDate, status, amount }`。SKIPPEDの`amount`は`null`（[log.ts](../apps/api/src/contracts/log.ts)） | Engine入力と同じ形で、画面が「量なし」を省略とnullで二重に扱わずに済む |
-| `PUT /logs/:localDate` | 作成も上書きも200＋Log。body：`{ status, amount? }`。SKIPPEDに`amount`があれば422（`body/amount`）。窓の外は422 `LOG_DATE_OUT_OF_WINDOW`（messageに許可する2日を含む）、記録開始日前は422 `LOG_DATE_BEFORE_START`。窓の判定が先で、両方に当たる日は`OUT_OF_WINDOW` | 作成と更新を画面が区別する必要がない。窓と開始日の判定はREAD COMMITTEDでGoal行の排他ロックを取得した後に時計を1回読み、同時のPATCHと同GoalのPUTを順序づける。同日のUPSERT待ちも時計取得前のGoal lockで直列化する |
+| `PUT /logs/:localDate` | 作成も上書きも200＋Log。body：`{ status, amount?, expectedGoalSettingsRevision }`。DONEでは`amount`必須。古い設定版は409。SKIPPEDに`amount`があれば422（`body/amount`）。窓の外は422 `LOG_DATE_OUT_OF_WINDOW`（messageに許可する2日を含む）、記録開始日前は422 `LOG_DATE_BEFORE_START`。窓の判定が先で、両方に当たる日は`OUT_OF_WINDOW` | 作成と更新を画面が区別する必要がない。窓と開始日の判定はREAD COMMITTEDでGoal行の排他ロックを取得した後に時計を1回読み、同時のPATCHと同GoalのPUTを順序づける。同日のUPSERT待ちも時計取得前のGoal lockで直列化する |
 | `GET /logs?from&to` | 記録済みの行だけを行動日の昇順で返す。`from`・`to`は任意で両端を含み、省略時は全期間。逆転・実在しない日付・未知のqueryは422。UNKNOWNの合成行は返さない | MVPの履歴表示に十分。件数上限・ページングは必要になった時点で追加 |
 | `GET /today` | `{ today, yesterday, todayLog, yesterdayMissing, prediction }`。`todayLog`は未記録ならnull。`yesterdayMissing`は**昨日が記録開始日以降で、昨日の記録がない**ときだけtrue。`prediction`はEngineの`PredictionResult`をそのまま返す（応答schemaはEngine型と双方向の互換を型検査する） | 開始日前の昨日に問いかけを出さない条件（P-14）をAPI側で1か所に持ち、画面は`yesterdayMissing`だけを見ればよい |
 | snapshotと時計 | pool取得・BEGIN・最初のGoal SELECTでsnapshotを確定した後に時計を1回読み、Goalと全記録を`repeatable read` / `read only`の1 transactionで取得し、接続を返してから`predict`を呼ぶ（[prediction/store.ts](../apps/api/src/prediction/store.ts)、[routes.ts](../apps/api/src/prediction/routes.ts)） | 日付境界で`today`と記録が食い違わず、途中で挟まる記録の更新と混ざらない。BEGINだけではsnapshotは確定しない。[通常操作の回帰](../apps/api/tests/record-concurrency.test.ts)でpool待ち・最初のSELECT待ち・PATCH／同日PUT待ちの日跨ぎと初回PUT／PATCHの両順序を検証する |
@@ -251,7 +251,7 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 
 | 項目 | 正本（現在） | 検証コード | 変更案 | 理由 |
 | --- | --- | --- | --- | --- |
-| DONEの量 | 省略可。省略時はAPIが`sessionAmount`で補う | 必須（クライアントが送る） | **正本を維持**（#77で実装） | 量の既定値をサーバーで一元管理し、UIごとの補い方の違いを防ぐ |
+| DONEの量 | #77では省略時補完 | 必須（クライアントが送る） | **#148で明示量＋設定版へ変更**（D-28） | 別画面の設定変更で表示量と保存量を違わせない |
 | T-14 | `requiredFutureDone = 120, 400, 1095`で500ms未満 | 混合負荷も判断材料にし、計算が長ければworkerで実行 | **500ms未満を維持**。混合負荷の確認を追加の受け入れ条件にするかを相談 | 単体の速さと、他のリクエストを止めないことは別の性質 |
 | 単位の値 | `minutes` / `sessions` | `minutes` / `count` | どちらかに統一。案：`count` | 「回」の意味が名前から読み取りやすい。検証コードで動作確認済み |
 | 量の型 | integer | numeric | 案：integerを維持 | 分・回は整数で足り、比較・合計で誤差が出ない |
@@ -312,7 +312,7 @@ CREATE TABLE action_log (
 
 業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の条件付き第一候補を#75で実装したもの（[認証実装](#2026-10-06の認証実装75)）。未ログインの401と別originからの状態変更の403（`ORIGIN_REJECTED`）は`/api/*`共通のhookが返す。認証endpoint自体のエラー形式はBetter Authのまま（`{ code, message }`）で、業務APIの共通error形式へ揃える範囲は未決定。
 
-以下はmethod / pathと記載済みの規則の一覧。Goal APIの成功DTO・status・PATCHの省略・null・空body・一覧の今日状態は[2026-10-06のGoal API](#2026-10-06のgoal-api76)、記録APIの成功DTO・status・SKIPPEDの応答量・期間と`/today`の細則は[2026-10-06の記録・Today API](#2026-10-06の記録today-api77)へ実装案を記録した。人のPR承認レビューで採択を確認する。R-11の任意回答・回答版と明示query読取は[D-26](#2026-10-07の保存予測接続133)の依頼者承認範囲で追加する。それ以外の未定義部分は[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
+以下はmethod / pathと記載済みの規則の一覧。Goal APIの成功DTO・status・PATCHの省略・null・空body・一覧の今日状態は[2026-10-06のGoal API](#2026-10-06のgoal-api76)、記録APIの成功DTO・status・SKIPPEDの応答量・期間と`/today`の細則は[2026-10-06の記録・Today API](#2026-10-06の記録today-api77)へ実装案を記録した。人のPR承認レビューで採択を確認する。R-11の任意回答・回答版と明示query読取は[D-26](#2026-10-07の保存予測接続133)の依頼者承認範囲で追加する。それ以外の未定義部分は[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamountは必須で、画面が表示した量を送る。PATCH／PUTは設定版、POSTはUUIDキーを必須とする（[D-28](#d-28-量と作成操作の保全148)）。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
 
 | Method / Path | 内容 |
 | --- | --- |
@@ -703,3 +703,18 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 人間の具体契約判断後、[既存Issueと追加UIへの対応表](change-map.md#r-11の既存issueへの対応)に沿って契約・実装・共有回帰を更新する。APIや初期分布の新しい型は今回の文書PRで確定しない。公開提案の検証成功を製品仕様・精度の採択へ昇格しない。入口・画面数・routesは#88の別レビューで扱う。[P-15の採択分担](product-spec.md#p-15-質問由来の見通しのmust追加方針)に沿い、KaitoのEngine・追加UI #117、BEの保存／API、FEの既存画面・組み込みを接続する。部品の受け渡し・状態所有者・共通ファイルの編集／衝突解消は未定で、数値・強さ・保存編集・更新競合を分担から確定しない。
 
 **D-26具体仕様の判断目標日は2026-10-05（JST）。** 依頼者側の目標であり、FE／BEの返答確約やチーム合意の期限ではない。実際の採択時点・実装の個別期限は未定で、D-26の具体契約はOPENのまま扱う。
+
+
+### D-28 量と作成操作の保全（#148）
+
+2026-10-09 / **依頼者の実装指示・チームレビュー対象**。R-02〜R-04／P-19を満たす限定変更。#76／#77の量補完と可変unitを、[Issue #148](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/148)の契約で拡張する。既存の回答版（D-26）と同日ログの上書き規則は保つ。
+
+- **単位**：`unitLocked = unit_history_locked || initial_progress > 0`。DONE保存と永続markerを同一transactionへ入れる。Goal行の所有者付き排他lock後の旧状態で単位変更を拒否する。同unitは許可。markerを単純な現ログEXISTSから導く案は訂正で解除されるため採用しない。
+- **設定CAS**：`goal_settings_revision`は非負int4、初期0。タイトル・単位・総量・1回量・初期量・timezoneの実変更で1回増加。no-op／回答のみ／ログは増加しない。PATCH・PUTは`expectedGoalSettingsRevision`必須。所有者付きFOR UPDATE取得後に比較し、古い版は同値でも409 `GOAL_SETTINGS_CONFLICT`、最大版の変更は422。単位固定違反は422 `GOAL_UNIT_LOCKED`で全体rollback。全Goal DTOとR-11 Todayの`goalContext`へ版・固定flagを返す。
+- **明示量**：DONEは正のint4 `amount`必須、SKIPPEDはamount禁止／保存NULL。API補完は設定更新と競合して表示量を変えるため廃止する。FEはGoal・日・量・版・元unit／timezoneを保存操作へ固定し、409後の最新GET成功まで再保存を止める。意味が同じときだけ元量で明示再保存する。
+- **作成ledger**：POSTのUUID `Idempotency-Key`を小文字化し、ownerとの複合主キーで予約する。検証済みbodyを固定順でcanonical化し、省略initialProgress=0・questionPrior=両nullとしてSHA-256で照合する。予約とGoal作成は同じREAD COMMITTED transaction。競合INSERTを待った後、新しいSELECTで確定ledgerを読む。初回201、同body再送200＋`Idempotency-Replayed: true`（現在DTO）、異body409 `IDEMPOTENCY_CONFLICT`。Goal削除ではFK SET NULLでledgerのowner／元hashを保持し、再送410 `CREATE_RESULT_DELETED`。owner削除のみcascade、TTLなし。独立した予約commitは孤立行を生むため採用しない。
+- **FE回復**：sessionStorageへowner・キー・元bodyのみを送信前に保存する（token／passwordなし）。戻る・reload・同account再認証で復元し、確定422または成功で消す。再送前の非cache session確認に加え、FEの`X-Create-Owner`をAPIで比較する。確認後にaccountが替わっても409 `CREATE_OWNER_CHANGED`として新ownerで作成しない。APIへの正規callerはUUIDキー必須で、このownerヘッダーは追加防御として任意。
+
+[migration 0005](../apps/api/migrations/0005_goal_data_integrity.sql)は旧migrationのchecksumを変更しない。Goal／logを排他lockし、旧ログのあるGoal（旧SKIP-onlyも含む）を保守的に固定する。backfill中だけupdated_at triggerを止め、保存量・日付・既存metadataを変更しない。アプリmigrationのtransaction内でDDL／backfill／ledgerをまとめ、再適用はno-op。Demo DONEも同transactionでmarkerを保存する。移行前SKIP-onlyのunit編集を制限すること、ledgerを永続保持することがtrade-off。
+
+不変条件は「過去の量の意味」「表示量の保存」「stale更新の副作用なし」「同操作でGoalを増やさない」。同日ログ一般のrevision、削除CAS、cache方針（#153）、認証cache全体（#155）、#147の画面再設計は含めない。単位換算を製品要件として採用する、ledger保持方針を変える、設定以外のlost updateを扱う場合に再検討する。[専用合成DB・実ブラウザの検証記録](operations/issue148-verification.md)を参照し、CI／人工切断／人の試験を混同しない。本番適用・merge・deployは未実施。

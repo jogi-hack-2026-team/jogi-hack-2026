@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
+import { authClient } from '../../auth/client.ts';
+import { clearCreateAttempt, loadCreateAttempt, prepareCreateAttempt, type CreateAttempt } from './create-attempt.ts';
 import { ApiError } from '../../api/client.ts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
@@ -52,8 +54,11 @@ const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 /** Goal の作成（R-02、#78）。/goals/new */
 export function GoalCreatePage() {
   // ログインしている人が替わったら作り直し、前の人の入力を持ち越さない
-  const { owner } = usePrivateEpoch();
-  return <GoalForm key={owner ?? ''} mode="create" />;
+  const session = authClient.useSession();
+  const owner = session.data?.user.id;
+  if (session.isPending) return <FormShell title={f.createTitle} body={<FormLoading />} />;
+  if (!owner) return <SignedOutPanel body={c.signedOut.formBody} />;
+  return <GoalForm key={owner} mode="create" owner={owner} />;
 }
 
 /** Goal の編集・削除（R-02、#78）。/goals/$goalId/edit。Goal を読み込んでからフォームを出す。 */
@@ -111,9 +116,10 @@ function FormLoading() {
 }
 
 type Props =
-  | { mode: 'create'; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined; onReloadLatest?: undefined }
+  | { mode: 'create'; owner: string; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined; onReloadLatest?: undefined }
   | {
       mode: 'edit';
+      owner?: undefined;
       goal: GoalWithAnswers;
       refreshError: unknown;
       onRetryRefresh: () => void;
@@ -121,11 +127,15 @@ type Props =
       onReloadLatest: () => Promise<GoalWithAnswers | undefined>;
     };
 
-function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: Props) {
+function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLatest }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const locked = mode === 'edit' && goal.hasLogs;
-  const [values, setValues] = useState<FormValues>(() => (goal ? valuesFromGoal(goal) : emptyValues(browserTimezone())));
+  const [attempt, setAttempt] = useState<CreateAttempt | null>(() => owner ? loadCreateAttempt(owner, sessionStorage) : null);
+  const recoveryValues = attempt ? { ...emptyValues(attempt.body.timezone), ...attempt.body,
+    totalRequired: String(attempt.body.totalRequired), sessionAmount: String(attempt.body.sessionAmount),
+    initialProgress: String(attempt.body.initialProgress ?? 0), questionPrior: attempt.body.questionPrior ?? NO_ANSWERS } : null;
+  const [values, setValues] = useState<FormValues>(() => (goal ? valuesFromGoal(goal) : recoveryValues ?? emptyValues(browserTimezone())));
   // 保存を押すまでは項目のエラーを出さない。押した後は入力のたびに検査し直す
   const [submitted, setSubmitted] = useState(false);
   const [serverErrors, setServerErrors] = useState<FieldErrors>({});
@@ -154,21 +164,32 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     };
   }, []);
 
-  const clientErrors = submitted ? validate(values, { locked }) : {};
+  const clientErrors = submitted ? validate(values, { locked, ...(mode === 'edit' ? { goal } : {}) }) : {};
   const errors: FieldErrors = { ...serverErrors, ...clientErrors };
   const count = errorCount(errors);
 
   const save = useMutation({
+    retry: false,
     mutationFn: async (v: FormValues): Promise<Goal | null> => {
-      if (mode === 'create') return goalsHttp.createGoal(toCreateBody(v));
+      if (mode === 'create') {
+        const operation = prepareCreateAttempt(owner!, toCreateBody(v), sessionStorage);
+        setAttempt(operation);
+        const current = await authClient.getSession({ query: { disableCookieCache: true } });
+        if (current.error || current.data?.user.id !== operation.owner) throw new Error('作成時のアカウントでログインし直してから再試行してください。');
+        return goalsHttp.createGoal(operation.body, operation.key, operation.owner);
+      }
       // 記録の有無は最新の Goal に従う（記録が付いた後は timezone・initialProgress を送らない）
       const patch = toPatchBody(v, { ...baseline!, hasLogs: goal.hasLogs });
       return patch ? goalsHttp.updateGoal(goal.id, patch) : null;
     },
     // 一覧などの取り直しは、画面を離れていても必ず行う。一覧への移動は mutate に渡す onSuccess で、表示中のときだけ行う
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: goalKeys.all }),
+    onSuccess: async () => {
+      if (owner) { clearCreateAttempt(owner, sessionStorage); setAttempt(null); }
+      await queryClient.invalidateQueries({ queryKey: goalKeys.all });
+    },
     onError: (error) => {
       saving.current = false;
+      if (owner && error instanceof ApiError && error.status === 422) { clearCreateAttempt(owner, sessionStorage); setAttempt(null); }
       const fromApi = fieldErrorsFromApi(error);
       if (fromApi && errorCount(fromApi) > 0) {
         setServerErrors(fromApi);
@@ -208,7 +229,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     if (saving.current || reloadInFlight.current || (save.isError && isAnswerConflict(save.error))) return;
     setSubmitted(true);
     setServerErrors({});
-    const found = validate(values, { locked });
+    const found = validate(values, { locked, ...(mode === 'edit' ? { goal } : {}) });
     if (errorCount(found) > 0) {
       focusFirstError(found);
       return;
@@ -226,6 +247,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   };
 
   const busy = save.isPending;
+  const inputDisabled = busy || (mode === 'create' && attempt !== null);
   useEffect(() => {
     if (!focusAfterSave || busy) return;
     focusFirstError(focusAfterSave);
@@ -265,6 +287,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
       <form ref={formRef} className="fr-goalform" noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">
+          {attempt ? <p role="status">作成結果を確認するまで、元の入力と同じ作成キーを保持します。「保存」で同じ操作を確認・再送できます。</p> : null}
           {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isAnswerConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} answerConflict={isAnswerConflict(save.error)} /> : null}
           {count > 0 ? (
             <div className="fr-goalform__summary" role="alert">
@@ -278,14 +301,14 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
               id="goal-title"
               value={values.title}
               onChange={(event) => update('title', event.target.value)}
-              disabled={busy}
+              disabled={inputDisabled}
               invalid={Boolean(errors.title)}
               autoComplete="off"
               {...fieldAria('goal-title', { error: errors.title })}
             />
           </Field>
 
-          <Field id="goal-unit" label={f.unit} group error={errors.unit}>
+          <Field id="goal-unit" label={f.unit} group error={errors.unit} help={mode === 'edit' && goal.unitLocked ? <><LockedNote>{goalsCopy.errors.unitLocked}</LockedNote><Link to="/goals/new">新しいGoalを作成</Link></> : undefined}>
             <SegmentedControl
               labelledBy="goal-unit-label"
               options={[
@@ -294,19 +317,19 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
               ]}
               value={values.unit}
               onChange={(value) => update('unit', value)}
-              disabled={busy}
+              disabled={inputDisabled || (mode === 'edit' && goal.unitLocked)}
             />
           </Field>
 
-          <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={busy} onChange={(v) => update('totalRequired', v)} />
-          <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={busy} onChange={(v) => update('sessionAmount', v)} />
+          <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={inputDisabled} onChange={(v) => update('totalRequired', v)} />
+          <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={inputDisabled} onChange={(v) => update('sessionAmount', v)} />
           <AmountField
             id="goal-initialProgress"
             label={f.initialProgress}
             unit={unit}
             value={values.initialProgress}
             error={errors.initialProgress}
-            disabled={busy || locked}
+            disabled={inputDisabled || locked}
             onChange={(v) => update('initialProgress', v)}
             help={
               <>
@@ -331,7 +354,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
               id="goal-timezone"
               value={values.timezone}
               onChange={(event) => update('timezone', event.target.value)}
-              disabled={busy || locked}
+              disabled={inputDisabled || locked}
               invalid={Boolean(errors.timezone)}
               {...fieldAria('goal-timezone', { help: true, error: errors.timezone })}
             >
@@ -352,7 +375,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             <QuestionPriorFields
               value={answersLock ? NO_ANSWERS : values.questionPrior}
               onChange={(next) => update('questionPrior', next)}
-              disabled={busy || answersLock !== null}
+              disabled={inputDisabled || answersLock !== null}
               fieldErrors={errors.questionPrior ? { a: errors.questionPrior } : {}}
             />
             {answersLock ? <LockedNote>{answersLock === 'withdrawn' ? f.answersWithdrawn : f.answersNotSavedWithContext}</LockedNote> : null}
@@ -361,7 +384,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
 
           {mode === 'edit' ? (
             <div>
-              <Button variant="text" icon="trash" disabled={busy} onClick={() => setDeleteOpen(true)}>
+              <Button variant="text" icon="trash" disabled={inputDisabled} onClick={() => setDeleteOpen(true)}>
                 {f.delete}
               </Button>
             </div>
@@ -488,7 +511,7 @@ function SaveFailure({ error, mode, onReloadLatest, reloadingLatest }: { error: 
           </Button>
         }
       >
-        {f.answerConflict.body}
+        入力は保持しています。最新の設定・回答を読み込んでから、保存する内容を確認してください。
       </ErrorPanel>
     );
   }
@@ -501,7 +524,7 @@ function SaveFailure({ error, mode, onReloadLatest, reloadingLatest }: { error: 
 
 /** 古い回答の版で保存しようとした（409 ANSWER_CONFLICT）。 */
 function isAnswerConflict(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 409 && error.body?.error.code === 'ANSWER_CONFLICT';
+  return error instanceof ApiError && error.status === 409 && ['ANSWER_CONFLICT', 'GOAL_SETTINGS_CONFLICT'].includes(error.body?.error.code ?? '');
 }
 
 const answerLabel = (answer: NonNullable<GoalWithAnswers['questionPrior']>['a']) => f.answerLabels[answer ?? 'none'];

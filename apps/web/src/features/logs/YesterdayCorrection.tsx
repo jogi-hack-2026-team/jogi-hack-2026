@@ -94,8 +94,9 @@ export function YesterdayCorrection({
     const failed = saver.failure.vars.choice;
     body = (
       <SaveFailure
+          settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
         kind={classifySaveError(saver.failure.error)}
-        body={todayCopy.correctFailed(describeChoice(failed, sessionAmount, unit, todayCopy.recordedRest), currentText)}
+        body={todayCopy.correctFailed(describeChoice(failed, sessionAmount, saver.failure.vars.unit === 'minutes' ? '分' : '回', todayCopy.recordedRest), currentText)}
         localDate={target}
         onRetry={saver.retry}
         onReselect={saver.reset}
@@ -114,7 +115,7 @@ export function YesterdayCorrection({
             icon="check"
             aria-pressed={draft.status === 'DONE'}
             disabled={saver.isSaving}
-            onClick={() => setDraft({ status: 'DONE', amount: current.status === 'DONE' ? current.amount : null })}
+            onClick={() => setDraft({ status: 'DONE', amount: current.status === 'DONE' ? current.amount : sessionAmount })}
           >
             {todayCopy.yesterdayDone}
           </Button>

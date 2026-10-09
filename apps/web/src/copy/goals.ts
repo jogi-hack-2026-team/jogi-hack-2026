@@ -63,7 +63,7 @@ export const goalsCopy = {
     summary: (count: number) => `${count}つの項目を確認してください`,
     saveFailed: {
       title: '保存できませんでした',
-      createBody: 'Goalはまだ作成されていません。入力内容はそのまま残っています。通信状態を確認して、もう一度お試しください。',
+      createBody: '作成結果を確認できませんでした。入力内容と作成操作は保持しています。もう一度保存すると、同じ操作の結果を確認します。',
       editBody: '変更はまだ保存されていません。入力内容はそのまま残っています。通信状態を確認して、もう一度お試しください。',
       retry: 'もう一度保存',
     },
@@ -95,6 +95,7 @@ export const goalsCopy = {
     tooLarge: '大きすぎる数です',
     timezone: '有効なタイムゾーンを選んでください',
     locked: '記録が1件以上あるため変更できません',
+    unitLocked: '過去の量や現在の初期量の意味を保つため、単位を変更できません。別単位は新しいGoalで始めてください。',
     server: '入力内容を確認してください',
   },
   deleteDialog: {

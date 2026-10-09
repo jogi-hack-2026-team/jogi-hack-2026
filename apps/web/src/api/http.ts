@@ -8,7 +8,7 @@ import { ApiError, toApiError } from './client.ts';
  * 通信そのものの失敗（fetch の reject）はそのまま投げ、画面側で「通信エラー」として扱う。
  * signal を渡すと、利用者が変わったときなどに取得を中断できる（TanStack Query の queryFn が渡す signal）。
  */
-type RequestInitLike = { method?: string; body?: unknown; signal?: AbortSignal | undefined };
+type RequestInitLike = { method?: string; body?: unknown; signal?: AbortSignal | undefined; headers?: Record<string, string> };
 
 export async function requestJson<S extends TSchema>(schema: S, path: string, init: RequestInitLike = {}): Promise<Static<S>> {
   const res = await send(path, init);
@@ -25,11 +25,11 @@ export async function requestNoContent(path: string, init: RequestInitLike = {})
   throw toApiError(res.status, json);
 }
 
-function send(path: string, { method = 'GET', body, signal }: RequestInitLike): Promise<Response> {
-  const init: RequestInit = { method, credentials: 'same-origin' };
+function send(path: string, { method = 'GET', body, signal, headers }: RequestInitLike): Promise<Response> {
+  const init: RequestInit = { method, credentials: 'same-origin', ...(headers ? { headers } : {}) };
   if (signal) init.signal = signal;
   if (body !== undefined) {
-    init.headers = { 'content-type': 'application/json' };
+    init.headers = { ...headers, 'content-type': 'application/json' };
     init.body = JSON.stringify(body);
   }
   return fetch(path, init);

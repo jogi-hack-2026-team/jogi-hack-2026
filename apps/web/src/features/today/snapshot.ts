@@ -17,6 +17,7 @@ import type { Goal, Log, TodayR11 as Today } from '@contracts';
  */
 export function isSameSnapshot(goal: Goal, today: Today, logs: readonly Log[]): boolean {
   if (goal.today !== today.today) return false;
+  if (goal.goalSettingsRevision !== today.context.goalSettingsRevision) return false;
   const { context } = today;
   if (context.sessionAmount !== goal.sessionAmount || context.unit !== goal.unit || context.recordStartDate !== goal.recordStartDate) return false;
   if (goal.totalRequired !== today.prediction.progress.total) return false;

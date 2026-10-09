@@ -90,3 +90,10 @@ PR #131の実Engine混合負荷は[2026-10-07の訂正・追加報告](../experi
 [#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)の[質問・出所表示部品と受け渡し案](../experiments/question-prior-ui-candidate/README.md)はSupporting Artifact。Scope・分担の採択記録はPR115、具体契約提案はPR118、計算adapter候補はPR119で別に追跡する。正式Goal/Today、API/Engine結合は未確認で、#70 Hard・D-26未採択・既存Ready/blockedを変更しない。[src](../experiments/question-prior-ui-candidate/src/presentation-types.ts)・[最小slot例](../experiments/question-prior-ui-candidate/examples/slots.tsx)・[型/SSR/preview buildの再現](../experiments/question-prior-ui-candidate/scripts/check.mjs)・[検証記録](../experiments/question-prior-ui-candidate/VERIFICATION.md)から調査できる。root依存・workspaceは追加していない。
 
 別checkoutのPR119実出力を渡す[FE所有の表示接続例](../experiments/question-prior-ui-candidate/examples/engine-view.ts)と[ローカル接続check](../experiments/question-prior-ui-candidate/scripts/check-connection.mjs)を追加。未採択のPR118共有18例・追加状態を実Engine→表示view→React SSRで確認した範囲と、保存・本番結合の未確認範囲は上の検証記録で分ける。
+
+
+## #148 phase1：量・設定版・作成再送
+
+R-02〜R-04の現行追加契約は[Product P-19](product-spec.md#p-19-量の意味と保存操作の保全148)・[Architecture D-28](architecture.md#d-28-量と作成操作の保全148)。コードは[Goal契約](../apps/api/src/contracts/goal.ts)・[Log契約](../apps/api/src/contracts/log.ts)・[Goal store](../apps/api/src/goals/store.ts)・[Log store](../apps/api/src/logs/store.ts)・[migration 0005](../apps/api/migrations/0005_goal_data_integrity.sql)、R-11 contextは[prediction store](../apps/api/src/prediction/store.ts)。FEは[フォーム](../apps/web/src/features/goals/GoalFormPage.tsx)・[作成操作の復元](../apps/web/src/features/goals/create-attempt.ts)・[記録回復](../apps/web/src/features/logs/useSaveLog.ts)。
+
+[API/DB受入](../apps/api/tests/goal-data-integrity.test.ts)、[FE固定値／回復回帰](../apps/web/tests/goal-integrity.test.mjs)、[単位フォーム回帰](../apps/web/tests/goal-form.test.mjs)、[明示実行のブラウザrunner](../apps/web/tests/issue148-browser.mjs)と[検証範囲・残件](operations/issue148-verification.md)へ追跡できる。既存API testsのcallerを新必須値へ追従し、必須値欠落・stale・同キー再送は補完しないrawCallで検証する。

@@ -240,7 +240,7 @@ test('R11 HTTP Todayはpool待ち後に時計を1回読み、新日の通常ロ�
     await waitFor(() => db.pool.waitingCount === 1);
     assert.equal(calls, 0);
     now = new Date('2026-10-06T15:00:00Z');
-    assert.equal((await putLog(writer, userId, id, '2026-10-07', { status: 'DONE' }, () => now)).kind, 'saved');
+    assert.equal((await putLog(writer, userId, id, '2026-10-07', { expectedGoalSettingsRevision: 0, amount: 10, status: 'DONE' }, () => now)).kind, 'saved');
     held.forEach(client => client.release()); released = true;
     const today = todayR11(await read);
     assert.equal(calls, 1);

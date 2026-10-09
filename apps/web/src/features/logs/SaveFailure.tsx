@@ -15,6 +15,7 @@ import './logs.css';
 export function SaveFailure({
   kind,
   body,
+  settings,
   localDate,
   onRetry,
   onReselect,
@@ -23,6 +24,7 @@ export function SaveFailure({
   lockedNote,
 }: {
   kind: SaveFailureKind;
+  settings?: { ready: boolean; meaningChanged: boolean; loading: boolean; failed: boolean; reload: () => Promise<void> };
   /** failed のときの本文（「やった・20分」はまだ記録されていません…など）。 */
   body: string;
   localDate: string;
@@ -35,6 +37,15 @@ export function SaveFailure({
   lockedNote?: string;
 }) {
   const location = useLocation();
+  if (kind === 'settings') return <ErrorPanel title="Goalの設定が変更されました" action={<div className="fr-savefail__actions">
+    <Button busy={settings?.loading ?? false} onClick={() => void settings?.reload()}>最新の設定を取得</Button>
+    <Button disabled={!settings?.ready || settings.meaningChanged || retryLocked || settings.loading} onClick={onRetry}>この量で再保存</Button>
+    <Button disabled={!settings?.ready || settings.loading} onClick={onReselect}>選び直す</Button>
+  </div>}>
+    {body}<br />入力は保持しています。最新の設定を取得してから、保存する量を確認してください。
+    {settings?.failed ? <p role="alert">最新の取得に失敗しました。まだ再保存できません。</p> : null}
+    {settings?.meaningChanged ? <p role="alert">単位またはタイムゾーンが変わりました。同じ数字を自動で保存せず、量と対象日を選び直してください。</p> : null}
+  </ErrorPanel>;
   if (kind === 'signed-out') {
     return (
       <ErrorPanel

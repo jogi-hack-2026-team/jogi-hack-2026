@@ -36,12 +36,13 @@ export function YesterdayPrompt({
   const failureKind = saver.failure ? classifySaveError(saver.failure.error) : null;
 
   let body;
-  if (failureKind === 'signed-out' || failureKind === 'date') {
+  if (failureKind === 'signed-out' || failureKind === 'date' || failureKind === 'settings') {
     // ログイン切れ・記録できない日は、選び直しても保存できないため、先にその対処を出す
     body = (
       <SaveFailure
+          settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
         kind={failureKind}
-        body=""
+        body={saver.failure?.vars?.choice.status === 'DONE' ? `未保存の量：${saver.failure.vars.choice.amount}${saver.failure.vars.unit === 'minutes' ? '分' : '回'}` : '休みの記録は未保存です。'}
         localDate={yesterday}
         onRetry={saver.retry}
         onReselect={saver.reset}
@@ -67,7 +68,7 @@ export function YesterdayPrompt({
     body = (
       <>
         <div className="fr-yesterday__pair">
-          <Button icon="check" busy={saving?.status === 'DONE'} disabled={saver.isSaving} onClick={() => save({ status: 'DONE', amount: null })}>
+          <Button icon="check" busy={saving?.status === 'DONE'} disabled={saver.isSaving} onClick={() => save({ status: 'DONE', amount: sessionAmount })}>
             {saving?.status === 'DONE' ? todayCopy.saving : todayCopy.yesterdayDone}
           </Button>
           <Button icon="moon" busy={saving?.status === 'SKIPPED'} disabled={saver.isSaving} onClick={() => save({ status: 'SKIPPED', amount: null })}>

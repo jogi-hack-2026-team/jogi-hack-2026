@@ -37,7 +37,7 @@ test('Goal PATCH sees a first log committed while waiting for its exclusive row 
     await writer.query('begin');
     await writer.query('select id from goal where id = $1 for share', [goal.id]);
     assert.equal((await patchPool.query('show default_transaction_isolation')).rows[0].default_transaction_isolation, 'repeatable read');
-    patch = updateGoal(patchPool, 'owner', goal.id, { timezone: 'America/Los_Angeles', initialProgress: 10, title: 'changed' }, () => NOW);
+    patch = updateGoal(patchPool, 'owner', goal.id, { expectedGoalSettingsRevision: 0, timezone: 'America/Los_Angeles', initialProgress: 10, title: 'changed' }, () => NOW);
     await waitFor(async () => (await db.pool.query<{ n: number }>(
       `select count(*)::int as n from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock' and query like '%for update of g%'`,
     )).rows[0]!.n === 1);

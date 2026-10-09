@@ -57,6 +57,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   const [yesterdayEdit, setYesterdayEdit] = useState<Log | null>(null);
   // 保存中の状態は Goal・日付ごとに見る（画面を作り直しても、同じ日の保存が残っていれば保存中のまま）
   const todaySaver = useSaveLog(goalId, {
+    context: snapshot?.goal ?? goalQuery.data,
     onSaved: () => {
       setChanging(false);
       setAmountEditing(false);
@@ -68,7 +69,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today,
       queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today),
   });
-  const yesterdaySaver = useSaveLog(goalId, { onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
+  const yesterdaySaver = useSaveLog(goalId, { context: snapshot?.goal, onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
   const [yesterdayLaterFor, setYesterdayLaterFor] = useState<string | null>(null);
 

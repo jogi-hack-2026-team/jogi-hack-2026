@@ -6,7 +6,7 @@ import type { TodaySnapshot } from './store.ts';
 
 // 呼出元はsnapshot取得とDB接続返却を完了してから呼ぶ。回答は保存mappingで全実ログへ接続する。
 export function buildR11Today(snapshot: TodaySnapshot): TodayR11 {
-  const context = { unit: snapshot.goal.unit, sessionAmount: snapshot.goal.sessionAmount, recordStartDate: snapshot.goal.recordStartDate };
+  const context = { unit: snapshot.goal.unit, sessionAmount: snapshot.goal.sessionAmount, recordStartDate: snapshot.goal.recordStartDate, goalSettingsRevision: snapshot.goal.goalSettingsRevision, unitLocked: snapshot.goal.unitLocked };
   const saved = validateSavedQuestion(snapshot.question, context);
   const today = localDateIn(snapshot.now, snapshot.goal.timezone);
   const yesterday = shiftLocalDate(today, -1);
