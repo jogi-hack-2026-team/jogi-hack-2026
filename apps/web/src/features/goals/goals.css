@@ -264,3 +264,72 @@
     border-bottom: 0;
   }
 }
+
+/*
+ * 作成・編集のデスクトップ幅（デザイン Desk-create・Desk-edit）。スマートフォン幅では2列の箱を作らず（display: contents）、
+ * 削除は項目の下、取りやめは上のバーの「×」のまま、保存ボタンは下に固定する。
+ */
+.fr-goalform__pair {
+  display: contents;
+}
+.fr-goalform__delete-desk,
+.fr-goalform__cancel {
+  display: none;
+}
+.fr-goalform__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+}
+@media (min-width: 960px) {
+  .fr-page--desk .fr-goalform {
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-dialog);
+    padding: var(--fr-space-8);
+    gap: var(--fr-space-6);
+  }
+  .fr-page--desk .fr-goalform__fields {
+    padding: 0;
+    gap: var(--fr-space-6);
+  }
+  .fr-goalform__pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--fr-space-6) 20px;
+    align-items: start;
+  }
+  .fr-goalform__delete-mobile {
+    display: none;
+  }
+  .fr-page--desk .fr-actionbar {
+    position: static;
+    box-shadow: none;
+    padding: 0;
+    background: none;
+  }
+  .fr-goalform__buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .fr-goalform--edit .fr-goalform__buttons {
+    border-top: 1px solid var(--fr-line);
+    padding-top: var(--fr-space-6);
+  }
+  .fr-goalform__delete-desk {
+    display: block;
+    margin-right: auto;
+  }
+  .fr-goalform__delete-desk .fr-btn--text {
+    color: var(--fr-danger);
+    padding: 0 var(--fr-space-1);
+  }
+  .fr-goalform__cancel {
+    display: inline-flex;
+  }
+  .fr-goalform__buttons .fr-btn--block {
+    width: auto;
+    min-width: 160px;
+  }
+}

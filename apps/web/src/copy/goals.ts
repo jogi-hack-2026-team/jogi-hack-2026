@@ -4,6 +4,8 @@
 export const goalsCopy = {
   appTitle: 'Future ROI',
   listTitle: 'あなたのGoal',
+  /** デスクトップ幅の戻り先（デザイン Desk-create）。 */
+  crumbList: 'Goal一覧',
   loading: 'Goalを読み込んでいます',
   loadingVisible: '読み込んでいます',
   add: 'Goalを追加',
@@ -44,6 +46,8 @@ export const goalsCopy = {
     priorTitle: '最初の見通しを調整する（任意）',
     editTitle: 'Goalを編集',
     close: '閉じる',
+    /** デスクトップ幅で、保存の横に置く取りやめ（スマートフォン幅の「×」の代わり。デザイン Desk-create・Desk-edit）。 */
+    cancel: 'キャンセル',
     title: 'タイトル',
     unit: '単位',
     // #157（C案）：時間のGoalの量は分で保存し、画面では時間（記録は分か時間）で入力・表示する

@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行の起動基盤・DB migration・認証・Goal・記録・Today APIはローカル実装済みで、Today APIに純粋Engineを結合済みです。Goal・記録・Today画面と公開配置は未完了です。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行mainのAPI・Engine・業務画面の実装と、製品受入・公開配置等の残条件は[現在地の読み方](change-map.md#現在地の読み方)を参照します。[保存から予測・表示を追うtrace](change-map.md#コードを読むための短いtrace)もあります。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
@@ -617,7 +617,7 @@ Goalのmigration 0002は、既存GoalがないDBへ記録開始日を追加し�
 
 `npm run dev:web`（または`WEB_DIST`つきのビルド済みサーバー）の `/` を開くと、公開ホームに登録・ログインの入口が表示されます。「登録してはじめる」でメールアドレスとパスワード（8文字以上）を入れると登録とログインが同時に行われ、Goal一覧へ進みます。0件なら「最初のGoalをつくる」から作成し、一覧のGoalを開くとTodayへ進めます。Goal一覧の上のバーと、各画面の一覧へ戻る操作も確認してください。ログイン済みのホームには「Goal一覧を開く」が表示され、再読み込みしてもログイン状態が続きます。保護画面を未ログインで開いた場合はログインへ送り、登録・ログイン画面を切り替えても元の戻り先を保ちます。戻り先指定がない認証はGoal一覧へ進みます。Goal一覧右上のアカウントボタンから「ログアウト」を押すとログイン画面へ戻ります（ログイン済みで`/login`を開くと戻り先へ移ります）。間違ったパスワードは「メールアドレスまたはパスワードが正しくありません」、同じ接続元から60秒に6回以上の失敗は「しばらく待ってからお試しください」と再開できる時刻を表示し、その時刻を過ぎると再試行できます。APIが止まっている間に保護画面を開くと、ログイン画面ではなく「接続できませんでした」と再読み込みを表示します。未ログインで`curl http://127.0.0.1:3000/api/goals`を実行すると401のJSONが返ります。ログイン後のCookieを付けて同じURLを呼ぶとGoalの一覧（最初は`[]`）が返り、作成・編集・削除の規則は[Architecture](architecture.md#2026-10-06のgoal-api76)に記載しています。
 
-stagingへの配置（Cloud Run＋Neonは[D-25](architecture.md#d-25)の条件付き候補）は公開先の承認待ちで、#70の該当項目は#75へ移管しています。
+stagingへの配置は公開先の承認待ちです。現在の第一候補はFE・BEともVercel Hobby＋Neon Free、ローカル開発はDocker（[D-25](architecture.md#d-25)）。#70→#75から移された未確認項目は#83で追跡し、[採用前の最小検証](operations/release-demo.md#公開候補の採用前に行う最小検証)を行います。Cloud Run＋Neonの従来候補はD-25の履歴に残します。
 
 ## Predictionの限定先行計算を確認する
 

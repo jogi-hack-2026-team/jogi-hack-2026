@@ -113,3 +113,37 @@ button.fr-recent__day:hover {
   color: var(--fr-ink);
   font-weight: 700;
 }
+
+/* デスクトップ幅の記録の履歴（デザイン Desk-history）。月の切り替え・凡例・カレンダーを角丸の箱に入れ、印を大きくする */
+.fr-history__box {
+  display: contents;
+}
+@media (min-width: 960px) {
+  .fr-history__box {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-dialog);
+    padding: 28px var(--fr-space-8) var(--fr-space-8);
+  }
+  .fr-history__box .fr-history__top {
+    padding: 0;
+    gap: 20px;
+  }
+  .fr-history__box .fr-history__month h1 {
+    font-size: 20px;
+  }
+  .fr-history__box .fr-history__cal {
+    padding: 0;
+    row-gap: var(--fr-space-2);
+  }
+  .fr-history__box .fr-history__day {
+    --fr-daymark-size: 48px;
+    gap: var(--fr-space-1);
+    font-size: 13px;
+  }
+  .fr-history__box .fr-history__wd {
+    font-size: 14px;
+  }
+}
