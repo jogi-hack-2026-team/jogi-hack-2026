@@ -122,7 +122,7 @@ test('same-owner draft: actual router/hooks preserve idle input only across succ
 
 test('#191 Today boundaries: response ordering, cancelled retry, and batched draft invalidation', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-today-boundary.browser.tsx', false, true);
-  assert.equal(result.results.length, 11);
+  assert.equal(result.results.length, 13);
   assert.equal(result.writes, 0);
   t.diagnostic(JSON.stringify(result));
 });

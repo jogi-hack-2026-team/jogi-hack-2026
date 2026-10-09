@@ -779,7 +779,7 @@ Decision: Todayだけ、表示していたownerと同じsession dataが残る正
 
 - その間は`notBefore=∞`とし、確認中に届いたGoal・Today・記録を表示にも保存の文脈にも使わない（Today取得失敗時のGoal fallbackも、notBeforeより後に届いたものだけを使う）。
 - [useSaveLog](../apps/web/src/features/logs/useSaveLog.ts)は、押した時点で所有者が未確定、またはcache消去後でAPIの今日がまだ分からないとき、送信せずに押した人・連続性世代と一緒に預かり「保存中」を表示する。同じownerで、認証操作をまたがず、APIの今日が一致したときだけ1回送る。別owner・未ログイン・古い日付と分かった場合は送らない。
-- APIの今日が分からない間は「日付が変わった」表示へ切り替えず、量の入力欄を閉じない。同日のTodayだけが先着してGoalが未着のときも、古い日付とは扱わずGoalを待つ。既知のGoal日付との不一致、または編集日より新しいToday日付があれば古いと判定する。送信の判定（isCurrentToday）は変えない。
+- APIの今日が分からない間は「日付が変わった」表示へ切り替えず、量の入力欄を閉じない。同日のTodayだけが先着してGoalが未着のときも、古い日付とは扱わずGoalを待つ。既知のGoal日付との不一致、または編集日より新しいToday日付があれば古いと判定する。所有者確認中に届いた未採用の日付は古さの判定にも使わない。Today取得失敗時のGoal fallbackで開いていた量入力も、正常同一owner確認後のpending中は維持する。送信の判定（isCurrentToday）は変えない。
 - 「選び直す」は失敗した保存と確認待ちの再試行をともに破棄する。入力の保持はowner・Goalだけでなく入力者の連続性世代にも限定し、描画間の短いowner変更・確認失敗・認証操作・別タブ通知で世代が進んだ場合も旧入力と失敗状態を捨てる。正常な同一owner確認では世代は進まない。
 - 初回確認・確認失敗（503・通信例外・429）・別owner・未ログインでは、従来どおり画面・入力・cacheを捨てる。Goal一覧・作成・編集・履歴の挙動は変えない。
 
@@ -796,6 +796,6 @@ Consequences / Invariants: 確認中に押した保存は確認が終わるま�
 
 Evidence: [Today回帰](../apps/web/tests/session-today.browser.tsx)は固定版の実useSession・visibilitychange・合成HTTPで、(1)同一owner確認中・cache消去中も入力欄と値を保ち、確認中に届いた別Goalを表示しない、(2)確認中の保存は送らず同一owner確定後に1回送る、(3)確認結果が別ownerなら送らず前の画面を捨てる、(4)503では入力を捨てて回復後に新しい画面を開く、を確認する。修正を戻すと(1)で失敗する。既存の所有者境界・focus・draftの実ブラウザ回帰は変更せず成功する。ローカルの実API・Chromeでも入力の保持と、戻った直後の保存が1回だけ送られることを確認した。実User・公開環境・別タブ通知の受入は未確認。
 
-追加Evidence（PR #191 review）: [Today境界回帰](../apps/web/tests/session-today-boundary.browser.tsx)は実Router・実hook・固定版Better Authと合成HTTP/通知で、同日Today先着、明示取消後の旧45非送信と新46送信、描画間のA→B→A/error→A/未ログイン→A/認証signal/storage通知、失敗状態・保留保存の破棄、正常確認の保持、既知翌日の拒否を検査する。専用Chrome profileのDOM/送信観測であり、実アカウント・公開環境・pixel描画は未検証。
+追加Evidence（PR #191 review）: [Today境界回帰](../apps/web/tests/session-today-boundary.browser.tsx)は実Router・実hook・固定版Better Authと合成HTTP/通知で、同日Today先着、明示取消後の旧45非送信と新46送信、描画間のA→B→A/error→A/未ログイン→A/認証signal/storage通知、失敗状態・保留保存の破棄、正常確認の保持、既知翌日の拒否、同日Today503 fallback入力のpending/503/回復を通じた保持、確認中の未採用異日付cacheで入力を破棄しないことを検査する。異日付cache注入は境界の合成対照であり、本番到達性の証明ではない。専用Chrome profileのDOM/送信観測であり、実アカウント・公開環境・pixel描画は未検証。
 
 再検討する条件: 確認中の「保存中」が利用者に分かりにくい、Better Authの再取得の仕様が変わる、Goal一覧・作成・編集・履歴でも同じ問題が受入上の障害になる、またはresponse ownerを照合できるDTOを導入する場合。

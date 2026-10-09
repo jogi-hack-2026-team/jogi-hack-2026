@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { checkingSameOwner, privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { checkingSameOwner, getPrivateEpoch, privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
 import { useDraftGeneration } from '../../api/session-draft.ts';
 import { authClient } from '../../auth/client.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
@@ -93,6 +93,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
     // 同じ人の確認後にキャッシュを消して取り直している間は、API の今日がまだ分からない。
     // その間は「日付が変わった」と表示せず（入力中の量を閉じない）、保存は分かるまで預かる（#190）
     isStaleDate: (date) => {
+      // 確認中に届いた未採用の日付は、入力の破棄にも使わない。
+      if (!privateDataReady(getPrivateEpoch())) return false;
       const goalToday = queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today;
       const todayToday = queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today;
       // Todayだけの先着では、同じ日付のGoalをまだ待っている。既知の矛盾だけを日付変更と扱う。
@@ -122,7 +124,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
   // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日・今日の状態で、今日の記録を付けられるようにする
   // （401・404は上で画面全体を切り替えているので、ここに来るのは計算・通信・サーバーの失敗）
-  const fallbackGoal = !today && todayQuery.isError ? acceptedGoal : undefined;
+  // 正常な同一owner確認のresetでisErrorがpendingに戻っても、開いていたfallback入力は外さない。
+  const fallbackGoal = !today && (todayQuery.isError || amountEditing) ? acceptedGoal : undefined;
   const recordGoal = goal ?? fallbackGoal;
   const recordDate = todayEditDate ?? today?.today ?? fallbackGoal?.today;
   const canRecordToday = recordDate !== undefined && todaySaver.canSaveDate(recordDate)

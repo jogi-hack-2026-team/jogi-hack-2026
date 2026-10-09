@@ -25,6 +25,9 @@ const logs = Array.from({ length: 28 }, (_, i) => {
 });
 let apiDate = '2026-10-10';
 let holdGoal = false;
+let holdToday = false;
+let failToday = false;
+const todayWaiters: (() => void)[] = [];
 const goalWaiters: (() => void)[] = [];
 const goal = (owner: string) => ({ id, title: `${owner}-PRIVATE-GOAL`, unit: 'minutes', totalRequired: 16600, sessionAmount: 30, initialProgress: 0,
   timezone: 'Asia/Tokyo', recordStartDate: '2026-09-10', hasLogs: true, unitLocked: false, goalSettingsRevision: 0, today: '2026-10-10',
@@ -37,7 +40,7 @@ const today = { today: '2026-10-10', yesterday: '2026-10-09', todayLog: null, ye
   context: { recordStartDate: '2026-09-10', unit: 'minutes', sessionAmount: 30, goalSettingsRevision: 0, unitLocked: false },
   provenance: { a: 'RECORDS', b: 'RECORDS' }, plan: null };
 goalsHttp.getGoal = async () => { if (holdGoal) await new Promise<void>(resolve => goalWaiters.push(resolve)); return goal(transport.owner) as never; };
-todayHttp.getToday = async () => ({ ...today, today: apiDate, prediction: { ...today.prediction, today: apiDate } }) as never;
+todayHttp.getToday = async () => { if (holdToday) await new Promise<void>(resolve => todayWaiters.push(resolve)); if (failToday) throw new ApiError(503, { error: { code: 'SYNTHETIC_UNAVAILABLE', message: 'synthetic Today503' } }); return { ...today, today: apiDate, prediction: { ...today.prediction, today: apiDate } } as never; };
 todayHttp.listLogs = async () => logs as never;
 const puts: { owner: string; localDate: string; body: unknown }[] = [];
 let failPut = false;
@@ -82,9 +85,10 @@ const release = async () => { transport.hold = false; transport.held.splice(0).f
 
 const navigate = async (to: string) => { await act(async () => { void router.navigate({ to }); await tick(); }); await settle(); };
 const releaseGoal = async () => { holdGoal = false; goalWaiters.splice(0).forEach(resolve => resolve()); await settle(); };
+const releaseToday = async () => { holdToday = false; todayWaiters.splice(0).forEach(resolve => resolve()); await settle(); };
 async function prepare() {
-  await releaseGoal(); await release();
-  transport.owner = 'A'; transport.failure = null; failPut = false; apiDate = '2026-10-10';
+  await releaseGoal(); await releaseToday(); await release();
+  transport.owner = 'A'; transport.failure = null; failPut = false; failToday = false; apiDate = '2026-10-10';
   await navigate('/'); client.clear(); puts.length = 0;
   await navigate('/goals/goal'); await focus(); await settle();
   ensure(text().includes('A-PRIVATE-GOAL') && button('量を変更'), 'initial Today not ready: ' + text());
@@ -119,6 +123,31 @@ async function run() {
     ensure(amountInput()?.value === '30' && !text().includes('保存できませんでした'), 'reselect did not open a fresh amount editor');
     await typeAmount('46'); await click('この量で記録'); await settle();
     ensure(puts.length === 2 && (puts[1]!.body as any).amount === 46, 'explicit replacement did not send 46 once');
+  });
+  await check('Today503 fallback input survives healthy same-A check and pending retry', async () => {
+    await navigate('/'); client.clear(); failToday = true;
+    await navigate('/goals/goal');
+    ensure(button('量を変更') && text().includes('A-PRIVATE-GOAL'), '503 Goal fallback fixture missing');
+    await click('量を変更'); await typeAmount('45');
+    const editor = host.querySelector('.fr-amount');
+    transport.hold = true; await focus();
+    ensure(editor?.isConnected && amountInput()?.value === '45', 'checking lost fallback input');
+    holdToday = true; await release();
+    ensure(todayWaiters.length > 0 && client.getQueryState(todayKeys.today(id))?.status === 'pending', 'pending Today reset fixture missing');
+    ensure(editor?.isConnected && amountInput()?.value === '45', 'pending retry unmounted fallback input');
+    await releaseToday();
+    ensure(editor?.isConnected && amountInput()?.value === '45' && puts.length === 0, '503 retry lost fallback input');
+    failToday = false;
+    await act(async () => { void client.invalidateQueries({ queryKey: goalKeys.all }); await tick(); }); await settle();
+    ensure(editor?.isConnected && amountInput()?.value === '45', 'healthy Today recovery lost fallback input');
+  });
+  await check('Unaccepted different-date cache during same-A check cannot replace amount editor', async () => {
+    const editor = host.querySelector('.fr-amount');
+    transport.hold = true; await focus();
+    await act(async () => { client.setQueryData(goalKeys.detail(id), { ...goal('A'), today: '2026-10-11' }); client.setQueryData(todayKeys.today(id), { ...today, today: '2026-10-11' }); await tick(); }); await settle();
+    ensure(editor?.isConnected && amountInput()?.value === '45' && !text().includes('日付が変わりました'), 'unaccepted cache replaced the editor');
+    await release();
+    ensure(editor?.isConnected && amountInput()?.value === '45' && puts.length === 0, 'same-date accepted recovery lost input');
   });
   const atom = authClient.$store.atoms.session;
   for (const boundary of ['A-B-A', 'error-A', 'signedout-A', 'auth-signal', 'storage-session']) {
