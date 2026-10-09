@@ -135,6 +135,8 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 
 ### 2026-10-06の認証実装（#75）
 
+私的APIのHTTP保存禁止（[#153](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/153)）は[app.ts](../apps/api/src/app.ts)で共通適用する。[apiBoundary](../apps/api/src/http/api-boundary.ts)が業務API・authと分類する応答は、成功・失敗（401／403／404／422／429／500等）とも`Cache-Control: no-store`を返し、routerが拒否したAPI要求にも適用する。登録済みhealth、SPAの`no-cache`、hash付きassetsの長期cacheは維持する。これはHTTP保存の方針であり、FEのcache消去・本番proxy/CDNの実漏洩防止を検証済みとするものではない。範囲と所有者・DB・Cookie保全は[cache-control.test.ts](../apps/api/tests/cache-control.test.ts)と既存auth／SPA回帰で確認する。
+
 #75でR-01（メール＋パスワードの登録・ログイン・ログアウト、未ログインは画面とAPIを使えない）を実装した。採択は#75の実装PR（[Issue #75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)の開発情報に記載）の承認レビューを同意として扱う。D-24の「条件付き第一候補」は、残条件（認証更新／DB復旧担当、復元後の巻戻し対処、公開HTTPSでの確認）が済むまで維持する。
 
 | 決める部分 | 採用 | 理由 |

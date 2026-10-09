@@ -80,6 +80,7 @@ FEの「整合snapshot」は別GET間の日付・設定・累計・今日のロ�
 | 質問由来の見通し（R-11、Must採択済み） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[Scope・分担の採択P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 2026-10-05、PR #115でMust追加・分担を採択。追加UIは#117。#133では2026-10-07の依頼者承認範囲の保存・回答版・純粋Engine接続境界を実装し、チームレビュー対象とする。明示queryによるGoal/Today公開読取も依頼者承認範囲で接続済み。FE結合・出所表示は#137・#81でmainにあり、製品受入は残条件 | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
+| 私的APIのHTTP保存禁止（#153） | [認証実装の方式](architecture.md#2026-10-06の認証実装75)。成功・失敗ともno-store、health／SPA／assetsの既存方針を保持 | [app.ts](../apps/api/src/app.ts)の共通応答hook・router拒否、[apiBoundary](../apps/api/src/http/api-boundary.ts)の既存分類。FE cache消去と本番proxy/CDNの受入とは別 | [cache-control.test.ts](../apps/api/tests/cache-control.test.ts)（Goal／Log／Today旧・r11、auth、401／403／404／422／500、所有者8ケースとDB不変、Cookie）、[auth.test.ts](../apps/api/tests/auth.test.ts)、[spa.test.ts](../apps/api/tests/spa.test.ts)。公開先は未検証 |
 
 ### R-11の既存Issueへの対応
 
