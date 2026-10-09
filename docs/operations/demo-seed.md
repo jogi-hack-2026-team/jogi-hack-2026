@@ -57,6 +57,18 @@ COMMIT前の失敗でROLLBACKが完了すれば、旧Goal・旧ログ・保存�
 
 無効引数やDATABASE_URL未設定はcode2、未作成／credential accountのないuserIdは`AUTH_USER_NOT_FOUND`、所有権の不整合は`OWNERSHIP_INVALID`、その他は`FAILED`でcode1。エラー原文・SQL・接続URLはCLIで表示しない。markerの手動付替え、DB全消去、既存volume削除はreset手順に含めない。
 
+## 当日受入と代替デモの引継ぎ（#83）
+
+以下は**未実行の受入計画**。公開DBへのseed／reset、アカウント作成、録画は実行していない。[公開・復旧のgate](release-demo.md#運用盲点の受入手順83)と#82／#83の既存完了条件へ結果を記録する。
+
+| gate | 手順 | 期待結果／停止条件 | 証拠・未決事項 |
+| --- | --- | --- | --- |
+| 当日の基準日 | 承認された合成環境で、操作前に2Goal／60履歴・`yesterdayMissing: true`・`todayLog: null`を確認してから、昨日補完→今日記録→Today再計算を通常Flowで確認。日またぎなら承認範囲内でreset後に確認をやり直す | 相対日と操作前の初期状態が上記どおり。操作後は保存した昨日／今日の値と再計算結果が一致し、履歴の増加を初期60件と混同しない。日付違い／保存失敗ならデモ開始停止。CLI成功だけでWeb受入済みにしない | SHA・`seedVersion`・`baseDate`・Goal timezone・操作前後の期待値と実測。確認担当・実施日時は未定 |
+| reset後の入口 | reset前の画面を閉じ、Goal一覧を取り直して新IDのTodayを開く。旧IDのbookmark／遅延要求を新Goalの成功として扱わない | 新IDで通常Flowが通り旧IDは404。旧画面・再取得失敗なら進行停止 | 使用URLの入口・再取得時刻・旧／新IDの合成結果を記録し、資格情報を含む出力は保存しない。実公開URL／担当は未定 |
+| 通信障害と代替デモ | 合成データだけで主要Flowの録画または画面資料を作る計画を決め、通信不通時に代替担当が入口を開く机上演習をする | 入口を開いて制約を説明できる。画面にpassword・Cookie・token等が映れば共有停止。録画未作成・Backup Plan未定のまま準備済みにしない | 資料のSHA・撮影／作成日・基準日／timezone・説明／操作／代替担当・保存先／入口。すべて未定 |
+
+代替資料は同じSHAの合成主要Flowに揃え、作り直しの条件と閲覧権限・保持期限もチームで決める。録画の成功を公開URL／HTTPS／E2Eの成功に読み替えない。resetは専用2Goalの置換であり、事故時のDB backup／復元ではない。
+
 ## 設計理由と検証
 
 理由・代替案・不変条件は[Architecture D-27](../architecture.md#d-27)。実装は[seed-demo.ts](../../apps/api/src/db/seed-demo.ts)、合成入力は[demo-data.ts](../../apps/api/src/db/demo-data.ts)、所有権は[migration 0004](../../apps/api/migrations/0004_demo_seed_goal.sql)。R-11の[migration 0003](../../apps/api/migrations/0003_goal_question_prior.sql)を保持し、空のDBでは0001→0002→0003→0004の順に適用する。既存SQLのchecksumは変更しない。
