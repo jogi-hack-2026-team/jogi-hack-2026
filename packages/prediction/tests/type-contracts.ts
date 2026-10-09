@@ -120,3 +120,36 @@ adapterResult.conditionalPlan.lastSessionAmount = 0;
 // @ts-expect-error 公開predictの確定DTOへ候補の回数計画を追加しない。
 void publicResult.conditionalPlan;
 void conditionalSessions;
+
+// 型の所有を移しても既存のpublic/indexとCandidate deep importの構造・readonlyを保つ。
+import type { QuestionPriorAnswer, QuestionPriorAnswers, QuestionPriorMapping, QuestionPriorEvidenceSource,
+  QuestionPriorEvaluation } from '../src/question-prior.js';
+import { QuestionPriorError } from '../src/question-prior.js';
+import { QuestionPriorAdapterCandidateError } from '../src/question-prior-adapter-candidate.js';
+import type { NumericAnswerCandidate, RawAnswerCandidate, EvidenceSourceCandidate,
+  QuestionPriorMappingCandidate } from '../src/question-prior-adapter-candidate.js';
+import type { QuestionPriorValidationCause } from '../src/question-prior-types.js';
+type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Assert<T extends true> = T;
+type StableAnswer = Assert<Same<QuestionPriorAnswer, RawAnswerCandidate>>;
+type StableNumeric = Assert<Same<Exclude<QuestionPriorAnswer, 'UNKNOWN' | null>, NumericAnswerCandidate>>;
+type StableSource = Assert<Same<QuestionPriorEvidenceSource, EvidenceSourceCandidate>>;
+type StableMapping = Assert<Same<QuestionPriorMapping, QuestionPriorMappingCandidate>>;
+type StableInput = Assert<Same<QuestionPriorPredictionInput, QuestionPriorAdapterInputCandidate>>;
+type StableAnswers = Assert<Same<QuestionPriorAnswers, QuestionPriorAdapterInputCandidate['answers']>>;
+type StableCause = Assert<Same<QuestionPriorValidationCause, QuestionPriorAdapterCandidateError>>;
+type StableConstructor = Assert<Same<ConstructorParameters<typeof QuestionPriorError>[0], QuestionPriorAdapterCandidateError>>;
+void (null as unknown as StableAnswer); void (null as unknown as StableNumeric); void (null as unknown as StableSource);
+void (null as unknown as StableMapping); void (null as unknown as StableInput); void (null as unknown as StableAnswers);
+void (null as unknown as StableCause); void (null as unknown as StableConstructor);
+function readonlyPublicContract(value: QuestionPriorPredictionInput, result: QuestionPriorEvaluation): void {
+  // @ts-expect-error inputのa/bは従来どおりreadonly。
+  value.answers.a = null;
+  // @ts-expect-error 保存mappingのBetaは従来どおりreadonly。
+  value.mapping.values.LOW.alpha = 9;
+  const legacyInput: QuestionPriorAdapterInputCandidate = value;
+  const stableInput: QuestionPriorPredictionInput = legacyInput;
+  const evaluation: import('../src/index.js').QuestionPriorEvaluation = result;
+  void stableInput; void evaluation;
+}
+void readonlyPublicContract;
