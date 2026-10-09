@@ -23,6 +23,7 @@
     "db:migrate": "npm run db:migrate --workspace=@futureroi/api",
     "db:migrate:auth": "npm run db:migrate:auth --workspace=@futureroi/api",
     "db:migrate:app": "npm run db:migrate:app --workspace=@futureroi/api",
+    "db:check": "npm run db:check --workspace=@futureroi/api",
     "db:seed:demo": "npm run db:seed:demo --workspace=@futureroi/api --"
   }
 }

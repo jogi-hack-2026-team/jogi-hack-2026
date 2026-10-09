@@ -551,6 +551,8 @@ npm run dev:web
 
 migrationはHTTP listenerを開く前に専用poolで実行します。host開発は専用CLI、Dockerは`container-start.ts`が起動時に実行してからserverを読み込みます。同一processで稼働中のBetter Auth schema cache更新や、古い部分適用schemaの自動修復は保証しません。既存schemaが不完全なら削除せず、field index等を確認して明示的な修復をレビューしてください。session単位のadvisory lockを使うため、transaction pooling経由では実行しません（Neon等の採用時の接続先選択はD-25の残条件です）。
 
+公開前やmigration後に、接続先DBが対象checkoutと整合しているかは`npm run db:check`（[schema-check-cli.ts](../apps/api/src/db/schema-check-cli.ts)、コンテナ内は`node apps/api/dist/db/schema-check-cli.js`）で確認します。`DATABASE_URL`だけを使い、DBを変更せず（DDL・DML・migration適用・`schema_migrations`作成なし。全接続を`default_transaction_read_only`にする）、`apps/api/migrations`の全文ファイル名とSHA-256を`schema_migrations`と照合し、固定版Better Authの差分計画から認証table・columnの欠落を調べます。結果はJSON 1行で、`status`が`ok`（exit 0）／`drift`（exit 1。未適用・checksum不一致・checkoutにない履歴・認証table／column欠落・空DB）／`unavailable`（exit 3。接続失敗・認証失敗・timeout）、使い方や`DATABASE_URL`未設定はexit 2です。接続・query・文の上限は各5秒、全体は既定30秒で、任意の`SCHEMA_CHECK_TIMEOUT_MS`（1000〜600000）で全体だけ変えられます。`findings`の`code`と`target`で原因を読み、checkoutにない履歴は互換性未確認として成功にしません。限界として、接続roleの権限自体は制限せず、field単位の認証index欠落や業務table全体のdrift、業務E2Eの成功は保証しません。
+
 ### 検証
 
 ```sh
