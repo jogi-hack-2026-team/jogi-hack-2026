@@ -80,7 +80,7 @@ Supporting Doc。正式な状態と結論は[Architecture](../architecture.md#ar
 - **Invariants**：ActionLogは実際の記録のみ。初期BetaとinitialProgressを分離。D/S起点の実遷移だけで事後更新。UNKNOWNをまたがない。今日DONE仮定を実績へ書き込まない。raw訂正は両隣接遷移を再集計。BigInt整数閾値・α≥1・既存DP・H超null・微小確率を捨てない処理を保持。
 - **Non-goals**：性格・習慣強度の測定、非dailyへの換算、LLM予測、本番API/DB/UIの実装、Mustや既存Issueの無断拡張、校正効果の主張。
 - **採択条件・再検討**：ownerが初日表示とScope、質問・強度・出所、保存訂正・受入方法を決める。R-02/R-06/P-12/D-20/API/T-11/T-15の正式差分をレビューする。回答の誤読、校正悪化、既存Mustの遅延で再検討する。新しい正式ADR番号やDECIDED状態を与えない。
-- **Evidence**：[試作と再現](../../experiments/question-prior-proposal/README.md)、[元調査](../../experiments/question-prior-proposal/historical/REPORT.md)、[一次研究と支持範囲](../../experiments/question-prior-proposal/SOURCES.md)。数値整合性・実ユーザー精度・理解や行動への効果を区別する。
+- **Evidence**：[試作と再現](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/README.md)、[元調査](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/historical/REPORT.md)、[一次研究と支持範囲](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/SOURCES.md)。数値整合性・実ユーザー精度・理解や行動への効果を区別する。
 
 元成果物はrepo外で準備した。今回の公開は独立Task [#107](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/107)で提案・実験だけを扱う。10/6は依頼者本人の目標で、チームの合意期限ではない。#84の技術選定・PR #105の競合解消へ追加しない。
 

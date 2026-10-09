@@ -96,3 +96,15 @@ AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してくだ�
 廃止した音楽案の文書・比較PoC・当時の設定は、[固定commit `77c71a5` のtree](https://github.com/jogi-hack-2026-team/jogi-hack-2026/tree/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration)から参照します。#188でtracked file 111件を現在の作業ツリーから外しました。Git履歴と当時の採択・失敗・検証結果は保持し、現行アプリの仕様や起動手順へ自動適用しません。
 
 ローカルで調べる場合は、そのcommitの別checkoutから `archive/music-exploration` を参照してください。現行checkoutの設定やDBへ復元して動かす前に、[再利用時の確認事項](docs/operations/reuse-handoff.md)を確認します。
+
+## 比較実験の保存範囲
+
+`experiments` は製品runtimeと分け、現在使う検証と過去の比較を次のように扱います。過去の成功・失敗・採択理由を現在の製品受入へ読み替えません。
+
+| 実験群 | 配置と用途 |
+| --- | --- |
+| [question-prior-engine-candidate](experiments/question-prior-engine-candidate/README.md)、[question-prior-contract](experiments/question-prior-contract/README.md) | 現CIの独立数値オラクル・凍結fixtureを使うため保持 |
+| [api-mixed-load](experiments/api-mixed-load/README.md) | 実EngineとAPIの能動的な再測定に使うため保持 |
+| question-prior-proposal | [固定commitのtree](https://github.com/jogi-hack-2026-team/jogi-hack-2026/tree/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal)へ。historical・reproduced・provenance・rawを一式で保持し、tracked 57件を作業ツリーから外す |
+| prediction-model-validation | [固定commitのtree](https://github.com/jogi-hack-2026-team/jogi-hack-2026/tree/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/prediction-model-validation)へ。旧モデル比較・失敗と修正の根拠を一式で保持し、tracked 22件を作業ツリーから外す |
+| question-prior-ui-candidate、architecture-verification | 旧候補UI専用workflowに実行依存があるため今回保持。workflowと必要チェックの確認を含む整理を別途判断する |

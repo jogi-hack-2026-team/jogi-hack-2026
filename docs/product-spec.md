@@ -130,7 +130,7 @@
 - unit／sessionAmountの実際の変更で回答を撤回し、保存済み実量と固定の記録開始日は保持する。新しい文脈で任意に答え直せる。totalRequiredだけの変更は回答を保持する。
 - 回答のみ・実記録のみ・両方・材料なしをa/b別に示す。中心にはbの材料、完了にはa/b両方の材料が必要。達成済みと今日記録済みの優先は保つ。不足時のPlanは実残量からの条件付き回数で、予測日数ではない。
 
-数値はLOW=Beta(1,3)、MID=Beta(2,2)、HIGH=Beta(3,1)、強度4を実装・レビューする。4は共通Beta(2,2)と同じ合計で、候補8より自己申告の影響を早く弱める単純な選択。起点別遷移n=0/1/4/12なら初期仮定の重みは100/80/50/25%。[局所比較](../experiments/question-prior-proposal/SHORT_REPORT.md)は合成条件の比較で、実ユーザーの校正・最適な強さ・予測精度・行動促進効果の検証ではない。保存／版／公開契約は[D-26](architecture.md#d-26)。3問目の経験ゲート、全Goalのrevision、新しい指標やGoal型を追加しない。
+数値はLOW=Beta(1,3)、MID=Beta(2,2)、HIGH=Beta(3,1)、強度4を実装・レビューする。4は共通Beta(2,2)と同じ合計で、候補8より自己申告の影響を早く弱める単純な選択。起点別遷移n=0/1/4/12なら初期仮定の重みは100/80/50/25%。[局所比較](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/experiments/question-prior-proposal/SHORT_REPORT.md)は合成条件の比較で、実ユーザーの校正・最適な強さ・予測精度・行動促進効果の検証ではない。保存／版／公開契約は[D-26](architecture.md#d-26)。3問目の経験ゲート、全Goalのrevision、新しい指標やGoal型を追加しない。
 
 #### 初期質問のレビュー用たたき台
 
