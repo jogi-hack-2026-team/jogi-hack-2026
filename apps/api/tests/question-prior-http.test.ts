@@ -52,7 +52,7 @@ test('R11 HTTP読取: 明示queryだけ専用DTO、既定Goal/Todayと書込応�
   assert.deepEqual(read.questionPrior, answers);
   assert.equal(read.answerRevision, 0);
   const today = todayR11(await owner.call('GET', `/api/goals/${id}/today?view=r11`));
-  assert.deepEqual(today.context, { recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount: 10 });
+  assert.deepEqual(today.context, { recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount: 10, unitLocked: false, goalSettingsRevision: 0 });
   assert.deepEqual(today.provenance, { a: 'QUESTION', b: 'QUESTION' });
   assert.deepEqual(today.prediction.posterior, { a: { alpha: 3, beta: 1 }, b: { alpha: 1, beta: 3 } });
   assert.equal(today.prediction.modelVersion, 'm1-question-prior-v1');
@@ -161,11 +161,16 @@ test('R11 HTTP予測: 実遷移と回答の出所を分け、撤回/文脈変更
   assert.equal((await owner.call('PATCH', url, { totalRequired: 125 })).status, 200);
   let saved = goalR11(await owner.call('GET', `${url}?view=r11`));
   assert.deepEqual(saved.questionPrior, answers); assert.equal(saved.answerRevision, 1);
-  assert.equal((await owner.call('PATCH', url, { unit: 'sessions', sessionAmount: 4, expectedAnswerRevision: 1 })).status, 200);
+  // #148: 既存DONEの単位は固定。旧文脈撤回の目的はsessionAmount変更で検証する。
+  const unitChange = await owner.call('PATCH', url, { unit: 'sessions', sessionAmount: 4, expectedAnswerRevision: 1 });
+  assert.equal(unitChange.status, 422);
+  assert.equal((unitChange.json!.error as { code: string }).code, 'GOAL_UNIT_LOCKED');
+  assert.deepEqual(goalR11(await owner.call('GET', `${url}?view=r11`)), saved);
+  assert.equal((await owner.call('PATCH', url, { sessionAmount: 4, expectedAnswerRevision: 1 })).status, 200);
   saved = goalR11(await owner.call('GET', `${url}?view=r11`));
   assert.deepEqual(saved.questionPrior, { a: null, b: null }); assert.equal(saved.answerRevision, 2);
   const cleared = todayR11(await owner.call('GET', `${url}/today?view=r11`));
-  assert.deepEqual(cleared.context, { recordStartDate: '2026-10-05', unit: 'sessions', sessionAmount: 4 });
+  assert.deepEqual(cleared.context, { recordStartDate: '2026-10-05', unit: 'minutes', sessionAmount: 4, goalSettingsRevision: 2, unitLocked: true });
   assert.deepEqual(cleared.provenance, { a: 'NONE', b: 'RECORDS' });
   assert.equal(cleared.prediction.progress.done, 7);
   assert.deepEqual(cleared.plan, { remainingAmount: 118, remainingSessions: 30, lastSessionAmount: 2 });
@@ -240,7 +245,7 @@ test('R11 HTTP Todayはpool待ち後に時計を1回読み、新日の通常ロ�
     await waitFor(() => db.pool.waitingCount === 1);
     assert.equal(calls, 0);
     now = new Date('2026-10-06T15:00:00Z');
-    assert.equal((await putLog(writer, userId, id, '2026-10-07', { status: 'DONE' }, () => now)).kind, 'saved');
+    assert.equal((await putLog(writer, userId, id, '2026-10-07', { expectedGoalSettingsRevision: 0, amount: 10, status: 'DONE' }, () => now)).kind, 'saved');
     held.forEach(client => client.release()); released = true;
     const today = todayR11(await read);
     assert.equal(calls, 1);

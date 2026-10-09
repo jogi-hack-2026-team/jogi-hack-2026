@@ -69,7 +69,7 @@ test('0004適用済みDBへ0003を後から適用しても、既存Goal/log/mark
   const dir = mkdtempSync(join(tmpdir(), 'seed82-migration-order-'));
   let closeStack = async () => {};
   t.after(async () => { await closeStack(); await db.close(); rmSync(dir, { recursive: true }); });
-  for (const name of ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0004_demo_seed_goal.sql']) {
+  for (const name of ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0004_demo_seed_goal.sql', '0005_goal_data_integrity.sql']) {
     writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
   }
   await migrate(db.pool, 'all', pathToFileURL(`${dir}/`));

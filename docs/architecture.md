@@ -69,7 +69,7 @@ Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 
 この表は当時の合意範囲の履歴。**2026-10-08時点の公開第一候補はFE・BEともVercel Hobby、DBはNeon Free、ローカル開発はDocker**へ更新した（[D-25](#d-25)）。D-23の基本構成や当時の採用理由を置換した記録ではなく、公開ランタイムの差は採用前に検証する。
 
-API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこの合意の対象外。[契約の判断事項](contract-review-proposal.md)で現行契約・#101のmain統合済み記録境界方針・残る未採択案を区別し、D-19〜D-22、DONEのサーバー量補完、SKIPPED入力amount禁止／保存NULL、T-14の500ms未満を変えない。#84のClose、Projects変更、本実装開始、Merge、クラウド作成はこの文書から自動実行しない。
+API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこの合意の対象外。[契約の判断事項](contract-review-proposal.md)で現行契約・#101のmain統合済み記録境界方針・残る未採択案を区別し、D-19〜D-22、当時のDONEのサーバー量補完（#148ではD-29の明示量へ変更）、SKIPPED入力amount禁止／保存NULL、T-14の500ms未満を変えない。#84のClose、Projects変更、本実装開始、Merge、クラウド作成はこの文書から自動実行しない。
 
 **合意の出所：** FE側のDiscord上の了承は依頼者の報告に基づく。BE側は[本人による#84の了承記録](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/84#issuecomment-5978901576)で確認できる。採用範囲は上記の基本構成に限り、D-24／D-25の最終採択・版・追加ツール・API細則は含めない。PR #85／#93の限定Approveを採択根拠へ読み替えない。
 
@@ -150,6 +150,20 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 | Secret・URL | `BETTER_AUTH_SECRET`（本番必須、32文字以上。開発では`apps/api/.local/auth-secret`に自動生成）、`BETTER_AUTH_URL`（本番必須）、`AUTH_TRUSTED_ORIGINS`（任意）、`TRUST_PROXY_HOPS`（既定0） | 実値をGitへ入れず、開発者ごとの生成を手順から外す。proxyのhop数は公開先の実形式で確認する（#83） |
 | 画面 | `/`は公開トップ（P-16）。`/login`・`/register`は[AuthPage](../apps/web/src/routes/AuthPage.tsx)。[router](../apps/web/src/router.tsx)はURLに現れない2つのまとまり（pathless layout route）で分ける：認証画面はログイン済みなら戻り先へ移り、Goal4画面はログインの確認を1か所で行う（未ログインは元のURLを戻り先にログインへ、確認できない通信失敗はログインへ送らず「接続できませんでした」）。ログイン後・ログアウト後は履歴を置き換える。戻り先はアプリ内pathだけ。ログアウトはGoal一覧のアカウントメニュー。セッション切れ（401）は理由付き（`reason=expired`）で再ログインへ誘導。404・エラー・読込中はルーター全体の既定の画面。Goalの記録の履歴は`/goals/$goalId/history`（カレンダー）。デスクトップ幅ではログイン必須の画面の外側（AppShell）に画面全体の上のバーを出。上のバーは1段にし、Goalの作成・編集と記録の履歴では画面ごとの上のバーの代わりに戻り先と見出し（[DeskHeader](../apps/web/src/ui/components/DeskHeader.tsx)）を出す（#146） | R-01の画面要件。Goal・記録の画面は#78〜#81、デザインに合わせた画面とルート構成は#146 |
 
+FEの私的な表示・入力（R-01／#155）は次の境界を持つ。
+
+- 表示とquery: [session-cache.ts](../apps/web/src/api/session-cache.ts)で描画時のsession ownerとcache消去の状態を照合する（R-01／#155）。別ownerを認識した最初の描画から一覧・編集・Today・履歴と作成draftを停止し、旧取得のcancelとcache resetが済んでから新取得を使う。連続切替では、その切替に対応するcancel完了だけが境界を開く。履歴もGoal・logs双方の取得時刻を照合し、ownerごとに表示月を作り直す。sessionの初回確認中・再取得中（isRefetching）・取得失敗も私的な表示・フォームを停止する。再取得中に到着した業務応答の所有者は旧session dataから確定できないため、同じownerで回復してもcacheを消して新取得から開く。
+- session確認: ルートの[ログイン確認](../apps/web/src/auth/session.ts)も独立したgetSessionの成功だけを使わず、useSessionと同じstoreの確認完了を待つ。並行するルート確認をまとめ、focus等が確認を置き換えた場合も最新の完了を待つ。[AccountMenu](../apps/web/src/features/account/AccountMenu.tsx)の空session回復は同じ欠落につき1回とし、null→取得中→nullの再取得ループを防ぐ。
+- 未送信入力: [session-draft.ts](../apps/web/src/api/session-draft.ts)はquery確認世代と入力者の連続性を分ける。確認開始はquery世代を更新し、Reactが中間描画を省いた場合もcacheを破棄する。owner変更・失敗・logout・認証変更通知はdraft世代も無効化し、A→B→Aでも旧入力を復活させない。正常同一owner確認ではDOMを除いたままメモリ内draftだけを保持し、fresh取得後に復帰する。編集は元baselineを保ち、最新の編集項目・answer/settings revision・記録有無の変化ではsnapshotを破棄して知らせる。履歴月は新しい取得範囲へ収める。
+- 送信と確定結果: 保存中の旧mutationはowner/画面別のkeyで追い、再確認後に同じ送信の新フォームを開かない。mutation/callback・結果不明の作成attemptはdraftとして復元しない。成功応答は送信時owner・draft連続性世代・ページの訪問トークンに束縛して親へ伝え、正常同一owner確認後に一覧へ一度だけ移す。異なるpathへの遷移開始で訪問トークンを失効させ、同routeのGoal1→Goal2→Goal1やcommit前の離脱・復帰でも旧成功を採用しない。同path/searchの確認は同じ訪問を保つ。確定成功後に空フォームを開かない。実ページ離脱・owner変更・失敗後は旧成功を新画面へ作用させない。実route/Goal離脱ではメモリを破棄する。未ログインが確定した場合は読み込みを続けず既存の再ログイン案内を表示する。
+- 他の責務: HTTP保存禁止（#153）、API所有者認可、作成結果不明の回復契約（#148）、direct GETの#175は別責務で、API/回復処理本体はこの修正では変更しない。getPrivateEpochはatomで確認が始まった直後から閉じ、非query回復GETが旧epochを再利用しない。
+- #148との確定成功の接続: 確認中にフォームが一時unmountされても、親が同owner・連続性・訪問の成功を採用するときは、送信時の作成操作を終了してから一覧へ移す。owner/key/保存原文が一致しなければK2を残し、その回復フォームへ戻す。読取・削除例外は原文を残して確認案内を出し、新規入力や自動再送を始めない。実離脱・owner変更後の旧成功はこの終了処理を呼ばない。作成mutationの待機はowner・訪問別とする。同じ訪問の確認中は待ち、別訪問で明示再送が確認済みなら、保留中の元応答で次の作成を待たせない。未確定attemptはowner別に復元する。
+- 検証と限界: [実hook／DOM回帰](../apps/web/tests/session-cache.browser-check.mjs)は制御したsession・応答で画面とQueryClientを動かす。固定版Better Auth 1.7.7はwindow focus自体ではなく可視復帰を購読し、onlineも同じ自動確認の5秒抑制を使う。routeの明示確認は抑制対象外で、既定の定期pollは0。再取得中は旧dataが残りisPending=falseでもisRefetching=trueとなり、503・429・通信例外では直前のdataを保持してerrorを設定する。[固定版client回帰](../apps/web/tests/session-focus.browser.tsx)は実useSessionとvisibilitychange、合成HTTPで確認中の外国応答・失敗・同一owner回復を確認し、[ルート確認回帰](../apps/web/tests/session-confirm.test.mjs)は確認の置換・並行呼出し・未ログイン・429を検証する。[draft回帰](../apps/web/tests/session-draft.browser.tsx)は15操作、短い中間owner/error・確認中の外国応答・保存中mutation・明示保存と編集revisionを確認する。専用合成DB・実API・実ルーターの実認証・#175併用検証はPRの対象HEADと結果を参照する。別タブ通知、瞬間の実描画、公開環境・実User・共有回線のrate制限受入はこの実装だけでは保証しない。通知のない直接Cookie置換を、有効なsession ownerの認識済み切替と同一視しない。DTOにresponse ownerは含まれず、owner付きquery keyだけでもCookieと応答の所有者を証明できない。
+
+appLayoutのroute確認でもquery世代を進め、goalKeys.allをcancel→resetする。inactive queryは空の状態へ戻し、実行中の画面や次のmountで再取得するため、Today/履歴の共通keyは遷移をまたいだ取得回避を現状保証しない。確認中の旧session dataや同一session idだけではCookieと業務応答のownerを確定できないため、このPRでは全resetを維持する。公開先の体感遅延・通信量のチーム受入は未承認。局所的な遷移測定はPR記録に残し、公開環境の性能保証へ読み替えず、大規模cache再設計は別判断とする。
+
+フォームの422 VALIDATION_ERRORは保存前の確定拒否として、入力訂正を始めたときだけmutation errorを解除し、その訂正入力を未送信draftとして保持する。通信結果不明・500・409・削除失敗・確定拒否の訂正前は通常snapshot復帰の対象外とする。送信中→確認→通信失敗でも自動再送せず、新しい空フォームまたは最新Goalから再開する。結果不明createの回復は#175の別契約へ委ねる。
+
 未実施: staging（公開HTTPS）でのCookie属性・複数Set-Cookie・転送ヘッダーの実形式・休止後の応答の確認（公開先D-25の承認待ち。#70から移管した項目を含めて#83へ引き継ぐ）。認証ライブラリのsupported版／advisoryの更新担当とDB復旧担当、復元後の全session失効・旧Cookie 401の確認手順はチームで決める（#84の[復元後session失効手順](../experiments/architecture-verification/candidate-1.7.7/RESTORE-PROCEDURE.md)は合成DB限定の案）。
 
 以下の比較表は2026-09-30の候補提案と2026-10-02の比較説明を保持したもの。版・追加ツール・migration順・代替候補の不採用を含む表全体を採択した記録ではない。現在の採用範囲は上記とD-23〜D-25で確認する。
@@ -184,7 +198,7 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 
 | 決める部分 | 採用 | 理由 |
 | --- | --- | --- |
-| Goal DTO | 一覧・取得・作成・編集で共通の1形（[goal.ts](../apps/api/src/contracts/goal.ts)）：`id, title, unit, totalRequired, sessionAmount, initialProgress, timezone, recordStartDate, hasLogs, today, todayStatus`。`user_id`・`created_at`・`updated_at`は返さない | 画面が一覧とフォームで必要な導出値（記録の有無、Goalのtimezoneでの今日と記録状態）を同じ形で受け取れる。`hasLogs`は「timezoneと初期量を変更できない」表示（R-02）に、`today`／`todayStatus`は一覧の今日状態に使う |
+| Goal DTO | 一覧・取得・作成・編集で共通の1形（[goal.ts](../apps/api/src/contracts/goal.ts)）：`id, title, unit, totalRequired, sessionAmount, initialProgress, timezone, recordStartDate, hasLogs, unitLocked, goalSettingsRevision, today, todayStatus`。`user_id`・`created_at`・`updated_at`は返さない | 画面が一覧とフォームで必要な導出値（記録の有無、Goalのtimezoneでの今日と記録状態）を同じ形で受け取れる。`hasLogs`は「timezoneと初期量を変更できない」表示（R-02）に、`today`／`todayStatus`は一覧の今日状態に使う |
 | status | `GET` 200、`POST` 201、`PATCH` 200（更新後のGoal）、`DELETE` 204（bodyなし）。他人・存在しない・uuidでないidは404 `NOT_FOUND` | [契約の判断事項](contract-review-proposal.md#apiの未定義部分)の案のうち最も単純な形。uuidでないidはDBへ渡さず、存在を明かさない404へ揃える |
 | 一覧の今日状態 | 配列（wrapperなし）、作成時刻・同時刻ならid順。各Goalに`today`（そのGoalのtimezoneでの暦日）と`todayStatus`（`DONE`／`SKIPPED`／`UNRECORDED`。行がなければ`UNRECORDED`） | Goalと`hasLogs`・今日の記録状態をREPEATABLE READの同じsnapshotで読み、最初のGoal SELECT後に時計を1回取得する。行なしをSKIPPEDにしない（P-14） |
 | 作成 | `initialProgress`省略時は0。timezoneは`地域/都市`形式か`UTC`で、ICUが解決できる名前だけ（略称`JST`・固定オフセット`+09:00`は422）。記録開始日は作成時刻をそのtimezoneで暦日にした値で固定し、`goal.record_start_date`（[migration 0002](../apps/api/migrations/0002_goal_record_start_date.sql)）へ保存して`recordStartDate`で返す | [初期進捗と日々の記録の境界](#初期進捗と日々の記録の境界)の最小案。ブラウザの既定timezoneは画面の責務で、APIは明示送信を受ける |
@@ -201,12 +215,14 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 
 ### 2026-10-06の記録・Today API（#77）
 
+この節は#77当時の判断記録。現在のDONE量必須・設定版・単位保全・作成キーは[D-29](#d-29-量と作成操作の保全148)で更新する。
+
 #77でR-03・R-04の記録API（作成・上書き・一覧）とR-05〜R-08の`/today`を実装し、main統合済みの純粋Engine（`packages/prediction`）をアプリへ結合する実装案を用意した。記載済み規則（今日・昨日かつ記録開始日以降だけ、DONEの量省略時は`sessionAmount`、SKIPPEDの量は禁止、同じ日は上書き、401／他人404／422）はそのままに、未定義だった成功DTO・status・一覧の期間・`yesterdayMissing`の条件・snapshotの取り方・Engineの読み込み方を次のとおり実装案を記録した。採択は人による#77の実装PR（[Issue #77](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)の開発情報に記載）の承認レビューを同意として扱い、自己レビューやCI成功で採択済みとは扱わない。R-11の出所・条件付き回数・表示context（[D-26](#d-26)）と、予測の実行方式（同期かworker）はここに含めない。
 
 | 決める部分 | 採用 | 理由 |
 | --- | --- | --- |
 | Log DTO | `{ localDate, status, amount }`。SKIPPEDの`amount`は`null`（[log.ts](../apps/api/src/contracts/log.ts)） | Engine入力と同じ形で、画面が「量なし」を省略とnullで二重に扱わずに済む |
-| `PUT /logs/:localDate` | 作成も上書きも200＋Log。body：`{ status, amount? }`。SKIPPEDに`amount`があれば422（`body/amount`）。窓の外は422 `LOG_DATE_OUT_OF_WINDOW`（messageに許可する2日を含む）、記録開始日前は422 `LOG_DATE_BEFORE_START`。窓の判定が先で、両方に当たる日は`OUT_OF_WINDOW` | 作成と更新を画面が区別する必要がない。窓と開始日の判定はREAD COMMITTEDでGoal行の排他ロックを取得した後に時計を1回読み、同時のPATCHと同GoalのPUTを順序づける。同日のUPSERT待ちも時計取得前のGoal lockで直列化する |
+| `PUT /logs/:localDate` | 作成も上書きも200＋Log。body：`{ status, amount?, expectedGoalSettingsRevision }`。DONEでは`amount`必須。古い設定版は409。SKIPPEDに`amount`があれば422（`body/amount`）。窓の外は422 `LOG_DATE_OUT_OF_WINDOW`（messageに許可する2日を含む）、記録開始日前は422 `LOG_DATE_BEFORE_START`。窓の判定が先で、両方に当たる日は`OUT_OF_WINDOW` | 作成と更新を画面が区別する必要がない。窓と開始日の判定はREAD COMMITTEDでGoal行の排他ロックを取得した後に時計を1回読み、同時のPATCHと同GoalのPUTを順序づける。同日のUPSERT待ちも時計取得前のGoal lockで直列化する |
 | `GET /logs?from&to` | 記録済みの行だけを行動日の昇順で返す。`from`・`to`は任意で両端を含み、省略時は全期間。逆転・実在しない日付・未知のqueryは422。UNKNOWNの合成行は返さない | MVPの履歴表示に十分。件数上限・ページングは必要になった時点で追加 |
 | `GET /today` | `{ today, yesterday, todayLog, yesterdayMissing, prediction }`。`todayLog`は未記録ならnull。`yesterdayMissing`は**昨日が記録開始日以降で、昨日の記録がない**ときだけtrue。`prediction`はEngineの`PredictionResult`をそのまま返す（応答schemaはEngine型と双方向の互換を型検査する） | 開始日前の昨日に問いかけを出さない条件（P-14）をAPI側で1か所に持ち、画面は`yesterdayMissing`だけを見ればよい |
 | snapshotと時計 | pool取得・BEGIN・最初のGoal SELECTでsnapshotを確定した後に時計を1回読み、Goalと全記録を`repeatable read` / `read only`の1 transactionで取得し、接続を返してから`predict`を呼ぶ（[prediction/store.ts](../apps/api/src/prediction/store.ts)、[routes.ts](../apps/api/src/prediction/routes.ts)） | 日付境界で`today`と記録が食い違わず、途中で挟まる記録の更新と混ざらない。BEGINだけではsnapshotは確定しない。[通常操作の回帰](../apps/api/tests/record-concurrency.test.ts)でpool待ち・最初のSELECT待ち・PATCH／同日PUT待ちの日跨ぎと初回PUT／PATCHの両順序を検証する |
@@ -250,7 +266,7 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 
 | 項目 | 正本（現在） | 検証コード | 変更案 | 理由 |
 | --- | --- | --- | --- | --- |
-| DONEの量 | 省略可。省略時はAPIが`sessionAmount`で補う | 必須（クライアントが送る） | **正本を維持**（#77で実装） | 量の既定値をサーバーで一元管理し、UIごとの補い方の違いを防ぐ |
+| DONEの量 | #77では省略時補完 | 必須（クライアントが送る） | **#148で明示量＋設定版へ変更**（D-29） | 別画面の設定変更で表示量と保存量を違わせない |
 | T-14 | `requiredFutureDone = 120, 400, 1095`で500ms未満 | 混合負荷も判断材料にし、計算が長ければworkerで実行 | **500ms未満を維持**。混合負荷の確認を追加の受け入れ条件にするかを相談 | 単体の速さと、他のリクエストを止めないことは別の性質 |
 | 単位の値 | `minutes` / `sessions` | `minutes` / `count` | どちらかに統一。案：`count` | 「回」の意味が名前から読み取りやすい。検証コードで動作確認済み |
 | 量の型 | integer | numeric | 案：integerを維持 | 分・回は整数で足り、比較・合計で誤差が出ない |
@@ -311,15 +327,15 @@ CREATE TABLE action_log (
 
 業務APIは`/api`配下。Goal・記録APIでは未ログインは401、他人のGoalは404（存在を明かさない）、入力不正は422。同一originのCookieセッション、Better Authと`/api/auth/*`の経路は[D-24](#d-24)の条件付き第一候補を#75で実装したもの（[認証実装](#2026-10-06の認証実装75)）。未ログインの401と別originからの状態変更の403（`ORIGIN_REJECTED`）は`/api/*`共通のhookが返す。認証endpoint自体のエラー形式はBetter Authのまま（`{ code, message }`）で、業務APIの共通error形式へ揃える範囲は未決定。
 
-以下はmethod / pathと記載済みの規則の一覧。Goal APIの成功DTO・status・PATCHの省略・null・空body・一覧の今日状態は[2026-10-06のGoal API](#2026-10-06のgoal-api76)、記録APIの成功DTO・status・SKIPPEDの応答量・期間と`/today`の細則は[2026-10-06の記録・Today API](#2026-10-06の記録today-api77)へ実装案を記録した。人のPR承認レビューで採択を確認する。R-11の任意回答・回答版と明示query読取は[D-26](#2026-10-07の保存予測接続133)の依頼者承認範囲で追加する。それ以外の未定義部分は[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamount省略時はサーバーが`sessionAmount`で補う。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
+以下はmethod / pathと記載済みの規則の一覧。Goal APIの成功DTO・status・PATCHの省略・null・空body・一覧の今日状態は[2026-10-06のGoal API](#2026-10-06のgoal-api76)、記録APIの成功DTO・status・SKIPPEDの応答量・期間と`/today`の細則は[2026-10-06の記録・Today API](#2026-10-06の記録today-api77)へ実装案を記録した。人のPR承認レビューで採択を確認する。R-11の任意回答・回答版と明示query読取は[D-26](#2026-10-07の保存予測接続133)の依頼者承認範囲で追加する。それ以外の未定義部分は[提案表](contract-review-proposal.md#apiの未定義部分)で判断する。DONEのamountは必須で、画面が表示した量を送る。PATCH／PUTは設定版、POSTはUUIDキーを必須とする（[D-29](#d-29-量と作成操作の保全148)）。SKIPPED入力のamountは禁止（[#77の受入条件](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/77)）、保存値は[Data Model](#data-model)のNULLと区別する。今日・昨日の補完／訂正と記録開始日の方針は[#101](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/101)でmain反映済みのProduct R-03・R-04・P-14を参照する。[契約の判断事項](contract-review-proposal.md#昨日補完と再送競合)では、この現行方針と、未決の具体保存・DTO・再送／競合方式を分ける。
 
 | Method / Path | 内容 |
 | --- | --- |
 | `/api/auth/*` | Better Authのハンドラ（`sign-up/email`・`sign-in/email`・`sign-out`・`get-session`等。#75で実装）。業務APIの確定契約とは別。回数制限超過は429と`X-Retry-After`（整数秒） |
-| `GET /api/goals` | 自分のGoal一覧。作成順の配列で、各Goalに`today`（Goalのtimezoneでの暦日）・`todayStatus`・`hasLogs`を含む（#76）。Goal DTOは記録した累計`progressDone`（`initialProgress`＋今日までのDONEの量。Todayの`prediction.progress.done`と同じ数え方で、総量を超えうる）も含み、一覧の進捗表示に使う（#146） |
-| `POST /api/goals` | 作成（201＋Goal DTO）。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone`。初期量の既定は0で、記録開始日の前日までの量。timezoneは有効なIANA名のみ（それ以外は422）。記録開始日は作成時のtimezoneの暦日で固定し`recordStartDate`で返す（#76） |
-| `GET / PATCH / DELETE /api/goals/:goalId` | 取得（200）・編集（200。省略は維持、`null`・空bodyは422）・削除（204。記録も連鎖削除）。他人・存在しないidは404。記録があるGoalで`timezone`・`initialProgress`を異なる値へ変えようとすると422 `GOAL_HAS_LOGS`（#76） |
-| `PUT /api/goals/:goalId/logs/:localDate` | 記録の作成・上書き（200＋Log）。body：`status, amount?`。`localDate`がGoalのtimezoneで今日・昨日以外なら422 `LOG_DATE_OUT_OF_WINDOW`、固定した記録開始日より前なら422 `LOG_DATE_BEFORE_START`。どちらの違反でも記録・初期量を変更しない（#77） |
+| `GET /api/goals` | 自分のGoal一覧。作成順の配列で、各Goalに`today`（Goalのtimezoneでの暦日）・`todayStatus`・`hasLogs`、`unitLocked`・`goalSettingsRevision`を含む（#76、#148）。Goal DTOは記録した累計`progressDone`（`initialProgress`＋今日までのDONEの量。Todayの`prediction.progress.done`と同じ数え方で、総量を超えうる）も含み、一覧の進捗表示に使う（#146） |
+| `POST /api/goals` | UUID `Idempotency-Key`必須。初回201＋Goal DTO、同owner/key/bodyの再送200＋現在DTO。異body409、削除後410（D-29）。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone`。初期量の既定は0で、記録開始日の前日までの量。timezoneは有効なIANA名のみ（それ以外は422）。記録開始日は作成時のtimezoneの暦日で固定し`recordStartDate`で返す（#76） |
+| `GET / PATCH / DELETE /api/goals/:goalId` | 取得（200）・編集（200。`expectedGoalSettingsRevision`必須、不一致409。値の省略は維持、`null`・設定／回答項目のないbodyは422）・削除（204。記録も連鎖削除）。他人・存在しないidは404。記録があるGoalで`timezone`・`initialProgress`を異なる値へ変えようとすると422 `GOAL_HAS_LOGS`（#76） |
+| `PUT /api/goals/:goalId/logs/:localDate` | 記録の作成・上書き（200＋Log）。body：`status, expectedGoalSettingsRevision, amount`（DONE必須、SKIPPEDではamount禁止）。古い設定版は409。`localDate`がGoalのtimezoneで今日・昨日以外なら422 `LOG_DATE_OUT_OF_WINDOW`、固定した記録開始日より前なら422 `LOG_DATE_BEFORE_START`。どちらの違反でも記録・初期量を変更しない（#77） |
 | `GET /api/goals/:goalId/logs?from&to` | 記録済みの一覧（行動日の昇順、両端を含む任意の期間。履歴表示用、#77） |
 | `GET /api/goals/:goalId/today` | query省略は`{ today, yesterday, todayLog, yesterdayMissing, prediction: PredictionResult }`。`yesterdayMissing`は昨日が記録開始日以降で未記録のときだけtrue。1つのDB snapshotと1回の時計読み取りから組み立てる（#77） |
 | `GET /api/goals/:goalId?view=r11` | 依頼者承認のR-11専用Goal DTO。raw回答・回答版を含む（#133）。query省略は旧Goal DTO。認証・owner条件、厳密queryの422は[D-26](#2026-10-07の保存予測接続133) |
@@ -502,7 +518,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 | 層 | 方法 | 内容 |
 | --- | --- | --- |
 | `packages/prediction` | `node:test`＋固定例・固定seed・独立オラクル（性質T-01〜T-15を具体例と閉形式で検査）。fast-check（性質ベースの入力生成）は未採択の候補 | 下表T-01〜T-15。CIで毎回実行 |
-| `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 認証（未ログイン401、登録→再読み込み→ログアウト→旧Cookie 401、期限切れ、別origin403、https Cookie、DB保存の回数制限と再起動。[auth.test.ts](../apps/api/tests/auth.test.ts)）、Goal API（契約違反の422と全項目列挙、無効timezone、他人・uuidでないidの404、記録があるGoalの変更禁止、削除の連鎖、timezoneの日付境界。[goals.test.ts](../apps/api/tests/goals.test.ts)）、記録API（DONE量の補完、同日上書き、SKIPPEDの量拒否、今日・昨日の窓と開始日前、Asia/Tokyoの23:59→0:00、期間指定の一覧。[logs.test.ts](../apps/api/tests/logs.test.ts)）、Today API（`yesterdayMissing`の条件、Engineの`predict`との完全一致、記録後の再計算、達成済み。[today.test.ts](../apps/api/tests/today.test.ts)）、所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
+| `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 認証（未ログイン401、登録→再読み込み→ログアウト→旧Cookie 401、期限切れ、別origin403、https Cookie、DB保存の回数制限と再起動。[auth.test.ts](../apps/api/tests/auth.test.ts)）、Goal API（契約違反の422と全項目列挙、無効timezone、他人・uuidでないidの404、記録があるGoalの変更禁止、削除の連鎖、timezoneの日付境界。[goals.test.ts](../apps/api/tests/goals.test.ts)）、記録API（DONEの明示量必須、同日上書き、SKIPPEDの量拒否、今日・昨日の窓と開始日前、Asia/Tokyoの23:59→0:00、期間指定の一覧。[logs.test.ts](../apps/api/tests/logs.test.ts)）、Today API（`yesterdayMissing`の条件、Engineの`predict`との完全一致、記録後の再計算、達成済み。[today.test.ts](../apps/api/tests/today.test.ts)）、所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
 | `apps/web` | 手動チェックリスト＋Playwright CLI（主要Flow 1本） | 登録→Goal作成→記録→前日補完→Today Decision表示 |
 
 | ID | Prediction Engineの性質 |
@@ -604,6 +620,7 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-25 | 2026-09-30 → 2026-10-03 → 2026-10-08 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [FE・BEともVercel Hobby＋Neon Free、ローカルDocker。厳密0円・非商用・検証条件付き](#d-25)。Cloud Runの旧候補記録を保持 |
 | D-26 | 2026-10-05 / 2026-10-07 | 保存・予測接続と明示query読取は依頼者承認・チームレビュー対象。FE結合・製品受入の残条件を分離 | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 | D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
+| D-29 | 2026-10-09 | 依頼者の実装指示・チームレビュー対象 | [量・設定版・作成操作の保全](#d-29-量と作成操作の保全148) |
 
 ### D-27
 
@@ -676,7 +693,7 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 | raw入力 | `questionPrior: { a, b }`、両key必須、各値LOW/MID/HIGH/UNKNOWN/null。POST省略は未回答、PATCH省略は維持、両nullは撤回。block全体null、片key、省略不明な内部Beta・mappingは422。必須回答を作らない |
 | 回答版 | `expectedAnswerRevision`は0〜MAX_SAFE_INTEGER。回答PATCHで必須、質問を扱うclientはunit/sessionAmountのkeyを送るときも必ず同送する。owner限定Goal FOR UPDATEを取って確認し、不一致は同一内容でも409 `ANSWER_CONFLICT`、title等を含め全体rollback。回答だけの版で全Goal revisionではない |
 | 互換書込 | 旧bodyの通常Goal更新は従来どおり。旧clientの実際のunit/sessionAmount変更も回答・snapshotを撤回し版を増やすので、古い回答編集を拒否できる。POST/PATCH成功は旧Goal DTOを保持し、回答編集後は新読取でraw／版／Todayを再取得する。token単独や無関係なtitleのみ＋tokenは422 |
-| 公開読取 | `GET /api/goals/:goalId?view=r11`は旧Goalの全欄＋`schemaVersion: r11-v1`・raw `questionPrior`・`answerRevision`。`GET /api/goals/:goalId/today?view=r11`は旧Todayの基礎欄＋同schemaVersion・R-11 prediction・文脈`{ recordStartDate, unit, sessionAmount }`・a/b別provenance・nullable Plan。query省略は旧DTO/旧predict、Goal一覧・POST/PATCH成功も旧DTOを維持。viewは省略または文字列r11だけ、未知key・空値・重複・未対応値は共通422。認証401とowner限定404を両表現で保持。書込bodyと回答版はqueryに依存しない |
+| 公開読取 | `GET /api/goals/:goalId?view=r11`は旧Goalの全欄＋`schemaVersion: r11-v1`・raw `questionPrior`・`answerRevision`。`GET /api/goals/:goalId/today?view=r11`は旧Todayの基礎欄＋同schemaVersion・R-11 prediction・文脈`{ recordStartDate, unit, sessionAmount, goalSettingsRevision, unitLocked }`（#148で後2項目を追加。保存した回答snapshotの文脈は元3項目のまま）・a/b別provenance・nullable Plan。query省略は旧DTO/旧predict、Goal一覧・POST/PATCH成功も旧DTOを維持。viewは省略または文字列r11だけ、未知key・空値・重複・未対応値は共通422。認証401とowner限定404を両表現で保持。書込bodyと回答版はqueryに依存しない |
 | 公開予測の表現 | R-11 predictionはmodelVersion `m1-question-prior-v1`、configはsamples/horizonDays/seedで旧スカラーprior欄なし。provenanceはa/b別NONE/QUESTION/RECORDS/QUESTION_AND_RECORDS。Planは未達成かつ完了不足のときだけ実残量・条件付き回数・最終回量、他はnull。raw回答・回答版はGoal読取に置き、保存mapping/snapshotはHTTPへ出さない。FEは専用型・表現別cache・出所表示を使い、旧実績専用変換へcastしない |
 | 版の更新 | 新Goalは回答ありでも0。rawの実変更・撤回またはunit/sessionAmountの実変更で1回加算。回答なしの文脈変更も加算し、撤回後にresetしない。同じraw・同じ文脈はno-opで版／snapshotを保持。title/totalRequired/initialProgress/timezone、Logは版を変えない。上限で変更が必要なら500でrollbackし、丸め／wrapしない |
 | 保存snapshot | [0003](../apps/api/migrations/0003_goal_question_prior.sql)でraw、bigint版、nullable JSON snapshotを追加。既存Goalは両null／版0で、既存Goal・実ログ・開始日・timestampを変えない。snapshotはschema `r11-prior-v1`、mapping `r11-strength4-v1`と全3写像、a/b初期Beta、unit/sessionAmount/recordStartDateを保存。保存mapping/snapshotはclientへ公開しない。破損・未知mapping版は500 `PREDICTION_FAILED`、最新mappingへfallbackしない。将来mappingを追加する場合は旧保存版のreaderを維持する |
@@ -702,3 +719,21 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 人間の具体契約判断後、[既存Issueと追加UIへの対応表](change-map.md#r-11の既存issueへの対応)に沿って契約・実装・共有回帰を更新する。APIや初期分布の新しい型は今回の文書PRで確定しない。公開提案の検証成功を製品仕様・精度の採択へ昇格しない。入口・画面数・routesは#88の別レビューで扱う。[P-15の採択分担](product-spec.md#p-15-質問由来の見通しのmust追加方針)に沿い、KaitoのEngine・追加UI #117、BEの保存／API、FEの既存画面・組み込みを接続する。部品の受け渡し・状態所有者・共通ファイルの編集／衝突解消は未定で、数値・強さ・保存編集・更新競合を分担から確定しない。
 
 **D-26具体仕様の判断目標日は2026-10-05（JST）。** 依頼者側の目標であり、FE／BEの返答確約やチーム合意の期限ではない。実際の採択時点・実装の個別期限は未定で、D-26の具体契約はOPENのまま扱う。
+
+
+### D-29 量と作成操作の保全（#148）
+
+2026-10-09 / **依頼者の実装指示・チームレビュー対象**。R-02〜R-04／P-20を満たす限定変更。#76／#77の量補完と可変unitを、[Issue #148](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/148)の契約で拡張する。既存の回答版（D-26）と同日ログの上書き規則は保つ。
+
+- **単位**：`unitLocked = unit_history_locked || initial_progress > 0`。DONE保存と永続markerを同一transactionへ入れる。Goal行の所有者付き排他lock後の旧状態で単位変更を拒否する。同unitは許可。markerを単純な現ログEXISTSから導く案は訂正で解除されるため採用しない。
+- **設定CAS**：`goal_settings_revision`は非負int4、初期0。タイトル・単位・総量・1回量・初期量・timezoneの実変更で1回増加。no-op／回答のみ／ログは増加しない。PATCH・PUTは`expectedGoalSettingsRevision`必須。所有者付きFOR UPDATE取得後に比較し、古い版は同値でも409 `GOAL_SETTINGS_CONFLICT`、最大版の変更は422。単位固定違反は422 `GOAL_UNIT_LOCKED`で全体rollback。全Goal DTOとR-11 Todayの`context`へ版・固定flagを返す。
+- **明示量**：DONEは正のint4 `amount`必須、SKIPPEDはamount禁止／保存NULL。API補完は設定更新と競合して表示量を変えるため廃止する。FEはGoal・日・量・版・元unit／timezoneを保存操作へ固定し、409後の最新GET成功まで再保存を止める。意味が同じときだけ元量で明示再保存する。
+- **作成ledger**：POSTのUUID `Idempotency-Key`を小文字化し、ownerとの複合主キーで予約する。検証済みbodyを固定順でcanonical化し、省略initialProgress=0・questionPrior=両nullとしてSHA-256で照合する。予約とGoal作成は同じREAD COMMITTED transaction。競合INSERTを待った後、新しいSELECTで確定ledgerを読む。初回201、同body再送200＋`Idempotency-Replayed: true`（現在DTO）、異body409 `IDEMPOTENCY_CONFLICT`。Goal削除ではFK SET NULLでledgerのowner／元hashを保持し、再送410 `CREATE_RESULT_DELETED`。owner削除のみcascade、TTLなし。独立した予約commitは孤立行を生むため採用しない。
+  - **FE回復**：sessionStorageへowner・キー・元bodyのみを送信前に保存する（token／passwordなし）。戻る・reload・同account再認証で復元し、表示中のフォームの確定422または成功で消す。実離脱したフォームの応答はstorageを終了せず、次のフォームへ引き継ぐ。#155の同owner確認による一時unmountでは、親が同じ連続性・訪問の確定成功を消費する直前に、その操作だけを終了する。復元済みの操作は同じキー・元bodyで再確認し、再送の未知結果やreloadでも新キーに替えない。再送前の非cache session確認に加え、FEの`X-Create-Owner`をAPIで比較する。確認後にaccountが替わっても409 `CREATE_OWNER_CHANGED`として新ownerで作成しない。APIへの正規callerはUUIDキー必須で、このownerヘッダーは追加防御として任意。
+- **確定応答の後始末**：送信操作が保持するowner・キー・保存原文が現sessionStorageと一致するときだけ終了する。APIが拒否したbodyをcleanupで再検証しない（NULを含む422でも訂正可能にする）。初回ロードは厳密なschema検証を維持する。遅延K1の成功／422は異なるK2や同keyの変更原文を消さない。Storageの読取・削除例外では原文と操作を保持して回復エラーを出し、422の項目エラー処理は続ける。通信切断・5xxは同key／元bodyを保持する。
+- **回復が確認できないとき**：壊れたJSON・旧schemaは原文を保持し、初期描画を継続してPOSTを止め、一覧での確認を案内する。409 `IDEMPOTENCY_CONFLICT`は同keyの入力不一致として盲目的な再送を止める。409 `CREATE_OWNER_CHANGED`は作成時のaccountでの再認証と同key/bodyの明示確認へ案内し、通信失敗と区別する。どの場合も自動で回復情報を消したり新keyを作ったりしない。
+- **FEの回復境界**：非queryの409回復GETもAbortSignalを渡し、離脱・owner／境界変更で中断する。反映前には開始時のownerとPrivateEpochの同一性を確認し、A→B→Aの旧応答もcacheへ戻さない。410 `CREATE_RESULT_DELETED`を受けた同owner／keyだけを、利用者の明示操作で終了する。入力を保持し、新keyは次の保存で初めて発行する。通信結果不明では同key再送を保つ。最新unitLockedと編集単位が食い違う場合は、他の入力を残して保存済み単位へ戻す明示操作を出す。
+
+[migration 0005](../apps/api/migrations/0005_goal_data_integrity.sql)は旧migrationのchecksumを変更しない。Goal／logを排他lockし、旧ログのあるGoal（旧SKIP-onlyも含む）を保守的に固定する。backfill中だけupdated_at triggerを止め、保存量・日付・既存metadataを変更しない。アプリmigrationのtransaction内でDDL／backfill／ledgerをまとめ、再適用はno-op。Demo DONEも同transactionでmarkerを保存する。移行前SKIP-onlyのunit編集を制限すること、ledgerを永続保持することがtrade-off。
+
+不変条件は「過去の量の意味」「表示量の保存」「stale更新の副作用なし」「同操作でGoalを増やさない」。同日ログ一般のrevision、削除CAS、cache方針（#153）、認証cache全体（#155）、#147の画面再設計は含めない。単位換算を製品要件として採用する、ledger保持方針を変える、設定以外のlost updateを扱う場合に再検討する。[専用合成DB・実ブラウザの検証記録](operations/issue148-verification.md)を参照し、CI／人工切断／人の試験を混同しない。本番適用・merge・deployは未実施。

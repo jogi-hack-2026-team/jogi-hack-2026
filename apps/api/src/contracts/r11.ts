@@ -1,5 +1,5 @@
 import { Type, type Static } from '@sinclair/typebox';
-import { Goal, GoalUnit, LocalDate } from './goal.ts';
+import { Goal, GoalUnit, GoalSettingsRevision, LocalDate } from './goal.ts';
 import { PredictionResultSchema, Today } from './log.ts';
 import { AnswerRevision, QuestionAnswers } from './question.ts';
 
@@ -17,7 +17,7 @@ export const PredictionR11 = Type.Object({ ...PredictionResultSchema.properties,
 const source = Type.Union([Type.Literal('NONE'), Type.Literal('QUESTION'), Type.Literal('RECORDS'), Type.Literal('QUESTION_AND_RECORDS')]);
 export const TodayR11 = Type.Object({ ...Today.properties,
   schemaVersion: Type.Literal('r11-v1'), prediction: PredictionR11,
-  context: Type.Object({ recordStartDate: LocalDate, unit: GoalUnit, sessionAmount: Type.Integer() }, strict),
+  context: Type.Object({ recordStartDate: LocalDate, unit: GoalUnit, sessionAmount: Type.Integer(), goalSettingsRevision: GoalSettingsRevision, unitLocked: Type.Boolean() }, strict),
   provenance: Type.Object({ a: source, b: source }, strict),
   plan: Type.Union([Type.Object({ remainingAmount: Type.Integer(), remainingSessions: Type.Integer(), lastSessionAmount: Type.Integer() }, strict), Type.Null()]),
 }, strict);

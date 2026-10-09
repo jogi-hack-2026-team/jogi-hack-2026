@@ -17,7 +17,7 @@ export const todayHttp = {
   getToday: (goalId: string, signal?: AbortSignal): Promise<TodayR11> => requestJson(TodaySchema, `${base(goalId)}/today?view=r11`, { signal }),
   /** 全期間の記録（累計の図に使う）。 */
   listLogs: (goalId: string, signal?: AbortSignal): Promise<Log[]> => requestJson(LogList, `${base(goalId)}/logs`, { signal }),
-  /** 記録の作成・上書き（同じ日は上書き）。DONE で amount を省くと API が1回の量で補う。 */
+  /** 記録の作成・上書き（同じ日は上書き）。DONE は表示した日合計の amount と設定版を明示する。 */
   putLog: (goalId: string, localDate: string, body: LogPut): Promise<Log> =>
     requestJson(LogSchema, `${base(goalId)}/logs/${encodeURIComponent(localDate)}`, { method: 'PUT', body }),
 };

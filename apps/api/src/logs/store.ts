@@ -11,27 +11,30 @@ const toLog = (r: LogRow): Log => ({ localDate: r.local_date, status: r.status, 
 
 export type PutLogResult =
   | { kind: 'saved'; log: Log }
-  | { kind: 'not_found' }
+  | { kind: 'not_found' | 'settings_conflict' }
   | { kind: 'out_of_window'; today: string; yesterday: string }
   | { kind: 'before_start'; recordStartDate: string };
 
 // 作成・上書き（R-03・R-04、P-14）。許可窓は「Goalのtimezoneで今日・昨日」かつ「記録開始日以降」。
 // 窓の判定と保存を同じtransactionで行い、Goal行を排他ロックして、同時のPATCH・同Goal PUTを時計の取得前に順序づける。
-// DONEでamount省略時はsessionAmountで補い、SKIPPEDはNULLで保存する（DBのCHECKと同じ）。
+// DONEの表示量と設定版を固定して送る。SKIPPEDはNULL。初回DONEのmarkerも同transactionで保存する。
 export async function putLog(pool: Pool, userId: string, goalId: string, localDate: string, body: LogPut, clock: () => Date): Promise<PutLogResult> {
   if (!isGoalId(goalId)) return { kind: 'not_found' };
   const client = await pool.connect();
   try {
     await client.query('begin isolation level read committed');
     const goal = (
-      await client.query<{ timezone: string; record_start_date: string; session_amount: number }>(
-        'select timezone, record_start_date::text as record_start_date, session_amount from goal where id = $1 and user_id = $2 for update',
+      await client.query<{ timezone: string; record_start_date: string; session_amount: number; goal_settings_revision: number }>(
+        'select timezone, record_start_date::text as record_start_date, session_amount, goal_settings_revision from goal where id = $1 and user_id = $2 for update',
         [goalId, userId],
       )
     ).rows[0];
     if (!goal) {
       await client.query('rollback');
       return { kind: 'not_found' };
+    }
+    if (body.expectedGoalSettingsRevision !== goal.goal_settings_revision) {
+      await client.query('rollback'); return { kind: 'settings_conflict' };
     }
     const today = localDateIn(clock(), goal.timezone);
     const yesterday = shiftLocalDate(today, -1);
@@ -43,13 +46,14 @@ export async function putLog(pool: Pool, userId: string, goalId: string, localDa
       await client.query('rollback');
       return { kind: 'before_start', recordStartDate: goal.record_start_date };
     }
-    const amount = body.status === 'DONE' ? (body.amount ?? goal.session_amount) : null;
+    const amount = body.status === 'DONE' ? body.amount! : null;
     const saved = await client.query<LogRow>(
       `insert into action_log (goal_id, local_date, status, amount) values ($1, $2::date, $3, $4)
        on conflict (goal_id, local_date) do update set status = excluded.status, amount = excluded.amount
        returning local_date::text as local_date, status, amount`,
       [goalId, localDate, body.status, amount],
     );
+    if (body.status === 'DONE') await client.query('update goal set unit_history_locked = true where id = $1 and not unit_history_locked', [goalId]);
     await client.query('commit');
     return { kind: 'saved', log: toLog(saved.rows[0]!) };
   } catch (error) {

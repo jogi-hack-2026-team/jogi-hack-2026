@@ -1,18 +1,18 @@
-import type { Log, LogPut, LogStatus } from '@contracts';
+import type { Log, LogPut } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isUnauthenticated } from '../../api/http.ts';
 
 /**
  * 記録の保存（R-03・R-04、#79・#80）で、画面から切り離した判定。Node のテストで確かめる。
- * 量の既定値（1回の量）は API が補うため、利用者が量を変えたときだけ amount を送る。
+ * DONE は表示した量を必ず送り、設定版の競合で別の量へ置き換わることを防ぐ。
  */
 
-/** 保存しようとしている記録。量は DONE のときだけ持つ（null は「1回の量のまま」）。 */
-export type RecordChoice = { status: LogStatus; amount: number | null };
+/** 保存しようとしている日合計。DONE は表示時の量を必ず持つ。 */
+export type RecordChoice = { status: 'DONE'; amount: number } | { status: 'SKIPPED'; amount: null };
 
-export function toLogPut(choice: RecordChoice): LogPut {
-  if (choice.status === 'SKIPPED' || choice.amount === null) return { status: choice.status };
-  return { status: 'DONE', amount: choice.amount };
+export function toLogPut(choice: RecordChoice, expectedGoalSettingsRevision: number): LogPut {
+  if (choice.status === 'SKIPPED') return { status: 'SKIPPED', expectedGoalSettingsRevision };
+  return { status: 'DONE', amount: choice.amount, expectedGoalSettingsRevision };
 }
 
 /** 画面に出す記録の要約（「やった・20分」「休んだ」）。 */
@@ -27,7 +27,7 @@ export function describeChoice(choice: RecordChoice, sessionAmount: number, unit
  * - date：記録できる日（今日・昨日、記録開始日以降）から外れた。日付が変わった後に古い画面で押した場合など
  * - failed：通信・サーバーの失敗。同じ内容で再試行できる
  */
-export type SaveFailureKind = 'signed-out' | 'date' | 'day-changed' | 'failed';
+export type SaveFailureKind = 'signed-out' | 'date' | 'day-changed' | 'settings' | 'failed';
 
 /** Today の操作は API で分かった今日だけに送る。昨日の補完・訂正には適用しない。
  * Goal が先に翌日へ進んだ場合も、Today が先に進んだ場合も、古い表示の日へ送らない。
@@ -45,6 +45,7 @@ export class TodayDateChangedError extends Error {
 export function classifySaveError(error: unknown): SaveFailureKind {
   if (error instanceof TodayDateChangedError) return 'day-changed';
   if (isUnauthenticated(error)) return 'signed-out';
+  if (error instanceof ApiError && error.status === 409 && error.body?.error.code === 'GOAL_SETTINGS_CONFLICT') return 'settings';
   if (error instanceof ApiError && error.status === 422) {
     const code = error.body?.error.code;
     if (code === 'LOG_DATE_OUT_OF_WINDOW' || code === 'LOG_DATE_BEFORE_START') return 'date';
@@ -69,7 +70,11 @@ export function yesterdayRecord(yesterday: string, recordStartDate: string, logs
 
 /** 保存済みの記録を、訂正の初期値（RecordChoice）にする。DONE は保存済みの量のまま（今の1回の量に置き換えない）。 */
 export function choiceFromLog(log: Log): RecordChoice {
-  return log.status === 'DONE' ? { status: 'DONE', amount: log.amount } : { status: 'SKIPPED', amount: null };
+  if (log.status === 'DONE') {
+    if (log.amount === null) throw new TypeError('DONE log must have an amount');
+    return { status: 'DONE', amount: log.amount };
+  }
+  return { status: 'SKIPPED', amount: null };
 }
 
 /**

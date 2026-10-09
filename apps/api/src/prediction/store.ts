@@ -5,7 +5,7 @@ import type { QuestionRow } from '../questions/snapshot.ts';
 
 // Todayの材料。Goalと全記録を1つの読み取りsnapshot（repeatable read）で取り、途中で挟まる記録の更新と混ざらないようにする。
 export type TodaySnapshot = {
-  goal: { totalRequired: number; initialProgress: number; sessionAmount: number; timezone: string; recordStartDate: string; unit: 'minutes' | 'sessions' };
+  goal: { totalRequired: number; initialProgress: number; sessionAmount: number; timezone: string; recordStartDate: string; unit: 'minutes' | 'sessions'; goalSettingsRevision: number; unitLocked: boolean };
   question: QuestionRow;
   logs: Log[];
   now: Date;
@@ -17,8 +17,8 @@ export async function loadTodaySnapshot(pool: Pool, userId: string, goalId: stri
   try {
     await client.query('begin isolation level repeatable read read only');
     const goal = (
-      await client.query<QuestionRow & { total_required: number; initial_progress: number; session_amount: number; timezone: string; record_start_date: string; unit: 'minutes' | 'sessions' }>(
-        'select total_required, initial_progress, session_amount, timezone, record_start_date::text as record_start_date, unit, question_prior, answer_revision::text as answer_revision, question_prior_snapshot from goal where id = $1 and user_id = $2',
+      await client.query<QuestionRow & { total_required: number; initial_progress: number; session_amount: number; timezone: string; record_start_date: string; unit: 'minutes' | 'sessions'; goal_settings_revision: number; unit_history_locked: boolean }>(
+        'select total_required, initial_progress, session_amount, timezone, record_start_date::text as record_start_date, unit, goal_settings_revision, unit_history_locked, question_prior, answer_revision::text as answer_revision, question_prior_snapshot from goal where id = $1 and user_id = $2',
         [goalId, userId],
       )
     ).rows[0];
@@ -42,6 +42,8 @@ export async function loadTodaySnapshot(pool: Pool, userId: string, goalId: stri
         timezone: goal.timezone,
         recordStartDate: goal.record_start_date,
         unit: goal.unit,
+        goalSettingsRevision: goal.goal_settings_revision,
+        unitLocked: goal.unit_history_locked || goal.initial_progress > 0,
       },
       question: { question_prior: goal.question_prior, answer_revision: goal.answer_revision, question_prior_snapshot: goal.question_prior_snapshot },
       logs: logs.rows.map((r) => ({ localDate: r.local_date, status: r.status, amount: r.amount })),

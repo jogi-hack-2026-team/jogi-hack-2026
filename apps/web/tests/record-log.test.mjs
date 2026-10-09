@@ -5,16 +5,14 @@ import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
 import { choiceFromLog, classifySaveError, describeChoice, editLocks, reachedDate, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
-test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
-  assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
-  assert.deepEqual(toLogPut({ status: 'DONE', amount: 35 }), { status: 'DONE', amount: 35 });
-  // SKIPPED に amount があると API は 422 にするため、量が残っていても送らない
-  assert.deepEqual(toLogPut({ status: 'SKIPPED', amount: 35 }), { status: 'SKIPPED' });
-  assert.deepEqual(toLogPut({ status: 'SKIPPED', amount: null }), { status: 'SKIPPED' });
+test('DONEは表示量と設定版を明示し、SKIPPEDは設定版だけを送る', () => {
+  assert.deepEqual(toLogPut({ status: 'DONE', amount: 20 }, 3), { status: 'DONE', amount: 20, expectedGoalSettingsRevision: 3 });
+  assert.deepEqual(toLogPut({ status: 'DONE', amount: 35 }, 3), { status: 'DONE', amount: 35, expectedGoalSettingsRevision: 3 });
+  assert.deepEqual(toLogPut({ status: 'SKIPPED', amount: null }, 3), { status: 'SKIPPED', expectedGoalSettingsRevision: 3 });
 });
 
 test('保存できなかった記録を「やった・20分」「休んだ」と書く（量を変えていなければ1回の量）', () => {
-  assert.equal(describeChoice({ status: 'DONE', amount: null }, 20, '分', '休んだ'), 'やった・20分');
+  assert.equal(describeChoice({ status: 'DONE', amount: 20 }, 20, '分', '休んだ'), 'やった・20分');
   assert.equal(describeChoice({ status: 'DONE', amount: 1500 }, 20, '分', '休んだ'), 'やった・1,500分');
   assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, '回', '休んだ'), '休んだ');
 });
@@ -52,7 +50,7 @@ test('作り直す前の画面の保存が終わるまで、新しい画面か�
   let finish;
   // 一覧へ戻る前の画面で始めた、今日の「やった」の保存（まだ届いていない）
   const before = new MutationObserver(client, { mutationKey: saveLogKey('g'), mutationFn: () => new Promise((r) => (finish = r)) });
-  const pending = before.mutate({ localDate: '2026-10-07', choice: { status: 'DONE', amount: null } }).catch(() => {});
+  const pending = before.mutate({ localDate: '2026-10-07', choice: { status: 'DONE', amount: 20 } }).catch(() => {});
   while (!finish) await new Promise((r) => setTimeout(r, 1));
 
   // 開き直した新しい画面（useSaveLog の save と同じ確かめ方）
