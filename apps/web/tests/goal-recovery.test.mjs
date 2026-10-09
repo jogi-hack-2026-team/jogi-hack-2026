@@ -9,7 +9,7 @@ import { QueryClient } from '@tanstack/react-query';
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (['react', '@tanstack/react-query', '../../api/goals-http.ts', '../../api/today-http.ts',
-      '../../api/session-cache.ts', '../../auth/client.ts'].includes(specifier)) {
+      '../../api/session-cache.ts', '../../api/session-draft.ts', '../../auth/client.ts'].includes(specifier)) {
       return { url: 'recovery:stubs', shortCircuit: true };
     }
     return nextResolve(specifier, context);
@@ -24,6 +24,9 @@ registerHooks({
       export const useEffect = callback => {globalThis.recovery.cleanups.push(callback());};
       export const usePrivateEpoch = () => globalThis.recovery.epoch;
       export const getPrivateEpoch = () => globalThis.recovery.epoch;
+      export const privateDataReady = epoch => typeof epoch.owner === 'string' && Number.isFinite(epoch.clearedAt);
+      export const getDraftGeneration = () => 0;
+      export const isDraftOwner = () => true;
       export const authClient = {useSession:()=>({data:{user:{id:globalThis.recovery.epoch.owner}},isPending:false,error:null})};
       export const goalKeys = {all:['goals'], detail:id=>['goals','detail',id,'r11']};
       export const goalsHttp = {getGoal:(id,signal)=>{globalThis.recovery.signal=signal;return globalThis.recovery.deferred;}};

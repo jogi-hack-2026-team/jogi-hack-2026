@@ -104,6 +104,14 @@ test('Better Auth 1.7.7: visibility refetch failure masks draft and successful r
   t.diagnostic(JSON.stringify(result));
 });
 
+test('#190 Today: same-owner visibility check keeps input, holds saves until confirmed, and discards on B/failure', { timeout: 180000 }, async (t) => {
+  const result = await runBrowser(t, './session-today.browser.tsx', false);
+  assert.equal(result.results.length, 4);
+  assert.equal(result.puts, 1);
+  assert.equal(result.writes, 0);
+  t.diagnostic(JSON.stringify(result));
+});
+
 test('same-owner draft: actual router/hooks preserve idle input only across successful continuous checks', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-draft.browser.tsx', false, true);
   assert.equal(result.operations.length, 15);

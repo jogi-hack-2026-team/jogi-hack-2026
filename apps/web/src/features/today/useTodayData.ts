@@ -36,6 +36,9 @@ export function useTodayData(goalId: string, notBefore = 0) {
   const fresh = [goalQuery, todayQuery, logsQuery].every((q) => q.dataUpdatedAt > notBefore);
   // 最後にそろっていた組み合わせ
   const lastGood = useRef<TodaySnapshot | undefined>(undefined);
+  // Today の取得失敗時に記録へ使う Goal も、notBefore より後に届いたものだけを採用する（同じ人かの確認中は更新しない、#190）
+  const acceptedGoal = useRef<GoalR11 | undefined>(undefined);
+  if (goal && goalQuery.dataUpdatedAt > notBefore) acceptedGoal.current = goal;
   // 予測に使った設定（1回の量など）も含めて、応答の値だけで照らし合わせる（snapshot.ts）
   const consistent = goal && today && logs && fresh ? isSameSnapshot(goal, today, logs) : null;
   if (goal && today && logs && consistent) lastGood.current = { goal, today, logs };
@@ -72,6 +75,8 @@ export function useTodayData(goalId: string, notBefore = 0) {
     logsQuery,
     /** 同じ時点の材料だとそろっている組み合わせ（まだ一度もそろっていなければ undefined）。 */
     snapshot: lastGood.current,
+    /** notBefore より後に届いた最新の Goal（Today の取得失敗時の記録に使う）。 */
+    goal: acceptedGoal.current,
     /** 取り直しても食い違いが解けなかった。 */
     resyncFailed: consistent === false && !fetching && resyncs >= MAX_RESYNC,
     refresh,

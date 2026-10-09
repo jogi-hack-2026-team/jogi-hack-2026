@@ -152,7 +152,7 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 
 FEの私的な表示・入力（R-01／#155）は次の境界を持つ。
 
-- 表示とquery: [session-cache.ts](../apps/web/src/api/session-cache.ts)で描画時のsession ownerとcache消去の状態を照合する（R-01／#155）。別ownerを認識した最初の描画から一覧・編集・Today・履歴と作成draftを停止し、旧取得のcancelとcache resetが済んでから新取得を使う。連続切替では、その切替に対応するcancel完了だけが境界を開く。履歴もGoal・logs双方の取得時刻を照合し、ownerごとに表示月を作り直す。sessionの初回確認中・再取得中（isRefetching）・取得失敗も私的な表示・フォームを停止する。再取得中に到着した業務応答の所有者は旧session dataから確定できないため、同じownerで回復してもcacheを消して新取得から開く。
+- 表示とquery: [session-cache.ts](../apps/web/src/api/session-cache.ts)で描画時のsession ownerとcache消去の状態を照合する（R-01／#155）。別ownerを認識した最初の描画から一覧・編集・Today・履歴と作成draftを停止し、旧取得のcancelとcache resetが済んでから新取得を使う。連続切替では、その切替に対応するcancel完了だけが境界を開く。履歴もGoal・logs双方の取得時刻を照合し、ownerごとに表示月を作り直す。sessionの初回確認中・再取得中（isRefetching）・取得失敗も私的な表示・フォームを停止する。再取得中に到着した業務応答の所有者は旧session dataから確定できないため、同じownerで回復してもcacheを消して新取得から開く。Todayだけは、表示していたownerと同じsession dataが残る正常な再確認（初回確認・失敗・別owner・未ログインを除く）の間、画面をunmountせず入力中の状態を保つ。その間と確認後のcache消去が済むまでに届いた応答は採用せず、保存は預かって同じowner・連続性の確定後に1回だけ送る（[D-30](#d-30-todayの同一owner再確認で入力を保つ190)）。
 - session確認: ルートの[ログイン確認](../apps/web/src/auth/session.ts)も独立したgetSessionの成功だけを使わず、useSessionと同じstoreの確認完了を待つ。並行するルート確認をまとめ、focus等が確認を置き換えた場合も最新の完了を待つ。[AccountMenu](../apps/web/src/features/account/AccountMenu.tsx)の空session回復は同じ欠落につき1回とし、null→取得中→nullの再取得ループを防ぐ。
 - 未送信入力: [session-draft.ts](../apps/web/src/api/session-draft.ts)はquery確認世代と入力者の連続性を分ける。確認開始はquery世代を更新し、Reactが中間描画を省いた場合もcacheを破棄する。owner変更・失敗・logout・認証変更通知はdraft世代も無効化し、A→B→Aでも旧入力を復活させない。正常同一owner確認ではDOMを除いたままメモリ内draftだけを保持し、fresh取得後に復帰する。編集は元baselineを保ち、最新の編集項目・answer/settings revision・記録有無の変化ではsnapshotを破棄して知らせる。履歴月は新しい取得範囲へ収める。
 - 送信と確定結果: 保存中の旧mutationはowner/画面別のkeyで追い、再確認後に同じ送信の新フォームを開かない。mutation/callback・結果不明の作成attemptはdraftとして復元しない。成功応答は送信時owner・draft連続性世代・ページの訪問トークンに束縛して親へ伝え、正常同一owner確認後に一覧へ一度だけ移す。異なるpathへの遷移開始で訪問トークンを失効させ、同routeのGoal1→Goal2→Goal1やcommit前の離脱・復帰でも旧成功を採用しない。同path/searchの確認は同じ訪問を保つ。確定成功後に空フォームを開かない。実ページ離脱・owner変更・失敗後は旧成功を新画面へ作用させない。実route/Goal離脱ではメモリを破棄する。未ログインが確定した場合は読み込みを続けず既存の再ログイン案内を表示する。
@@ -625,6 +625,7 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
 | D-28 | 2026-10-09 | DECIDED（依頼者の方針変更・敵対的セルフレビューを根拠に同期維持と再検討条件を採択） | [予測計算はMVPでは同期実行を維持し、worker化は再検討条件付きで見送る](#d-28) |
 | D-29 | 2026-10-09 | 依頼者の実装指示・チームレビュー対象 | [量・設定版・作成操作の保全](#d-29-量と作成操作の保全148) |
+| D-30 | 2026-10-10 | 依頼者判断（Code Freeze前のため文書のチーム事前承諾なし。コードはHuman Review対象） | [Todayの同一owner再確認で入力を保つ](#d-30-todayの同一owner再確認で入力を保つ190)。D-29・#155の別owner・失敗時の境界は維持 |
 
 ### D-27
 
@@ -753,3 +754,31 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 [migration 0005](../apps/api/migrations/0005_goal_data_integrity.sql)は旧migrationのchecksumを変更しない。Goal／logを排他lockし、旧ログのあるGoal（旧SKIP-onlyも含む）を保守的に固定する。backfill中だけupdated_at triggerを止め、保存量・日付・既存metadataを変更しない。アプリmigrationのtransaction内でDDL／backfill／ledgerをまとめ、再適用はno-op。Demo DONEも同transactionでmarkerを保存する。移行前SKIP-onlyのunit編集を制限すること、ledgerを永続保持することがtrade-off。#157の[0005_goal_target_date.sql](../apps/api/migrations/0005_goal_target_date.sql)と併用する際も既存のファイル名・checksumを維持し、[両順序の移行回帰](../apps/api/tests/goal-pair-migrations.test.ts)で量・日付・metadata・ログ・台帳と再適用no-opを検査する。
 
 不変条件は「過去の量の意味」「表示量の保存」「stale更新の副作用なし」「同操作でGoalを増やさない」。同日ログ一般のrevision、削除CAS、cache方針（#153）、認証cache全体（#155）、#147の画面再設計は含めない。単位換算を製品要件として採用する、ledger保持方針を変える、設定以外のlost updateを扱う場合に再検討する。[専用合成DB・実ブラウザの検証記録](operations/issue148-verification.md)を参照し、CI／人工切断／人の試験を混同しない。本番適用・merge・deployは未実施。
+
+### D-30 Todayの同一owner再確認で入力を保つ（#190）
+
+2026-10-10 / **依頼者判断（Code Freeze 2026-10-12前のため、文書のチーム事前承諾は取らない。コードはHuman Review・CI・実ブラウザ確認の対象）**。[Issue #190](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/190)。
+
+Context: 固定版Better Authは可視状態へ戻るたびにsessionを再取得する。#155／D-29の境界は再取得中（isRefetching）の私的な表示・入力を停止し、同じownerで回復してもcacheを消すため、Todayでは別タブから戻るたびに画面全体が作り直された。量の入力中の値が消え、戻った直後の最初のEnterやクリックは作り直し中の部品に届かず保存されなかった（R-03・R-07の毎日の記録を損なう）。
+
+Decision: Todayだけ、表示していたownerと同じsession dataが残る正常な再確認の間は[TodayPage](../apps/web/src/features/today/TodayPage.tsx)をunmountしない（[checkingSameOwner](../apps/web/src/api/session-cache.ts)）。確認後にcache消去が済むまで（ownerは同じでclearedAtが∞）も同じ確認の続きとして扱う。
+
+- その間は`notBefore=∞`とし、確認中に届いたGoal・Today・記録を表示にも保存の文脈にも使わない（Today取得失敗時のGoal fallbackも、notBeforeより後に届いたものだけを使う）。
+- [useSaveLog](../apps/web/src/features/logs/useSaveLog.ts)は、押した時点で所有者が未確定、またはcache消去後でAPIの今日がまだ分からないとき、送信せずに押した人・連続性世代と一緒に預かり「保存中」を表示する。同じownerで、認証操作をまたがず、APIの今日が一致したときだけ1回送る。別owner・未ログイン・古い日付と分かった場合は送らない。
+- APIの今日が分からない間は「日付が変わった」表示へ切り替えず、量の入力欄を閉じない。送信の判定（isCurrentToday）は変えない。
+- 初回確認・確認失敗（503・通信例外・429）・別owner・未ログインでは、従来どおり画面・入力・cacheを捨てる。Goal一覧・作成・編集・履歴の挙動は変えない。
+
+Alternatives:
+
+| 案 | 内容 | 判断の理由 |
+|---|---|---|
+| A：現状維持 | 再確認のたびに停止・消去 | 別ownerの取り違えに最も強いが、入力が消えキー入力も失われる。Mustの記録UXを損なうため不採用 |
+| B：可視復帰での再確認を止める | Better Authの自動再取得を無効化 | 変更は最小だが、別タブでのログアウト・アカウント切替に気づけず#155の境界が弱まるため不採用 |
+| **C：表示を保ち、新しい応答の採用と送信を止める** | 本Decision | 確認前からこのタブに出ていた同じownerの表示だけを保つため、新たに見せる私的データはない。送信は確定後に限るため別ownerのCookieで保存しない。採用 |
+| D：表示を保ち、送信も止めない | 再確認中も通常どおり | 再確認中に別Cookieで送信し得て#155・D-29の対策を崩すため不採用 |
+
+Consequences / Invariants: 確認中に押した保存は確認が終わるまで送られない（「保存中」を表示）。確認の結果が別ownerなら、預かった保存は捨てられ、利用者は押し直す必要がある。別ownerを認識した描画から前のownerの表示を出さない・確認中に届いた応答を使わない・前のownerのcacheで保存しない、は維持する。保持するのは確認前に描画済みの同じownerの表示だけで、DTOにresponse ownerがない制約（#155）は変わらない。
+
+Evidence: [Today回帰](../apps/web/tests/session-today.browser.tsx)は固定版の実useSession・visibilitychange・合成HTTPで、(1)同一owner確認中・cache消去中も入力欄と値を保ち、確認中に届いた別Goalを表示しない、(2)確認中の保存は送らず同一owner確定後に1回送る、(3)確認結果が別ownerなら送らず前の画面を捨てる、(4)503では入力を捨てて回復後に新しい画面を開く、を確認する。修正を戻すと(1)で失敗する。既存の所有者境界・focus・draftの実ブラウザ回帰は変更せず成功する。ローカルの実API・Chromeでも入力の保持と、戻った直後の保存が1回だけ送られることを確認した。実User・公開環境・別タブ通知の受入は未確認。
+
+再検討する条件: 確認中の「保存中」が利用者に分かりにくい、Better Authの再取得の仕様が変わる、Goal一覧・作成・編集・履歴でも同じ問題が受入上の障害になる、またはresponse ownerを照合できるDTOを導入する場合。

@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { checkingSameOwner, privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { authClient } from '../../auth/client.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
@@ -40,18 +41,26 @@ import './today.css';
  * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
  * 「後で答える」や記録の変更中の状態を別の Goal へ持ち越さない。
  * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
+ * ウィンドウへ戻るたびの、同じ人かの正常な確認中は作り直さず、入力中の状態を保つ（#190）。
+ * その間は確認中に届いたデータを使わず（notBefore=∞）、保存は確認できるまで送らない（useSaveLog）。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
   const current = usePrivateEpoch();
+  const session = authClient.useSession();
+  // いま表示している画面の利用者。確認の結果が別の人・未ログイン・失敗なら捨てる
+  const shown = useRef<string | undefined>(undefined);
   const { owner, clearedAt } = current;
+  const ready = privateDataReady(current);
+  const checking = !ready && checkingSameOwner(shown.current, current, session);
+  shown.current = ready ? owner ?? undefined : checking ? shown.current : undefined;
   if (owner === null) return <SignedOutPage />;
-  if (!privateDataReady(current)) return <Loading />;
-  return <TodayScreen key={`${owner ?? ''}:${goalId}`} goalId={goalId} notBefore={clearedAt} />;
+  if (!shown.current) return <Loading />;
+  return <TodayScreen key={`${shown.current}:${goalId}`} goalId={goalId} notBefore={checking ? Number.POSITIVE_INFINITY : clearedAt} />;
 }
 
 function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number }) {
   // Goal・Today・記録は同じ時点の材料がそろったものだけを使う（snapshot）。日付の切り替わりでも取り直す
-  const { goalQuery, todayQuery, logsQuery, snapshot, resyncFailed, refresh, retryResync } = useTodayData(goalId, notBefore);
+  const { goalQuery, todayQuery, logsQuery, snapshot, goal: acceptedGoal, resyncFailed, refresh, retryResync } = useTodayData(goalId, notBefore);
   // 今日の記録（#79）と昨日の補完・訂正（#80）。保存の状態は別々に持つ
   // 記録済みの今日を選び直している（D5-change）。保存に成功したら戻す
   const [changing, setChanging] = useState(false);
@@ -67,18 +76,25 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   // フォーカスを移す（キーボード・読み上げで場所を見失わない）
   const focusAfterSave = useRef(false);
   const todaySaver = useSaveLog(goalId, {
-    context: snapshot?.goal ?? goalQuery.data,
+    context: snapshot?.goal ?? acceptedGoal,
     onSaved: () => {
       focusAfterSave.current = true;
       setChanging(false);
       setAmountEditing(false);
       setTodayEditDate(undefined);
     },
-    localDate: todayEditDate ?? snapshot?.today.today ?? goalQuery.data?.today,
+    localDate: todayEditDate ?? snapshot?.today.today ?? acceptedGoal?.today,
     // 再描画前のクリックでも、QueryClient に到着済みの API 日付を検査する
     canSaveDate: (date) => isCurrentToday(date,
       queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today,
       queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today),
+    // 同じ人の確認後にキャッシュを消して取り直している間は、API の今日がまだ分からない。
+    // その間は「日付が変わった」と表示せず（入力中の量を閉じない）、保存は分かるまで預かる（#190）
+    isStaleDate: (date) => {
+      const goalToday = queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today;
+      const todayToday = queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today;
+      return (goalToday !== undefined || todayToday !== undefined) && !isCurrentToday(date, goalToday, todayToday);
+    },
   });
   const yesterdaySaver = useSaveLog(goalId, { context: snapshot?.goal, onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
   // 「後で答える」を押したときの対象日。日付が変われば問いかけを出し直す
@@ -103,7 +119,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
   // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日・今日の状態で、今日の記録を付けられるようにする
   // （401・404は上で画面全体を切り替えているので、ここに来るのは計算・通信・サーバーの失敗）
-  const fallbackGoal = !today && todayQuery.isError ? goalQuery.data : undefined;
+  const fallbackGoal = !today && todayQuery.isError ? acceptedGoal : undefined;
   const recordGoal = goal ?? fallbackGoal;
   const recordDate = todayEditDate ?? today?.today ?? fallbackGoal?.today;
   const canRecordToday = recordDate !== undefined && todaySaver.canSaveDate(recordDate)
