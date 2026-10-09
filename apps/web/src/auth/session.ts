@@ -17,9 +17,29 @@ export function classifySession(result: SessionResult): SessionCheck {
   return user ? { kind: 'signed-in', email: user.email ?? '' } : { kind: 'signed-out' };
 }
 
-export async function checkSession(): Promise<SessionCheck> {
+let checking: Promise<SessionCheck> | undefined;
+
+/** ルートと画面で同じ確認結果を使う。並行するルート確認で再取得を互いに中断しない。 */
+export function checkSession(): Promise<SessionCheck> {
+  return checking ??= confirmSession().finally(() => { checking = undefined; });
+}
+
+async function confirmSession(): Promise<SessionCheck> {
   try {
-    return classifySession(await authClient.getSession());
+    // getSession()単独の成功はuseSessionのstoreを更新しない。
+    // 新Cookieでルートを開き、旧ownerのstoreで業務応答を表示する間を作らない。
+    const session = authClient.$store.atoms.session;
+    if (!session) return { kind: 'unreachable' };
+    await session.get().refetch();
+    // signin通知・focusが途中で新しい確認へ置き換えた場合も、その完了まで待つ。
+    const result = await new Promise<ReturnType<typeof session.get>>((resolve) => {
+      const settled = (value: ReturnType<typeof session.get>) => {
+        if (!value.isPending && !value.isRefetching) { stop(); resolve(value); }
+      };
+      const stop = session.listen(settled);
+      settled(session.get());
+    });
+    return classifySession(result);
   } catch {
     return { kind: 'unreachable' };
   }

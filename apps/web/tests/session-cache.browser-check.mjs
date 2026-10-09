@@ -27,15 +27,17 @@ async function browserPath() {
 
 // Better Auth は client 作成時に fetch を保持するため、bundle 評価前に transport を用意する。
 function setupSessionTransport() {
-  const state = globalThis.__sessionTransport = { owner: 'A', failure: null, reads: 0, writes: 0 };
+  const state = globalThis.__sessionTransport = { owner: 'A', failure: null, reads: 0, writes: 0, hold: false, held: [] };
   globalThis.fetch = async (request, init) => {
     const url = typeof request === 'string' ? request : request instanceof URL ? request.href : request.url;
     if (!url.endsWith('/api/auth/get-session') || (init?.method && init.method !== 'GET')) {
       state.writes++; throw new Error('unexpected request: ' + url);
     }
     state.reads++;
+    if (state.hold) await new Promise((resolve) => state.held.push(resolve));
     if (state.failure === 'network') throw new TypeError('synthetic offline');
     if (state.failure === '503') return Response.json({ code: 'SYNTHETIC_UNAVAILABLE', message: 'synthetic 503' }, { status: 503 });
+    if (state.failure === '429') return Response.json({ code: 'RATE_LIMITED', message: 'synthetic 429' }, { status: 429 });
     return Response.json({
       user: { id: state.owner, name: 'Synthetic ' + state.owner, email: state.owner + '@example.invalid', emailVerified: true, createdAt: '2026-10-09T00:00:00Z', updatedAt: '2026-10-09T00:00:00Z' },
       session: { id: 'synthetic-' + state.owner, userId: state.owner, token: 'synthetic-test-token', expiresAt: '2099-01-01T00:00:00Z', createdAt: '2026-10-09T00:00:00Z', updatedAt: '2026-10-09T00:00:00Z' },
@@ -90,14 +92,14 @@ async function runBrowser(t, entry, mockAuth) {
 
 test('session ownership: real React hooks/Goal screens reject old cache and drafts in every DOM commit', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-cache.browser.tsx', true);
-  assert.equal(result.results.length, 11);
+  assert.equal(result.results.length, 12);
   assert.equal(result.writes, 0);
   t.diagnostic(JSON.stringify(result));
 });
 
 test('Better Auth 1.7.7: visibility refetch failure masks draft and successful recovery starts a fresh form', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-focus.browser.tsx', false);
-  assert.equal(result.results.length, 2);
+  assert.equal(result.results.length, 4);
   assert.equal(result.writes, 0);
   t.diagnostic(JSON.stringify(result));
 });

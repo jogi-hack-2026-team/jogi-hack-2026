@@ -46,7 +46,8 @@ export function usePrivateEpoch(): PrivateEpoch {
   const session = authClient.useSession();
   // effect の消去を待つ前の描画でも、いま認識している session と照合する。
   // 取得失敗は未ログインと取り違えず、私的な表示・入力だけを停止する。
-  if (session.isPending || session.error) return { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
+  // 再取得中は旧 data が残り isPending=false でも、Cookie の所有者と一致するとは限らない。
+  if (session.isPending || session.isRefetching || session.error) return { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
   return nextEpoch(stored, session.data?.user.id ?? null);
 }
 
@@ -67,12 +68,25 @@ export function PrivateCacheGuard() {
   const session = authClient.useSession();
   const queryClient = useQueryClient();
   const last = useRef<string | null | undefined>(undefined);
-  const userId = session.isPending || session.error ? undefined : (session.data?.user.id ?? null);
+  const needsReset = useRef(false);
+  const userId = session.isPending || session.isRefetching || session.error ? undefined : (session.data?.user.id ?? null);
 
   useEffect(() => {
-    const transition = nextEpoch(epoch, userId);
+    if (userId === undefined) {
+      if (epoch.owner !== undefined) {
+        // 確認中に届く業務応答を旧 session の所有物と見なさない。
+        // 古い cancel 完了も無効にし、同じ owner で回復した場合にも cache を消す。
+        needsReset.current = true;
+        setEpoch({ owner: epoch.owner, clearedAt: Number.POSITIVE_INFINITY });
+      }
+      return;
+    }
+    const transition = needsReset.current
+      ? { owner: userId, clearedAt: Number.POSITIVE_INFINITY }
+      : nextEpoch(epoch, userId);
     setEpoch(transition);
-    if (sessionChanged(last.current, userId)) {
+    if (needsReset.current || sessionChanged(last.current, userId)) {
+      needsReset.current = false;
       const owner = userId;
       void queryClient.cancelQueries({ queryKey: goalKeys.all }).then(() => {
         // 前の人の取得が止まった後なら、ここから先に届くデータは新しい利用者のもの

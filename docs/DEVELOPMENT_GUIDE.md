@@ -561,7 +561,9 @@ npm run build
 
 `npm test`は[Webの共通エラー回帰](../apps/web/tests/client.test.mjs)、APIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）と[Engineの数値・候補回帰](../packages/prediction/README.md#検証ci)を実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。
 
-Webの[所有者境界の実hook回帰](../apps/web/tests/session-cache.browser-check.mjs)は`npm run test:browser --workspace=@futureroi/web`で実行します。既存Viteでテスト用bundleを作り、Chrome／Edge／Chromiumの専用一時profileで実DOMを確認します。Windows・macOSの一般的なインストール先とLinuxの`/usr/bin/`を探索します。別の場所なら`TEST_BROWSER`に実行ファイルの絶対pathを指定してください。GitHub Actionsの既存`npm test`から[CI入口](../apps/web/tests/session-browser-ci.test.mjs)で自動実行し、`ubuntu-latest`にあるChromeを使います。ブラウザがない場合は未実行の成功にせず失敗を報告します。ローカルの`npm test`はブラウザ回帰を明示的なskipとして報告し、Docker buildにもブラウザを要求しません。所有者切替の合成session回帰と、固定版Better Authの実client・合成HTTPによるfocus失敗／回復回帰を含みます。実認証・API／DBのE2Eとは区別します。
+Webの[所有者境界の実hook回帰](../apps/web/tests/session-cache.browser-check.mjs)は`npm run test:browser --workspace=@futureroi/web`で実行します。既存Viteでテスト用bundleを作り、Chrome／Edge／Chromiumの専用一時profileで実DOMを確認します。Windows・macOSの一般的なインストール先とLinuxの`/usr/bin/`を探索します。別の場所なら`TEST_BROWSER`に実行ファイルの絶対pathを指定してください。GitHub Actionsの既存`npm test`から[CI入口](../apps/web/tests/session-browser-ci.test.mjs)で自動実行し、`ubuntu-latest`にあるChromeを使います。ブラウザがない場合は未実行の成功にせず失敗を報告します。ローカルの`npm test`はブラウザ回帰を明示的なskipとして報告し、Docker buildにもブラウザを要求しません。所有者切替の合成session回帰と、固定版Better Authの実client・合成HTTPによるfocus確認中／失敗／回復、空sessionの再取得ループ抑止を含みます。[ルート確認回帰](../apps/web/tests/session-confirm.test.mjs)も通常testで実行し、hookと共有する確認の置換・並行呼出し・429を検証します。実認証・API／DBのE2Eとは区別します。
+
+sessionを再確認している間は私的な画面・入力を停止します。正常なfocus再確認でも編集中の未保存入力と履歴の選択月は失われ、同じownerに戻っても復元しません。デモやレビューではこの制約を確認してください。実ユーザーでの頻度・UX受入は別途残ります。詳しい境界は[Architectureの認証実装](architecture.md#2026-10-06の認証実装75)を参照してください。
 
 `.env`は`npm run dev:api`とmigration／seedのCLIが読みます。`npm test`とビルド済みサーバーはシェルの環境変数だけを見るため、次のように使い分けます。
 

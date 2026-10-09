@@ -47,7 +47,7 @@ export function GoalListPage() {
           <h1 className="fr-goals__heading">{c.listTitle}</h1>
         </section>
         {/* デスクトップ幅では「Goalを追加」を見出しの右に置く（デザイン Desk-home）。Goal があるときだけ */}
-        {query.data && query.data.length > 0 ? (
+        {fresh && query.data && query.data.length > 0 ? (
           <Link to="/goals/new" className="fr-btn fr-btn--secondary fr-goals__add-top">
             <Icon name="plus" size={18} />
             {c.add}

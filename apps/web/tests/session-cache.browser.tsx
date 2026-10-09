@@ -13,15 +13,22 @@ import { HistoryPage } from '../src/features/history/HistoryPage.tsx';
 
 // 認証の transport だけを制御する。製品の guard・画面・hook・QueryClient を実DOMで動かす。
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-const refetch = async () => {};
-let session = { data: { user: { id: 'A', email: 'A@example.invalid' } }, isPending: false, error: null, refetch };
+let simulateMissing = false;
+let missingReads = 0;
+const refetch = async () => {
+  if (!simulateMissing) return;
+  missingReads++;
+  if (missingReads > 3) return; // 未修正のループでもrunnerを止め、回数のassertを失敗させる。
+  publish(null, false, true); await tick(); publish(null);
+};
+let session = { data: { user: { id: 'A', email: 'A@example.invalid' } }, isPending: false, isRefetching: false, error: null, refetch };
 const listeners = new Set<() => void>();
 authClient.useSession = () => useSyncExternalStore((fn) => {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }, () => session);
-const publish = (owner: string | null, error = false, pending = false) => {
-  session = { data: owner ? { user: { id: owner, email: `${owner}@example.invalid` } } : null, isPending: pending, error: error ? new Error('synthetic session failure') : null, refetch };
+const publish = (owner: string | null, error = false, pending = false, refetching = false) => {
+  session = { data: owner ? { user: { id: owner, email: `${owner}@example.invalid` } } : null, isPending: pending, isRefetching: refetching, error: error ? new Error('synthetic session failure') : null, refetch };
   listeners.forEach((fn) => fn());
 };
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
@@ -205,6 +212,14 @@ async function run() {
   cancelHolds.forEach((hold) => hold.resolve(undefined));
   ensure(writes.length === 0, 'owner transitions sent private writes');
   results.push('A→B→A: outdated cancellation cannot reopen gate');
+
+  page = 'list'; await render(); await change('B'); await settle();
+  simulateMissing = true; await change(null); await settle();
+  ensure(missingReads === 1, 'AccountMenu retried null→pending→null more than once');
+  await change('B'); await change(null); await settle();
+  ensure(missingReads === 2, 'new signed-in→missing episode did not retry exactly once');
+  simulateMissing = false;
+  results.push('AccountMenu: missing session recovery once per episode; no null/pending loop');
 
   await act(async () => root.unmount()); client.clear(); mutations.disconnect();
   return { results, commits: commits.length, writes: writes.length };
