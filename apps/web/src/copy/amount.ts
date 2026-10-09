@@ -1,63 +1,59 @@
-import type { GoalUnit, RecordUnit } from '@contracts';
+import type { GoalUnit } from '@contracts';
 
 /*
- * 量の書き方（#157、Product Spec P-18 のC案）。
- * 量はAPI・Engineとも分（回のGoalは回）の整数のまま扱い、ここで画面に出す単位へ換算する。
- * - 時間のGoal（unit = minutes）：累計・総量・残り・記録開始前の量は時間で出す。1回の量と日々の記録は記録の単位（分か時間）で出す
+ * 量の書き方（Product Spec P-18「整数分を保った時間＋分表示」、#121・#157）。
+ * 量はAPI・Engine・入力とも分（回のGoalは回）の整数のまま扱い、ここで画面に出す文字にするだけ。
+ * - 分のGoal：累計・総量・残量は正確な「時間＋分」（1240分 → 20時間40分）。小数へ丸めない（1分の差を隠さない）
+ *   1回の量と日々の記録は分のまま（20分）
  * - 回のGoal：すべて回
- * 時間は小数第1位まで（6分刻み）。換算は表示と入力のためだけで、FEで予測の数値は計算しない。
+ * 表示の文字から量を逆算しない。FEで予測の数値は計算しない。
  */
 
-export type AmountGoal = { unit: GoalUnit; recordUnit: RecordUnit | null };
+export type AmountGoal = { unit: GoalUnit };
 
 const MINUTES_PER_HOUR = 60;
 
-/** 分を時間の数字にする（小数第1位まで。整数なら小数を付けない）。 */
-export function hoursText(minutes: number): string {
-  return (Math.round(minutes / 6) / 10).toLocaleString('ja-JP', { maximumFractionDigits: 1 });
-}
+const integer = (n: number) => n.toLocaleString('ja-JP');
 
-/** 時間の入力（例「1.5」「２」）を分へ。小数は第1位まで、0より大きい値だけ。それ以外は null。 */
-export function minutesFromHoursText(text: string): number | null {
-  const normalized = text.trim().replace(/[０-９．]/g, (ch) => (ch === '．' ? '.' : String.fromCharCode(ch.charCodeAt(0) - 0xfee0))).replace(/[,，]/g, '');
-  if (!/^\d+(\.\d)?$/.test(normalized)) return null;
-  const minutes = Math.round(Number(normalized) * MINUTES_PER_HOUR);
-  return minutes > 0 ? minutes : null;
+/** 整数分を正確な時間＋分にする（0 → 0時間0分、61 → 1時間1分、1240 → 20時間40分）。 */
+export function hoursMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
+  return `${integer(hours)}時間${minutes - hours * MINUTES_PER_HOUR}分`;
 }
 
 export type AmountFormat = {
-  /** 累計・総量・残りなどの数字（単位なし）。 */
-  totalNumber: (amount: number) => string;
-  /** 累計・総量・残りなどの単位。 */
-  totalUnit: string;
-  /** 累計・総量・残りなど（例「20.7時間」「38回」）。 */
+  /** 累計・総量・残量（例「20時間40分」「38回」）。 */
   total: (amount: number) => string;
-  /** 1回の量・日々の記録の数字（単位なし）。 */
-  recordNumber: (amount: number) => string;
-  /** 1回の量・日々の記録の単位。 */
-  recordUnit: string;
-  /** 1回の量・日々の記録（例「20分」「1.5時間」「20回」）。 */
+  /** 1回の量・日々の記録（例「20分」「20回」）。 */
   record: (amount: number) => string;
-  /** 記録の単位が時間か（入力欄で小数を受け付ける）。 */
-  recordInHours: boolean;
+  /** 1回の量・日々の記録の単位（入力欄の右端）。 */
+  recordUnit: string;
+  /** 積み上げの図の縦軸（総量で決まる）。 */
+  axis: (total: number) => AmountAxis;
 };
 
-const integer = (n: number) => n.toLocaleString('ja-JP');
+export type AmountAxis = {
+  /** 縦軸の単位。 */
+  unit: string;
+  /** 目盛りの数字（単位なし）。 */
+  label: (amount: number) => string;
+  /** 目盛りの値をそろえる刻み。 */
+  gridUnit: number;
+};
+
+const plainAxis = (unit: string): AmountAxis => ({ unit, label: integer, gridUnit: 1 });
 
 export function amountFormat(goal: AmountGoal): AmountFormat {
   if (goal.unit === 'sessions') {
-    return { totalNumber: integer, totalUnit: '回', total: (n) => `${integer(n)}回`, recordNumber: integer, recordUnit: '回', record: (n) => `${integer(n)}回`, recordInHours: false };
+    const times = (n: number) => `${integer(n)}回`;
+    return { total: times, record: times, recordUnit: '回', axis: () => plainAxis('回') };
   }
-  const recordInHours = goal.recordUnit === 'hours';
-  const recordNumber = recordInHours ? hoursText : integer;
-  const recordUnit = recordInHours ? '時間' : '分';
   return {
-    totalNumber: hoursText,
-    totalUnit: '時間',
-    total: (n) => `${hoursText(n)}時間`,
-    recordNumber,
-    recordUnit,
-    record: (n) => `${recordNumber(n)}${recordUnit}`,
-    recordInHours,
+    total: hoursMinutes,
+    record: (n) => `${integer(n)}分`,
+    recordUnit: '分',
+    // 3時間以上なら1時間刻みの目盛りを時間の数で出す（目盛りは整数時間なので丸めは起きない）。短いGoalは分の目盛り
+    axis: (total) =>
+      total >= 3 * MINUTES_PER_HOUR ? { unit: '時間', label: (n) => integer(n / MINUTES_PER_HOUR), gridUnit: MINUTES_PER_HOUR } : plainAxis('分'),
   };
 }

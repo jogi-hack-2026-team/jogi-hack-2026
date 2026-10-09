@@ -50,13 +50,8 @@ export const goalsCopy = {
     cancel: 'キャンセル',
     title: 'タイトル',
     unit: '単位',
-    // #157（C案）：時間のGoalの量は分で保存し、画面では時間（記録は分か時間）で入力・表示する
-    units: { minutes: '時間', sessions: '回' },
-    recordUnit: '1回の量・記録の単位',
-    recordUnits: { minutes: '分', hours: '時間' },
-    recordUnitHelp: '記録した累計は時間で表示します',
-    hoursHelp: '0.5時間のように、小数第1位まで入力できます',
-    // #157（B案）
+    units: { minutes: '分', sessions: '回' },
+    // 到達予定日（#157、P-19）
     targetDate: '到達予定日',
     targetDateOptional: '任意',
     targetDateHelp: 'いつまでに終えたいかを決めると、Todayの完了の目安の横に、この日とのずれを表示します。あとから変更・削除できます',
@@ -108,8 +103,6 @@ export const goalsCopy = {
     titleTooLong: '100文字以内で入力してください',
     positiveInteger: '1以上の整数を入力してください',
     nonNegativeInteger: '0以上の整数を入力してください',
-    positiveHours: '0より大きい数を、小数第1位までで入力してください',
-    nonNegativeHours: '0以上の数を、小数第1位までで入力してください',
     targetDatePast: '到達予定日は、今日より後の日付を選んでください',
     tooLarge: '大きすぎる数です',
     timezone: '有効なタイムゾーンを選んでください',

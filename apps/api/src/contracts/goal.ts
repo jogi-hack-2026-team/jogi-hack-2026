@@ -13,13 +13,6 @@ export type GoalUnit = Static<typeof GoalUnit>;
 /** Goalのtimezoneでの暦日（YYYY-MM-DD）。 */
 export const LocalDate = Type.String({ pattern: '^\\d{4}-\\d{2}-\\d{2}$' });
 
-/**
- * 時間のGoal（unit = minutes）で、1回の量・日々の記録を入力・表示する単位（#157、C案）。
- * 量はどちらでも分で保存・送受信する。hoursは画面での入力と表示だけを時間にする。
- */
-export const RecordUnit = Type.Union([Type.Literal('minutes'), Type.Literal('hours')]);
-export type RecordUnit = Static<typeof RecordUnit>;
-
 export const TodayStatus = Type.Union([Type.Literal('DONE'), Type.Literal('SKIPPED'), Type.Literal('UNRECORDED')]);
 export type TodayStatus = Static<typeof TodayStatus>;
 
@@ -46,10 +39,8 @@ export const Goal = Type.Object(
      * Todayの予測のprogress.doneと同じ数え方で、一覧の進捗表示に使う。totalRequiredを超えることがある（R-02・R-08）。
      */
     progressDone: Type.Integer(),
-    /** 到達予定日（#157、B案）。任意で、未設定はnull。設定・変更のときはGoalのtimezoneの今日より後だけを受け付ける。 */
+    /** 到達予定日（#157、P-19）。任意で、未設定はnull。設定・変更のときはGoalのtimezoneの今日より後だけを受け付ける。 */
     targetDate: Type.Union([LocalDate, Type.Null()]),
-    /** 時間のGoalの記録の単位（#157、C案）。回のGoalはnull。 */
-    recordUnit: Type.Union([RecordUnit, Type.Null()]),
   },
   strict,
 );
@@ -77,8 +68,6 @@ export const GoalCreate = Type.Object(
     questionPrior: Type.Optional(QuestionAnswers),
     /** 到達予定日。省略・nullは未設定。 */
     targetDate: Type.Optional(Type.Union([LocalDate, Type.Null()])),
-    /** 時間のGoalの記録の単位。省略は minutes。回のGoalには付けない（422）。 */
-    recordUnit: Type.Optional(RecordUnit),
   },
   strict,
 );
@@ -96,7 +85,6 @@ export const GoalPatch = Type.Object(
     questionPrior: Type.Optional(QuestionAnswers),
     expectedAnswerRevision: Type.Optional(AnswerRevision),
     targetDate: Type.Optional(Type.Union([LocalDate, Type.Null()])),
-    recordUnit: Type.Optional(RecordUnit),
   },
   { ...strict, minProperties: 1 },
 );

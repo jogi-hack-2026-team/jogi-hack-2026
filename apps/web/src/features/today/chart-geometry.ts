@@ -110,7 +110,7 @@ export function cumulativeChart(
   recordStartDate: string,
   today: string,
   width: number,
-  /** 目盛りの値をそろえる刻み（時間のGoalは60分＝1時間刻みにして、16.7時間のような目盛りを出さない。#157）。 */
+  /** 目盛りの値をそろえる刻み（分のGoalは60分＝1時間刻みにして、目盛りを整数の時間にする。P-18）。 */
   gridUnit = 1,
 ): CumulativeChart {
   const bounds: PlotBounds = { left: PLOT_LEFT, right: width - PLOT_RIGHT_PAD, top: PLOT_TOP, bottom: PLOT_BOTTOM };

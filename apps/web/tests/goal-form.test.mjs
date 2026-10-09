@@ -6,10 +6,10 @@ import { goalsCopy } from '../src/copy/goals.ts';
 import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, reloadLatestGoal, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
 
 const e = goalsCopy.errors;
-const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', questionPrior: { a: null, b: null } };
+const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', targetDate: '', questionPrior: { a: null, b: null } };
 const goal = {
   id: 'g1', title: '英単語アプリ', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 400, timezone: 'Asia/Tokyo',
-  recordStartDate: '2026-08-17', hasLogs: false, today: '2026-10-07', todayStatus: 'UNRECORDED',
+  recordStartDate: '2026-08-17', hasLogs: false, today: '2026-10-07', todayStatus: 'UNRECORDED', targetDate: null,
 };
 
 test('数の入力は全角数字と桁区切りを受け付け、整数でなければ拒否する', () => {
@@ -179,4 +179,26 @@ test('409後の再取得は通信中断・503の古いcacheを採用せず、成
 test('最新取得のPromiseがrejectしても成功扱いせず、未取得なら比較元を返さない', async () => {
   assert.equal(await reloadLatestGoal(async () => { throw new Error('aborted'); }), undefined);
   assert.equal(await reloadLatestGoal(async () => ({ isSuccess: true, data: undefined })), undefined);
+});
+
+test('到達予定日：任意で、今日より後だけ。空にすると未設定（null）で送る（#157、P-19）', () => {
+  assert.deepEqual(validate({ ...valid, targetDate: '2026-10-08' }, { today: '2026-10-07' }), {});
+  assert.equal(validate({ ...valid, targetDate: '2026-10-07' }, { today: '2026-10-07' }).targetDate, e.targetDatePast);
+  assert.equal(toCreateBody({ ...valid, targetDate: '2027-03-31' }).targetDate, '2027-03-31');
+  assert.equal('targetDate' in toCreateBody(valid), false);
+  const withTarget = { ...goal, targetDate: '2027-03-31', hasLogs: true };
+  assert.equal(toPatchBody(valuesFromGoal(withTarget), withTarget), null);
+  // 記録があっても変えられる。空にすると null
+  assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '2027-06-30' }, withTarget), { targetDate: '2027-06-30' });
+  assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '' }, withTarget), { targetDate: null });
+});
+
+test('時間のGoalの量は整数分のまま入力・保存し、編集で触らなければ元の分を保つ（P-18）', () => {
+  // 1240分のような時間＋分で表す値も、入力欄は分の整数で出し、未変更なら送らない
+  const g = { ...goal, totalRequired: 3000, sessionAmount: 25, initialProgress: 1240 };
+  const shown = valuesFromGoal(g);
+  assert.deepEqual([shown.totalRequired, shown.sessionAmount, shown.initialProgress], ['3000', '25', '1240']);
+  assert.equal(toPatchBody(shown, g), null);
+  // 小数は受け付けない（小数の時間で入力しない）
+  assert.equal(validate({ ...valid, sessionAmount: '1.5' }).sessionAmount, e.positiveInteger);
 });

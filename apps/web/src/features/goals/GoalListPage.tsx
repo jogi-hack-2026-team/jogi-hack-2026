@@ -84,7 +84,7 @@ export function GoalListPage() {
  * 進捗バーは総量を超えたら満杯で止める（数字は超えた値のまま出す、R-08）。
  */
 function GoalRow({ goal }: { goal: Goal }) {
-  // 累計と総量（時間のGoalは時間、#157）
+  // 累計と総量（分のGoalは時間＋分、P-18）
   const fmt = amountFormat(goal);
   const percent = Math.min(100, Math.floor((goal.progressDone / goal.totalRequired) * 100));
   return (
@@ -102,7 +102,7 @@ function GoalRow({ goal }: { goal: Goal }) {
         <span className="fr-goals__row-sub">
           <span>{c.todayStatus[goal.todayStatus]}</span>
           <span className="fr-goals__amount">
-            {fmt.totalNumber(goal.progressDone)}{' '}
+            {fmt.total(goal.progressDone)}{' '}
             <span className="fr-goals__amount-total">
               / {fmt.total(goal.totalRequired)}
             </span>

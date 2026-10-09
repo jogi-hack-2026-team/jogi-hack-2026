@@ -14,13 +14,12 @@ interface Props {
   logs: Log[];
   recordStartDate: string;
   today: string;
-  /** 量の書き方（時間のGoalは累計を時間で出す、#157）。 */
+  /** 量の書き方（分のGoalは累計・総量を時間＋分で出す、P-18）。 */
   fmt: AmountFormat;
 }
 
 /** これまでの積み上げ。％は進捗だけに使い、累計は記録開始日〜今日の範囲で描く（今日より先の線は引かない）。 */
 export function ProgressSummary({ progress, initialProgress, logs, recordStartDate, today, fmt }: Props) {
-  const unit = fmt.totalUnit;
   // 100% は達成したときだけ出す（未達で切り上げて 100% と見せない）
   const percent = Math.min(100, Math.floor((progress.done / progress.total) * 100));
   return (
@@ -34,8 +33,7 @@ export function ProgressSummary({ progress, initialProgress, logs, recordStartDa
           <small>%</small>
         </p>
         <p className="fr-progress__amount">
-          {fmt.totalNumber(progress.done)} / {fmt.totalNumber(progress.total)}
-          {unit}
+          {fmt.total(progress.done)} / {fmt.total(progress.total)}
         </p>
       </div>
       <Help>{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}</Help>
@@ -61,11 +59,11 @@ function CumulativeChartView({
   fmt: AmountFormat;
   done: number;
 }) {
-  const unit = fmt.totalUnit;
+  const axis = fmt.axis(total);
   // 実際の幅で描く（縮めて表示すると文字まで小さくなるため）
   const [ref, width] = useElementWidth<HTMLDivElement>(DEFAULT_CHART_WIDTH);
-  // 時間のGoalは、目盛りを1時間刻みにそろえる
-  const c = cumulativeChart(logs, initialProgress, total, recordStartDate, today, width, fmt.totalUnit === '時間' ? 60 : 1);
+  // 分のGoalは、目盛りを1時間刻みにそろえる（P-18）
+  const c = cumulativeChart(logs, initialProgress, total, recordStartDate, today, width, axis.gridUnit);
   const b = c.bounds;
   const line = c.points.map((p) => `${p.x},${p.y}`).join(' ');
   const area = `${b.left},${c.zeroY} ${line} ${b.right},${c.zeroY}`;
@@ -74,7 +72,7 @@ function CumulativeChartView({
     <div ref={ref} className="fr-chart-box">
     <svg className="fr-chart" width={width} height={CUMULATIVE_HEIGHT} viewBox={`0 0 ${width} ${CUMULATIVE_HEIGHT}`} role="img" aria-label={`記録開始日から今日までの累計。今日 ${fmt.total(done)}。目標は${fmt.total(total)}`}>
       <text x="50" y="16" textAnchor="end" className="fr-chart__text">
-        {unit}
+        {axis.unit}
       </text>
       <line x1={b.left} y1={c.targetY} x2={b.right} y2={c.targetY} className="fr-chart__target" />
       <text x={b.right} y={c.targetY - 8} textAnchor="end" className="fr-chart__text">
@@ -84,7 +82,7 @@ function CumulativeChartView({
         <g key={g.value}>
           <line x1={b.left} y1={g.y} x2={b.right} y2={g.y} className="fr-chart__grid" />
           <text x="50" y={g.y + 4} textAnchor="end" className="fr-chart__text">
-            {fmt.totalNumber(g.value)}
+            {axis.label(g.value)}
           </text>
         </g>
       ))}

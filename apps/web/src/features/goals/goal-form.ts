@@ -16,6 +16,8 @@ export type FormValues = {
   sessionAmount: string;
   initialProgress: string;
   timezone: string;
+  /** 到達予定日（#157、P-19）。YYYY-MM-DD、空は未設定。 */
+  targetDate: string;
   /** R-11の2問の回答（任意。null は回答しない、UNKNOWN は経験がない・思い出せない）。 */
   questionPrior: QuestionAnswers;
 };
@@ -28,14 +30,14 @@ export type FieldName = keyof FormValues;
 export type FieldErrors = Partial<Record<FieldName, string>>;
 
 /** 画面に並ぶ順。エラーの件数を数え、最初のエラー項目へ移るときに使う。 */
-export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'timezone', 'questionPrior'];
+export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'targetDate', 'timezone', 'questionPrior'];
 
 const INT4_MAX = 2_147_483_647;
 export const TITLE_MAX = 100;
 const e = goalsCopy.errors;
 
 export function emptyValues(timezone: string): FormValues {
-  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, questionPrior: NO_ANSWERS };
+  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, targetDate: '', questionPrior: NO_ANSWERS };
 }
 
 export function valuesFromGoal(goal: GoalWithAnswers): FormValues {
@@ -46,6 +48,7 @@ export function valuesFromGoal(goal: GoalWithAnswers): FormValues {
     sessionAmount: String(goal.sessionAmount),
     initialProgress: String(goal.initialProgress),
     timezone: goal.timezone,
+    targetDate: goal.targetDate ?? '',
     questionPrior: goal.questionPrior ?? NO_ANSWERS,
   };
 }
@@ -78,8 +81,11 @@ export function isValidTimezone(timezone: string): boolean {
   }
 }
 
-/** 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。 */
-export function validate(values: FormValues, { locked = false }: { locked?: boolean } = {}): FieldErrors {
+/**
+ * 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。
+ * today は到達予定日の比較に使う「今日」（選んだ timezone の今日）。API でも同じ検査をする。
+ */
+export function validate(values: FormValues, { locked = false, today }: { locked?: boolean; today?: string } = {}): FieldErrors {
   const errors: FieldErrors = {};
   if (!/\S/.test(values.title)) errors.title = e.titleRequired;
   else if (titleLength(values.title) > TITLE_MAX) errors.title = e.titleTooLong;
@@ -87,6 +93,10 @@ export function validate(values: FormValues, { locked = false }: { locked?: bool
   if (total) errors.totalRequired = total;
   const session = amountError(values.sessionAmount, 1);
   if (session) errors.sessionAmount = session;
+  // YYYY-MM-DD どうしなので文字列の比較で日付の前後が分かる
+  if (values.targetDate && (!/^\d{4}-\d{2}-\d{2}$/.test(values.targetDate) || (today !== undefined && values.targetDate <= today))) {
+    errors.targetDate = e.targetDatePast;
+  }
   if (!locked) {
     const initial = amountError(values.initialProgress, 0);
     if (initial) errors.initialProgress = initial;
@@ -107,6 +117,8 @@ export function toCreateBody(values: FormValues): GoalCreate {
     sessionAmount: int(values.sessionAmount),
     initialProgress: int(values.initialProgress),
     timezone: values.timezone,
+    // 未設定の到達予定日は送らない
+    ...(values.targetDate ? { targetDate: values.targetDate } : {}),
     // 回答しない問いは null のまま送る（POST は版を送らない。初版は 0）
     questionPrior: values.questionPrior,
   };
@@ -144,6 +156,7 @@ export function rebaseValues(values: FormValues, previous: GoalWithAnswers, late
     sessionAmount: pick('sessionAmount', int(values.sessionAmount) !== previous.sessionAmount),
     initialProgress: pick('initialProgress', int(values.initialProgress) !== previous.initialProgress),
     timezone: pick('timezone', values.timezone !== before.timezone),
+    targetDate: pick('targetDate', values.targetDate !== before.targetDate),
     questionPrior: pick('questionPrior', !sameAnswers(values.questionPrior, before.questionPrior)),
   };
 }
@@ -173,6 +186,8 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
   if (values.unit !== goal.unit) patch.unit = values.unit;
   if (int(values.totalRequired) !== goal.totalRequired) patch.totalRequired = int(values.totalRequired);
   if (int(values.sessionAmount) !== goal.sessionAmount) patch.sessionAmount = int(values.sessionAmount);
+  // 到達予定日は記録があっても変えられる。空にしたら null で未設定に戻す
+  if ((values.targetDate || null) !== (goal.targetDate ?? null)) patch.targetDate = values.targetDate || null;
   if (!goal.hasLogs) {
     if (int(values.initialProgress) !== goal.initialProgress) patch.initialProgress = int(values.initialProgress);
     if (values.timezone !== goal.timezone) patch.timezone = values.timezone;
@@ -191,6 +206,7 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
 const serverMessage: Record<FieldName, string> = {
   title: e.server,
   unit: e.server,
+  targetDate: e.targetDatePast,
   totalRequired: e.positiveInteger,
   sessionAmount: e.positiveInteger,
   initialProgress: e.nonNegativeInteger,

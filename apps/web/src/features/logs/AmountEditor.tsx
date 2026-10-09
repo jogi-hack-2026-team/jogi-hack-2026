@@ -3,7 +3,7 @@ import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { Field, fieldAria, NumberInput } from '../../ui/components/FormField.tsx';
 import { IconButton } from '../../ui/components/Button.tsx';
-import { minutesFromHoursText, type AmountFormat } from '../../copy/amount.ts';
+import type { AmountFormat } from '../../copy/amount.ts';
 import { parseInteger } from '../goals/goal-form.ts';
 import './logs.css';
 
@@ -27,7 +27,7 @@ export function AmountEditor({
   label: string;
   initial: number;
   sessionAmount: number;
-  /** 量の書き方（記録の単位。時間なら時間で入力する、#157）。 */
+  /** 量の書き方（記録は分か回の整数で入力する、P-18）。 */
   fmt: AmountFormat;
   busy: boolean;
   onSubmit: (amount: number) => void;
@@ -37,14 +37,12 @@ export function AmountEditor({
   cancelLabel?: string;
 }) {
   const id = useId();
-  // 入力欄は記録の単位の数字（時間は小数第1位まで、桁区切りなし）。送る値は分（回）のまま
-  const toText = (n: number) => fmt.recordNumber(n).replace(/,/g, '');
-  const [text, setText] = useState(toText(initial));
+  const [text, setText] = useState(String(initial));
   const [error, setError] = useState<string | undefined>();
-  const value = fmt.recordInHours ? minutesFromHoursText(text) : parseInteger(text);
+  const value = parseInteger(text);
   const step = (delta: number) => {
     const next = Math.min(INT4_MAX, Math.max(1, (value ?? 0) + delta));
-    setText(toText(next));
+    setText(String(next));
     setError(undefined);
   };
   const submit = () => {
@@ -64,7 +62,6 @@ export function AmountEditor({
           <NumberInput
             id={id}
             suffix={fmt.recordUnit}
-            decimal={fmt.recordInHours}
             value={text}
             disabled={busy}
             invalid={Boolean(error)}

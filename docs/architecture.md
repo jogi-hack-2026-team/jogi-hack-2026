@@ -276,8 +276,6 @@ CREATE TABLE goal (
   timezone        text NOT NULL,            -- IANA名（例 Asia/Tokyo）
   record_start_date date NOT NULL,          -- 記録開始日。作成時のtimezoneでの暦日で固定（#76、migration 0002）
   target_date     date,                     -- 到達予定日（任意）。今日より後の確認はAPI（#157、migration 0005）
-  record_unit     text NOT NULL DEFAULT 'minutes' CHECK (record_unit IN ('minutes', 'hours')),
-                                            -- 時間のGoalの記録の単位。量は分のまま。回のGoalは 'minutes' に固定（#157）
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
@@ -295,12 +293,12 @@ CREATE TABLE action_log (
 ```
 
 - 記録のない日はUNKNOWNとして解釈し、行を作らない。
-- 目標期日（targetDate）は持たなかった（MVPの表示に使わないため。期日到達確率は[D-21](#d-21)で不採用）。2026-10-09、[Product P-18](product-spec.md#p-18-到達予定日と時間の単位b案c案)で任意の到達予定日 `target_date` を追加した（#157）。表示は目安の週との日付の差だけで、期日到達確率はD-21のとおり出さない。Engineの入力・計算は変えない。
-- 時間のGoal（`unit = 'minutes'`）の量は分で保存し、`record_unit`（`minutes`／`hours`）は1回の量と日々の記録を画面で入力・表示する単位だけを決める（P-18、#157）。累計の時間への換算は画面で行う。
+- 目標期日（targetDate）は持たなかった（MVPの表示に使わないため。期日到達確率は[D-21](#d-21)で不採用）。2026-10-09、[Product P-19](product-spec.md#p-19-到達予定日b案)で任意の到達予定日 `target_date` を追加した（#157）。表示は目安の週との日付の差だけで、期日到達確率はD-21のとおり出さない。Engineの入力・計算は変えない。
+- 分のGoal（`unit = 'minutes'`）の量は入力・保存とも整数分のままとし、累計・総量・残量の「時間＋分」は画面の表示だけで作る（[Product P-18](product-spec.md#p-18-整数分を保った時間分表示)、#157）。C案の記録の単位（分／時間）・小数時間の入力は採用しない（P-19）。
 - `initial_progress`は「記録開始日の前日までに終えた量」（既定0）。現在の実績は常に `initial_progress ＋ 記録開始日以降のDONEのamountの合計` で計算し、別に保存しない。開始日前の新規ログは拒否し、初期量から過去の行動状態・遷移を作らない。
 - 記録が1件でもあるGoalでは、`timezone`と`initial_progress`を変更できない（過去の`local_date`の基準や、過去の予測の意味が変わるため。timezoneの移行処理はMVPで扱わない）。
 
-**実装（#74・#76）**: 上のSQLは[apps/api/migrations/0001_goal_action_log.sql](../apps/api/migrations/0001_goal_action_log.sql)（`updated_at`はtriggerで更新）と、`record_start_date`を足す[0002_goal_record_start_date.sql](../apps/api/migrations/0002_goal_record_start_date.sql)（#76）として適用済み。`target_date`・`record_unit`は[0005_goal_target_date_record_unit.sql](../apps/api/migrations/0005_goal_target_date_record_unit.sql)（#157）で足し、既存Goalは到達予定日なし・分で記録のまま。`npm run db:migrate`が認証→アプリの順に実行し、空のDBへの初回適用・2回目の差分なし・各制約の拒否は[migrate.test.ts](../apps/api/tests/migrate.test.ts)で確認する。方式は[2026-10-06のmigration方式](#2026-10-06のmigration方式74)を参照。
+**実装（#74・#76）**: 上のSQLは[apps/api/migrations/0001_goal_action_log.sql](../apps/api/migrations/0001_goal_action_log.sql)（`updated_at`はtriggerで更新）と、`record_start_date`を足す[0002_goal_record_start_date.sql](../apps/api/migrations/0002_goal_record_start_date.sql)（#76）として適用済み。`target_date`は[0005_goal_target_date.sql](../apps/api/migrations/0005_goal_target_date.sql)（#157）で足し、既存Goalは到達予定日なしのまま。`npm run db:migrate`が認証→アプリの順に実行し、空のDBへの初回適用・2回目の差分なし・各制約の拒否は[migrate.test.ts](../apps/api/tests/migrate.test.ts)で確認する。方式は[2026-10-06のmigration方式](#2026-10-06のmigration方式74)を参照。
 
 ### 初期進捗と日々の記録の境界
 
@@ -321,7 +319,7 @@ CREATE TABLE action_log (
 | Method / Path | 内容 |
 | --- | --- |
 | `/api/auth/*` | Better Authのハンドラ（`sign-up/email`・`sign-in/email`・`sign-out`・`get-session`等。#75で実装）。業務APIの確定契約とは別。回数制限超過は429と`X-Retry-After`（整数秒） |
-| `GET /api/goals` | 自分のGoal一覧。作成順の配列で、各Goalに`today`（Goalのtimezoneでの暦日）・`todayStatus`・`hasLogs`を含む（#76）。Goal DTOは記録した累計`progressDone`（`initialProgress`＋今日までのDONEの量。Todayの`prediction.progress.done`と同じ数え方で、総量を超えうる）も含み、一覧の進捗表示に使う（#146）。到達予定日`targetDate`（未設定はnull）と、時間のGoalの記録の単位`recordUnit`（`minutes`／`hours`、回のGoalはnull）も含む。作成・編集で送る`targetDate`はGoalのtimezoneの今日より後だけ（`null`で未設定に戻す）、回のGoalへの`recordUnit`は422（#157） |
+| `GET /api/goals` | 自分のGoal一覧。作成順の配列で、各Goalに`today`（Goalのtimezoneでの暦日）・`todayStatus`・`hasLogs`を含む（#76）。Goal DTOは記録した累計`progressDone`（`initialProgress`＋今日までのDONEの量。Todayの`prediction.progress.done`と同じ数え方で、総量を超えうる）も含み、一覧の進捗表示に使う（#146）。到達予定日`targetDate`（未設定はnull）も含む。作成・編集で送る`targetDate`はGoalのtimezoneの今日より後だけ（`null`で未設定に戻す）（#157、P-19） |
 | `POST /api/goals` | 作成（201＋Goal DTO）。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone`。初期量の既定は0で、記録開始日の前日までの量。timezoneは有効なIANA名のみ（それ以外は422）。記録開始日は作成時のtimezoneの暦日で固定し`recordStartDate`で返す（#76） |
 | `GET / PATCH / DELETE /api/goals/:goalId` | 取得（200）・編集（200。省略は維持、`null`・空bodyは422）・削除（204。記録も連鎖削除）。他人・存在しないidは404。記録があるGoalで`timezone`・`initialProgress`を異なる値へ変えようとすると422 `GOAL_HAS_LOGS`（#76） |
 | `PUT /api/goals/:goalId/logs/:localDate` | 記録の作成・上書き（200＋Log）。body：`status, amount?`。`localDate`がGoalのtimezoneで今日・昨日以外なら422 `LOG_DATE_OUT_OF_WINDOW`、固定した記録開始日より前なら422 `LOG_DATE_BEFORE_START`。どちらの違反でも記録・初期量を変更しない（#77） |

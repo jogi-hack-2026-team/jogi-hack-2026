@@ -7,7 +7,7 @@ import { amountFormat } from '../src/copy/amount.ts';
 import { choiceFromLog, classifySaveError, describeChoice, editLocks, reachedDate, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 
-const minutes = amountFormat({ unit: 'minutes', recordUnit: 'minutes' });
+const minutes = amountFormat({ unit: 'minutes' });
 
 test('量を変えていないDONEは amount を送らず、APIに1回の量で補わせる。SKIPPEDは amount を送らない', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: null }), { status: 'DONE' });
@@ -20,9 +20,9 @@ test('量を変えていないDONEは amount を送らず、APIに1回の量で�
 test('保存できなかった記録を「やった・20分」「休んだ」と書く（量を変えていなければ1回の量）', () => {
   assert.equal(describeChoice({ status: 'DONE', amount: null }, 20, minutes.record, '休んだ'), 'やった・20分');
   assert.equal(describeChoice({ status: 'DONE', amount: 1500 }, 20, minutes.record, '休んだ'), 'やった・1,500分');
-  // 記録の単位が時間のGoalは、分で保存した量を時間で書く（#157）
-  assert.equal(describeChoice({ status: 'DONE', amount: 90 }, 60, amountFormat({ unit: 'minutes', recordUnit: 'hours' }).record, '休んだ'), 'やった・1.5時間');
-  assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, amountFormat({ unit: 'sessions', recordUnit: null }).record, '休んだ'), '休んだ');
+  // 日々の記録は時間＋分にせず、分のまま書く（P-18）
+  assert.equal(describeChoice({ status: 'DONE', amount: 90 }, 60, minutes.record, '休んだ'), 'やった・90分');
+  assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, amountFormat({ unit: 'sessions' }).record, '休んだ'), '休んだ');
 });
 
 test('保存の失敗を、ログイン切れ・記録できない日・それ以外（再試行できる）に分ける', () => {

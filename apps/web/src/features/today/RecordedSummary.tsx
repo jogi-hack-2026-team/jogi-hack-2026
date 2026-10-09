@@ -35,7 +35,7 @@ export function RecordedSummary({ todayLog, fmt, onChange }: { todayLog: Log; fm
 
 /** 達成済み（R-08、デザイン D6）。予測は出さない。累計（総量を超えることがある）と総量を出す。 */
 export function AchievedPanel({ done, total, fmt }: { done: number; total: number; fmt: AmountFormat }) {
-  // 累計と総量（時間のGoalは時間、#157）
+  // 累計と総量（分のGoalは時間＋分、P-18）
   const amount = fmt.total;
   return (
     <section className="fr-today__top fr-achieved" aria-labelledby="fr-achieved-title">

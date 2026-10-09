@@ -16,7 +16,7 @@ export type GoalRouteDeps = {
 
 const GOAL_NOT_FOUND = errorBody('NOT_FOUND', 'Goal not found.');
 
-/** 到達予定日・記録の単位の検査に通らなかった（#157）。契約違反と同じ形の422で返す。 */
+/** 到達予定日の検査に通らなかった（#157）。契約違反と同じ形の422で返す。 */
 const invalidFields = (error: GoalFieldsInvalid) => errorBody('VALIDATION_ERROR', 'Request does not match the goal contract.', error.fields);
 
 // Goal API（R-02、#76）。`/api/*`共通hook（guards.ts）の内側に置くため、ここでは認証済みのrequest.userIdを前提にする。

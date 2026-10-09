@@ -33,7 +33,7 @@ export function RecordChoiceBar({
 }: {
   today: string;
   sessionAmount: number;
-  /** 量の書き方（記録の単位。#157）。 */
+  /** 量の書き方（1回の量は分か回。P-18）。 */
   fmt: AmountFormat;
   current?: Log | null;
   saver: ReturnType<typeof useSaveLog>;

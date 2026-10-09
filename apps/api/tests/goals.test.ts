@@ -51,7 +51,7 @@ test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの
   assert.match(goal.id, /^[0-9a-f-]{36}$/);
   assert.deepEqual(
     { ...goal, id: 'x' },
-    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0, targetDate: null, recordUnit: 'minutes' },
+    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0, targetDate: null },
   );
 
   const list = await a.call('GET', '/api/goals');

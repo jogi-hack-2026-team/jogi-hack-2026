@@ -1,7 +1,7 @@
 import { addDays, daysBetween, mondayOf } from '../../copy/date.ts';
 
 /*
- * 到達予定日とのずれ（#157、Product Spec P-18 のB案）。
+ * 到達予定日とのずれ（#157、Product Spec P-19 のB案）。
  * 完了の目安・余裕をみるならは「○月○日の週」で出しているので、その週の月曜日と到達予定日の差をずれとする。
  * Engine の日数（今日から何日目か）をそのまま使い、FE で予測を計算し直さない（日付の差を数えるだけ）。
  */

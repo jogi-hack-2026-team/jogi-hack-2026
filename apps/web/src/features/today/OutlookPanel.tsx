@@ -140,7 +140,7 @@ function SourceRows({ sources }: { sources: Extract<CompletionPresentation, { ki
 }
 
 function PlanView({ plan, reason, fmt }: { plan: Plan; reason: string; fmt: AmountFormat }) {
-  // 残りは累計と同じ単位、1回の量と最後の量は記録の単位で書く（#157）
+  // 残りは累計と同じ時間＋分、1回の量と最後の量は分で書く（P-18）
   return (
     <div className="fr-plan">
       <p className="fr-plan__title">{todayCopy.planTitle}</p>
