@@ -131,6 +131,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const locked = mode === 'edit' && goal.hasLogs;
+  const [prepareError, setPrepareError] = useState<unknown>(null);
   const [attempt, setAttempt] = useState<CreateAttempt | null>(() => owner ? loadCreateAttempt(owner, sessionStorage) : null);
   const recoveryValues = attempt ? { ...emptyValues(attempt.body.timezone), ...attempt.body,
     totalRequired: String(attempt.body.totalRequired), sessionAmount: String(attempt.body.sessionAmount),
@@ -170,10 +171,9 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
 
   const save = useMutation({
     retry: false,
-    mutationFn: async (v: FormValues): Promise<Goal | null> => {
+    mutationFn: async ({ values: v, operation }: { values: FormValues; operation: CreateAttempt | null }): Promise<Goal | null> => {
       if (mode === 'create') {
-        const operation = prepareCreateAttempt(owner!, toCreateBody(v), sessionStorage);
-        setAttempt(operation);
+        if (!operation || operation.owner !== owner) throw new Error('作成操作を確認できません。');
         const current = await authClient.getSession({ query: { disableCookieCache: true } });
         if (current.error || current.data?.user.id !== operation.owner) throw new Error('作成時のアカウントでログインし直してから再試行してください。');
         return goalsHttp.createGoal(operation.body, operation.key, operation.owner);
@@ -183,13 +183,13 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       return patch ? goalsHttp.updateGoal(goal.id, patch) : null;
     },
     // 一覧などの取り直しは、画面を離れていても必ず行う。一覧への移動は mutate に渡す onSuccess で、表示中のときだけ行う
-    onSuccess: async () => {
-      if (owner) { clearCreateAttempt(owner, sessionStorage); setAttempt(null); }
+    onSuccess: async (_goal, vars) => {
+      if (vars.operation) { clearCreateAttempt(vars.operation.owner, vars.operation.key, sessionStorage); setAttempt(null); }
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
     },
-    onError: (error) => {
+    onError: (error, vars) => {
       saving.current = false;
-      if (owner && error instanceof ApiError && error.status === 422) { clearCreateAttempt(owner, sessionStorage); setAttempt(null); }
+      if (vars.operation && error instanceof ApiError && error.status === 422) { clearCreateAttempt(vars.operation.owner, vars.operation.key, sessionStorage); setAttempt(null); }
       const fromApi = fieldErrorsFromApi(error);
       if (fromApi && errorCount(fromApi) > 0) {
         setServerErrors(fromApi);
@@ -234,8 +234,14 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       focusFirstError(found);
       return;
     }
-    saving.current = true;
-    save.mutate(values, { onSuccess: leaveToList });
+    setPrepareError(null);
+    try {
+      // mutation varsに送信操作を固定する。旧画面のcallbackでも該当キーだけを終了する。
+      const operation = mode === 'create' ? prepareCreateAttempt(owner!, toCreateBody(values), sessionStorage) : null;
+      if (operation) setAttempt(operation);
+      saving.current = true;
+      save.mutate({ values, operation }, { onSuccess: leaveToList });
+    } catch (error) { saving.current = false; setPrepareError(error); }
   };
 
   const focusFirstError = (found: FieldErrors) => {
@@ -257,7 +263,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const timezones = useTimezones(values.timezone);
   // 422 で項目に割り当てられたエラーは各項目に出す。それ以外（通信・サーバー・ログイン切れ）は保存ボタンの上に出す
   const apiFieldErrors = save.isError ? fieldErrorsFromApi(save.error) : null;
-  const saveFailure = save.isError && (apiFieldErrors === null || errorCount(apiFieldErrors) === 0) ? save.error : null;
+  const saveFailure = prepareError ?? (save.isError && (apiFieldErrors === null || errorCount(apiFieldErrors) === 0) ? save.error : null);
   const showSaveFailure = saveFailure !== null && count === 0;
   // 通信・サーバーの失敗は「もう一度保存」。ログイン切れはログインし直すまで同じ文言のままにする
   const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isAnswerConflict(saveFailure);

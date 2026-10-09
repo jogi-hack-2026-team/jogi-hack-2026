@@ -59,19 +59,23 @@ test('R11 保存・編集・撤回: 版0から開始し、nullとUNKNOWNを保�
 test('R11 文脈変更: title/total/initial/timezoneは回答を保ち、unit/sessionAmountだけ撤回、実記録は保持する', async t => {
   const { db, goal } = await setupStore(t);
   const start = goal.recordStartDate;
+  let settingsRevision = 0;
   for (const patch of [{ title: 'other' }, { totalRequired: 125 }, { initialProgress: 3 }, { timezone: 'UTC' }, { unit: input.unit, expectedAnswerRevision: 0 }]) {
-    const result = await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: 0, ...patch }, () => NOW);
+    const result = await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: settingsRevision, ...patch }, () => NOW);
     assert.equal(result.kind, 'updated');
-    if (result.kind === 'updated') { assert.equal(result.goal.answerRevision, 0); assert.deepEqual(result.goal.questionPrior, answers); assert.equal(result.goal.recordStartDate, start); }
+    if (result.kind === 'updated') { settingsRevision = result.goal.goalSettingsRevision; assert.equal(result.goal.answerRevision, 0); assert.deepEqual(result.goal.questionPrior, answers); assert.equal(result.goal.recordStartDate, start); }
   }
   const later = new Date('2026-10-07T12:00:00Z');
-  assert.equal((await putLog(db.pool, 'owner', goal.id, '2026-10-07', { expectedGoalSettingsRevision: 0, status: 'DONE', amount: 7 }, () => later)).kind, 'saved');
+  assert.equal((await putLog(db.pool, 'owner', goal.id, '2026-10-07', { expectedGoalSettingsRevision: settingsRevision, status: 'DONE', amount: 7 }, () => later)).kind, 'saved');
   for (const answer of [answers, { a: null, b: 'UNKNOWN' }] as const) {
-    assert.deepEqual(await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: 0, unit: 'sessions', title: 'must rollback', questionPrior: answer, expectedAnswerRevision: 0 }, () => NOW), { kind: 'invalid_question_patch', field: 'questionPrior' });
+    assert.deepEqual(await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: settingsRevision, sessionAmount: 4, title: 'must rollback', questionPrior: answer, expectedAnswerRevision: 0 }, () => NOW), { kind: 'invalid_question_patch', field: 'questionPrior' });
   }
-  const changed = await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: 0, unit: 'sessions', sessionAmount: 4, expectedAnswerRevision: 0 }, () => NOW);
+  const changed = await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: settingsRevision, sessionAmount: 4, expectedAnswerRevision: 0 }, () => NOW);
   assert.equal(changed.kind, 'updated');
   if (changed.kind !== 'updated') return;
+  settingsRevision = changed.goal.goalSettingsRevision;
+  assert.equal(changed.goal.unit, 'minutes');
+  assert.equal(changed.goal.unitLocked, true);
   assert.equal(changed.goal.answerRevision, 1);
   assert.deepEqual(changed.goal.questionPrior, { a: null, b: null });
   assert.equal(changed.goal.recordStartDate, start);
@@ -82,7 +86,7 @@ test('R11 文脈変更: title/total/initial/timezoneは回答を保ち、unit/se
   const result = runQuestionPrediction({ prediction: { goal: snapshot.goal, logs: snapshot.logs, today: '2026-10-07' }, answers: saved.answers, mapping: saved.mapping });
   assert.equal(result.prediction.progress.done, 10, 'initial 3 + stored actual 7; no unit conversion or new default amount');
   assert.deepEqual(result.plan, { remainingAmount: 115, remainingSessions: 29, lastSessionAmount: 3 });
-  const legacy = await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: 0, sessionAmount: 5 }, () => NOW);
+  const legacy = await updateGoal(db.pool, 'owner', goal.id, { expectedGoalSettingsRevision: settingsRevision, sessionAmount: 5 }, () => NOW);
   assert.equal(legacy.kind, 'updated');
   if (legacy.kind === 'updated') assert.equal(legacy.goal.answerRevision, 2, 'legacy context write also invalidates old answer tokens');
 });
@@ -102,7 +106,7 @@ test('R11 同時回答変更: Goal lock待機後に版を確認し、同じ古�
     await waitFor(async () => (await db.pool.query<{ n: number }>(`select count(*)::int as n from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock' and query like '%for update of g%'`)).rows[0]!.n === 2);
     await held.query('commit');
     const results = await Promise.all(writes) as Awaited<ReturnType<typeof updateGoal>>[];
-    assert.deepEqual(results.map(r => r.kind).sort(), ['answer_conflict', 'updated']);
+    assert.deepEqual(results.map(r => r.kind).sort(), ['settings_conflict', 'updated']);
     const winner = results.find(r => r.kind === 'updated')!;
     const stored = (await getGoal(db.pool, 'owner', goal.id, () => NOW))!;
     if (winner.kind === 'updated') assert.deepEqual(stored, winner.goal);
@@ -118,7 +122,7 @@ test('R11 文脈変更と回答編集を両順序で固定し、古い回答を�
     const writePool = new pg.Pool({ connectionString: db.connectionString, max: 2 });
     let first: ReturnType<typeof updateGoal> | undefined, second: ReturnType<typeof updateGoal> | undefined;
     const context = { unit: 'sessions', sessionAmount: 4 } as const;
-    const edit = { title: 'answer edit', questionPrior: { a: 'MID', b: 'MID' }, expectedAnswerRevision: 0 } as const;
+    const edit = { questionPrior: { a: 'MID', b: 'MID' }, expectedAnswerRevision: 0 } as const;
     const blocked = async (count: number) => waitFor(async () => (await db.pool.query<{ n: number }>(`select count(*)::int as n from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock' and query like '%for update of g%'`)).rows[0]!.n === count);
     try {
       await held.query('begin');
@@ -130,12 +134,12 @@ test('R11 文脈変更と回答編集を両順序で固定し、古い回答を�
       await held.query('commit');
       const results = await Promise.all([first, second]);
       assert.equal(results[0].kind, 'updated');
-      assert.equal(results[1].kind, contextFirst ? 'answer_conflict' : 'updated');
+      assert.equal(results[1].kind, contextFirst ? 'settings_conflict' : 'updated');
       const stored = (await getGoal(db.pool, 'owner', goal.id, () => NOW))!;
       assert.equal(stored.unit, 'sessions'); assert.equal(stored.sessionAmount, 4);
       assert.deepEqual(stored.questionPrior, { a: null, b: null });
       assert.equal(stored.answerRevision, contextFirst ? 1 : 2);
-      assert.equal(stored.title, contextFirst ? input.title : 'answer edit');
+      assert.equal(stored.title, input.title);
     } finally { await held.query('rollback').catch(() => {}); held.release(); await Promise.allSettled([first, second]); await writePool.end(); }
   }
 });

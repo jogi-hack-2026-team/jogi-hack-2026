@@ -85,7 +85,7 @@ try {
    const f=await fixture(),g=await f.create();await f.open(g);await f.patch(g,change);
    await f.page.getByRole('button',{name:/^やった/}).last().click();await f.page.getByRole('button',{name:'最新の設定を取得'}).click();
    await f.page.getByText('単位またはタイムゾーンが変わりました。同じ数字を自動で保存せず、量と対象日を選び直してください。',{exact:true}).waitFor();
-   assert.equal(await f.page.getByRole('button',{name:'この量で再保存'}).isDisabled(),true);assert.equal(await f.page.getByRole('button',{name:'選び直す',exact:true}).isDisabled(),false);
+   assert.equal(await f.page.getByRole('button',{name:'この量で再保存'}).isDisabled(),true);await wait(async()=>!(await f.page.getByRole('button',{name:'選び直す',exact:true}).isDisabled()));
    assert.equal(f.requests.length,1);assert.ok((await f.page.locator('body').innerText()).includes('10分'));evidence.push({change,requests:f.requests});
   }return evidence;
  });
@@ -102,6 +102,29 @@ try {
   await f.page.screenshot({path:`${out}/F06.png`,fullPage:true});await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
   assert.equal(f.requests.length,2);assert.deepEqual(f.requests[0],f.requests[1]);const list=(await f.request('GET','/api/goals')).json;assert.equal(list.length,1);assert.equal(list[0].id,committed.id);
   uncertain=f;return {requests:f.requests,goalId:committed.id};
+ });
+ await run('F06-late-operation',async()=>{
+  const f=await fixture();await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').waitFor();
+  await f.page.evaluate(owner=>{const get=Storage.prototype.getItem;window.__attemptReads=[];Storage.prototype.getItem=function(key){const value=get.call(this,key);if(this===sessionStorage && key===`future-roi:create-attempt:${owner}`)window.__attemptReads.push(value?JSON.parse(value).key:null);return value;};},f.owner);
+  let releaseOld;const oldBarrier=new Promise(r=>releaseOld=r);let committed=false;let count=0;
+  await f.page.route('**/api/goals',async route=>{
+    if(route.request().method()!=='POST'){await route.continue();return;}
+    count++;
+    if(count===1){const response=await route.fetch();assert.equal(response.status(),201);committed=true;await oldBarrier;await route.fulfill({response});}
+    else if(count===3){const response=await route.fetch();assert.equal(response.status(),201);await route.abort('failed');}
+    else await route.continue();
+  });
+  const fill=async title=>{await f.page.locator('#goal-title').fill(title);await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');};
+  await fill('K1 遅延成功');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await wait(()=>Promise.resolve(committed));
+  await f.page.getByRole('link',{name:'閉じる',exact:true}).click();await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();
+  assert.equal(await f.page.locator('#goal-title').inputValue(),'K1 遅延成功');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
+  await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();await fill('K2 応答不明');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('button',{name:'もう一度保存',exact:true}).waitFor();
+  const reads=await f.page.evaluate(()=>window.__attemptReads.length);const secondKey=f.requests[2].key;releaseOld();
+  // Observe the old hook's cleanup read, rather than assuming a callback after a delay.
+  await wait(async()=>(await f.page.evaluate(()=>window.__attemptReads.length))>reads);
+  assert.equal(await f.page.evaluate(owner=>JSON.parse(sessionStorage.getItem(`future-roi:create-attempt:${owner}`)).key,f.owner),secondKey);
+  await f.page.reload();assert.equal(await f.page.locator('#goal-title').inputValue(),'K2 応答不明');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
+  assert.deepEqual(f.requests[0],f.requests[1]);assert.deepEqual(f.requests[2],f.requests[3]);assert.equal((await f.request('GET','/api/goals')).json.length,2);return f.requests;
  });
  await run('F07',async()=>{
   const f=await fixture();await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').fill('Aの不明操作');await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');

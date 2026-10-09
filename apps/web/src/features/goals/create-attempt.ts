@@ -26,4 +26,7 @@ export function prepareCreateAttempt(owner: string, body: GoalCreate, storage: A
   storage.setItem(storageKey(owner), JSON.stringify(attempt));
   return attempt;
 }
-export function clearCreateAttempt(owner: string, storage: AttemptStorage): void { storage.removeItem(storageKey(owner)); }
+// 離脱した旧フォームの遅延応答が、同ownerの次の作成操作を消さない。
+export function clearCreateAttempt(owner: string, key: string, storage: AttemptStorage): void {
+  if (loadCreateAttempt(owner, storage)?.key === key) storage.removeItem(storageKey(owner));
+}

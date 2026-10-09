@@ -22,7 +22,7 @@ test('shiftLocalDate / isCalendarDate: 月末・うるう年・不正な日付',
   for (const d of ['2026-02-30', '2026-13-01', '2026-00-10', '2027-02-29', '1900-02-29', '2026-1-1', '']) assert.ok(!isCalendarDate(d), d);
 });
 
-test('今日の記録: DONEはamount省略でsessionAmountを補い、同じ日の再送は1行の上書き、SKIPPEDはNULL', async (t) => {
+test('今日の記録: DONEは表示中のsessionAmountをclientが明示し、同じ日の再送は1行の上書き、SKIPPEDはNULL', async (t) => {
   // 2026-10-05T15:30:00Z = Asia/Tokyo 10/6 00:30。記録開始日も10/6。
   const { db, stack } = await setup(t, { now: () => new Date('2026-10-05T15:30:00Z') });
   const a = await signedInClient(stack.app, 'log');

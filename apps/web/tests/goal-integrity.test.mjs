@@ -28,11 +28,26 @@ test('F06/F07/F08: 未確定createは同ownerのキー・原bodyを復元し、�
   assert.deepEqual(prepareCreateAttempt('a', body, db, () => { throw Error('新keyは禁止'); }), a);
   assert.deepEqual(loadCreateAttempt('a', db), a);
   assert.equal(loadCreateAttempt('b', db), null);
-  clearCreateAttempt('a', db);
+  clearCreateAttempt('a', key, db);
   assert.equal(loadCreateAttempt('a', db), null);
   assert.equal(prepareCreateAttempt('a', body, db, () => key).body.title, '入力変更');
 });
 test('回復情報の破損・保存失敗は新keyで送信を進めない', () => {
   assert.throws(() => prepareCreateAttempt('a', body, { getItem: () => '{', setItem() {}, removeItem() {} }, () => key));
   assert.throws(() => prepareCreateAttempt('a', body, { getItem: () => null, setItem() { throw Error('容量'); }, removeItem() {} }, () => key), /容量/);
+});
+
+
+test('F06逆対: 離脱したK1の遅延成功/422で、進行中K2の回復情報を消さない', () => {
+  const db = storage();
+  prepareCreateAttempt('a', body, db, () => key);
+  clearCreateAttempt('a', key, db);
+  const key2 = '00000000-0000-4000-8000-000000000249';
+  const current = prepareCreateAttempt('a', body, db, () => key2);
+  for (const lateResponse of ['success', '422']) {
+    clearCreateAttempt('a', key, db);
+    assert.deepEqual(loadCreateAttempt('a', db), current, lateResponse);
+  }
+  clearCreateAttempt('a', key2, db);
+  assert.equal(loadCreateAttempt('a', db), null);
 });

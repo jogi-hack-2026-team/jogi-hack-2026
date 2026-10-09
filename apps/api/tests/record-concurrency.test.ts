@@ -85,7 +85,7 @@ test('Today samples its clock after pool wait and includes a new-day normal log 
     await waitFor(() => db.pool.waitingCount === 1);
     assert.equal(calls, 0);
     now = NEW;
-    assert.equal((await putLog(writer, owner, goal.id, '2026-10-06', { expectedGoalSettingsRevision: 0, amount: 10, status: 'DONE' }, () => now)).kind, 'saved');
+    assert.equal((await putLog(writer, owner, goal.id, '2026-10-06', { expectedGoalSettingsRevision: 0, amount: 30, status: 'DONE' }, () => now)).kind, 'saved');
     held.forEach(c => c.release()); released = true;
     const res = await read;
     assert.equal(res.status, 200, res.body);
@@ -115,7 +115,7 @@ test('Today establishes its first SELECT snapshot before sampling its clock, rat
     await waitFor(pause.reached);
     assert.equal(calls, 0, 'BEGIN has not established the read snapshot');
     now = NEW;
-    assert.equal((await putLog(db.pool, owner, goal.id, '2026-10-06', { expectedGoalSettingsRevision: 0, amount: 10, status: 'DONE' }, () => now)).kind, 'saved');
+    assert.equal((await putLog(db.pool, owner, goal.id, '2026-10-06', { expectedGoalSettingsRevision: 0, amount: 30, status: 'DONE' }, () => now)).kind, 'saved');
     pause.open();
     const res = await read;
     assert.equal(res.status, 200, res.body);
@@ -133,7 +133,7 @@ test('PUT rejects a date that becomes two days old while waiting for normal Goal
   const goal = (await client.call('POST', '/api/goals', input)).json as unknown as Goal;
   now = OLD;
   const pause = pauseQuery(db.pool, sql => sql.includes('for update of g'));
-  const patch = client.call('PATCH', `/api/goals/${goal.id}`, { title: 'changed' });
+  const patch = client.call('PATCH', `/api/goals/${goal.id}`, { title: input.title });
   let put: ReturnType<typeof client.call> | undefined;
   try {
     await waitFor(pause.reached);
@@ -162,7 +162,7 @@ test('First PUT and Goal PATCH obey both normal lock orders without changing log
     let second: ReturnType<typeof client.call> | undefined;
     try {
       await waitFor(pause.reached);
-      second = putFirst ? client.call('PATCH', path, changes) : client.call('PUT', `${path}/logs/2026-10-06`, { status: 'DONE' });
+      second = putFirst ? client.call('PATCH', path, changes) : client.call('PUT', `${path}/logs/2026-10-06`, { status: 'DONE', expectedGoalSettingsRevision: 1 });
       await blocked(db.pool);
       pause.open();
       assert.equal((await first).status, 200);

@@ -19,6 +19,7 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 // ブラウザのように、Set-Cookieを保持して次の要求へ付け、Originヘッダーを送るclient。
 export class Client {
+  private readonly displayedGoals = new Map<string, Record<string, unknown>>();
   readonly cookies = new Map<string, string>();
   private readonly app: FastifyInstance;
   private readonly origin: string | null;
@@ -29,18 +30,28 @@ export class Client {
   cookieHeader() {
     return [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ');
   }
-  // 既存の各機能回帰は、最新の公開契約を満たすclientとして送る。
-  // 必須値の欠落・stale CAS・同キー再送の検証はrawCallで送信内容をそのまま検証する。
+  // 既存機能の回帰は取得済みDTOを表示中のclientとして必須値を送る。
+  // 新しいGETを暗黙に差し込まない（snapshot/時計/行lockの観測を変えない）。
+  // 欠落・stale CAS・同キー再送のnegative oracleはrawCallで送信内容を固定する。
   async call(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
-    if (method === 'POST' && url === '/api/goals') headers = { 'idempotency-key': randomUUID(), ...headers };
-    const match = /^\/api\/goals\/([^/?]+)(?:\/logs\/[^/?]+)?$/.exec(url);
+    const path = url.split('?')[0]!;
+    if (method === 'POST' && path === '/api/goals') headers = { 'idempotency-key': randomUUID(), ...headers };
+    const match = /^\/api\/goals\/([^/]+)(?:\/logs\/[^/]+)?$/.exec(path);
     if (match && (method === 'PATCH' || method === 'PUT') && body && typeof body === 'object' && Object.keys(body).length > 0) {
-      const current = (await this.rawCall('GET', `/api/goals/${match[1]}`)).json;
+      const current = this.displayedGoals.get(match[1]!);
       const input = body as Record<string, unknown>;
       body = { expectedGoalSettingsRevision: current?.goalSettingsRevision ?? 0,
         ...(method === 'PUT' && input.status === 'DONE' && !Object.hasOwn(input, 'amount') ? { amount: current?.sessionAmount ?? 10 } : {}), ...input };
     }
-    return this.rawCall(method, url, body, headers);
+    const result = await this.rawCall(method, url, body, headers);
+    const keep = (dto: Record<string, unknown> | null) => {
+      if (dto && typeof dto.id === 'string' && typeof dto.goalSettingsRevision === 'number') this.displayedGoals.set(dto.id, dto);
+    };
+    if (result.status === 200 || result.status === 201) {
+      if (Array.isArray(result.json)) for (const dto of result.json) keep(dto);
+      else keep(result.json);
+    }
+    return result;
   }
   async rawCall(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
     const res = await this.app.inject({
