@@ -561,6 +561,8 @@ npm run build
 
 `npm test`は[Webの共通エラー回帰](../apps/web/tests/client.test.mjs)、APIテスト（`node:test`。`DATABASE_URL`があればそのPostgreSQLへ、なければ`embedded-postgres`で`apps/api/.local/`にローカルクラスタを起動し、テスト専用databaseを作成・削除）と[Engineの数値・候補回帰](../packages/prediction/README.md#検証ci)を実行します。`npm run build`は`apps/web/dist`（SPA）と`apps/api/dist`（JS）を作ります。
 
+Webの[所有者境界の実hook回帰](../apps/web/tests/session-cache.test.mjs)は、既存Viteでテスト用bundleを作り、Chrome／Edge／Chromiumの専用一時profileで実DOMを確認します。Windows・macOSの一般的なインストール先とLinuxの`/usr/bin/`を探索します。別の場所なら`TEST_BROWSER`に実行ファイルの絶対pathを指定してください。CIは`ubuntu-latest`にあるChromeを使います。ブラウザがない場合は未実行の成功にせず失敗を報告します。実Better Auth・API／DBのE2Eとは区別します。
+
 `.env`は`npm run dev:api`とmigration／seedのCLIが読みます。`npm test`とビルド済みサーバーはシェルの環境変数だけを見るため、次のように使い分けます。
 
 | 用途 | sh（macOS / Linux / Git Bash） | PowerShell |

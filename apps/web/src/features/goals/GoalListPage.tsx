@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { Goal } from '@contracts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
+import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
 import { unitLabel } from '../../copy/today.ts';
@@ -26,7 +27,10 @@ function browserToday(): string {
 
 /** Goal 一覧（R-02、#78）。/goals */
 export function GoalListPage() {
-  const query = useQuery({ queryKey: goalKeys.list(), queryFn: ({ signal }) => goalsHttp.listGoals(signal), ...fetchPolicy });
+  const current = usePrivateEpoch();
+  const ready = privateDataReady(current);
+  const query = useQuery({ queryKey: goalKeys.list(), queryFn: ({ signal }) => goalsHttp.listGoals(signal), enabled: ready, ...fetchPolicy });
+  const fresh = ready && query.dataUpdatedAt > current.clearedAt;
 
   return (
     <div className="fr fr-page">
@@ -35,7 +39,7 @@ export function GoalListPage() {
         <h1 className="fr-goals__heading">{c.listTitle}</h1>
       </section>
 
-      {query.isPending ? (
+      {!ready || query.isPending || (query.data !== undefined && !fresh) ? (
         <ListLoading />
       ) : query.isError ? (
         <div className="fr-goals__pad">

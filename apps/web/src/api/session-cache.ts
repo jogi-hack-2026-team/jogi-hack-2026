@@ -42,7 +42,17 @@ function subscribe(listener: () => void) {
 
 /** いまの利用者と、その利用者のデータとして使ってよい取得の下限時刻。 */
 export function usePrivateEpoch(): PrivateEpoch {
-  return useSyncExternalStore(subscribe, () => epoch);
+  const stored = useSyncExternalStore(subscribe, () => epoch);
+  const session = authClient.useSession();
+  // effect の消去を待つ前の描画でも、いま認識している session と照合する。
+  // 取得失敗は未ログインと取り違えず、私的な表示・入力だけを停止する。
+  if (session.isPending || session.error) return { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
+  return nextEpoch(stored, session.data?.user.id ?? null);
+}
+
+/** 取得・フォームを使えるのは、所有者が確定し、旧取得の中断と消去が終わったときだけ。 */
+export function privateDataReady(current: PrivateEpoch): boolean {
+  return typeof current.owner === 'string' && Number.isFinite(current.clearedAt);
 }
 
 /**
@@ -57,16 +67,22 @@ export function PrivateCacheGuard() {
   const session = authClient.useSession();
   const queryClient = useQueryClient();
   const last = useRef<string | null | undefined>(undefined);
-  const userId = session.isPending ? undefined : (session.data?.user.id ?? null);
+  const userId = session.isPending || session.error ? undefined : (session.data?.user.id ?? null);
 
   useEffect(() => {
-    setEpoch(nextEpoch(epoch, userId));
+    const transition = nextEpoch(epoch, userId);
+    setEpoch(transition);
     if (sessionChanged(last.current, userId)) {
       const owner = userId;
       void queryClient.cancelQueries({ queryKey: goalKeys.all }).then(() => {
         // 前の人の取得が止まった後なら、ここから先に届くデータは新しい利用者のもの
-        if (epoch.owner === owner) setEpoch({ owner, clearedAt: Date.now() });
-        return queryClient.resetQueries({ queryKey: goalKeys.all });
+        // A→B→A のような連続切替でも、古い中断完了で新しい境界を開かない。
+        if (epoch !== transition) return;
+        // 先に消去する。時刻を公開してから reset すると、間に旧 cache を読めてしまう。
+        const reset = queryClient.resetQueries({ queryKey: goalKeys.all });
+        // cache はすでに空。同じ millisecond に成功した新取得も許可する。
+        setEpoch({ owner, clearedAt: Date.now() - 1 });
+        return reset;
       });
     }
     if (userId !== undefined) last.current = userId;

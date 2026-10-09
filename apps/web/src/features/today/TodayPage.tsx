@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { usePrivateEpoch } from '../../api/session-cache.ts';
+import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
@@ -38,7 +38,9 @@ import './today.css';
  * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
-  const { owner, clearedAt } = usePrivateEpoch();
+  const current = usePrivateEpoch();
+  const { owner, clearedAt } = current;
+  if (!privateDataReady(current)) return <Loading />;
   return <TodayScreen key={`${owner ?? ''}:${goalId}`} goalId={goalId} notBefore={clearedAt} />;
 }
 

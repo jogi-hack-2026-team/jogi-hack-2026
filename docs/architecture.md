@@ -153,6 +153,8 @@ Evidenceは[Compose検証](../scripts/smoke-compose.sh)と[Application CI](../.g
 | Secret・URL | `BETTER_AUTH_SECRET`（本番必須、32文字以上。開発では`apps/api/.local/auth-secret`に自動生成）、`BETTER_AUTH_URL`（本番必須）、`AUTH_TRUSTED_ORIGINS`（任意）、`TRUST_PROXY_HOPS`（既定0） | 実値をGitへ入れず、開発者ごとの生成を手順から外す。proxyのhop数は公開先の実形式で確認する（#83） |
 | 画面 | `/login`・`/register`（[AuthForm](../apps/web/src/routes/AuthForm.tsx)）、`/`は未ログインなら`/login?redirect=`へ（[router](../apps/web/src/router.tsx)）。戻り先はアプリ内pathだけ。ログアウトはnavのボタン。セッション切れは再ログインへ誘導 | R-01の画面要件。Goal・記録の画面は#78〜#81 |
 
+FEの私的な表示・入力は、[session-cache.ts](../apps/web/src/api/session-cache.ts)で描画時のsession ownerとcache消去の状態を照合する（R-01／#155）。別ownerを認識した最初の描画から一覧・編集・Todayと作成draftを停止し、旧取得のcancelとcache resetが済んでから新取得を使う。連続切替では、その切替に対応するcancel完了だけが境界を開く。sessionの確認中・取得失敗も私的な表示・フォームを停止し、回復後に現在ownerのデータを使う。フォームを再作成するため未保存の入力は失われる。HTTP保存禁止（#153）、API所有者認可、作成結果不明の回復契約（#148）は別責務で、この修正では変更しない。[実hook／DOM回帰](../apps/web/tests/session-cache.test.mjs)は制御したsession・応答で画面とQueryClientを動かす。実Better Authの別タブ通知・実API／DB・瞬間の実描画・公開環境は別の受入確認が必要。
+
 未実施: staging（公開HTTPS）でのCookie属性・複数Set-Cookie・転送ヘッダーの実形式・休止後の応答の確認（公開先D-25の承認待ち。#70から移管した項目を含めて#83へ引き継ぐ）。認証ライブラリのsupported版／advisoryの更新担当とDB復旧担当、復元後の全session失効・旧Cookie 401の確認手順はチームで決める（#84の[復元後session失効手順](../experiments/architecture-verification/candidate-1.7.7/RESTORE-PROCEDURE.md)は合成DB限定の案）。
 
 以下の比較表は2026-09-30の候補提案と2026-10-02の比較説明を保持したもの。版・追加ツール・migration順・代替候補の不採用を含む表全体を採択した記録ではない。現在の採用範囲は上記とD-23〜D-25で確認する。
