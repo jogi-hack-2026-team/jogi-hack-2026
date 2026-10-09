@@ -61,6 +61,8 @@ const engineIndex = join(repoRoot, 'packages', 'prediction', 'dist', 'src', 'ind
 const provenance = {
   repositoryHead: git('rev-parse', 'HEAD'),
   workingTreeDirty: git('status', '--porcelain', '--', 'apps', 'packages').split('\n').filter(Boolean),
+  harnessDirty: git('status', '--porcelain', '--', 'experiments/api-mixed-load').split('\n').filter(Boolean),
+  harnessSha256: sha256(readFileSync(fileURLToPath(import.meta.url))),
   engineSourceTree: git('rev-parse', 'HEAD:packages/prediction'),
   apiSourceTree: git('rev-parse', 'HEAD:apps/api'),
   engineDistIndexSha256: sha256(readFileSync(engineIndex)),

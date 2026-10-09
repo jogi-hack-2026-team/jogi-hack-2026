@@ -29,14 +29,14 @@ node experiments/api-mixed-load/run.ts
 ```
 
 ```bash
-MIXED_LOAD_SIZES=120,400,1090 node experiments/api-mixed-load/run.ts
+MIXED_LOAD_SIZES=548,700,800 node experiments/api-mixed-load/run.ts
 ```
 
 ```bash
 node experiments/api-mixed-load/engine-sweep.mjs
 ```
 
-- `run.ts` は `results/<UTC時刻>/mixed-load.json` に生結果（条件・provenance・各種p50/p95/p99/max・件数・HTTP status別件数・server metrics・生の遅延配列）を保存する。wiring・全cohortの収束・要求失敗0・oracle不一致0をすべて満たしたときだけexit 0。
+- `run.ts` は `results/<UTC時刻>/mixed-load.json` に生結果（条件・provenance（`run.ts` 自身のSHA256とexperiments配下のdirty状態を含む）・各種p50/p95/p99/max・件数・HTTP status別件数・server metrics・生の遅延配列）を保存する。wiring・全cohortの収束・要求失敗0・oracle不一致0をすべて満たしたときだけexit 0。
 - `engine-sweep.mjs` は純粋Engine単体で `requiredFutureDone` を変えながら計測し、この端末で最も重いサイズを探す。`results/<UTC時刻>/engine-sweep.json` に保存する。
 - server processは `LOG_LEVEL=warn`（製品既定はinfo。応答ごとのaccess logを書かない）、`TRUST_PROXY_HOPS=1`、認証回数上限1000で起動する。`NODE_ENV` は未設定（loopback HTTP）。
 
