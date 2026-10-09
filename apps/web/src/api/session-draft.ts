@@ -11,6 +11,8 @@ const listeners = new Set<() => void>();
 const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
 const snapshot = () => continuity;
 export const getPrivateGeneration = () => continuity.queryGeneration;
+/** 通常確認を越える確定結果も、owner/連続性が変わった後は別画面へ持ち越さない。 */
+export const isDraftOwner = (owner: string, generation: number) => continuity.owner === owner && continuity.generation === generation;
 export const usePrivateGeneration = () => useSyncExternalStore(subscribe, snapshot).queryGeneration;
 function invalidate(owner = continuity.owner) {
   continuity = { owner, generation: continuity.generation + 1, queryGeneration: continuity.queryGeneration + 1 };

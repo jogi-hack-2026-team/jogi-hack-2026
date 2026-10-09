@@ -34,10 +34,17 @@ FE修正HEAD a9b839aで全workspace typecheck/build、通常Web test64成功・b
 
 上の正常focusでも入力を破棄する説明はHEAD `6b3cf98d7db500c1ad23f03bfbb0f6bfe32ffdae` 時点の制約。固定HEADで実SDK/実router/APIと制御イベントによる15操作を測定し、可視復帰/onlineの5秒抑制を越えた再確認、同path/search navigationで入力中の作成/編集値と履歴月の消失を確認した。visibleのままwindow focus、hidden/offlineだけ、直前の自動確認から5秒未満の復帰では作成入力を保持した。OS native focus/NIC切断・実人頻度は未測定。
 
-2026-10-09 08:10 UTCにユーザーが、入力消失の限定修正と#175回復処理との合成環境での整合検証を承認した。後回しの大規模整理と分け、正常同一ownerの未送信draftだけをメモリへ退避する。私的DOM除去とquery消去は維持する。session atomの確認開始・owner/error/認証変更を追い、query世代は毎確認で、draft連続性は失敗/logout/owner変更/認証通知で無効化する。正常同一ownerだけsnapshotを戻す。中間B/errorをReactが同じ描画へまとめても安全境界を維持する。
+2026-10-09 08:10 UTCに本taskの依頼者が、入力消失の限定修正と#175回復処理との合成環境での整合検証を承認した。後回しの大規模整理と分け、正常同一ownerの未送信draftだけをメモリへ退避する。私的DOM除去とquery消去は維持する。session atomの確認開始・owner/error/認証変更を追い、query世代は毎確認で、draft連続性は失敗/logout/owner変更/認証通知で無効化する。正常同一ownerだけsnapshotを戻す。中間B/errorをReactが同じ描画へまとめても安全境界を維持する。
 
 編集の元baselineと最新の編集値・revision・記録有無を照合し、変更がある場合は復元を止めて理由を表示する。送信中のmutationは別に追い、同じowner/画面の送信終了まで再作成フォームを開かず、古いcallbackで移動しない。作成結果不明attemptと#175の回復処理はsnapshotへ含めず、既存責務へ委ねる。localStorage永続化・認証設定・API/DB変更は追加しない。
 
 新しい[実router/hook回帰](../../apps/web/tests/session-draft.browser.tsx)は15操作を保持し、正常復帰、失敗→A、高速A→B→A/正常確認/429/null、認証通知、編集のanswer/settings revision、保存中と明示保存を検査する。合成HTTPテスト、実認証、#175との隔離統合は異なる証拠であり、最終HEAD・実施結果・残る制約はPRの最新記録から確認する。既存の旧失敗と未検証事項を保全し、正式Decision・Scope・製品完成の状態は変更しない。
 
 追加レビューで、validation 422の確定拒否後に訂正した入力もmutation errorにより通常draftから除外される経路を実hookで再現した。契約検査の422 VALIDATION_ERRORだけ、訂正開始時にmutation errorを解除して未送信入力へ戻す。通信失敗/500/409や削除errorは解除しない。回帰に422→訂正→正常確認、通信結果不明→訂正→正常確認、送信中→確認→通信失敗を追加し、15操作＋14安全性ケース・明示mock書込5件として検証する。確定拒否の訂正前、通信結果不明、競合、削除失敗の入力保持は通常draft復帰の対象外であり、全idle入力保持の保証ではない。
+
+
+## 追加レビュー5467976583への対応
+
+9837bb4対象のS1は81d8f92で確定validation422の訂正を修正済み。S2は81d8f92でも実hookで失敗を再現した。確認中に成功応答が届くとchildのmutate callbackが失われ、空フォームへ戻る。確定成功だけを送信時owner/入力者の連続性世代/ページへ束縛して親に通知し、正常同一owner確認後に一覧へ一度だけ移す。owner変更・A→B→A・確認失敗・実ページ離脱後は新画面へ作用させない。結果不明を成功へ読み替えず、175の同key/body回復は別契約として保持する。実hook回帰は15操作＋20安全性ケース（明示mock書込11）へ拡張した。
+
+S3の全query resetは安全境界として維持し、ルート遷移の取得件数・局所時間を別測定した。性能/UXのチーム受入、公開先の体感遅延、merge順は未承認。cache再設計・正式Scope採択を代理実施しない。getPrivateEpochの現製品callerがないことと175向けの候補用途をコメントに記録し、Architectureの境界説明を責務ごとへ分けた。判断主体は本taskの依頼者、実行・記録はCodex、Issueの担当は@Kaito-Iwase。依頼者とGitHub名の本人対応は未確認で、承認者名を担当者名から推定しない。

@@ -32,7 +32,7 @@ export function nextEpoch(prev: PrivateEpoch, userId: string | null | undefined)
 let epoch: PrivateEpoch = { owner: undefined, clearedAt: 0 };
 let clearedGeneration = 0;
 const waitingEpoch: PrivateEpoch = { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
-/** 非queryの回復GETも、描画/effectより先に始まった確認やowner変更で無効にする。 */
+/** 非query回復GET向けの境界。現時点の製品callerはなく、#175併用候補と実hook回帰用。確認/owner変更は描画前にも無効にする。 */
 export function getPrivateEpoch(): PrivateEpoch {
   const session = authClient.$store?.atoms?.session?.get();
   if (getPrivateGeneration() !== clearedGeneration || session?.isPending || session?.isRefetching || session?.error ||

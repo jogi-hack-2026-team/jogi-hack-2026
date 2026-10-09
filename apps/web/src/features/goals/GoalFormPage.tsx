@@ -1,12 +1,12 @@
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
-import { useMemoryDraft } from '../../api/session-draft.ts';
+import { privateDataReady, usePrivateEpoch, type PrivateEpoch } from '../../api/session-cache.ts';
+import { isDraftOwner, useMemoryDraft } from '../../api/session-draft.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
 import { todayCopy, unitLabel } from '../../copy/today.ts';
@@ -59,22 +59,50 @@ function useInterruptedOperation(ready: boolean, operationKey: readonly unknown[
   return interrupted.current && pending;
 }
 
+/** Formが確認中にunmountされても、確定成功だけは同じページの親へ伝える。 */
+function useConfirmedSave(current: PrivateEpoch, generation: number, scope: string) {
+  const navigate = useNavigate();
+  const mounted = useRef(false);
+  const activeScope = useRef(scope);
+  activeScope.current = scope;
+  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string }>();
+  const delivered = useRef<typeof saved>(undefined);
+  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const owner = current.owner;
+  const onSaved = useCallback(() => {
+    if (mounted.current && typeof owner === 'string' && activeScope.current === scope && window.location.pathname === scope && isDraftOwner(owner, generation))
+      setSaved({ owner, generation, scope });
+  }, [owner, generation, scope]);
+  const confirmed = saved !== undefined && saved.scope === scope && window.location.pathname === scope && saved.generation === generation &&
+    isDraftOwner(saved.owner, saved.generation) && current.owner === saved.owner && privateDataReady(current);
+  useEffect(() => {
+    if (confirmed && delivered.current !== saved) {
+      delivered.current = saved;
+      void navigate({ to: '/goals' });
+    }
+  }, [confirmed, saved, navigate]);
+  return { onSaved, confirmed };
+}
+
 /** Goal の作成（R-02、#78）。/goals/new */
 export function GoalCreatePage() {
   // ログインしている人が替わったら作り直し、前の人の入力を持ち越さない
   const current = usePrivateEpoch();
   const draft = useMemoryDraft<FormDraft>(current, 'create');
+  const completion = useConfirmedSave(current, draft.generation, '/goals/new');
   const operationKey = ['goal-form', current.owner, 'create'];
   const operating = useInterruptedOperation(privateDataReady(current), operationKey);
   if (current.owner === null) return <FormShell title={f.createTitle} body={<SignedOutPanel />} />;
   if (!privateDataReady(current) || operating) return <FormShell title={f.createTitle} body={<FormLoading />} />;
-  return <GoalForm key={`${current.owner}:${draft.generation}`} mode="create" operationKey={operationKey} draft={draft.restored} onDraftChange={draft.remember} />;
+  if (completion.confirmed) return <FormShell title={f.createTitle} body={<p role="status">保存しました。Goal一覧へ移動します。</p>} />;
+  return <GoalForm key={`${current.owner}:${draft.generation}`} mode="create" operationKey={operationKey} draft={draft.restored} onDraftChange={draft.remember} onSaved={completion.onSaved} />;
 }
 
 /** Goal の編集・削除（R-02、#78）。/goals/$goalId/edit。Goal を読み込んでからフォームを出す。 */
 export function GoalEditPage({ goalId }: { goalId: string }) {
   const current = usePrivateEpoch();
   const draft = useMemoryDraft<FormDraft>(current, `edit:${goalId}`);
+  const completion = useConfirmedSave(current, draft.generation, `/goals/${goalId}/edit`);
   const operationKey = ['goal-form', current.owner, 'edit', goalId];
   const operating = useInterruptedOperation(privateDataReady(current), operationKey);
   const { owner } = current;
@@ -82,6 +110,7 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
   const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), enabled: ready, ...fetchPolicy });
   if (owner === null) return <FormShell title={f.editTitle} body={<SignedOutPanel />} />;
   if (!ready || operating || (query.data && query.dataUpdatedAt <= current.clearedAt)) return <FormShell title={f.editTitle} body={<FormLoading />} />;
+  if (completion.confirmed) return <FormShell title={f.editTitle} body={<p role="status">保存しました。Goal一覧へ移動します。</p>} />;
   if (!query.data) {
     if (!query.isError) return <FormShell title={f.editTitle} body={<FormLoading />} />;
     // 最初の読み込みの失敗。入力はまだないので、フォームの代わりにエラーを出す
@@ -102,6 +131,7 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
       draft={draft.restored}
       onDraftChange={draft.remember}
       operationKey={operationKey}
+      onSaved={completion.onSaved}
       refreshError={query.isError ? query.error : null}
       onRetryRefresh={() => void query.refetch()}
       onReloadLatest={() => reloadLatestGoal(() => query.refetch())}
@@ -170,7 +200,7 @@ function sameEditableGoal(left: GoalWithAnswers, right: GoalWithAnswers) {
     ('goalSettingsRevision' in left ? left.goalSettingsRevision : undefined) === ('goalSettingsRevision' in right ? right.goalSettingsRevision : undefined) &&
     JSON.stringify(valuesFromGoal(left)) === JSON.stringify(valuesFromGoal(right));
 }
-type Props = { draft: FormDraft | undefined; onDraftChange: (draft: FormDraft | undefined) => void; operationKey: readonly unknown[] } & (
+type Props = { draft: FormDraft | undefined; onDraftChange: (draft: FormDraft | undefined) => void; operationKey: readonly unknown[]; onSaved: () => void } & (
   | { mode: 'create'; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined; onReloadLatest?: undefined }
   | {
       mode: 'edit';
@@ -181,7 +211,7 @@ type Props = { draft: FormDraft | undefined; onDraftChange: (draft: FormDraft | 
       onReloadLatest: () => Promise<GoalWithAnswers | undefined>;
     });
 
-function GoalForm({ mode, goal, draft, onDraftChange, operationKey, refreshError, onRetryRefresh, onReloadLatest }: Props) {
+function GoalForm({ mode, goal, draft, onDraftChange, operationKey, onSaved, refreshError, onRetryRefresh, onReloadLatest }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const locked = mode === 'edit' && goal.hasLogs;
@@ -231,8 +261,8 @@ function GoalForm({ mode, goal, draft, onDraftChange, operationKey, refreshError
       const patch = toPatchBody(v, { ...baseline!, hasLogs: goal.hasLogs });
       return patch ? goalsHttp.updateGoal(goal.id, patch) : null;
     },
-    // 一覧などの取り直しは、画面を離れていても必ず行う。一覧への移動は mutate に渡す onSuccess で、表示中のときだけ行う
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: goalKeys.all }),
+    // invalidateは離脱後も行う。確定結果はowner/世代/ページで束縛した親へ渡す。
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: goalKeys.all }); onSaved(); },
     onError: (error) => {
       saving.current = false;
       const fromApi = fieldErrorsFromApi(error);
@@ -292,7 +322,7 @@ function GoalForm({ mode, goal, draft, onDraftChange, operationKey, refreshError
     }
     saving.current = true;
     onDraftChange?.(undefined);
-    save.mutate(values, { onSuccess: leaveToList });
+    save.mutate(values);
   };
 
   const focusFirstError = (found: FieldErrors) => {
