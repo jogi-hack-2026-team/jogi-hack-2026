@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  NODE_VERSION: '24.21.0'
+  CI_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   foundation:
     name: Repository checks
@@ -18,6 +22,22 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
       - name: Check documentation and configuration
-        shell: pwsh
-        run: ./scripts/check-foundation.ps1
+        run: node .github/scripts/ci-report.mjs run foundation -- pwsh -NoProfile -File ./scripts/check-foundation.ps1
+      - name: Summarize verification
+        if: ${{ always() }}
+        run: node .github/scripts/ci-report.mjs summary foundation
+      - name: Retain safe failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: foundation-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/ci-report/*.json
+            ${{ runner.temp }}/ci-report/*.log
+          if-no-files-found: warn
+          retention-days: 1
