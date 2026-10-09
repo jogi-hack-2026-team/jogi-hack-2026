@@ -6,7 +6,10 @@ import { recoveryQuantiles } from './recovery.js';
 import { completionFromValidatedState } from './completion-scenario.js';
 import type { Completion, PredictionInput } from './types.js';
 
-// PR118の未採択提案に依存する内部adapter。index.ts・公開predictへは追加しない。
+// Candidateという名前はPR118の候補接続として追加した経緯を残している。現在は
+// question-prior.tsの公開wrapper predictWithQuestionPrior（#133 / D-26）がここを使う。
+// このadapter自体はindex.tsから直接公開せず、旧predictの共通prior・材料条件も変えない。
+// 候補全体の採択や予測精度の検証済みを名前から判断せず、承認範囲はD-26を参照する。
 export type NumericAnswerCandidate = 'LOW' | 'MID' | 'HIGH';
 export type RawAnswerCandidate = NumericAnswerCandidate | 'UNKNOWN' | null;
 export type EvidenceSourceCandidate = 'NONE' | 'QUESTION' | 'RECORDS' | 'QUESTION_AND_RECORDS';
@@ -31,7 +34,8 @@ export interface QuestionPriorAdapterResultCandidate extends GoalPriorCandidateR
   };
 }
 
-// raw/snapshotの構造不正をmessage解析なしで区別する候補分類。HTTPコードは外側で決める。
+// raw/snapshotの構造不正をmessage解析なしで区別する内部分類。公開wrapperは
+// QuestionPriorErrorへ変換してkind/reason/pathを渡し、HTTPコードはAPI側で決める。
 export class QuestionPriorAdapterCandidateError extends TypeError {
   readonly kind: 'input' | 'config';
   readonly reason: 'INVALID_ANSWERS' | 'INVALID_ANSWER' | 'INVALID_MAPPING';
