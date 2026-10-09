@@ -6,9 +6,10 @@ import type { TodaySnapshot } from './store.ts';
 
 // 呼出元はsnapshot取得とDB接続返却を完了してから呼ぶ。回答は保存mappingで全実ログへ接続する。
 export function buildR11Today(snapshot: TodaySnapshot): TodayR11 {
-  const context = { unit: snapshot.goal.unit, sessionAmount: snapshot.goal.sessionAmount, recordStartDate: snapshot.goal.recordStartDate, goalSettingsRevision: snapshot.goal.goalSettingsRevision, unitLocked: snapshot.goal.unitLocked };
-  // 公開contextの設定版/固定flagは、既存回答snapshotの意味を変更しない。
-  const saved = validateSavedQuestion(snapshot.question, { unit: context.unit, sessionAmount: context.sessionAmount, recordStartDate: context.recordStartDate });
+  const answerContext = { unit: snapshot.goal.unit, sessionAmount: snapshot.goal.sessionAmount, recordStartDate: snapshot.goal.recordStartDate };
+  const saved = validateSavedQuestion(snapshot.question, answerContext);
+  // 回答版も同じDB snapshotから返す。保存回答snapshotの文脈や設定版の意味は変えない。
+  const context = { ...answerContext, goalSettingsRevision: snapshot.goal.goalSettingsRevision, answerRevision: saved.revision, unitLocked: snapshot.goal.unitLocked };
   const today = localDateIn(snapshot.now, snapshot.goal.timezone);
   const yesterday = shiftLocalDate(today, -1);
   const { prediction, provenance, plan } = runQuestionPrediction({
