@@ -173,7 +173,7 @@ async function run() {
   await change('B'); ensure(host.querySelector('.fr-history__cal'), 'history session recovery failed');
   foreignGoal = true; await change('A'); await change('B'); await settle();
   ensure(!host.querySelector('.fr-history__cal') && !host.textContent?.includes('A-PRIVATE'), 'foreign goal kept A history');
-  ensure(host.textContent?.includes('見つかりません'), 'foreign history did not show 404');
+  ensure(host.textContent?.includes('このGoalは開けません'), 'foreign history did not show 404');
   foreignGoal = false; await change('A'); await change('B'); await settle();
   results.push('history: session failure masking, B recovery, foreign Goal 404');
 
