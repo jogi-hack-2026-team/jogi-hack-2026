@@ -52,7 +52,12 @@ test('R11 HTTP読取: 明示queryだけ専用DTO、既定Goal/Todayと書込応�
   assert.deepEqual(read.questionPrior, answers);
   assert.equal(read.answerRevision, 0);
   const today = todayR11(await owner.call('GET', `/api/goals/${id}/today?view=r11`));
-  assert.deepEqual(today.context, { recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount: 10, unitLocked: false, goalSettingsRevision: 0 });
+  assert.deepEqual(today.context, { recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount: 10, unitLocked: false, goalSettingsRevision: 0, answerRevision: 0 });
+  const { answerRevision: _removed, ...oldContext } = today.context;
+  assert.ok(!Value.Check(TodayR11, { ...today, context: oldContext }), '回答版は必須で、旧contextへフォールバックしない');
+  for (const answerRevision of [-1, 0.5, Number.MAX_SAFE_INTEGER + 1, '0']) {
+    assert.ok(!Value.Check(TodayR11, { ...today, context: { ...today.context, answerRevision } }));
+  }
   assert.deepEqual(today.provenance, { a: 'QUESTION', b: 'QUESTION' });
   assert.deepEqual(today.prediction.posterior, { a: { alpha: 3, beta: 1 }, b: { alpha: 1, beta: 3 } });
   assert.equal(today.prediction.modelVersion, 'm1-question-prior-v1');
@@ -125,6 +130,8 @@ test('R11 HTTP読取: 部分回答・UNKNOWN・撤回を版付きGETで区別し
     assert.equal(stale.status, 409, stale.body);
     assert.deepEqual(goalR11(await owner.call('GET', `${url}?view=r11`)), saved);
     const today = todayR11(await owner.call('GET', `${url}/today?view=r11`));
+    assert.equal(today.context.answerRevision, saved.answerRevision);
+    assert.equal(today.context.goalSettingsRevision, 0, '回答のみの変更は設定版を増やさない');
     assert.deepEqual(today.provenance, variant.source);
     assert.equal(today.prediction.coreMetric.status, variant.center);
     assert.equal(today.prediction.completion.status, 'insufficient');
@@ -170,7 +177,7 @@ test('R11 HTTP予測: 実遷移と回答の出所を分け、撤回/文脈変更
   saved = goalR11(await owner.call('GET', `${url}?view=r11`));
   assert.deepEqual(saved.questionPrior, { a: null, b: null }); assert.equal(saved.answerRevision, 2);
   const cleared = todayR11(await owner.call('GET', `${url}/today?view=r11`));
-  assert.deepEqual(cleared.context, { recordStartDate: '2026-10-05', unit: 'minutes', sessionAmount: 4, goalSettingsRevision: 2, unitLocked: true });
+  assert.deepEqual(cleared.context, { recordStartDate: '2026-10-05', unit: 'minutes', sessionAmount: 4, goalSettingsRevision: 2, answerRevision: 2, unitLocked: true });
   assert.deepEqual(cleared.provenance, { a: 'NONE', b: 'RECORDS' });
   assert.equal(cleared.prediction.progress.done, 7);
   assert.deepEqual(cleared.plan, { remainingAmount: 118, remainingSessions: 30, lastSessionAmount: 2 });
@@ -214,12 +221,14 @@ test('R11 HTTP Todayはfirst SELECT後の文脈撤回/新日ログcommitを混�
     assert.equal(writes, 1);
     assert.equal(old.today, '2026-10-07', 'first SELECT後にclockを読む');
     assert.equal(old.context.sessionAmount, 10);
+    assert.equal(old.context.answerRevision, 0);
     assert.equal(old.todayLog, null);
     assert.equal(old.prediction.progress.done, 0);
     assert.deepEqual(old.provenance, { a: 'QUESTION', b: 'QUESTION' });
     assert.deepEqual(old.prediction.posterior, { a: { alpha: 3, beta: 1 }, b: { alpha: 1, beta: 3 } });
     const fresh = todayR11(await owner.call('GET', `${url}/today?view=r11`));
     assert.equal(fresh.context.sessionAmount, 4);
+    assert.equal(fresh.context.answerRevision, 1);
     assert.deepEqual(fresh.todayLog, { localDate: '2026-10-07', status: 'DONE', amount: 7 });
     assert.equal(fresh.prediction.progress.done, 7);
     assert.deepEqual(fresh.provenance, { a: 'NONE', b: 'NONE' });
@@ -255,6 +264,76 @@ test('R11 HTTP Todayはpool待ち後に時計を1回読み、新日の通常ロ�
     assert.deepEqual(today.provenance, { a: 'QUESTION', b: 'QUESTION' });
   } finally { if (!released) held.forEach(client => client.release()); await read.catch(() => {}); await writer.end(); }
 });
+
+for (const [name, nextAnswers] of [
+  ['回答変更', { a: 'LOW', b: 'HIGH' }],
+  ['回答撤回', { a: null, b: null }],
+] as const) {
+  test(`R11 HTTP Todayの回答版はfirst SELECT後の${name}で新しい版へすり替わらない`, async t => {
+    const { db, stack } = await setup(t, { now: () => NOW });
+    const owner = await signedInClient(stack.app, 'r11-answer-snapshot');
+    const otherTab = new Client(stack.app, 'http://127.0.0.1:3000');
+    for (const [key, value] of owner.cookies) otherTab.cookies.set(key, value);
+    const created = await owner.sendExact('POST', '/api/goals', { ...input, questionPrior: answers }, { 'idempotency-key': crypto.randomUUID() });
+    assert.equal(created.status, 201, created.body);
+    const id = String(created.json!.id), url = `/api/goals/${id}`;
+    const before = goalR11(await owner.sendExact('GET', `${url}?view=r11`));
+    const legacy = await owner.sendExact('GET', `${url}/today`);
+    const stored = (await db.pool.query('select question_prior_snapshot from goal where id = $1', [id])).rows[0].question_prior_snapshot;
+    const nativeConnect = db.pool.connect;
+    let writes = 0;
+    // 本物の最初のSELECTで読取snapshotを確立してから、別clientの回答のみの変更をcommitする。
+    db.pool.connect = ((...args: unknown[]) => {
+      if (args.some(arg => typeof arg === 'function')) return Reflect.apply(nativeConnect, db.pool, args);
+      db.pool.connect = nativeConnect;
+      return Promise.resolve(Reflect.apply(nativeConnect, db.pool, args)).then((client: pg.PoolClient) => {
+        const query = client.query, release = client.release;
+        let used = false;
+        client.query = ((...queryArgs: unknown[]) => {
+          const result = Reflect.apply(query, client, queryArgs);
+          if (!used && typeof queryArgs[0] === 'string' && queryArgs[0].startsWith('select total_required')) {
+            used = true;
+            return Promise.resolve(result).then(async rows => {
+              const changed = await otherTab.sendExact('PATCH', url, {
+                expectedGoalSettingsRevision: before.goalSettingsRevision,
+                expectedAnswerRevision: before.answerRevision,
+                questionPrior: nextAnswers,
+              });
+              assert.equal(changed.status, 200, changed.body);
+              writes++;
+              return rows;
+            });
+          }
+          return result;
+        }) as typeof client.query;
+        client.release = (...releaseArgs) => { client.query = query; client.release = release; Reflect.apply(release, client, releaseArgs); };
+        return client;
+      });
+    }) as typeof db.pool.connect;
+    try {
+      const delayed = todayR11(await owner.sendExact('GET', `${url}/today?view=r11`));
+      assert.equal(writes, 1);
+      const after = goalR11(await otherTab.sendExact('GET', `${url}?view=r11`));
+      const fresh = todayR11(await owner.sendExact('GET', `${url}/today?view=r11`));
+      assert.equal(after.answerRevision, before.answerRevision + 1);
+      assert.equal(after.goalSettingsRevision, before.goalSettingsRevision);
+      assert.deepEqual(after.questionPrior, nextAnswers);
+      assert.equal(delayed.context.answerRevision, before.answerRevision, '古い予測には古い回答版');
+      assert.equal(fresh.context.answerRevision, after.answerRevision, '新しい予測には新しい回答版');
+      assert.equal(delayed.context.goalSettingsRevision, fresh.context.goalSettingsRevision);
+      assert.deepEqual(delayed.prediction.posterior, { a: { alpha: 3, beta: 1 }, b: { alpha: 1, beta: 3 } });
+      assert.notDeepEqual(fresh.prediction.posterior, delayed.prediction.posterior);
+      if (nextAnswers.a === null) {
+        assert.equal(delayed.prediction.completion.status, 'available');
+        assert.equal(fresh.prediction.completion.status, 'insufficient');
+      }
+      assert.deepEqual((await owner.sendExact('GET', `${url}/logs`)).json, []);
+      assert.deepEqual((await owner.sendExact('GET', `${url}/today`)).json, legacy.json, '旧Todayの形と予測は変えない');
+      assert.deepEqual(Object.keys(stored.context).sort(), ['recordStartDate', 'sessionAmount', 'unit'], '保存回答snapshotへ公開版を追加しない');
+      assert.equal(db.pool.totalCount - db.pool.idleCount, 0);
+    } finally { db.pool.connect = nativeConnect; }
+  });
+}
 
 test('R11 HTTP失敗復旧: 未知の保存mappingは両GETを共通500にし、復元後に接続と正常応答を回復する', async t => {
   const { db, stack } = await setup(t, { now: () => NOW });

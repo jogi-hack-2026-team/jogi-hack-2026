@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { Goal } from '@contracts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
-import { getPrivateEpoch, usePrivateEpoch } from '../../api/session-cache.ts';
+import { getPrivateEpoch, privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { getDraftGeneration, isDraftOwner } from '../../api/session-draft.ts';
 import { authClient } from '../../auth/client.ts';
 import { classifySaveError, TodayDateChangedError, toLogPut, type RecordChoice } from './record-log.ts';
 
@@ -23,9 +24,12 @@ export function rebaseSave(vars: SaveVars, latest: RecordContext): SaveVars | nu
   return { ...vars, expectedGoalSettingsRevision: latest.goalSettingsRevision };
 }
 
-export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, context }: {
+export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, isStaleDate, context }: {
   onSaved?: () => void; localDate?: string | undefined;
-  canSaveDate?: (date: string) => boolean; context?: RecordContext | undefined;
+  canSaveDate?: (date: string) => boolean;
+  /** 古い日付だと分かっている。省略時は送れない日付をすべて古いとみなす。API の今日がまだ分からない間は false にできる。 */
+  isStaleDate?: (date: string) => boolean;
+  context?: RecordContext | undefined;
 } = {}) {
   const queryClient = useQueryClient();
   const epoch = usePrivateEpoch();
@@ -39,6 +43,9 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
   const canSaveDateRef = useRef(canSaveDate);
   canSaveDateRef.current = canSaveDate;
   const dateAllowed = (date: string) => canSaveDateRef.current?.(date) ?? true;
+  const isStaleDateRef = useRef(isStaleDate);
+  isStaleDateRef.current = isStaleDate;
+  const dateStale = (date: string) => isStaleDateRef.current?.(date) ?? !dateAllowed(date);
   const [refreshFailed, setRefreshFailed] = useState(false);
   const [latest, setLatest] = useState<RecordContext | null>(null);
   const [reloadingSettings, setReloadingSettings] = useState(false);
@@ -74,17 +81,38 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
   const pendingForDate = localDate === undefined ? undefined : pending.find(vars => vars?.localDate === localDate);
   const conflict = mutation.isError && classifySaveError(mutation.error) === 'settings';
   const rebased = latest && mutation.variables ? rebaseSave(mutation.variables, latest) : null;
+  // 同じ人かの確認中に押された保存（#190）。押した人と入力者の連続性を固定し、確認できたら送る
+  const [held, setHeld] = useState<{ vars: SaveVars; owner: string; generation: number } | null>(null);
   const submit = (vars: SaveVars) => {
-    if (!dateAllowed(vars.localDate) || inFlight.current || reloadInFlight.current) return;
+    if (inFlight.current || reloadInFlight.current) return;
     if (queryClient.isMutating({ mutationKey: saveLogKey(goalId), predicate: m => isSaveFor(vars.localDate, m.state.variables) }) > 0) return;
+    // 押した時点で所有者と API の今日を確かめる。確認中・確認直後の取り直し中は分からないので、送らずに預かる
+    if (!privateDataReady(getPrivateEpoch()) || (!dateAllowed(vars.localDate) && !dateStale(vars.localDate))) {
+      const who = authClient.$store?.atoms?.session?.get()?.data?.user.id;
+      if (who) setHeld({ vars, owner: who, generation: getDraftGeneration() });
+      return;
+    }
+    if (!dateAllowed(vars.localDate)) return;
     inFlight.current = true; setRefreshFailed(false); mutation.mutate(vars);
   };
+  const heldReady = held !== null && privateDataReady(epoch) && dateAllowed(held.vars.localDate);
+  const heldStale = held !== null && privateDataReady(epoch) && dateStale(held.vars.localDate);
+  useEffect(() => {
+    if (!held) return;
+    // 未ログイン・古い日付と分かったら送らない
+    if (epoch.owner === null || heldStale) { setHeld(null); return; }
+    if (!heldReady) return;
+    setHeld(null);
+    // 別の人・認証操作をまたいだ場合は送らない（押した人の操作として確かめられない）
+    if (epoch.owner === held.owner && isDraftOwner(held.owner, held.generation)) submit(held.vars);
+  }, [epoch, held, heldReady, heldStale]);
   return {
     save: (vars: { localDate: string; choice: RecordChoice }) => {
       if (conflict || !context) return;
       submit(captureSave(context, vars.localDate, vars.choice));
     },
     canSaveDate: dateAllowed,
+    isStaleDate: dateStale,
     retry: () => {
       const vars = conflict ? rebased : mutation.variables;
       if (vars) submit(vars);
@@ -92,7 +120,7 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
     // 409は取得成功まで消さない。意味が変わった場合、成功後に利用者が明示的に選び直す。
     reset: () => {
       if (conflict && !latest) return;
-      mutation.reset(); setLatest(null); setSettingsReloadFailed(false);
+      setHeld(null); mutation.reset(); setLatest(null); setSettingsReloadFailed(false);
     },
     reloadSettings: async () => {
       if (!conflict || reloadInFlight.current || inFlight.current) return;
@@ -123,8 +151,8 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
     meaningChanged: conflict && latest !== null && rebased === null,
     reloadingSettings, settingsReloadFailed,
     refreshFailed,
-    isSaving: mutation.isPending || pendingForDate !== undefined,
-    saving: mutation.isPending ? mutation.variables : pendingForDate,
+    isSaving: mutation.isPending || pendingForDate !== undefined || held !== null,
+    saving: mutation.isPending ? mutation.variables : pendingForDate ?? held?.vars,
     failure: mutation.isError ? { error: mutation.error, vars: mutation.variables } : undefined,
     isSuccess: mutation.isSuccess,
   };

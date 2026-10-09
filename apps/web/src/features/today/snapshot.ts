@@ -1,4 +1,4 @@
-import type { Goal, Log, TodayR11 as Today } from '@contracts';
+import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 
 /**
  * Goal・Today・記録の一覧は別々の GET で取るため、取得した時点がずれることがある（別のタブでの編集・記録など）。
@@ -8,6 +8,7 @@ import type { Goal, Log, TodayR11 as Today } from '@contracts';
  *
  * 照らし合わせる値（どれも API が同じ snapshot から返す値で、FE で予測を計算し直すものではない）：
  * - 日付：Goal の today と Today の today
+ * - 回答版：質問回答だけの更新・撤回でも、古い回答で計算した予測と新しいGoalを組み合わせない
  * - 予測に使った設定：R-11 の読み取り（?view=r11）の context（1回の量・単位・記録開始日）と Goal。
  *   総量・累計が一致したまま1回の量だけが変わった組み合わせ（量10で計算した予測と量20の Goal）を止める
  * - 総量：Goal の totalRequired と予測の progress.total
@@ -18,6 +19,7 @@ import type { Goal, Log, TodayR11 as Today } from '@contracts';
 export function isSameSnapshot(goal: Goal, today: Today, logs: readonly Log[]): boolean {
   if (goal.today !== today.today) return false;
   if (goal.goalSettingsRevision !== today.context.goalSettingsRevision) return false;
+  if (goal.answerRevision !== today.context.answerRevision) return false;
   const { context } = today;
   if (context.sessionAmount !== goal.sessionAmount || context.unit !== goal.unit || context.recordStartDate !== goal.recordStartDate) return false;
   if (goal.totalRequired !== today.prediction.progress.total) return false;

@@ -68,6 +68,19 @@ export function privateDataReady(current: PrivateEpoch): boolean {
 }
 
 /**
+ * 表示中の画面の利用者（shown）を、同じ人かの確認中に保ってよいか（#190）。
+ * ウィンドウへ戻るたびの正常な再確認で、Today の入力中の状態を作り直さないために使う。
+ * 保ってよいのは、確認中に残っている session の利用者が shown と同じで、失敗も初回読み込みもしていないときだけ。
+ * 確認の後、旧取得の中断と消去が終わるまで（owner は同じで clearedAt が∞）も同じ確認の続きとして扱う。
+ * 保っている間も、確認中に届いたデータは使わず、私的な送信もしない（画面側・useSaveLog）。
+ */
+export function checkingSameOwner(shown: string | undefined, current: PrivateEpoch,
+  session: { data: { user: { id: string } } | null; error: unknown; isPending: boolean }): shown is string {
+  return shown !== undefined && (current.owner === undefined || current.owner === shown) &&
+    !session.error && !session.isPending && session.data?.user.id === shown;
+}
+
+/**
  * 利用者ごとの私的なデータ（Goal・Today・記録）を、ログインしている人が変わったときに止めて消す。
  * QueryClient は SPA の間ずっと共有されるため、消さないと、ログアウトして別の人がログインした後に
  * 前の人の Goal・記録・予測がキャッシュから見えてしまう（API の所有者チェックだけでは表示を防げない）。
