@@ -46,6 +46,20 @@ interfaceは差替えやテストに必要な境界だけに置く。大がか�
 
 入力検証は、UIの入力支援、APIの信用できない外部入力の検証、application service／Engineの業務不変条件、DBの一意性・参照整合性等の制約で役割が異なる。共有できる形式定義を使っても、各境界に必要な検証をDRY（重複削減）だけを理由に消さない。値・日付・NULLの規則は[Data Model](#data-model)と[Prediction Engine](#prediction-engine)を参照する。
 
+### 責務と配置を変えるとき
+
+既存の契約を保つ整理では、同じ理由で変わる小さな処理を抽出する。状態・副作用・transactionの所有者を増やさず、呼出し順序と失敗の境界を維持する。
+
+| 境界 | 現行の配置と保つ条件 |
+| --- | --- |
+| FEの入力と訪問 | [GoalFormPage](../apps/web/src/features/goals/GoalFormPage.tsx)がdraft・作成attempt・保存を所有する。[GoalFormFields](../apps/web/src/features/goals/form/GoalFormFields.tsx)は制御された値・callbackで描画し、保存や認証を持たない。[成功receipt](../apps/web/src/features/goals/navigation/useConfirmedGoalSave.ts)はowner・世代・訪問を照合してから、同じattemptの掃除と遷移を一度だけ行う |
+| FEの純粋な境界 | [forecast-validation](../apps/web/src/features/prior/forecast-validation.ts)が表示へ渡す契約を検査し、[PriorForecast](../apps/web/src/features/prior/PriorForecast.tsx)は描画する。共有する[IANA timezone・暦日関数](../apps/web/src/calendar.ts)へ時計や画面stateを持ち込まない |
+| BEの判断と永続化 | [settings-policy](../apps/api/src/goals/settings-policy.ts)・[target-date-policy](../apps/api/src/goals/target-date-policy.ts)・[回答更新policy](../apps/api/src/questions/update-policy.ts)・[作成fingerprint](../apps/api/src/goals/create-request-fingerprint.ts)は純粋判定。[Goal store](../apps/api/src/goals/store.ts)はSQL・lock・時計・CAS・commit/rollbackを所有する。`loadGoalReadModels`等の名前でDB読込を明示し、拒否の優先順を抽出の都合で変えない |
+| Engineの公開型と計算 | [question-prior-types](../packages/prediction/src/question-prior-types.ts)がR-11の公開型を所有し、内部候補は型を参照する。公開入口は既存exportを保つ。数値核・演算順・乱数・K/H/seed・独立オラクルと凍結fixtureを保ち、結果の値・key・省略条件・拒否条件を比較する |
+| 検証の資源 | APIの[helper](../apps/api/tests/helpers/stack.ts)は獲得した資源を早期に所有し、初期化失敗でも獲得済み資源をすべて終了する。元の失敗と終了失敗を併記する。これはテストの境界で、製品へ新しいDI層を導入しない |
+
+変更時は[検証手順](DEVELOPMENT_GUIDE.md#検証)で純粋・描画・実ブラウザ・実DBの範囲を分ける。画面の直接操作や独立オラクルを、ソース文字列の一致や件数だけで置き換えない。
+
 ### Repository構成
 
 `packages/prediction` は実在する純粋Engineで、[利用条件と検証手順](../packages/prediction/README.md)を参照する。root workspace・health/SPA配信・Compose・単一コンテナ・Application CIは#70、DB schema/migrationは#74、認証/API保護/認証画面は#75で導入済み（[起動・検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。Goal APIは#76、記録・Today APIとEngine結合は#77でローカル実装済み。業務画面のmain実装と受入・公開の残条件は[対応表](change-map.md#現在地の読み方)へ集約し、Docker起動成功を業務機能全体の完成としない。
@@ -522,7 +536,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 | --- | --- | --- |
 | `packages/prediction` | `node:test`＋固定例・固定seed・独立オラクル（性質T-01〜T-15を具体例と閉形式で検査）。fast-check（性質ベースの入力生成）は未採択の候補 | 下表T-01〜T-15。CIで毎回実行 |
 | `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 認証（未ログイン401、登録→再読み込み→ログアウト→旧Cookie 401、期限切れ、別origin403、https Cookie、DB保存の回数制限と再起動。[auth.test.ts](../apps/api/tests/auth.test.ts)）、Goal API（契約違反の422と全項目列挙、無効timezone、他人・uuidでないidの404、記録があるGoalの変更禁止、削除の連鎖、timezoneの日付境界。[goals.test.ts](../apps/api/tests/goals.test.ts)）、記録API（DONEの明示量必須、同日上書き、SKIPPEDの量拒否、今日・昨日の窓と開始日前、Asia/Tokyoの23:59→0:00、期間指定の一覧。[logs.test.ts](../apps/api/tests/logs.test.ts)）、Today API（`yesterdayMissing`の条件、Engineの`predict`との完全一致、記録後の再計算、達成済み。[today.test.ts](../apps/api/tests/today.test.ts)）、所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
-| `apps/web` | 手動チェックリスト＋Playwright CLI（主要Flow 1本） | 登録→Goal作成→記録→前日補完→Today Decision表示 |
+| `apps/web` | `node:test`の純粋module・HTTP契約・SSR、実React/Router/SDKのブラウザ回帰（合成transport）、実API/DBの手動ブラウザ確認 | 前者は所有者切替・再確認・draft・保存成功の訪問寿命を検査。実認証・実HTTP・DBの通し確認とは分ける。登録→Goal作成→記録→前日補完→Today Decisionの実環境結果は対象SHAと操作をPRへ記録する |
 
 | ID | Prediction Engineの性質 |
 | --- | --- |

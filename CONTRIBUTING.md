@@ -809,6 +809,8 @@ Design IntentにはContext、Intent、Design、Why、Invariants、Non-goals、Al
 
 移動PRでは基準commitと原文範囲・移動先をIssue単位のmanifestに記録し、`pwsh -NoProfile -File scripts/check-doc-migration.ps1 -Manifest <manifestのパス>`で全文と旧見出しを確認します。続いて[Foundation](README.md#開発基盤のセットアップと確認)で相対リンク・見出し・文書形式を検査します。移動manifestはその移動時点の検証用で、将来の正本更新を古いSHAの本文へ固定する常設ゲートにはしません。
 
+依頼者が廃止資料を現行作業ツリーから除外すると決めた場合は、tracked fileの通常削除commitと固定Git履歴で保存できます。対象treeの基準SHA・object ID・全fileの対応と内容保持・削除範囲・現行依存の確認をIssue単位に記録し、必要な入口を固定tree/blobへ更新します。raw・FAIL・採択理由を部分的に間引かず、Git履歴と未tracked資料を保全します。既存本文を別文書へ移す上記の全文検査とは分け、除外を未検証事項の解消や過去の成功への読み替えに使いません。
+
 ### 文書を書く手順
 
 人間とAIが共通で使う執筆・保守手順はここに集約します。Skillや別ガイドへ全文を複製しません。

@@ -561,6 +561,20 @@ migrationはHTTP listenerを開く前に専用poolで実行します。host開�
 
 ### 検証
 
+確認する範囲と結果を分け、対象HEAD・実行環境・fail/skip/未実行をIssue/PRへ記録します。内部整理の責務は[Architecture](architecture.md#責務と配置を変えるとき)が正本です。
+
+| 検証層 | 何を確認し、何を保証しないか |
+| --- | --- |
+| Engine | 固定例・独立オラクル・凍結fixture・型契約。`tests`配下の`*.test.mjs`を再帰収集し、境界監査も入れ子のTSを確認。DB/HTTP/UIの成功は保証しない |
+| API | 実Fastifyへの`inject`と専用PostgreSQLで契約・transaction・競合を確認。実TCP/ブラウザの確認とは別。[helperの新規caller](../apps/api/tests/helpers/stack.ts)は、表示済みDTOのkey/revision/DONE量を補う`callWithDisplayedGoal`、要求を補わない`sendExact`を選ぶ。既存`call`/`rawCall`は互換入口。欠落・stale CAS・再送の負例は`sendExact`を使い、暗黙GETで時計やsnapshotを変えない |
+| Web一般 | 純粋module、外部JSON検査、SSR等。session確認は製品moduleを直接importし、依存境界だけをテストtransportへ替える |
+| Webブラウザ | 実React/Router/SDKと合成transportによる所有者・再確認・draft/attemptの回帰。実認証API/DBのE2Eではない。下記の別コマンドでローカルのbrowser未実行を補う |
+| 実環境 | 専用アカウント・合成Goal・専用API/DBで操作し、通信・保存と再取得・画面を対応付ける。ユーザーのDB/sessionに故障を注入しない |
+
+API helperは獲得後すぐ終了処理を登録し、途中の初期化失敗や一資源の終了失敗でも残りを片付けます。[lifecycle回帰](../apps/api/tests/helper-lifecycle.test.ts)は実DBと子fixtureを使います。失敗したCREATEの成功を推測して未所有DBを削除せず、元の失敗と終了失敗を残します。
+
+CIのcommand・層別集計・安全な失敗artifactは[診断手順](../.github/scripts/README.md)を参照します。checkoutの合成merge SHAとPR source HEADを区別し、欠落/不明/0件/skipを成功へ置換しません。required check名・settings・閾値はこの整理で変更しません。速度比較は同条件の実測がある場合だけ行います。
+
 ```sh
 npm run typecheck
 npm test
