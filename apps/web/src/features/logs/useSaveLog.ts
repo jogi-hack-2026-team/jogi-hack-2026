@@ -120,7 +120,7 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, is
     // 409は取得成功まで消さない。意味が変わった場合、成功後に利用者が明示的に選び直す。
     reset: () => {
       if (conflict && !latest) return;
-      mutation.reset(); setLatest(null); setSettingsReloadFailed(false);
+      setHeld(null); mutation.reset(); setLatest(null); setSettingsReloadFailed(false);
     },
     reloadSettings: async () => {
       if (!conflict || reloadInFlight.current || inFlight.current) return;

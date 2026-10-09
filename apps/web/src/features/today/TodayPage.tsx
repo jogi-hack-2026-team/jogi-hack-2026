@@ -7,6 +7,7 @@ import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { checkingSameOwner, privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { useDraftGeneration } from '../../api/session-draft.ts';
 import { authClient } from '../../auth/client.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
@@ -40,12 +41,13 @@ import './today.css';
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
  * 同じルートで goalId だけが変わると部品が使い回されるため、Goal ごとに作り直して
  * 「後で答える」や記録の変更中の状態を別の Goal へ持ち越さない。
- * ログインしている人が変わったときも作り直し、前の人の表示（最後にそろっていた snapshot など）を捨てる。
+ * 入力者の連続性が変わったときも作り直し（同一描画間のowner/error/認証操作も含む）、前の人の表示（最後にそろっていた snapshot など）を捨てる。
  * ウィンドウへ戻るたびの、同じ人かの正常な確認中は作り直さず、入力中の状態を保つ（#190）。
  * その間は確認中に届いたデータを使わず（notBefore=∞）、保存は確認できるまで送らない（useSaveLog）。
  */
 export function TodayPage({ goalId }: { goalId: string }) {
   const current = usePrivateEpoch();
+  const draftGeneration = useDraftGeneration();
   const session = authClient.useSession();
   // いま表示している画面の利用者。確認の結果が別の人・未ログイン・失敗なら捨てる
   const shown = useRef<string | undefined>(undefined);
@@ -55,7 +57,7 @@ export function TodayPage({ goalId }: { goalId: string }) {
   shown.current = ready ? owner ?? undefined : checking ? shown.current : undefined;
   if (owner === null) return <SignedOutPage />;
   if (!shown.current) return <Loading />;
-  return <TodayScreen key={`${shown.current}:${goalId}`} goalId={goalId} notBefore={checking ? Number.POSITIVE_INFINITY : clearedAt} />;
+  return <TodayScreen key={`${shown.current}:${goalId}:${draftGeneration}`} goalId={goalId} notBefore={checking ? Number.POSITIVE_INFINITY : clearedAt} />;
 }
 
 function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number }) {
@@ -93,7 +95,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
     isStaleDate: (date) => {
       const goalToday = queryClient.getQueryData<Goal>(goalKeys.detail(goalId))?.today;
       const todayToday = queryClient.getQueryData<Today>(todayKeys.today(goalId))?.today;
-      return (goalToday !== undefined || todayToday !== undefined) && !isCurrentToday(date, goalToday, todayToday);
+      // Todayだけの先着では、同じ日付のGoalをまだ待っている。既知の矛盾だけを日付変更と扱う。
+      return (goalToday !== undefined && date !== goalToday) || (todayToday !== undefined && date < todayToday);
     },
   });
   const yesterdaySaver = useSaveLog(goalId, { context: snapshot?.goal, onSaved: () => setYesterdayEdit(null), localDate: yesterdayEdit?.localDate ?? snapshot?.today.yesterday });
