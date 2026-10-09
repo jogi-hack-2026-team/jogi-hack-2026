@@ -77,6 +77,12 @@ PR #131の実Engine混合負荷は[2026-10-07の訂正・追加報告](../experi
 | 同じ行動の経験質問からのa/b初期分布・条件付き計画 | [PROPOSAL詳細](prediction/question-prior-proposal.md)、[判断理由](prediction/decision-log.md#proposalgoal作成時の質問由来priorと条件付き計画)、[Evidence](prediction/evidence.md#質問由来priorの局所検証2026-10-04) | 未採択。純粋[試作・再現手順](../experiments/question-prior-proposal/README.md)と局所テストのみ。R-02/R-06/P-12/D-20/API/T-11/T-15の採択後差分を記載。正式Product/Architecture・本番FE/BE/Engine・既存Issue依存は変更しない |
 | 質問・保存・表示の共通契約案（D-26） | [Supporting提案](prediction/question-prior-contract-proposal.md)、[固定例・再現方法](../experiments/question-prior-contract/README.md) | 具体契約は未採択。R-11 Mustと分担の採択記録はPR115で分離。#107で数値／表示・保存訂正・UI受け渡しをレビュー。BE確認に合わせ開始日先行・回答tokenのみのC案・同時PATCH・最小公開block・常時adapterを具体化。goldenの全入力キー照合と変更拒否回帰・専用CIで資料の取り違えを検出。製品実装・正式Decisionは変更しない |
 
+## 時間量の表示方針（#121）
+
+[P-18の限定採択・理由・他案・受入条件](product-spec.md#p-18-整数分を保った時間分表示)と[表示・入力の規則](product-spec.md#時間量の表示と整数分の保持)を正本とする。採択済みだが、正確な時間＋分表示の実装・受入確認は未実施。現行の量表示は[GoalListPage](../apps/web/src/features/goals/GoalListPage.tsx)、[ProgressSummary](../apps/web/src/features/today/ProgressSummary.tsx)、[量の文言・unitLabel](../apps/web/src/copy/today.ts)から調査し、Todayの残量・予測用viewは[forecast-view.ts](../apps/web/src/features/today/forecast-view.ts)へたどる。編集の初期値と整数分の送信は[goal-form.ts](../apps/web/src/features/goals/goal-form.ts)から確認する。
+
+P-18の0／1／59／60／61／1240分と達成まで残り1分の固定例、元の整数分を使う達成判定・予測・編集・未変更保存、回数Goalの維持を確認する境界テストは未整備。実装時に関連箇所へ追加し、狭い画面での折返しと累計・総量・残量の区別も確認する。既存の[goal-form.test.mjs](../apps/web/tests/goal-form.test.mjs)は編集・送信契約の調査入口であり、新しい表示仕様の受入済みという証拠にはしない。この文書PRでは実行コード・API・migrationを変更しない。
+
 ## 確認記録と残課題
 
 業務API・昨日補完・Engine集計／エラー・表示の判断事項は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日補完／訂正方針、#103のmetadata・公開エラー契約と純粋Engineはmain統合済み。未決の具体保存・DTO・再送／競合方式や表示案とは分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
