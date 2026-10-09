@@ -6,7 +6,7 @@
 
 2026-10-05、[PR #115の公開レビューに基づきR-11のMust追加と分担を採択](#p-15-質問由来の見通しのmust追加方針)した。現行MVPのMustはR-01〜R-11とPrediction Engineのテスト。KaitoがEngine・追加質問UI／出所別表示、BEが回答保存／API、FEが既存画面・追加UIの組み込みを担う。2026-10-07に[任意回答・編集・保存と予測への接続方針を依頼者が承認](#r-11の保存予測接続方針2026-10-07)した。チームレビュー・FE結合・製品の受入は別に確認する。Scope採択を実装完了の証拠にしない。
 
-旧音楽探索案は[P-10](#p-10-音楽探索案の廃止)で廃止した。旧案の要件・Scopeは[旧Product Spec](../archive/music-exploration/docs/product-spec.md)に履歴として保管し、現行へ持ち越さない。
+旧音楽探索案は[P-10](#p-10-音楽探索案の廃止)で廃止した。旧案の要件・Scopeは[旧Product Spec](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/product-spec.md)に履歴として保管し、現行へ持ち越さない。
 
 ## 本書を読む・更新する単位
 
@@ -163,7 +163,7 @@
 
 | ID | 日付 | 状態 | 判断 |
 | --- | --- | --- | --- |
-| P-01 | 2026-09-24 | DECIDED | 正式なProduct・Architectureの正本を2文書に集約する。詳細な当時の記録は[旧Product Spec](../archive/music-exploration/docs/product-spec.md#product-decision-log) |
+| P-01 | 2026-09-24 | DECIDED | 正式なProduct・Architectureの正本を2文書に集約する。詳細な当時の記録は[旧Product Spec](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/product-spec.md#product-decision-log) |
 | P-10 | 2026-09-29 | DECIDED | [音楽探索案を廃止](#p-10-音楽探索案の廃止)。旧P-02〜P-09は現行Productへの適用を終了 |
 | P-11 | 2026-09-30 | DECIDED | [Future ROIの採用とCoreの境界](#p-11-future-roiの採用とcoreの境界) |
 | P-12 | 2026-09-30 → 2026-10-08 | DECIDED（実績由来規則を維持。2026-10-08に補助指標1を表示しないよう改訂。R-11の具体表示契約はD-26でOPEN） | [中心指標と表示の規則](#p-12-中心指標と表示の規則) |
@@ -296,4 +296,4 @@ Today・昨日補完・昨日訂正は表示量と設定版を保存操作へ固
 
 ## Reconsideration Policy
 
-別案の存在だけで現在の判断を覆さない。欠陥、要件未達、規約・安全・運用上の重大リスク、期間超過、同等価値の単純化、一次情報による前提変更、PoCの不成立など、具体的な根拠がある場合に提案する。提案には対象Decision、変更案、根拠、利点・欠点、新しいリスクと移行コストを記録し、**提案→人間Decision→正式反映**の順を守る。旧案の詳細な検討経緯は[履歴](../archive/music-exploration/docs/product-spec.md#reconsideration-policy)に残す。
+別案の存在だけで現在の判断を覆さない。欠陥、要件未達、規約・安全・運用上の重大リスク、期間超過、同等価値の単純化、一次情報による前提変更、PoCの不成立など、具体的な根拠がある場合に提案する。提案には対象Decision、変更案、根拠、利点・欠点、新しいリスクと移行コストを記録し、**提案→人間Decision→正式反映**の順を守る。旧案の詳細な検討経緯は[履歴](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/product-spec.md#reconsideration-policy)に残す。

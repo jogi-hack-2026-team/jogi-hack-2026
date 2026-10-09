@@ -18,7 +18,7 @@ Supporting Doc / Not a Source of Truth。契約の不足、未採択の選択肢
 - 単位は`minutes` / `sessions`、量はinteger、タイトル上限は100。PoCの`count` / numeric / 120は未採択差分。[既存差分表](architecture.md#検証コードとの差分変更案未合意)を参照し、本書で重ねて採択しない。
 - DONE入力はamount省略可、APIが`sessionAmount`で補う。SKIPPED入力はamount禁止、DBはNULL。入力で省略することと、DBやEngine・応答のNULLを同じ規則として扱わない。
 - EngineのD-19〜D-22、状態判定順、今日の実績の二重加算禁止、微小確率の打ち切り禁止、T-14の500ms未満を維持する。
-- [技術説明PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)、[検証報告](../experiments/architecture-verification/REPORT.md)、[旧音楽案](../archive/music-exploration/README.md)を、それぞれmain統合済みの比較説明・PoC・履歴として区別する。ここでは技術候補の比較理由を再記載しない。
+- [技術説明PR #93](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/93)、[検証報告](../experiments/architecture-verification/REPORT.md)、[旧音楽案](../README.md#廃止した音楽案の履歴)を、それぞれmain統合済みの比較説明・PoC・履歴として区別する。ここでは技術候補の比較理由を再記載しない。
 
 ## APIの未定義部分
 

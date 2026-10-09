@@ -252,7 +252,7 @@ Mustの完成度を犠牲にしてShouldやCouldを実装しないでくださ�
 ## GitHub Projects
 
 原則1人1Issueとし、レビューが滞っている場合は新規着手よりレビューを優先します。
-BoardのWIP上限と資料との差分の旧記録は[履歴](archive/music-exploration/docs/operations/development-foundation-status.md#資料との相違点)を参照し、列や上限を無断で置換しません。
+BoardのWIP上限と資料との差分の旧記録は[履歴](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/operations/development-foundation-status.md#資料との相違点)を参照し、列や上限を無断で置換しません。
 
 Statusは以下を使用します。
 
@@ -268,7 +268,7 @@ Statusは以下を使用します。
     ↓
     Done
 
-Projectの自動追加対象はIssueです。PRはIssue本文の開発情報とDevelopment欄から追跡し、IssueカードのStatusを更新します。既存PRカードの扱いは[旧基盤状態](archive/music-exploration/docs/operations/development-foundation-status.md#資料との相違点)に記録しています。
+Projectの自動追加対象はIssueです。PRはIssue本文の開発情報とDevelopment欄から追跡し、IssueカードのStatusを更新します。既存PRカードの扱いは[旧基盤状態](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/operations/development-foundation-status.md#資料との相違点)に記録しています。
 
 | 対象 | タイミング | Status |
 | --- | --- | --- |
@@ -705,7 +705,7 @@ Force PushはGitの履歴を書き換えるため、他のメンバーの変更�
 - Webhook URL
 - `.env` の実値
 
-次のProductのSecret管理方式は未決定です。旧Doppler採択と当時の接続待ちは[履歴](archive/music-exploration/docs/operations/development-foundation-status.md#dopplerの引き継ぎ)に保管しています。Secretの実値は承認された安全な手段で管理し、リポジトリやIssue・PRへ載せません。
+次のProductのSecret管理方式は未決定です。旧Doppler採択と当時の接続待ちは[履歴](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/operations/development-foundation-status.md#dopplerの引き継ぎ)に保管しています。Secretの実値は承認された安全な手段で管理し、リポジトリやIssue・PRへ載せません。
 
 `.env` などは `.gitignore` でGitの管理対象から除外します。
 
@@ -744,7 +744,7 @@ Merge前に以下を確認してください。
 | 新しいProduct・Architectureの重要判断 | 上記2文書内のDecision Log。ID・日付・状態・判断要約・詳細/Issueリンクを記録する。詳しい理由は領域別decision-logへ置く |
 | Git管理できる構成図・Sequence図 | 必要な仕様文書内のMermaid。実装前に架空の図を作らない |
 
-当時の採用方針・導入条件は[旧開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)、項目ごとの導入・検証結果と外部変更の承認待ちは[旧基盤状態](archive/music-exploration/docs/operations/development-foundation-status.md)を参照してください。現在の未決定事項は[現行状態](docs/operations/development-foundation-status.md)に記録しています。
+当時の採用方針・導入条件は[旧開発基盤ADR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/decisions/0001-development-foundation.md)、項目ごとの導入・検証結果と外部変更の承認待ちは[旧基盤状態](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/operations/development-foundation-status.md)を参照してください。現在の未決定事項は[現行状態](docs/operations/development-foundation-status.md)に記録しています。
 過去の基盤ADRは履歴として保持します。新しいProduct・Architecture判断のために正式ADRファイルを増やさず、2文書内のDecision Logから旧判断を参照し、変更理由と影響を記録します。Baselineの再検討は[Reconsideration Policy](docs/product-spec.md#reconsideration-policy)に従い、人間の決定前に正式反映しません。
 リリース・提出前は[リリースとデモの手順](docs/operations/release-demo.md)を使います。
 
@@ -759,9 +759,9 @@ Merge前に以下を確認してください。
 | 構成・責務・技術・DB・Deployment・Auth・Testing | `docs/architecture.md`。Product要件から実現方法またはOPENへ追跡できるようにする |
 | 開発基盤・運用・リリース手順 | 既存の`docs/operations/`。日常の具体的な操作は[開発ガイド](docs/DEVELOPMENT_GUIDE.md)に置く |
 | Product / Architecture Decision | 2文書内のDecision Log。別の正式requirements・scope・technology-stack・deployment文書やADR群を増やさない |
-| 領域別の理由・実装支援 | 新Productの要件と領域が決まってから、必要なSupporting Docsを`docs/`に置く。[旧音楽案のFE/BE/ML文書](archive/music-exploration/README.md)は履歴として保管し、現行仕様にはしない |
+| 領域別の理由・実装支援 | 新Productの要件と領域が決まってから、必要なSupporting Docsを`docs/`に置く。[旧音楽案のFE/BE/ML文書](README.md#廃止した音楽案の履歴)は履歴として保管し、現行仕様にはしない |
 | 調査資料・PoC・測定CSV/JSON・experiment README | `Supporting Artifact / Not a Source of Truth`と明記。正式Decisionは2文書へ反映し、補助資料だけに残さない |
-| 過去の開発基盤の判断 | [旧開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
+| 過去の開発基盤の判断 | [旧開発基盤ADR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/decisions/0001-development-foundation.md)を履歴として保持。正式Product・Architecture仕様の追加正本とはしない |
 | ページ・機能・基盤の棚卸しと、仕様・コード・確認方法の対応 | [docs/change-map.md](docs/change-map.md)。動的URLはルートのパターン単位で扱う |
 
 Figma / FigJamの図や画面表現から、条件・制約を説明するGit管理の仕様文書へ相互に参照できるようにします。外部資料の共有先が未確認ならURLを創作せず、同じ仕様の別正本を作りません。

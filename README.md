@@ -16,7 +16,7 @@
 | DECIDED（基本構成） | 2026-10-03のD-23基本構成採用は、FE側のDiscord上の了承についての依頼者報告とBE本人の了承記録に基づく。[採用構成・理由・次の作業](docs/architecture.md#2026-10-03の技術構成合意)。2026-10-05に[npm workspacesと`pg`を追加採択](docs/architecture.md#2026-10-05の追加採択)。当時の合意範囲と、後日の[版固定・API契約](docs/architecture.md#technology-stack)を分けて読む |
 | 条件付き第一候補 | Better Authは[D-24](docs/architecture.md#d-24)。公開はFE・BEともVercel Hobby＋Neon Free、ローカルDockerが[D-25](docs/architecture.md#d-25)の第一候補（2026-10-08、本人アカウント・厳密0円・非商用・検証条件付き）。最終採択・配備済み・一般公開や課金の許可ではない |
 | mainの実装／受入・公開待ち | [Prediction計算本体・テスト](packages/prediction/README.md)、起動基盤・DB schema/migration・認証・Goal・記録・Today APIと実APIを使う業務画面はmainにある。画面の実装・既存ローカル検証記録と、製品受入・E2E・公開配置の残条件は[対応表の現在地](docs/change-map.md#現在地の読み方)で区別する。未mergeの画面変更をmainの説明へ混ぜない |
-| 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](archive/music-exploration/README.md) |
+| 履歴 | 音楽案向けの要件・設計・比較結果は新案に自動適用しない。[旧案の保管場所](README.md#廃止した音楽案の履歴) |
 
 コードフリーズ後は、原則としてソースコードと事前提出資料を編集できません。
 過去の案・会話・実験コードは採用済みの仕様ではありません。
@@ -29,7 +29,7 @@
 - **未定**：まだ議論・決定されていない事項。
 
 現時点では文書、4種類のIssue Forms、PRテンプレート、AI向けSkills、Serena設定、miseの共通タスク、文書・設定検証用のGitHub Actionsがあります。
-旧案の文書と比較PoCは[保管場所](archive/music-exploration/README.md)へ移しました。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で、DBスキーマとmigration（`npm run db:migrate`）は#74で、認証（登録・ログイン・ログアウト、未ログインは401）は#75でローカル実装済みです。Goal API（#76）と記録・Today API（#77、`/today`が純粋Engineを呼ぶ）、Goalの一覧・作成・編集・削除画面（#78）とToday画面（#81）は実APIでローカル実装済みです。今日の記録・変更（#79）と昨日の補完・訂正（#80）も実APIで保存します。公開先（staging）への配置は未実施です。
+旧案の文書と比較PoCは[固定commitの履歴](#廃止した音楽案の履歴)から参照できます。現行のアプリ起動構成（npm workspaces・`apps/api`・`apps/web`・Compose・単一コンテナ・Application CI）は#70で、DBスキーマとmigration（`npm run db:migrate`）は#74で、認証（登録・ログイン・ログアウト、未ログインは401）は#75でローカル実装済みです。Goal API（#76）と記録・Today API（#77、`/today`が純粋Engineを呼ぶ）、Goalの一覧・作成・編集・削除画面（#78）とToday画面（#81）は実APIでローカル実装済みです。今日の記録・変更（#79）と昨日の補完・訂正（#80）も実APIで保存します。公開先（staging）への配置は未実施です。
 現行の未決定事項と当時の検証記録への入口は[開発基盤の状態](docs/operations/development-foundation-status.md)で区別しています。
 次の案で使える資産と再評価が必要な条件は[引き継ぎの棚卸し](docs/operations/reuse-handoff.md)にまとめています。
 実装の棚卸し・調査基準・関連する判断Issueは[仕様・実装・確認方法の対応表](docs/change-map.md)を参照してください。
@@ -52,7 +52,7 @@ Hook（コミット前に走る処理）の導入はローカル設定を変更�
 
 Prediction単体は[Docker検証手順](packages/prediction/DOCKER.md)で、hostにNodeを追加せず型検査・テスト・接続例・T-14を実行できます。Secret・DBは不要です。製品全体の起動構成やruntimeの採択とは分けます。
 
-`check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。旧アプリを調べる場合だけ[履歴内の手順](archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#composeでwebapipostgresqlを起動する)を参照してください。
+`check`は文書・設定の検証です。Secret・DB・アプリRuntimeは不要です。
 
 ## 最初に読む順番
 
@@ -65,7 +65,7 @@ Prediction単体は[Docker検証手順](packages/prediction/DOCKER.md)で、host
 機能の仕様を知りたい・変更したい場合は、[対応表](docs/change-map.md#アプリの仕様と実装)から「目的・操作・入力や表示の条件・失敗時の動作」を説明する機能文書へ進み、内部処理、関連コード、確認方法をたどります。
 正式な設計文書は[Product Spec](docs/product-spec.md)と[Architecture](docs/architecture.md)の2本です。アプリの起動構成とProduct機能の実装状況、比較結果と未検証範囲はArchitectureからたどれます。[開発基盤と作業手順](docs/change-map.md#開発基盤と作業手順)と[配置ルール](CONTRIBUTING.md#仕様文書の配置)も参照してください。
 
-旧音楽案の領域別記録は[保管場所](archive/music-exploration/README.md)からたどれます。現在の実装指示ではありません。
+旧音楽案の領域別記録は[保管場所](README.md#廃止した音楽案の履歴)からたどれます。現在の実装指示ではありません。
 
 AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してください。
 
@@ -84,9 +84,15 @@ AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してくだ�
 | 現在のStatus・Scope | [GitHub Projects](https://github.com/orgs/jogi-hack-2026-team/projects/1)（アクセス権が必要） |
 | 正式Product仕様・要件・Scope・Product Decision Log | [Product Spec](docs/product-spec.md) |
 | 正式Architecture・技術候補・DB・Deployment・Architecture Decision Log | [Architecture](docs/architecture.md) |
-| 過去の開発基盤の判断履歴 | [開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)。新規Product設計の正本を増やさない |
+| 過去の開発基盤の判断履歴 | [開発基盤ADR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/decisions/0001-development-foundation.md)。新規Product設計の正本を増やさない |
 | 現行基盤の状態と旧設定・検証記録への入口 | [開発基盤の状態](docs/operations/development-foundation-status.md) |
 | リリース・提出・デモ | [リリースとデモの手順](docs/operations/release-demo.md) |
 
 仕様・設計・資料の追加先と執筆手順は[ドキュメント運用](CONTRIBUTING.md#ドキュメントと技術判断)を正本とします。過去の草稿・実施結果は[Issue単位の履歴フォルダ](docs/changes/)から探せます。フォルダには新しい正式仕様を置きません。
 同じ説明をコピーせず、正本へリンクします。
+
+## 廃止した音楽案の履歴
+
+廃止した音楽案の文書・比較PoC・当時の設定は、[固定commit `77c71a5` のtree](https://github.com/jogi-hack-2026-team/jogi-hack-2026/tree/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration)から参照します。#188でtracked file 111件を現在の作業ツリーから外しました。Git履歴と当時の採択・失敗・検証結果は保持し、現行アプリの仕様や起動手順へ自動適用しません。
+
+ローカルで調べる場合は、そのcommitの別checkoutから `archive/music-exploration` を参照してください。現行checkoutの設定やDBへ復元して動かす前に、[再利用時の確認事項](docs/operations/reuse-handoff.md)を確認します。
