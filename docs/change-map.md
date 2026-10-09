@@ -2,11 +2,13 @@
 
 現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。この対応表は実装を調べる入口で、正式仕様の追加正本ではない。下表のパスと[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)は[Repository構成](architecture.md#repository構成)から確認する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
 
+運用と配置は[共通の文書規則](../CONTRIBUTING.md#変更に伴う文書更新)、草稿・実施結果の保存先は[履歴フォルダ](changes/)を参照する。新しい実測だけを追加する場合は中央表への毎回追記を要しない。現行の契約・処理経路・確認方法が変わる場合は該当行を更新する。
+
 ## 現在地の読み方
 
-2026-10-08のmain `25f473fe` を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
+2026-10-09のmain `10c1df7`（PR #176統合後）を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
 
-[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)（確認時HEAD `9a87a2c`）の画面・ルート変更とGoal一覧の`progressDone`はこの基準mainに含まれない（確認時は未merge）。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
+[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)の画面・ルート変更とGoal一覧の`progressDone`はこの基準mainに含まれる。未mergeのPRの追加契約は取り込まず、各Issue/PRで状態を確認する。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
 
 ## コードを読むための短いtrace
 
