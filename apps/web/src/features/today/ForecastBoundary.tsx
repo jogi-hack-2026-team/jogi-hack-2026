@@ -5,10 +5,15 @@ import { todayCopy } from '../../copy/today.ts';
 /**
  * 予測の表示だけを囲む Error Boundary。表示データへの変換と検査（assertForecastPresentation）もこの内側で行う。
  * 記録の2択はこの外に置くので、予測の表示が失敗しても記録はできる。
- * 新しいデータを受け取ったら親が key を変えて、失敗の状態から戻す。
+ * 新しいデータを受け取ったら（resetKey が変わったら）、失敗の状態から戻す。
+ * 失敗していないときは作り直さない（取り直しのたびに作り直すと、キーボードのフォーカスが外れるため）。
  */
-export class ForecastBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+export class ForecastBoundary extends Component<{ children: ReactNode; resetKey: unknown }, { failed: boolean }> {
   override state = { failed: false };
+
+  override componentDidUpdate(previous: Readonly<{ resetKey: unknown }>) {
+    if (this.state.failed && previous.resetKey !== this.props.resetKey) this.setState({ failed: false });
+  }
 
   static getDerivedStateFromError(): { failed: boolean } {
     return { failed: true };

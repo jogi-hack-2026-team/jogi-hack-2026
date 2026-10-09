@@ -4,11 +4,10 @@
 //
 // 実行（repository root、Node 24.21.0、`npm ci` と `npm run build:prediction` 済み）:
 //   node experiments/api-mixed-load/run.ts
-// 外部DBを使わず、apps/api のテストhelperと同じembedded PostgreSQL（apps/api/.local、Git除外）へ専用databaseを作って削除する。
+// DATABASE_URL未設定なら、apps/api のテストhelperと同じembedded PostgreSQL（apps/api/.local、Git除外）へ専用databaseを作って削除する。
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { createServer } from 'node:net';
 import { cpus, platform, release, totalmem } from 'node:os';
 import { dirname, join } from 'node:path';
 import { performance } from 'node:perf_hooks';
@@ -19,6 +18,7 @@ import { migrate } from '../../apps/api/src/db/migrate.ts';
 import { seedDemo } from '../../apps/api/src/db/seed-demo.ts';
 import { localDateIn } from '../../apps/api/src/goals/local-date.ts';
 import { QUESTION_MAPPING } from '../../apps/api/src/questions/snapshot.ts';
+import { distinctLoopbackPorts, monitorChild, withHarnessCleanup, type Stop } from './lifecycle.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..');
@@ -26,29 +26,17 @@ const apiDir = join(repoRoot, 'apps', 'api');
 const TIMEZONE = 'Asia/Tokyo';
 const SESSION_AMOUNT = 30;
 const LOG_DAYS = 60;
-// requiredFutureDone（既定はT-14の3入力）。利用者1人に1Goal。MIXED_LOAD_SIZES=a,b,c で差し替えられる（最悪入力の確認用）。
+// requiredFutureDone（既定はT-14の3入力）。利用者1人に1Goal。MIXED_LOAD_SIZES=a,b,c で追加条件を比較する。
 const T14_SIZES = (process.env.MIXED_LOAD_SIZES ?? '120,400,1095').split(',').map(Number);
 if (T14_SIZES.length !== 3 || T14_SIZES.some((n) => !Number.isInteger(n) || n < 1 || n > 100_000)) throw new Error('MIXED_LOAD_SIZES must be three positive integers');
 const USERS = 3; // 3人デモ相当
 const DEMO_LOOP = { warmupMs: 5_000, measureMs: 30_000, thinkMs: [1_000, 500, 1_000] as const };
-const OPEN_LOOP = { warmupMs: 1_000, measureMs: 8_000, crudPerSec: 20, todayPerSec: [1, 4, 10] as const }; // 候補spike（10-07報告）と同じ
+const OPEN_LOOP = { warmupMs: 1_000, measureMs: 8_000, crudPerSec: 20, todayPerSec: [1, 4, 10] as const }; // 候補spike（10-07報告）と同じ送信rate
 const SESSION_IPS_PER_USER = 8; // open loopのsession確認は固定版Better Authの100回/60秒/IPに当たるため、利用者ごとに複数IPへ分散する
 
 const sha256 = (buf: Buffer | string) => createHash('sha256').update(buf).digest('hex');
 const git = (...args: string[]) => spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' }).stdout.trim();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-async function freePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const s = createServer();
-    s.unref();
-    s.on('error', reject);
-    s.listen(0, '127.0.0.1', () => {
-      const a = s.address();
-      const p = typeof a === 'object' && a ? a.port : 0;
-      s.close(() => resolve(p));
-    });
-  });
-}
 const pct = (a: number[], p: number) => {
   if (!a.length) return null;
   const s = [...a].sort((x, y) => x - y);
@@ -61,6 +49,8 @@ const engineIndex = join(repoRoot, 'packages', 'prediction', 'dist', 'src', 'ind
 const provenance = {
   repositoryHead: git('rev-parse', 'HEAD'),
   workingTreeDirty: git('status', '--porcelain', '--', 'apps', 'packages').split('\n').filter(Boolean),
+  harnessDirty: git('status', '--porcelain', '--', 'experiments/api-mixed-load').split('\n').filter(Boolean),
+  harnessSha256: sha256(readFileSync(fileURLToPath(import.meta.url))),
   engineSourceTree: git('rev-parse', 'HEAD:packages/prediction'),
   apiSourceTree: git('rev-parse', 'HEAD:apps/api'),
   engineDistIndexSha256: sha256(readFileSync(engineIndex)),
@@ -80,6 +70,8 @@ const benchJson = JSON.parse(bench.stdout) as { cases: { requiredFutureDone: num
 
 // ---- database ----------------------------------------------------------------------------------
 const db = await createTestDatabase();
+const ownedStops: Stop[] = [];
+await withHarnessCleanup(ownedStops, () => db.close(), async () => {
 await migrate(db.pool, 'all');
 const admin = db.pool;
 const dbVersion = (await admin.query('select version()')).rows[0]!.version as string;
@@ -89,8 +81,7 @@ const encoding = (await admin.query('select pg_encoding_to_char(encoding) as e f
 type Server = { url: string; metricsUrl: string; child: ChildProcess; stop: () => Promise<number | null>; stderr: () => string };
 const secret = randomBytes(32).toString('base64url');
 async function startServer(): Promise<Server> {
-  const port = await freePort();
-  const metricsPort = await freePort();
+  const [port, metricsPort] = await distinctLoopbackPorts();
   const url = `http://127.0.0.1:${port}`;
   const child = spawn(process.execPath, ['--import', join(here, 'server-metrics-preload.mjs'), join(apiDir, 'src', 'server.ts')], {
     cwd: apiDir,
@@ -107,16 +98,18 @@ async function startServer(): Promise<Server> {
       MIXED_LOAD_METRICS_PORT: String(metricsPort),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
   });
+  const lifecycle = monitorChild(child);
+  ownedStops.push(lifecycle.stop); // readinessが失敗する前から、outer finallyの対象にする。
   let err = '';
   child.stderr!.on('data', (d) => (err += d));
   child.stdout!.on('data', () => {});
-  const exited = new Promise<number | null>((r) => child.once('exit', (code) => r(code)));
   const deadline = Date.now() + 20_000;
   for (;;) {
-    if (child.exitCode !== null) throw new Error(`server exited early: ${err.slice(-800)}`);
+    if (lifecycle.spawnError() || child.exitCode !== null || child.signalCode !== null) throw new Error(`server exited early: ${err.slice(-800)}`);
     try {
-      const res = await fetch(`${url}/api/health`);
+      const res = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(1_000) });
       if (res.status === 200) break;
     } catch {}
     if (Date.now() > deadline) throw new Error(`server did not become healthy: ${err.slice(-800)}`);
@@ -127,10 +120,7 @@ async function startServer(): Promise<Server> {
     metricsUrl: `http://127.0.0.1:${metricsPort}`,
     child,
     stderr: () => err,
-    stop: async () => {
-      child.kill('SIGTERM');
-      return exited;
-    },
+    stop: lifecycle.stop,
   };
 }
 
@@ -380,9 +370,8 @@ for (const r of open) {
   console.log(`open ${r.scenario.todayView.padEnd(3)} today ${String(r.scenario.todayPerSec).padStart(2)}/s | crud p95 ${String(r.latency.crud.p95).padStart(7)}ms | session p95 ${String(r.latency.session.p95).padStart(7)}ms | today p95 ${String(r.latency.today.p95).padStart(7)}ms max ${String(r.latency.today.max).padStart(7)}ms (unfinished ${r.latency.today.unfinishedWhenWindowClosed}) | loop max ${String(r.server.eventLoopDelay.maxMs).padStart(7)}ms | cpu ${r.server.cpuUtilization} | fail ${Object.values(r.cohort).reduce((a, c) => a + c.failure, 0)} mismatch ${Object.values(r.cohort).reduce((a, c) => a + c.mismatch, 0)}`);
 }
 
-await db.close();
-
-const settled = [demo, ...open].every((r) => Object.values({ ...r.cohort, ...r.warmup }).every((c) => c.sent === c.success + c.failure));
+// 測定cohortとwarmup cohortは同じkind名を持つので、object spreadで合成せず別々に収束を確認する
+const settled = [demo, ...open].every((r) => [r.cohort, r.warmup].every((phase) => Object.values(phase).every((c) => c.sent === c.success + c.failure)));
 const result = {
   label: 'Supporting Artifact / Not a Source of Truth (Issue #161)',
   provenance: { ...provenance, finishedAt: new Date().toISOString(), database: dbVersion, databaseEncoding: encoding, todayInGoalTimezone: users[0]!.today },
@@ -413,6 +402,8 @@ const result = {
 const tag = provenance.startedAt.replace(/[-:.]/g, '').slice(0, 15);
 const outDir = join(here, 'results', tag);
 mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, 'mixed-load.json'), JSON.stringify(result, null, 2) + '\n');
+writeFileSync(join(outDir, 'mixed-load.json'), JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
 console.log(`\nchecks: wiring ${wired.ok} settled ${settled} noFail ${result.checks.noRequestFailed} noMismatch ${result.checks.noOracleMismatch} -> ${outDir}`);
-process.exit(wired.ok && settled && result.checks.noRequestFailed && result.checks.noOracleMismatch ? 0 : 1);
+// process.exit()でfinallyを飛ばさず、child/DBのcleanup完了後に自然終了する。
+process.exitCode = wired.ok && settled && result.checks.noRequestFailed && result.checks.noOracleMismatch ? 0 : 1;
+});

@@ -8,8 +8,10 @@ import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
-import { unitLabel } from '../../copy/today.ts';
+import { todayCopy, unitLabel } from '../../copy/today.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
+import { DeskHeader } from '../../ui/components/DeskHeader.tsx';
+import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { ConfirmDialog } from '../../ui/components/ConfirmDialog.tsx';
 import { Field, fieldAria, NumberInput, SegmentedControl, SelectInput, TextInput } from '../../ui/components/FormField.tsx';
@@ -86,8 +88,10 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
 
 function FormShell({ title, body }: { title: string; body: ReactNode }) {
   return (
-    <div className="fr fr-page">
+    <div className="fr fr-page fr-page--desk">
+      <PageTitle title={title} />
       <AppBar title={title} leading={<CloseLink />} />
+      <DeskHeader back={<ListCrumb />} title={title} />
       <div className="fr-goals__pad">{body}</div>
     </div>
   );
@@ -97,6 +101,26 @@ function CloseLink() {
   return (
     <Link to="/goals" className="fr-icon-btn" aria-label={f.close}>
       <Icon name="close" />
+    </Link>
+  );
+}
+
+/** デスクトップ幅の戻り先（Goal一覧）。 */
+function ListCrumb() {
+  return (
+    <Link to="/goals" className="fr-btn fr-btn--text">
+      <Icon name="back" size={18} />
+      {c.crumbList}
+    </Link>
+  );
+}
+
+/** デスクトップ幅の編集の戻り先（そのGoalのToday。表示は Today の戻り先と同じ「Goal一覧 / タイトル」）。 */
+function GoalCrumb({ goal }: { goal: Goal }) {
+  return (
+    <Link to="/goals/$goalId" params={{ goalId: goal.id }} className="fr-btn fr-btn--text">
+      <Icon name="back" size={18} />
+      {todayCopy.breadcrumbTrail(goal.title)}
     </Link>
   );
 }
@@ -143,6 +167,8 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   const [baseline, setBaseline] = useState(goal);
   // 最新を読み直したときの回答。入力中の回答で上書きする前に確かめられるよう、知らせとして出す
   const [latestAnswers, setLatestAnswers] = useState<GoalWithAnswers['questionPrior'] | null>(null);
+  // 初期質問の開閉。保存済みの回答がある編集では開いた状態から始める
+  const [priorOpen, setPriorOpen] = useState(() => values.questionPrior.a !== null || values.questionPrior.b !== null);
   const [reloadingLatest, setReloadingLatest] = useState(false);
   const reloadInFlight = useRef(false);
   // この画面がまだ表示されているか。保存の途中で離れた後に、別の画面を一覧へ移さないために使う
@@ -261,9 +287,11 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
   };
 
   return (
-    <div className="fr fr-page">
+    <div className="fr fr-page fr-page--desk">
+      <PageTitle title={mode === 'create' ? f.createTitle : f.editTitle} />
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
-      <form ref={formRef} className="fr-goalform" noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
+      <DeskHeader back={goal ? <GoalCrumb goal={goal} /> : <ListCrumb />} title={mode === 'create' ? f.createTitle : f.editTitle} />
+      <form ref={formRef} className={`fr-goalform fr-goalform--${mode}`} noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">
           {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isAnswerConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} answerConflict={isAnswerConflict(save.error)} /> : null}
           {count > 0 ? (
@@ -298,8 +326,11 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             />
           </Field>
 
-          <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={busy} onChange={(v) => update('totalRequired', v)} />
-          <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={busy} onChange={(v) => update('sessionAmount', v)} />
+          {/* デスクトップ幅では2列に並べる（デザイン Desk-create）。スマートフォン幅では1列のまま */}
+          <div className="fr-goalform__pair">
+            <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={busy} onChange={(v) => update('totalRequired', v)} />
+            <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={busy} onChange={(v) => update('sessionAmount', v)} />
+          </div>
           <AmountField
             id="goal-initialProgress"
             label={f.initialProgress}
@@ -343,13 +374,25 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             </SelectInput>
           </Field>
 
-          <div className="fr-goalform__prior">
+          {/* 初期質問は任意なので、開閉できる形で閉じて置く（デザイン C1・R1）。回答・エラー・お知らせがあるときは開いておく */}
+          <details
+            className="fr-goalform__prior"
+            open={priorOpen || Boolean(errors.questionPrior) || latestAnswers !== null || answersLock !== null}
+            onToggle={(event) => setPriorOpen(event.currentTarget.open)}
+          >
+            <summary className="fr-goalform__prior-summary">
+              <h2 id="fr-goalform-prior-title" className="fr-goalform__prior-title">
+                {f.priorTitle}
+              </h2>
+              <Icon name="chevronDown" size={20} />
+            </summary>
             {latestAnswers ? (
               <p className="fr-goalform__latest" role="status">
                 {f.latestAnswers(answerLabel(latestAnswers.a), answerLabel(latestAnswers.b))}
               </p>
             ) : null}
             <QuestionPriorFields
+              externalHeadingId="fr-goalform-prior-title"
               value={answersLock ? NO_ANSWERS : values.questionPrior}
               onChange={(next) => update('questionPrior', next)}
               disabled={busy || answersLock !== null}
@@ -357,10 +400,10 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
             />
             {answersLock ? <LockedNote>{answersLock === 'withdrawn' ? f.answersWithdrawn : f.answersNotSavedWithContext}</LockedNote> : null}
             <p className="fr-goals__help">{f.answersNotRecords}</p>
-          </div>
+          </details>
 
           {mode === 'edit' ? (
-            <div>
+            <div className="fr-goalform__delete-mobile">
               <Button variant="text" icon="trash" disabled={busy} onClick={() => setDeleteOpen(true)}>
                 {f.delete}
               </Button>
@@ -371,9 +414,28 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
         <StickyActionBar>
           <div className="fr-goalform__actions">
             {showSaveFailure ? <SaveFailure error={saveFailure} mode={mode} onReloadLatest={reloadLatest} reloadingLatest={reloadingLatest} /> : null}
-            <Button type="submit" variant="primary" block busy={busy} disabled={reloadingLatest || isAnswerConflict(saveFailure)} {...(canRetry ? { icon: 'retry' as const } : {})}>
-              {busy ? f.saving : canRetry ? f.saveFailed.retry : mode === 'create' ? f.save : f.saveEdit}
-            </Button>
+            {/* デスクトップ幅では、削除を左端に、取りやめ（スマートフォン幅の「×」の代わり）を保存の横に置く（デザイン Desk-edit） */}
+            <div className="fr-goalform__buttons">
+              {mode === 'edit' ? (
+                <span className="fr-goalform__delete-desk">
+                  <Button variant="text" icon="trash" disabled={busy} onClick={() => setDeleteOpen(true)}>
+                    {f.delete}
+                  </Button>
+                </span>
+              ) : null}
+              {goal ? (
+                <Link to="/goals/$goalId" params={{ goalId: goal.id }} className="fr-btn fr-btn--secondary fr-goalform__cancel">
+                  {f.cancel}
+                </Link>
+              ) : (
+                <Link to="/goals" className="fr-btn fr-btn--secondary fr-goalform__cancel">
+                  {f.cancel}
+                </Link>
+              )}
+              <Button type="submit" variant="primary" block busy={busy} disabled={reloadingLatest || isAnswerConflict(saveFailure)} {...(canRetry ? { icon: 'retry' as const } : {})}>
+                {busy ? f.saving : canRetry ? f.saveFailed.retry : mode === 'create' ? f.save : f.saveEdit}
+              </Button>
+            </div>
           </div>
         </StickyActionBar>
       </form>

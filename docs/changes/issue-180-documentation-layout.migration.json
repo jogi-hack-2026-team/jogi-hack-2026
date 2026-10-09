@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "10c1df734b6a8a2ba031a45f6c7b70af16e4c38e",
+  "moves": [
+    {
+      "id": "question-draft",
+      "source": "docs/product-spec.md",
+      "after": "#### 初期質問のレビュー用たたき台",
+      "before": "#### R-11の受入条件・担当・判断時点の案",
+      "destination": "docs/changes/issue-107-initial-question-draft.md",
+      "destinationAfter": "## 移動した記録",
+      "destinationBefore": null,
+      "headingMap": {}
+    },
+    {
+      "id": "stack-agreement",
+      "source": "docs/architecture.md",
+      "after": "### 2026-10-03の技術構成合意",
+      "before": "この表は当時の合意範囲の履歴。",
+      "destination": "docs/changes/issue-84-stack-agreement.md",
+      "destinationAfter": "## 移動した記録",
+      "destinationBefore": null,
+      "headingMap": {}
+    },
+    {
+      "id": "documentation-procedure",
+      "source": ".agents/skills/documentation-sync/SKILL.md",
+      "after": null,
+      "fromLine": "## 変更前",
+      "before": null,
+      "destination": "CONTRIBUTING.md",
+      "destinationAfter": "<!-- documentation-procedure:start -->",
+      "destinationBefore": "<!-- documentation-procedure:end -->",
+      "headingMap": {
+        "## 変更前": "#### 文書を書く前",
+        "## 機能の仕様を書くとき": "#### 機能の仕様を書くとき",
+        "## 手順・例を書くとき": "#### 文書の手順・例を書くとき",
+        "## 変更時": "#### 文書を変更するとき",
+        "## 完了前": "#### 文書更新を完了する前",
+        "## 原則": "#### 文書保守の原則",
+        "## 最後に報告する内容": "#### 文書更新で報告する内容"
+      }
+    }
+  ],
+  "preserveHeadings": [
+    "docs/product-spec.md",
+    "docs/architecture.md",
+    "docs/change-map.md",
+    ".agents/skills/documentation-sync/SKILL.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "README.md",
+    "docs/DEVELOPMENT_GUIDE.md"
+  ],
+  "preserveUnmovedLines": [
+    "docs/product-spec.md",
+    "docs/architecture.md"
+  ]
+}
