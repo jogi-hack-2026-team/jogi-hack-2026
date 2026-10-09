@@ -8,7 +8,9 @@
 
 2026-10-09のmain `74bd1ba`（#147・#176・#178・#181を含む）と本PRの#148追加契約を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
 
-[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)の画面・ルート変更とGoal一覧の`progressDone`はmain `685e7d0`で統合済み。本PRはその表示と#148の保存契約を両方保持する。他の未merge PRの追加契約は取り込まず、各Issue/PRで状態を確認する。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
+[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)の画面・ルート変更とGoal一覧の`progressDone`はmain `685e7d0`で統合済み。本PRはその表示と#148の保存契約を両方保持する。PR159 `0ed0c31`のFE owner/連続性/訪問境界は本PRへ通常mergeした。#163等の他の未merge PRは取り込まず、各Issue/PRで状態を確認する。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
+
+併用時の作成終了は[Architecture](architecture.md)と[175検証記録](operations/issue148-verification.md#pr159の通常取込みと確定作成の終了境界2026-10-09)を参照する。[session-draft.browser.tsx](../apps/web/tests/session-draft.browser.tsx)は成功通知消費・次の新規入力・K2/別owner原文・storage例外を直接resetなしで検証する。[issue148-browser.mjs](../apps/web/tests/issue148-browser.mjs)のF23は実APIで確認中成功→次の新規→NUL422訂正を連続検証する。
 
 ## コードを読むための短いtrace
 

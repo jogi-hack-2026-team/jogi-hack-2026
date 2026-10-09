@@ -125,6 +125,16 @@ Goal作成・設定競合・昨日未保存の既存表示文言を`copy/goals.t
 
 初回の全回帰は接続変数を`TEST_DATABASE_URL`と誤記し、worktree内のembeddedクラスタを選んだため途中停止した（PASSに含めない）。自分のrunner／initdbの親子関係を確認して止め、正しい`DATABASE_URL`の専用合成DBで再実行する。最終HEADの型・全回帰・build・Foundation・空DBのcompiled migration／no-op・実Chrome全24ケース（F22は両順序）・CI・独立再レビューの結果はPR #175に記録する。
 
+## PR159の通常取込みと確定作成の終了境界（2026-10-09）
+
+175 `fa0fa3e`へ159 `0ed0c31`を通常mergeした比較tree `a8fd5c7d`で、同じ訪問の作成成功がsession確認中に到着し、親が確認後に一覧へ移った後も完了済みattemptが残った。次の「Goalを追加」は保存済み入力を凍結表示した。旧二重作成順序の成功とは別に、専用合成DB・実API・実hook/RouterでこのFAILを固定した。修正は175側の独立branchに置き、159 branch・旧175 worktree・通常checkoutには書き込まない。
+
+離脱済みFormの無条件cleanupを再開せず、成功通知に該当操作の終了処理を添える。親が同owner・draft連続性・訪問の成功を採用する直前だけ呼ぶ。既存のowner/key/raw照合を使い、置換済みK2では通知を採用せずK2のフォームへ戻す。読取／削除例外は保存成功自体を失敗へ読み替えず、原文を保持して一覧での確認を案内する。API・schema・SQL・auth設定・依存・CI定義は変更しない。
+
+`session-draft.browser.tsx`はstorage直接resetを廃止し、未確定操作を明示同key/bodyで回復して次のケースへ進む。既存のowner/失敗/訪問の遷移抑止を維持し、175の別責務のattemptだけを凍結保持する。従来の空欄assertはこの回復契約と同時には成立しないため、同ownerの凍結attempt・明示回復・旧成功の遷移抑止を照合する。15操作＋26安全性ケース（明示mock書込26）はworking-tree実Chromeで成功した。親による完了操作終了、次の新規入力、K2/Bの保全、storage get/remove例外を含む。
+
+実APIの追加F23は確認中201→一覧→次の空欄入力→NUL422→訂正新key→Goal2件を同じbrowser/storageで連続検証し、working-treeで成功した。初回の全連続実認証driverは後半のget-session429で停止し、FAILとして保全した。製品の制限値やDB制限行は変えず、同じbrowser/cookies/storageのまま62秒の認証無要求待機を挟む。最終HEADでの実行・CI・残る未検証範囲はPR175の最新返信を参照する。Human Approve・チーム採択・main merge・deployは行わない。
+
 ## 変更ファイル
 
 - [.github/workflows/application.yml](../../.github/workflows/application.yml)

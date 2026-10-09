@@ -335,6 +335,39 @@ try {
   }
   return evidence;
  });
+ await run('F23-session-success-next-create-continuous',async()=>{
+  const f=await fixture();let releaseWrite,releaseSession,committed=false,sessionHeld=false,holdSession=false;
+  const writeBarrier=new Promise(resolve=>{releaseWrite=resolve;});const sessionBarrier=new Promise(resolve=>{releaseSession=resolve;});
+  let first=true;
+  await f.page.route('**/api/goals',async route=>{
+   if(route.request().method()!=='POST'||!first)return route.continue();first=false;
+   const response=await route.fetch();assert.equal(response.status(),201);committed=true;await writeBarrier;await route.fulfill({response});
+  });
+  await f.page.route('**/api/auth/get-session*',async route=>{
+   if(!holdSession)return route.continue();holdSession=false;const response=await route.fetch();sessionHeld=true;await sessionBarrier;await route.fulfill({response});
+  });
+  await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').fill('確認中保存・次の新規');
+  await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await wait(()=>Promise.resolve(committed));
+  holdSession=true;
+  await f.page.evaluate(()=>{const now=Date.now;Date.now=()=>now()+6000;let visible='hidden';Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>visible});document.dispatchEvent(new Event('visibilitychange'));visible='visible';document.dispatchEvent(new Event('visibilitychange'));});
+  await wait(()=>Promise.resolve(sessionHeld));await wait(async()=>(await f.page.locator('#goal-title').count())===0);
+  const writeResponse=f.page.waitForResponse(r=>r.request().method()==='POST'&&r.status()===201);
+  releaseWrite();await delivered(writeResponse,f.page);assert.equal(new URL(f.page.url()).pathname,'/goals/new');assert.equal(await f.page.locator('#goal-title').count(),0);
+  releaseSession();await f.page.waitForURL(`${origin}/goals`);
+  assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),null);
+  await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();await f.page.locator('#goal-title').waitFor();
+  assert.equal(await f.page.locator('#goal-title').inputValue(),'');assert.equal(await f.page.locator('#goal-title').isDisabled(),false);assert.equal(f.requests.length,1);
+  // Continue from the fresh form, without clearing recovery storage between cases.
+  await f.page.locator('#goal-title').fill('次のNUL\u0000拒否');await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');
+  const rejected=f.page.waitForResponse(r=>r.request().method()==='POST'&&r.status()===422);
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await delivered(rejected,f.page);
+  await wait(async()=>!(await f.page.locator('#goal-title').isDisabled()));assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),null);
+  await f.page.locator('#goal-title').fill('次の訂正Goal');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
+  assert.equal(f.requests.length,3);assert.notEqual(f.requests[0].key,f.requests[1].key);assert.notEqual(f.requests[1].key,f.requests[2].key);
+  assert.deepEqual((await f.request('GET','/api/goals')).json.map(g=>g.title).sort(),['次の訂正Goal','確認中保存・次の新規'].sort());
+  return {sameVisitConfirmedSuccess:true,nextCreateEditable:true,realNul422:true,correctionNewKey:true,noStorageReset:true,goalCount:2,requests:f.requests};
+ });
 } finally {
  writeFileSync(`${out}/results.json`,JSON.stringify({level:'REAL_CHROME_SYNTHETIC_IMAGE',source:'Docker image ID and source revision in verification log',cases},null,2));
  for(const context of contexts)await context.close();await browser.close();await pool.end();

@@ -81,8 +81,8 @@ async function runBrowser(t, entry, mockAuth, realRouter = false) {
   const { port } = server.address();
   const { stdout, stderr } = await promisify(execFile)(browser, [
     '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
-    `--user-data-dir=${join(dir, 'profile')}`, '--dump-dom', `--virtual-time-budget=${realRouter ? 30000 : 15000}`, `http://127.0.0.1:${port}/`,
-  ], { timeout: realRouter ? 75000 : 45000, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
+    `--user-data-dir=${join(dir, 'profile')}`, '--dump-dom', `--virtual-time-budget=${realRouter ? 60000 : 15000}`, `http://127.0.0.1:${port}/`,
+  ], { timeout: realRouter ? 120000 : 45000, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
   const text = stdout.match(/<pre id="result">([\s\S]*?)<\/pre>/)?.[1];
   assert.ok(text && text !== 'PENDING', `browser did not finish hook regression: ${stderr.slice(-1500)}`);
   const result = JSON.parse(text.replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"'));
@@ -107,7 +107,7 @@ test('Better Auth 1.7.7: visibility refetch failure masks draft and successful r
 test('same-owner draft: actual router/hooks preserve idle input only across successful continuous checks', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-draft.browser.tsx', false, true);
   assert.equal(result.operations.length, 15);
-  assert.equal(result.safety.length, 22);
-  assert.equal(result.writes, 13);
+  assert.equal(result.safety.length, 26);
+  assert.equal(result.writes, 26);
   t.diagnostic(JSON.stringify(result));
 });

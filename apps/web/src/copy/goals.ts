@@ -70,6 +70,7 @@ export const goalsCopy = {
     createRecovery: {
       pending: '作成結果を確認するまで、元の入力と同じ作成キーを保持します。「保存」で同じ操作を確認・再送できます。',
       unreadableTitle: '作成の回復情報を確認できません',
+      completionFailed: 'Goalは保存しました。次のGoalの入力を準備できませんでした。Goal一覧で保存結果を確認してください。',
       conflictTitle: '作成操作の入力が一致しません',
       checkList: 'Goal一覧で確認する',
       checkBody: '作成済みか確認できないため、保存を止めています。元の回復情報は保持しています。Goal一覧で作成結果を確認してください。',

@@ -71,7 +71,8 @@ function useConfirmedSave(current: PrivateEpoch, generation: number, scope: stri
   if (visit.current.scope !== scope) visit.current = { scope, token: {} };
   activeScope.current = scope;
   const token = visit.current.token;
-  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object }>();
+  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object; complete?: () => boolean }>();
+  const [failedCompletion, setFailedCompletion] = useState<{ receipt: typeof saved; error: unknown }>();
   const delivered = useRef<typeof saved>(undefined);
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   // 同routeのGoal1→Goal2→Goal1でも親は再利用される。commit前の離脱開始も旧訪問を失効させる。
@@ -79,19 +80,25 @@ function useConfirmedSave(current: PrivateEpoch, generation: number, scope: stri
     if (pathChanged) visit.current = { ...visit.current, token: {} };
   }), [router]);
   const owner = current.owner;
-  const onSaved = useCallback(() => {
+  const onSaved = useCallback((complete?: () => boolean) => {
     if (mounted.current && visit.current.token === token && typeof owner === 'string' && activeScope.current === scope && window.location.pathname === scope && isDraftOwner(owner, generation))
-      setSaved({ owner, generation, scope, token });
+      setSaved({ owner, generation, scope, token, ...(complete ? { complete } : {}) });
   }, [owner, generation, scope, token]);
   const confirmed = saved !== undefined && saved.token === visit.current.token && saved.scope === scope && window.location.pathname === scope && saved.generation === generation &&
     isDraftOwner(saved.owner, saved.generation) && current.owner === saved.owner && privateDataReady(current);
+  const error = confirmed && failedCompletion?.receipt === saved ? failedCompletion.error : null;
   useEffect(() => {
-    if (confirmed && saved?.token === visit.current.token && window.location.pathname === scope && isDraftOwner(saved.owner, saved.generation) && delivered.current !== saved) {
+    if (confirmed && !error && saved?.token === visit.current.token && window.location.pathname === scope && isDraftOwner(saved.owner, saved.generation) && delivered.current !== saved) {
+      // 確認中の一時unmountでも、この訪問の確定成功を採用するときは該当操作を終了する。
+      // 離脱/owner変更後の旧成功では呼ばない。K2へ置換済みならK2を残してそのフォームへ戻す。
+      try {
+        if (saved.complete && !saved.complete()) { setSaved(undefined); return; }
+      } catch (error) { setFailedCompletion({ receipt: saved, error }); return; }
       delivered.current = saved;
       void navigate({ to: '/goals' });
     }
-  }, [confirmed, saved, scope, navigate]);
-  return { onSaved, confirmed };
+  }, [confirmed, error, saved, scope, navigate]);
+  return { onSaved, confirmed, error };
 }
 
 /** Goal の作成（R-02、#78）。/goals/new */
@@ -104,6 +111,16 @@ export function GoalCreatePage() {
   const operating = useInterruptedOperation(privateDataReady(current), operationKey);
   if (current.owner === null) return <FormShell title={f.createTitle} body={<SignedOutPanel />} />;
   if (!privateDataReady(current) || operating) return <FormShell title={f.createTitle} body={<FormLoading />} />;
+  if (completion.error) return (
+    <FormShell title={f.createTitle} body={
+      <ErrorPanel
+        title={f.createRecovery.unreadableTitle}
+        action={<Link to="/goals" className="fr-btn fr-btn--secondary">{f.createRecovery.checkList}</Link>}
+      >
+        {f.createRecovery.completionFailed}
+      </ErrorPanel>
+    } />
+  );
   if (completion.confirmed) return <FormShell title={f.createTitle} body={<p role="status">保存しました。Goal一覧へ移動します。</p>} />;
   return <GoalForm key={`${current.owner}:${draft.generation}`} mode="create" owner={current.owner!} operationKey={operationKey} draft={draft.restored} onDraftChange={draft.remember} onSaved={completion.onSaved} />;
 }
@@ -210,7 +227,7 @@ function sameEditableGoal(left: GoalWithAnswers, right: GoalWithAnswers) {
     ('goalSettingsRevision' in left ? left.goalSettingsRevision : undefined) === ('goalSettingsRevision' in right ? right.goalSettingsRevision : undefined) &&
     JSON.stringify(valuesFromGoal(left)) === JSON.stringify(valuesFromGoal(right));
 }
-type Props = { draft: FormDraft | undefined; onDraftChange: (draft: FormDraft | undefined) => void; operationKey: readonly unknown[]; onSaved: () => void } & (
+type Props = { draft: FormDraft | undefined; onDraftChange: (draft: FormDraft | undefined) => void; operationKey: readonly unknown[]; onSaved: (complete?: () => boolean) => void } & (
   | { mode: 'create'; owner: string; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined; onReloadLatest?: undefined }
   | {
       mode: 'edit';
@@ -305,11 +322,12 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
       const patch = toPatchBody(v, { ...baseline!, hasLogs: goal.hasLogs });
       return patch ? goalsHttp.updateGoal(goal.id, patch) : null;
     },
-    // attempt終了とinvalidateは離脱後も行い、確定成功はowner/連続性/訪問に束縛した親へ伝える。
+    // 確定成功を親へ渡す。離脱済みFormでは操作を終了せず、同じ訪問での採用時にだけ親が終了する。
     onSuccess: async (_goal, vars) => {
       if (vars.operation) finishCreateAttempt(vars.operation);
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
-      onSaved();
+      const operation = vars.operation;
+      onSaved(operation ? () => clearCreateAttempt(operation, sessionStorage) : undefined);
     },
     onError: (error, vars) => {
       saving.current = false;
