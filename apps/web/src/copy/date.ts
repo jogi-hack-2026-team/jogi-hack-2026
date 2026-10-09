@@ -39,6 +39,12 @@ export function longDate(value: string): string {
   return `${date.getUTCMonth() + 1}月${date.getUTCDate()}日（${weekday}）`;
 }
 
+/** 「2026年10月5日」。達成済みの記録開始日・届いた日など、年をまたぐ日付に使う。 */
+export function fullDate(value: string): string {
+  const date = parseLocalDate(value);
+  return `${date.getUTCFullYear()}年${date.getUTCMonth() + 1}月${date.getUTCDate()}日`;
+}
+
 export function daysBetween(from: string, to: string): number {
   return Math.round((parseLocalDate(to).getTime() - parseLocalDate(from).getTime()) / DAY_MS);
 }

@@ -51,7 +51,7 @@ test('作成→一覧→取得: 201のDTO、記録開始日はGoalのtimezoneの
   assert.match(goal.id, /^[0-9a-f-]{36}$/);
   assert.deepEqual(
     { ...goal, id: 'x' },
-    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, unitLocked: false, goalSettingsRevision: 0, today: '2026-10-06', todayStatus: 'UNRECORDED' },
+    { id: 'x', ...validGoal, initialProgress: 0, recordStartDate: '2026-10-06', hasLogs: false, unitLocked: false, goalSettingsRevision: 0, today: '2026-10-06', todayStatus: 'UNRECORDED', progressDone: 0 },
   );
 
   const list = await a.call('GET', '/api/goals');
@@ -191,7 +191,7 @@ test('編集: 省略は維持、空object・null・未知の項目は422、記�
   // 記録がない間はtimezone・初期量を変えられる。記録開始日は作成時の値のまま、今日は新しいtimezoneで決まる。
   const moved = await a.call('PATCH', `/api/goals/${goal.id}`, { timezone: 'America/Los_Angeles', initialProgress: 100 });
   assert.equal(moved.status, 200, moved.body);
-  assert.deepEqual(moved.json, { ...goal, title: '英語 45分', sessionAmount: 45, timezone: 'America/Los_Angeles', initialProgress: 100, unitLocked: true, goalSettingsRevision: 2, recordStartDate: '2026-10-06', today: '2026-10-05' });
+  assert.deepEqual(moved.json, { ...goal, title: '英語 45分', sessionAmount: 45, timezone: 'America/Los_Angeles', initialProgress: 100, unitLocked: true, goalSettingsRevision: 2, recordStartDate: '2026-10-06', today: '2026-10-05', progressDone: 100 });
 });
 
 test('記録があるGoalはtimezoneとinitialProgressを変更できない（同じ値の再送は通る）。一覧は今日の記録状態を含む', async (t) => {
@@ -224,6 +224,25 @@ test('記録があるGoalはtimezoneとinitialProgressを変更できない（�
   const yesterdayOnly = (await a.call('GET', `/api/goals/${goal.id}`)).json as unknown as Goal;
   assert.equal(yesterdayOnly.hasLogs, true);
   assert.equal(yesterdayOnly.todayStatus, 'UNRECORDED');
+});
+
+test('一覧と取得の累計（progressDone）は、初期量＋今日までのDONEの量で、Todayの累計と一致する（#146）', async (t) => {
+  const { db, stack } = await setup(t, { now: () => NOW });
+  const a = await signedInClient(stack.app, 'progress');
+  const goal = (await a.call('POST', '/api/goals', { ...validGoal, initialProgress: 100 })).json as unknown as Goal;
+  assert.equal(goal.progressDone, 100);
+  // DONEの量を足し、SKIPPEDは数えない
+  await db.pool.query(`insert into action_log (goal_id, local_date, status, amount) values ($1, '2026-10-06', 'DONE', 30)`, [goal.id]);
+  const other = (await a.call('POST', '/api/goals', validGoal)).json as unknown as Goal;
+  await db.pool.query(`insert into action_log (goal_id, local_date, status, amount) values ($1, '2026-10-06', 'SKIPPED', null)`, [other.id]);
+
+  const list = (await a.call('GET', '/api/goals')).json as unknown as Goal[];
+  // 同じ時刻に作ったGoalの並びは決まらないので、idで引いて比べる
+  const byId = new Map(list.map((g) => [g.id, g.progressDone]));
+  assert.deepEqual([byId.get(goal.id), byId.get(other.id)], [130, 0]);
+  assert.equal(((await a.call('GET', `/api/goals/${goal.id}`)).json as unknown as Goal).progressDone, 130);
+  const today = (await a.call('GET', `/api/goals/${goal.id}/today`)).json as { prediction: { progress: { done: number } } };
+  assert.equal(today.prediction.progress.done, 130);
 });
 
 test('削除: 204でbodyなし、紐づく記録も消え、再送は404', async (t) => {

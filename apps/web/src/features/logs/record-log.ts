@@ -97,12 +97,30 @@ export function editLocks(s: {
   todayChoicesShown: boolean;
   todaySaving: boolean;
   yesterdayEditing: boolean;
-}): { todayAmountEditing: boolean; yesterdayLocked: boolean; todayLocked: boolean } {
+}): { todayAmountEditing: boolean; yesterdayLocked: boolean; todayLocked: boolean; cancelChangeLocked: boolean } {
   // 量の入力は2択を出しているときだけ開いている（別のタブで記録されて2択が消えたら、昨日を止めたままにしない）
   const todayAmountEditing = s.todayAmountEditing && s.todayChoicesShown;
   return {
     todayAmountEditing,
     yesterdayLocked: s.changingToday || todayAmountEditing || s.todaySaving,
     todayLocked: s.yesterdayEditing,
+    // 今日の保存中は「変更をやめる」で選び直しを閉じない。閉じて保存の状態を消すと、遅れて届いた失敗と再試行を見失う
+    cancelChangeLocked: s.todaySaving,
   };
+}
+
+/**
+ * 決めた総量に届いた日（デザイン D6）。初期量から記録の DONE を日付順に足し、総量に届いた最初の日。
+ * 初期量だけで届いていれば null（記録開始前に届いていた）。届いていなければ undefined。
+ * 記録の事実をたどるだけで、予測の計算はしない。
+ */
+export function reachedDate(initialProgress: number, totalRequired: number, logs: readonly Log[]): string | null | undefined {
+  if (initialProgress >= totalRequired) return null;
+  let done = initialProgress;
+  for (const log of [...logs].sort((a, b) => (a.localDate < b.localDate ? -1 : a.localDate > b.localDate ? 1 : 0))) {
+    if (log.status !== 'DONE') continue;
+    done += log.amount ?? 0;
+    if (done >= totalRequired) return log.localDate;
+  }
+  return undefined;
 }

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
-import { choiceFromLog, classifySaveError, describeChoice, editLocks, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
+import { choiceFromLog, classifySaveError, describeChoice, editLocks, reachedDate, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('DONEは表示量と設定版を明示し、SKIPPEDは設定版だけを送る', () => {
   assert.deepEqual(toLogPut({ status: 'DONE', amount: 20 }, 3), { status: 'DONE', amount: 20, expectedGoalSettingsRevision: 3 });
@@ -67,7 +67,7 @@ test('作り直す前の画面の保存が終わるまで、新しい画面か�
 
 test('今日の量の入力を開いた後は昨日の変更を始められず、昨日の訂正中は今日を送れない（今日と昨日を同時に編集しない）', () => {
   const idle = { changingToday: false, todayAmountEditing: false, todayChoicesShown: true, todaySaving: false, yesterdayEditing: false };
-  assert.deepEqual(editLocks(idle), { todayAmountEditing: false, yesterdayLocked: false, todayLocked: false });
+  assert.deepEqual(editLocks(idle), { todayAmountEditing: false, yesterdayLocked: false, todayLocked: false, cancelChangeLocked: false });
   // 今日が未記録・昨日が記録済み：今日の「量を変更」を開くと、昨日の［変更］は押せない
   assert.equal(editLocks({ ...idle, todayAmountEditing: true }).yesterdayLocked, true);
   // 昨日の訂正中は、今日の2択・量の入力から送らない
@@ -80,7 +80,38 @@ test('今日の量の入力を開いた後は昨日の変更を始められず�
     todayAmountEditing: false,
     yesterdayLocked: false,
     todayLocked: false,
+    cancelChangeLocked: false,
   });
+});
+
+test('今日の記録を選び直して保存している間は「変更をやめる」で閉じず、遅れて届いた失敗と再試行を見失わない（#146）', async () => {
+  const client = new QueryClient();
+  let reject;
+  const pending = new Promise((_, r) => { reject = r; });
+  const observer = new MutationObserver(client, { mutationFn: () => pending });
+  const choosing = { changingToday: true, todayAmountEditing: false, todayChoicesShown: true, todaySaving: false, yesterdayEditing: false };
+  const resets = [];
+  const cancel = (locks) => unlessLocked(locks.cancelChangeLocked, () => { resets.push('reset'); observer.reset(); })();
+  try {
+    // 保存を始める前は、選び直しをやめられる
+    assert.equal(editLocks(choosing).cancelChangeLocked, false);
+    const saving = observer.mutate().catch(() => {});
+    assert.equal(observer.getCurrentResult().isPending, true);
+    // 保存の応答待ち：「変更をやめる」は押せず、押されても保存の状態を消さない
+    const whileSaving = editLocks({ ...choosing, todaySaving: true });
+    assert.equal(whileSaving.cancelChangeLocked, true);
+    cancel(whileSaving);
+    assert.deepEqual(resets, []);
+    // 遅れて失敗が届いても、保存の失敗として残り、再試行を出せる
+    reject(new ApiError(503, null));
+    await saving;
+    assert.equal(observer.getCurrentResult().isError, true);
+    assert.equal(observer.getCurrentResult().error.status, 503);
+    // 保存が終われば、やめられる
+    assert.equal(editLocks(choosing).cancelChangeLocked, false);
+  } finally {
+    client.clear();
+  }
 });
 
 test('今日の保存が失敗した後に昨日の訂正を始めたら、今日の「もう一度保存」からも送らない（#88）', () => {
@@ -108,4 +139,19 @@ test('今日の保存は API の今日だけ。Goal/Todayの到着順・初回To
   assert.equal(isCurrentToday(next, next, undefined), true); // 初回Today失敗時のGoal fallback
   assert.equal(isCurrentToday(d, undefined, d), false);
   assert.equal(classifySaveError(new TodayDateChangedError()), 'day-changed');
+});
+
+test('達成済みの「届いた日」は、初期量にDONEの量を日付順に足して総量に届いた最初の日（初期量だけなら記録開始前）', () => {
+  const logs = [
+    { localDate: '2026-10-07', status: 'DONE', amount: 30 },
+    { localDate: '2026-10-05', status: 'DONE', amount: 50 },
+    { localDate: '2026-10-06', status: 'SKIPPED', amount: null },
+  ];
+  // 20＋50（10/5）＝70、＋30（10/7）＝100 で届く。並びが日付順でなくても日付順にたどる
+  assert.equal(reachedDate(20, 100, logs), '2026-10-07');
+  assert.equal(reachedDate(20, 70, logs), '2026-10-05');
+  // 初期量だけで届いていた
+  assert.equal(reachedDate(100, 100, logs), null);
+  // 記録から届いた日をたどれない（総量を下げて達成済みになったなど）
+  assert.equal(reachedDate(0, 1000, logs), undefined);
 });
