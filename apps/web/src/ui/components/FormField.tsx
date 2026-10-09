@@ -69,14 +69,11 @@ export function TextInput({ invalid = false, ...rest }: InputProps) {
   return <input {...rest} className={`fr-input${invalid ? ' fr-input--invalid' : ''}`} />;
 }
 
-/**
- * 数の入力欄。単位（分・時間・回）を右端に出す。値は文字列のまま受け渡し、検査は画面側で行う。
- * decimal は小数を受け付ける欄（時間）で、スマートフォンのキーボードに小数点を出す。
- */
-export function NumberInput({ suffix, invalid = false, decimal = false, ...rest }: InputProps & { suffix: string; decimal?: boolean }) {
+/** 数の入力欄。単位（分・回）を右端に出す。値は文字列のまま受け渡し、検査は画面側で行う。 */
+export function NumberInput({ suffix, invalid = false, ...rest }: InputProps & { suffix: string }) {
   return (
     <div className="fr-inwrap">
-      <input {...rest} type="text" inputMode={decimal ? 'decimal' : 'numeric'} autoComplete="off" className={`fr-input fr-input--suffix${invalid ? ' fr-input--invalid' : ''}`} />
+      <input {...rest} type="text" inputMode="numeric" autoComplete="off" className={`fr-input fr-input--suffix${invalid ? ' fr-input--invalid' : ''}`} />
       <span className="fr-inwrap__suffix" aria-hidden="true">
         {suffix}
       </span>

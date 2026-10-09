@@ -1,6 +1,5 @@
-import type { Goal, GoalCreate, GoalPatch, GoalUnit, QuestionAnswers, RecordUnit } from '@contracts';
+import type { Goal, GoalCreate, GoalPatch, GoalUnit, QuestionAnswers } from '@contracts';
 import { ApiError } from '../../api/client.ts';
-import { hoursText, minutesFromHoursText } from '../../copy/amount.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 
 /**
@@ -9,22 +8,14 @@ import { goalsCopy } from '../../copy/goals.ts';
  * 契約と食い違ったときのために、API の 422（fields）も同じ項目へ割り当てる。
  */
 
-/**
- * 入力中の値。数は画面に出す単位の文字のまま持ち、送るときに分（回のGoalは回）の整数へ変える（#157、C案）。
- * - 時間のGoal（unit = minutes）：総量・記録開始前の量は時間、1回の量は記録の単位（分か時間）
- * - 回のGoal：すべて回
- */
+/** 入力中の値。数は入力した文字のまま持ち、送るときに整数へ変える。 */
 export type FormValues = {
   title: string;
   unit: GoalUnit;
-  /** 時間のGoalの記録の単位。回のGoalでは使わない。 */
-  recordUnit: RecordUnit;
   totalRequired: string;
   sessionAmount: string;
   initialProgress: string;
   timezone: string;
-  /** 到達予定日（#157、B案）。YYYY-MM-DD、空は未設定。 */
-  targetDate: string;
   /** R-11の2問の回答（任意。null は回答しない、UNKNOWN は経験がない・思い出せない）。 */
   questionPrior: QuestionAnswers;
 };
@@ -37,50 +28,26 @@ export type FieldName = keyof FormValues;
 export type FieldErrors = Partial<Record<FieldName, string>>;
 
 /** 画面に並ぶ順。エラーの件数を数え、最初のエラー項目へ移るときに使う。 */
-export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'recordUnit', 'totalRequired', 'sessionAmount', 'targetDate', 'initialProgress', 'timezone', 'questionPrior'];
+export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'timezone', 'questionPrior'];
 
 const INT4_MAX = 2_147_483_647;
 export const TITLE_MAX = 100;
 const e = goalsCopy.errors;
 
 export function emptyValues(timezone: string): FormValues {
-  return { title: '', unit: 'minutes', recordUnit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, targetDate: '', questionPrior: NO_ANSWERS };
+  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, questionPrior: NO_ANSWERS };
 }
 
-/** 保存値（分）を、時間の入力欄の文字にする（桁区切りは付けない）。 */
-const asHours = (minutes: number) => hoursText(minutes).replace(/,/g, '');
-
 export function valuesFromGoal(goal: GoalWithAnswers): FormValues {
-  const time = goal.unit === 'minutes';
-  const recordUnit: RecordUnit = goal.recordUnit ?? 'minutes';
   return {
     title: goal.title,
     unit: goal.unit,
-    recordUnit,
-    totalRequired: time ? asHours(goal.totalRequired) : String(goal.totalRequired),
-    sessionAmount: time && recordUnit === 'hours' ? asHours(goal.sessionAmount) : String(goal.sessionAmount),
-    initialProgress: time ? asHours(goal.initialProgress) : String(goal.initialProgress),
+    totalRequired: String(goal.totalRequired),
+    sessionAmount: String(goal.sessionAmount),
+    initialProgress: String(goal.initialProgress),
     timezone: goal.timezone,
-    targetDate: goal.targetDate ?? '',
     questionPrior: goal.questionPrior ?? NO_ANSWERS,
   };
-}
-
-export type AmountField = 'totalRequired' | 'sessionAmount' | 'initialProgress';
-
-/** その項目を時間で入力するか（時間のGoalの総量・記録開始前の量、記録の単位が時間のときの1回の量）。 */
-export function inputInHours(values: Pick<FormValues, 'unit' | 'recordUnit'>, field: AmountField): boolean {
-  if (values.unit !== 'minutes') return false;
-  return field === 'sessionAmount' ? values.recordUnit === 'hours' : true;
-}
-
-/** 入力の文字を保存値（分か回）の整数へ。読めなければ null（時間は小数第1位まで）。 */
-export function amountFromInput(values: FormValues, field: AmountField): number | null {
-  const raw = values[field];
-  if (!inputInHours(values, field)) return parseInteger(raw);
-  // 記録開始前の量は0時間も受け付ける
-  if (field === 'initialProgress' && /^\s*[0０]+(?:[.．][0０])?\s*$/.test(raw)) return 0;
-  return minutesFromHoursText(raw);
 }
 
 /** タイトルの文字数（API の maxLength と同じく、絵文字なども1文字と数える）。 */
@@ -94,13 +61,9 @@ export function parseInteger(raw: string): number | null {
   return Number.isSafeInteger(value) ? value : Number.POSITIVE_INFINITY;
 }
 
-function amountError(values: FormValues, field: AmountField, minimum: 0 | 1): string | undefined {
-  const value = amountFromInput(values, field);
-  const hours = inputInHours(values, field);
-  if (value === null || value < minimum) {
-    if (hours) return minimum === 1 ? e.positiveHours : e.nonNegativeHours;
-    return minimum === 1 ? e.positiveInteger : e.nonNegativeInteger;
-  }
+function amountError(raw: string, minimum: 0 | 1): string | undefined {
+  const value = parseInteger(raw);
+  if (value === null || value < minimum) return minimum === 1 ? e.positiveInteger : e.nonNegativeInteger;
   if (value > INT4_MAX) return e.tooLarge;
   return undefined;
 }
@@ -115,24 +78,17 @@ export function isValidTimezone(timezone: string): boolean {
   }
 }
 
-/**
- * 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。
- * today は到達予定日の比較に使う「今日」（作成は端末の今日、編集はGoalの timezone の今日）。API でも同じ検査をする。
- */
-export function validate(values: FormValues, { locked = false, today }: { locked?: boolean; today?: string } = {}): FieldErrors {
+/** 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。 */
+export function validate(values: FormValues, { locked = false }: { locked?: boolean } = {}): FieldErrors {
   const errors: FieldErrors = {};
   if (!/\S/.test(values.title)) errors.title = e.titleRequired;
   else if (titleLength(values.title) > TITLE_MAX) errors.title = e.titleTooLong;
-  const total = amountError(values, 'totalRequired', 1);
+  const total = amountError(values.totalRequired, 1);
   if (total) errors.totalRequired = total;
-  const session = amountError(values, 'sessionAmount', 1);
+  const session = amountError(values.sessionAmount, 1);
   if (session) errors.sessionAmount = session;
-  // YYYY-MM-DD どうしなので文字列の比較で日付の前後が分かる
-  if (values.targetDate && (!/^\d{4}-\d{2}-\d{2}$/.test(values.targetDate) || (today !== undefined && values.targetDate <= today))) {
-    errors.targetDate = e.targetDatePast;
-  }
   if (!locked) {
-    const initial = amountError(values, 'initialProgress', 0);
+    const initial = amountError(values.initialProgress, 0);
     if (initial) errors.initialProgress = initial;
     if (!isValidTimezone(values.timezone)) errors.timezone = e.timezone;
   }
@@ -141,43 +97,16 @@ export function validate(values: FormValues, { locked = false, today }: { locked
 
 export const errorCount = (errors: FieldErrors) => FIELD_ORDER.filter((name) => errors[name]).length;
 
-/** 送る保存値（分か回）。検査を通った後だけ呼ぶので、読めない入力は0にする。 */
-const amount = (values: FormValues, field: AmountField) => amountFromInput(values, field) ?? 0;
-
-/**
- * 量を変えたか。時間で出す欄は分を小数第1位へ丸めて見せる（400分→6.7時間）ので、保存値と換算し直した値を比べると
- * 触っていないのに変わったことになる（6.7時間→402分）。入力の文字が保存値を出した文字のままなら、変えていないとみなす。
- */
-function amountChanged(values: FormValues, goal: GoalWithAnswers, field: AmountField): boolean {
-  // 記録の単位を切り替えた場合も、保存値をいまの記録の単位で出した文字と比べる（20分→0.3時間のまま保存すれば20分を保つ）
-  const shown = valuesFromGoal({ ...goal, recordUnit: values.unit === 'minutes' ? (values.recordUnit ?? 'minutes') : goal.recordUnit });
-  if (values.unit === goal.unit && values[field] === shown[field]) return false;
-  return amount(values, field) !== goal[field];
-}
-
-/**
- * 記録の単位を切り替える。1回の量の入力を新しい単位へ換算し、量を保つ（20分→0.3時間）。
- * 読めない入力はそのまま残す（検査で知らせる）。
- */
-export function switchRecordUnit(values: FormValues, next: RecordUnit): FormValues {
-  if (values.recordUnit === next) return values;
-  const minutes = amountFromInput(values, 'sessionAmount');
-  const switched = { ...values, recordUnit: next };
-  if (minutes === null) return switched;
-  return { ...switched, sessionAmount: next === 'hours' ? asHours(minutes) : String(minutes) };
-}
+const int = (raw: string) => parseInteger(raw) ?? 0;
 
 export function toCreateBody(values: FormValues): GoalCreate {
   return {
     title: values.title,
     unit: values.unit,
-    totalRequired: amount(values, 'totalRequired'),
-    sessionAmount: amount(values, 'sessionAmount'),
-    initialProgress: amount(values, 'initialProgress'),
+    totalRequired: int(values.totalRequired),
+    sessionAmount: int(values.sessionAmount),
+    initialProgress: int(values.initialProgress),
     timezone: values.timezone,
-    // 未設定の到達予定日は送らない。記録の単位は時間のGoalだけ（回のGoalに付けると 422）
-    ...(values.targetDate ? { targetDate: values.targetDate } : {}),
-    ...(values.unit === 'minutes' ? { recordUnit: values.recordUnit ?? 'minutes' } : {}),
     // 回答しない問いは null のまま送る（POST は版を送らない。初版は 0）
     questionPrior: values.questionPrior,
   };
@@ -187,7 +116,7 @@ const sameAnswers = (x: QuestionAnswers, y: QuestionAnswers) => x.a === y.a && x
 
 /** 編集で、単位か1回の量を変えるか。変えると保存済みの回答は API が取り消す（R-11、#133）。 */
 export function changesAnswerContext(values: FormValues, goal: Goal): boolean {
-  return values.unit !== goal.unit || amountChanged(values, goal, 'sessionAmount');
+  return values.unit !== goal.unit || int(values.sessionAmount) !== goal.sessionAmount;
 }
 
 /**
@@ -211,12 +140,10 @@ export function rebaseValues(values: FormValues, previous: GoalWithAnswers, late
   return {
     title: pick('title', values.title !== before.title),
     unit: pick('unit', values.unit !== before.unit),
-    recordUnit: pick('recordUnit', values.recordUnit !== before.recordUnit),
-    totalRequired: pick('totalRequired', amountChanged(values, previous, 'totalRequired')),
-    sessionAmount: pick('sessionAmount', amountChanged(values, previous, 'sessionAmount')),
-    initialProgress: pick('initialProgress', amountChanged(values, previous, 'initialProgress')),
+    totalRequired: pick('totalRequired', int(values.totalRequired) !== previous.totalRequired),
+    sessionAmount: pick('sessionAmount', int(values.sessionAmount) !== previous.sessionAmount),
+    initialProgress: pick('initialProgress', int(values.initialProgress) !== previous.initialProgress),
     timezone: pick('timezone', values.timezone !== before.timezone),
-    targetDate: pick('targetDate', values.targetDate !== before.targetDate),
     questionPrior: pick('questionPrior', !sameAnswers(values.questionPrior, before.questionPrior)),
   };
 }
@@ -244,14 +171,10 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
   const patch: { -readonly [K in keyof GoalPatch]: GoalPatch[K] } = {};
   if (values.title !== goal.title) patch.title = values.title;
   if (values.unit !== goal.unit) patch.unit = values.unit;
-  if (amountChanged(values, goal, 'totalRequired')) patch.totalRequired = amount(values, 'totalRequired');
-  if (amountChanged(values, goal, 'sessionAmount')) patch.sessionAmount = amount(values, 'sessionAmount');
-  // 記録の単位は時間のGoalだけ（回のGoalへ送ると 422）。回から時間へ変えるときも、選んだ単位が保存と違えば送る
-  if (values.unit === 'minutes' && (values.recordUnit ?? 'minutes') !== (goal.recordUnit ?? 'minutes')) patch.recordUnit = values.recordUnit;
-  // 到達予定日は記録があっても変えられる。空にしたら null で未設定に戻す
-  if ((values.targetDate || null) !== (goal.targetDate ?? null)) patch.targetDate = values.targetDate || null;
+  if (int(values.totalRequired) !== goal.totalRequired) patch.totalRequired = int(values.totalRequired);
+  if (int(values.sessionAmount) !== goal.sessionAmount) patch.sessionAmount = int(values.sessionAmount);
   if (!goal.hasLogs) {
-    if (amountChanged(values, goal, 'initialProgress')) patch.initialProgress = amount(values, 'initialProgress');
+    if (int(values.initialProgress) !== goal.initialProgress) patch.initialProgress = int(values.initialProgress);
     if (values.timezone !== goal.timezone) patch.timezone = values.timezone;
   }
   if (goal.answerRevision !== undefined) {
@@ -268,8 +191,6 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
 const serverMessage: Record<FieldName, string> = {
   title: e.server,
   unit: e.server,
-  recordUnit: e.server,
-  targetDate: e.targetDatePast,
   totalRequired: e.positiveInteger,
   sessionAmount: e.positiveInteger,
   initialProgress: e.nonNegativeInteger,
