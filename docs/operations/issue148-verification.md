@@ -105,7 +105,11 @@ remote `608df0c3de388e25338ce8393fd453e07c7948fc`から別worktree／local branc
 
 修正後の初回全workspace回帰はNode24.21.0でAPI149・FE81・Prediction70、計300成功／失敗0／skip0。型検査・Foundation・動的migration checker5件成功。新規Chrome回帰はF17（実NUL422から訂正）・F18（人工遅延422対K2）・F19（人工503）・F20のStorage読取／削除例外の5件成功。F18初回は未作成の一覧に存在しない「Goalを追加」を探してtimeoutとなり、K2の判定へ未到達だった。実画面の「最初のGoalをつくる」へselectorを訂正して再実行し、raw・キー・本文・件数のoracleを維持した。専用app初回health probeの接続切断もPASSに含めず、migration完了後のhealth成功を別に確認した。
 
+候補commit `3a60cf1a3f58837239c27d882465a3b19584ccd9`の通しブラウザと全体回帰を同時に実行した際、F01のToday／Goal／Log GETがDB query／connection timeoutの500となり、Todayの表示待ちに失敗した。F01の失敗を回帰成功へ丸めない。並行負荷との因果は未確定で、最終HEADの全体回帰とブラウザを直列に実行する。作業中にmainへ入った`74bd1ba`（#178）の予測4ファイルのコメント変更も保持する。新たな数式・runtime設定変更はない。
+
 今回の専用ComposeはGit除外`.tools/review175/compose.yaml`、project `codex-task5-pr175-review`、app18175／DB15675、合成DB `futureroi_issue148`／role `issue148_synthetic`のtmpfs。最終commit後のGit artifact・revision labelを持つimageで空DBへのcompiled migration／再実行no-op・実Chrome全22ケースを確認する。最終HEAD・image ID・そのHEADでの全体回帰／CI／独立レビュー結果はPR #175に記録し、旧608のCIや過去imageを新HEADの成功へ流用しない。
+
+候補commit `3a60cf1`の今回10ファイルは別コンテキストで静的敵対レビュー済み。設計・機能・複雑性・テスト・命名・コメント・スタイル・文書・所有権・同時更新・移行保全の11観点でBlocking／Should Fix／Optionalなし。レビュアー自身のtest・build・browser・CI実行やHuman Approveの証拠ではない。
 
 API・共有schema・SQL・dependency・CI・製品のauth設定に新しい変更を追加しない。取り込んだmainの私的API no-storeは保持する。#159の最新SHAとの併用は親タスクの独立確認対象で、本修正単独の成功から統合成功を主張しない。Human Approve・チーム採択・内部3人／初見受入・macOS実機・本番migration・merge・deployは未実施。
 
