@@ -67,3 +67,52 @@ test('spawn失敗と不完全なtest出力も失敗記録を残す', async () =>
     } finally { for (const path of readdirSync(directory)) rmSync(join(directory, path)); rmdirSync(directory); }
   }
 });
+
+test('scopeごとの期待集計を表示し、欠落workspaceや不完全件数をcommandのN/Aにしない', () => {
+  const record = counts => safeRecord({ layer: 'test', scope: 'workspace-tests', counts,
+    status: 'failed', exitCode: 7, durationMs: 1000, diagnostic: 'command-failure' });
+  const empty = renderSummary('application', [record({})]);
+  for (const name of ['prediction', 'api', 'web']) assert.ok(empty.includes(name + ': 集計不明／未到達'));
+  assert.equal(empty.includes('N/A (command check)'), false);
+
+  const partial = renderSummary('application', [record({ prediction: counters() })]);
+  assert.ok(partial.includes('prediction: 2 / 2 / 0 / 0 / 0'));
+  for (const name of ['api', 'web']) assert.ok(partial.includes(name + ': 集計不明／未到達'));
+  const incomplete = renderSummary('application', [
+    safeRecord({ layer: 'migration-tests', scope: 'node-tests', counts: { tests: { tests: 2 } } }),
+  ]);
+  assert.ok(incomplete.includes('tests: 集計不明／未到達'));
+  assert.equal(incomplete.includes('N/A (command check)'), false);
+
+  const complete = renderSummary('application', [record(parseCounts(workspaceOutput, true))]);
+  for (const name of ['prediction', 'api', 'web']) assert.ok(complete.includes(name + ': 2 / 2 / 0 / 0 / 0'));
+  assert.equal(complete.includes('集計不明／未到達'), false);
+  assert.ok(renderSummary('application', [
+    safeRecord({ layer: 'build', scope: 'command', counts: {} }),
+  ]).includes('N/A (command check)'));
+});
+
+test('workspace集計前・途中のexit 7を保持し、保存record経由のCLI summaryにも欠落を示す', async () => {
+  const script = fileURLToPath(new URL('./ci-report.mjs', import.meta.url));
+  const predictionOutput = '> @futureroi/prediction@0.0.0 test\n' + totals(counters());
+  for (const output of ['', predictionOutput]) {
+    const directory = mkdtempSync(join(tmpdir(), 'ci-report-test-'));
+    const env = { ...process.env, CI_REPORT_DIR: directory, GITHUB_STEP_SUMMARY: '' };
+    try {
+      await assert.rejects(promisify(execFile)(process.execPath, [script, 'run', 'test', '--', process.execPath,
+        '-e', 'process.stdout.write(' + JSON.stringify(output) + ');process.exit(7)'],
+      { env, windowsHide: true }), error => error.code === 7);
+      const record = JSON.parse(readFileSync(join(directory, 'test.json'), 'utf8'));
+      assert.equal(record.exitCode, 7);
+      assert.equal(record.status, 'failed');
+      assert.equal(record.diagnostic, 'command-failure');
+      assert.equal(record.scope, 'workspace-tests');
+      const { stdout } = await promisify(execFile)(process.execPath, [script, 'summary', 'application'], { env, windowsHide: true });
+      for (const name of output ? ['api', 'web'] : ['prediction', 'api', 'web']) {
+        assert.ok(stdout.includes(name + ': 集計不明／未到達'));
+      }
+      if (output) assert.ok(stdout.includes('prediction: 2 / 2 / 0 / 0 / 0'));
+      assert.equal(stdout.includes('N/A (command check)'), false);
+    } finally { for (const path of readdirSync(directory)) rmSync(join(directory, path)); rmdirSync(directory); }
+  }
+});

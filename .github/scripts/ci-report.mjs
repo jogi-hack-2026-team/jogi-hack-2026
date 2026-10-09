@@ -74,9 +74,16 @@ export function renderSummary(job, records, metadata = {}) {
   for (const layer of jobLayers[job]) {
     const record = records.find(item => item.layer === layer);
     if (!record) { lines.push('| ' + layer + ' | not-run | not-run | — |'); continue; }
-    const totals = Object.entries(record.counts);
-    const display = totals.length ? totals.map(([name, count]) => name + ': ' +
-      [count.tests ?? '?', count.pass ?? '?', count.fail ?? '?', count.skipped ?? '?', (count.skipped ?? 0) + (count.cancelled ?? 0) + (count.todo ?? 0)].join(' / ')).join('<br>') : 'N/A (command check)';
+    const expected = record.scope === 'workspace-tests' ? workspaces : record.scope === 'node-tests' ? ['tests'] : [];
+    const display = expected.length ? expected.map(name => {
+      const count = record.counts[name];
+      // Reporter totals may be absent even when the command ran; never imply N/A or zero.
+      if (!count || fields.some(field => !Number.isSafeInteger(count[field]) || count[field] < 0)) {
+        return name + ': 集計不明／未到達';
+      }
+      return name + ': ' + [count.tests, count.pass, count.fail, count.skipped,
+        count.skipped + count.cancelled + count.todo].join(' / ');
+    }).join('<br>') : 'N/A (command check)';
     lines.push('| ' + layer + ' | ' + record.status + ' (' + record.diagnostic + ') | ' + display + ' | ' + (record.durationMs / 1000).toFixed(3) + ' |');
   }
   for (const [name, sha] of [['Checkout SHA', records[0]?.checkoutSha ?? metadata.checkoutSha], ['Source HEAD SHA', records[0]?.sourceSha ?? metadata.sourceSha]]) {
