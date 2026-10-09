@@ -1,25 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { registerHooks } from 'node:module';
 import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
 
-// PriorForecast.tsx（PR #120から取り込んだ検査）はJSXを含むため、Nodeの型除去だけでは読めない。
-// テストの中だけ、.tsxをTypeScriptで変換して読み込む。
-registerHooks({
-  load(url, context, nextLoad) {
-    if (!url.startsWith('file:') || !url.endsWith('.tsx')) return nextLoad(url, context);
-    const source = readFileSync(fileURLToPath(url), 'utf8');
-    const { outputText } = ts.transpileModule(source, {
-      compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, verbatimModuleSyntax: true },
-      fileName: fileURLToPath(url),
-    });
-    return { format: 'module', source: outputText, shortCircuit: true };
-  },
-});
-
-const { assertForecastPresentation } = await import('../src/features/prior/PriorForecast.tsx');
+import { assertForecastPresentation } from '../src/features/prior/forecast-validation.ts';
 const { toForecastView } = await import('../src/features/today/forecast-view.ts');
 const { showYesterdayPrompt } = await import('../src/features/today/yesterday-later.ts');
 const examples = JSON.parse(readFileSync(new URL('./fixtures/engine-examples.json', import.meta.url), 'utf8'));
