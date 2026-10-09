@@ -1,23 +1,103 @@
 # #148 phase1の検証記録
 
-対象はIssue #148と引継ぎZIPのACCEPTANCE-DESIGN.mdにある36ケース。通常checkoutのEngine2・.vscode、元spec-harnessの途中FE6ファイルを保全し、独立worktreeで25f473feを起点に実装した。元タスクのAPI/migration実行審査拒否を解消済みとは扱わず、今回の直接実装指示を根拠とする具体操作の審査が通過した。承認転記・他経路の回避は行わない。本番変更・merge・deployは未実施。
+対象はIssue #148と引継ぎZIPのACCEPTANCE-DESIGN.mdにある36ケース。通常checkoutのEngine2・.vscode、元spec-harnessの途中FE6ファイルを保全し、独立worktreeで25f473feを起点に実装した。最新main ca002394を取り込み、2026-10-09の最終再確認でも同SHAだった。元タスクのAPI/migration実行審査拒否を解消済みとは扱わず、今回の直接実装指示を根拠とする具体操作の審査が通過した。承認転記・他経路の回避は行わない。本番変更・merge・deployは未実施。
 
-## 実行と範囲
+## 最終ローカル結果
 
-- API/DB受入初回：24 node tests、成功24、失敗0、skip0。U01〜U06、V01〜V08、I01〜I10、M01〜M02を複数oracleへまとめている。受入ID数とnode test数は同じではない。
-- 修正後型チェック：成功。FE単体：53件成功、失敗0、skip0。
-- 全回帰初回：ローカルメモリ不足下で接続timeoutなどが発生し中断。PASSではない。起動した自分のrunnerをPID・親子関係で特定して停止した。stale PID fileの正規停止はNo such processとなったため、現存する自分のクラスタを別途確認して停止した。生成data dirは削除していない。
-- 実ブラウザ初回：待受前socket hangupで失敗。2回目：selector不一致・試験用sign-up上限で失敗。製品動作の成功証拠ではない。runnerを観測DOMに合わせ、専用環境だけAUTH_SIGN_UP_MAX／AUTH_SIGN_IN_MAXを100にして再検証する。
-- 現在の全回帰・image・実ブラウザの最終結果は後続の更新で記録する。未完了を合格とは扱わない。
+実装commit 3a5b10cと、その後のDemo試験の明示量1の送信修正を対象に再実行した。後続変更は検証記録・参照番号・合成専用Compose。リモート最終HEADのCIはDraft PRのChecksで別に確認し、ここへ過去SHAのCI成功を流用しない。
 
-## 再現方法
+| 検証 | 結果と範囲 |
+| --- | --- |
+| Node24.21.0、各worktree自身の依存 | 通常ディレクトリ。既存node_modules junctionを再利用せず、lockfileからinstall |
+| `npm run typecheck` | 全workspace成功 |
+| `npm test` | API145・FE60・Prediction70、合計275成功／失敗0／skip0 |
+| `npm run build` | 全workspace成功 |
+| `scripts/check-foundation.ps1` | 成功：text files・local links・環境例・ignore・diff。アプリ検証の代替ではない |
+| 受入U01〜U06、V01〜V08、I01〜I10、M01〜M02 | 全26 ID成功。API/DB24 node testsへ複数oracleをまとめた。全API145に含む |
+| migration source | 初回・再実行、移行前1〜4のGoal/log量・日付・metadata保全、旧SKIP-onlyの保守lock成功（M01） |
+| migration compiled/container | 専用の空DBへ認証→app1〜5を初回適用、再実行auth/app差分なし成功 |
+| Chrome＋新SPA/API image | F01〜F10とF06-late-operation、11成功。合成Docker DB、8097のみ |
+| #147とのローカル併用 | PR147 HEAD bc24cc0156ab56c24065b6daac4d7908f2465cbaと3a5b10cの隔離コピーで型・build成功、8098実API/UIの同11ケース成功。PR147へ書込・pushなし |
+| 独立敵対レビュー | 別コンテキストの静的レビュー。遅延K1応答が新K2の回復情報を消すP1を修正し、単体＋実ブラウザ回帰を追加。再レビューでBlockingなし。独立したテスト実行やHuman Approveではない |
 
-Nodeはpackage.jsonの24.21.0。`npm ci --ignore-scripts --no-audit --no-fund`後、`npm run typecheck`、`npm test`、`npm run build`を実行する。DATABASE_URLは専用合成PostgreSQLの管理用接続のみを渡す（テストは個別DBを作成・終了後drop）。普段の環境・本番URLを使わない。
+#147併用ではGoalFormPageの2箇所で画面配置と保存中disabledを両方保持し、Goal API testsの2箇所でprogressDoneと設定版／unitLockedを両方保持した。progressDone・PageTitle・reason=expired・P-17・auth/router/layout/fontを#148へ重複実装しない。#156/#158はmainから保持した。#153のAPI cache、#155のFE所有者境界（PR159）、#157（PR163）、#162（PR173）は未mergeで別作業。並行PRのP-19／D-28と重複しないよう、本変更をP-20／D-29とした。
 
-ブラウザrunnerは[issue148-browser.mjs](../../apps/web/tests/issue148-browser.mjs)。既存playwright-coreの絶対pathをISSUE148_PLAYWRIGHT_ROOT、既存Chrome/Edge executableをISSUE148_BROWSER_EXEに指定する。依存やブラウザを自動導入しない。loopback8097の専用SPA/API image、15488のPostgreSQL（database futureroi_issue148、role issue148_synthetic）だけを操作する。`.tools/issue148/compose.yaml`は同名の専用project・tmpfsで起動し、BETTER_AUTH_URLは8097、合成Secretのみを使用する。runner冒頭でDB名・roleを照合する。通常8080・audit8088/8089や旧projectを使わない。
+検証image ID：`sha256:97cf0724bada72c272843cf1a0ce2e5247943d72f97120d6c2a87f7346bee2e7`。このimageのアプリsourceは3a5b10cと同一。
 
-F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然な2日間の利用試験とは扱わない。F02の503、F03のGET503、F06のPOST commit後応答切断、F08の確定422、F10の保存後GET失敗は人工条件。I03のAPI試験は受信済み結果を捨てるケースで、実通信切断はF06で別に検証する。競合順は行lock待機を観測・制御し、sleepだけで成功を主張しない。
+## 再現方法と証拠の限界
 
-## 残る受入
+Nodeはpackage.jsonの24.21.0。`npm ci --ignore-scripts --no-audit --no-fund`後、`npm run typecheck`、`npm test`、`npm run build`を実行する。DATABASE_URLは専用合成PostgreSQLの管理用接続のみを渡す。テストは個別DBを作成・終了後dropする。普段の環境・本番URLを使わない。
 
-内部3人での担当交代・初見利用者の理解確認はNOT_RUN。独立した逆対レビュー・Human Approve・main反映・本番migration・公開配置も未完了。セルフレビュー・人工障害・CI成功でこれらを代替しない。同日ログ一般の競合解消、削除CAS、#147の画面再設計、#153/#155のcache方針は範囲外。
+[合成専用Compose](../../apps/web/tests/fixtures/issue148-compose.yaml)を`docker compose -f apps/web/tests/fixtures/issue148-compose.yaml up -d --build`で起動する。project future-roi-148-takeover、loopback8097の専用SPA/API image、15488のPostgreSQL（database futureroi_issue148、role issue148_synthetic）、tmpfsと合成認証Secretのみ。普段の8080・audit8088/8089や旧projectを使わない。試験用sign-up/sign-in上限100はこの環境だけで、製品の既定値を変更しない。
+
+`/api/health`が成功した後、[browser runner](../../apps/web/tests/issue148-browser.mjs)を`node apps/web/tests/issue148-browser.mjs`で明示実行する。既存playwright-coreの絶対pathをISSUE148_PLAYWRIGHT_ROOT、既存Chrome/Edge executableをISSUE148_BROWSER_EXEへ指定する。依存・ブラウザを自動導入しない。runner冒頭でDB名・roleを照合し、結果はGit除外の`.tools/issue148/browser/results.json`に出す。終了時は同じComposeの`stop`で専用環境だけ停止する。
+
+F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然な2日間の利用試験とは扱わない。F02の503、F03のGET503、F06のPOST commit後応答切断、F08の確定422、F10の保存後GET失敗は人工条件。I03のAPI試験は受信済み結果を捨てるケースで、実通信切断はF06で別に検証する。競合順は行lock待機を観測・制御し、sleepだけで成功を主張しない。F06-late-operationは古い送信の応答を保留し、新しい送信をcommit後に切断してから古い応答を返す。新キー保全とreload回復をassertした。
+
+## 途中の失敗・中断
+
+全回帰初回はローカルメモリ不足下の接続timeout等で中断し、PASSではない。起動した自分のrunnerをPID・親子関係で特定して停止した。stale PID fileの正規停止はNo such processとなり、現存する自分のクラスタを別途確認して停止した。生成data dirは削除していない。その後の失敗にはR-11の回答snapshotへ公開contextの追加項目を渡す不整合、旧テストの禁止unit変更と量省略があった。原因を修正し、期待値を弱めず全回帰を再実行した。
+
+ブラウザの途中実行では待受前socket hangup、観測DOMと異なるselector、試験用sign-up制限、最新取得中のdisabled待機不足で失敗した。専用環境・runnerを直して最終11成功を確認した。#147併用初回型チェックはGoal DTO testsの競合marker残存で失敗し、両側項目を統合した再実行で成功した。
+
+## 未実行・残件
+
+- 内部3人での担当交代・初見利用者の理解確認：NOT_RUN。
+- Human Approve、チームによる契約採択、main反映、本番migration、公開配置：未実施。
+- `CREATE_RESULT_DELETED`のAPI410・台帳保持・復活禁止は検証済み。FEは未確定attemptを維持し自動再作成しないが、410から新しい作成へ進む明示操作のUXは今回未追加。終端時の画面契約をチームレビューで確認する。
+- 同日ログ一般の競合解消、削除CAS、全mutation冪等性、#147の画面再設計、#153/#155のcache方針は範囲外。
+
+セルフレビューのBlockingは修正済み。上記410 UXと実利用受入を残件として明示し、ローカル・CI・人工障害の成功で代替しない。READMEの一般setupや製品runtime環境変数は変わらないため追加更新不要。
+
+## 変更ファイル
+
+- [.github/workflows/application.yml](../../.github/workflows/application.yml)
+- [apps/api/migrations/0005_goal_data_integrity.sql](../../apps/api/migrations/0005_goal_data_integrity.sql)
+- [apps/api/src/contracts/goal.ts](../../apps/api/src/contracts/goal.ts)
+- [apps/api/src/contracts/log.ts](../../apps/api/src/contracts/log.ts)
+- [apps/api/src/contracts/r11.ts](../../apps/api/src/contracts/r11.ts)
+- [apps/api/src/db/seed-demo.ts](../../apps/api/src/db/seed-demo.ts)
+- [apps/api/src/goals/routes.ts](../../apps/api/src/goals/routes.ts)
+- [apps/api/src/goals/store.ts](../../apps/api/src/goals/store.ts)
+- [apps/api/src/logs/routes.ts](../../apps/api/src/logs/routes.ts)
+- [apps/api/src/logs/store.ts](../../apps/api/src/logs/store.ts)
+- [apps/api/src/prediction/r11.ts](../../apps/api/src/prediction/r11.ts)
+- [apps/api/src/prediction/store.ts](../../apps/api/src/prediction/store.ts)
+- [apps/api/tests/demo-seed.test.ts](../../apps/api/tests/demo-seed.test.ts)
+- [apps/api/tests/goal-data-integrity.test.ts](../../apps/api/tests/goal-data-integrity.test.ts)
+- [apps/api/tests/goals-concurrency.test.ts](../../apps/api/tests/goals-concurrency.test.ts)
+- [apps/api/tests/goals.test.ts](../../apps/api/tests/goals.test.ts)
+- [apps/api/tests/helpers/stack.ts](../../apps/api/tests/helpers/stack.ts)
+- [apps/api/tests/logs.test.ts](../../apps/api/tests/logs.test.ts)
+- [apps/api/tests/migrate.test.ts](../../apps/api/tests/migrate.test.ts)
+- [apps/api/tests/question-prior-http.test.ts](../../apps/api/tests/question-prior-http.test.ts)
+- [apps/api/tests/question-prior.test.ts](../../apps/api/tests/question-prior.test.ts)
+- [apps/api/tests/record-concurrency.test.ts](../../apps/api/tests/record-concurrency.test.ts)
+- [apps/api/tests/seed-r11-compatibility.test.ts](../../apps/api/tests/seed-r11-compatibility.test.ts)
+- [apps/web/src/api/goals-http.ts](../../apps/web/src/api/goals-http.ts)
+- [apps/web/src/api/http.ts](../../apps/web/src/api/http.ts)
+- [apps/web/src/api/today-http.ts](../../apps/web/src/api/today-http.ts)
+- [apps/web/src/copy/goals.ts](../../apps/web/src/copy/goals.ts)
+- [apps/web/src/features/goals/GoalFormPage.tsx](../../apps/web/src/features/goals/GoalFormPage.tsx)
+- [apps/web/src/features/goals/create-attempt.ts](../../apps/web/src/features/goals/create-attempt.ts)
+- [apps/web/src/features/goals/goal-form.ts](../../apps/web/src/features/goals/goal-form.ts)
+- [apps/web/src/features/logs/RecordChoiceBar.tsx](../../apps/web/src/features/logs/RecordChoiceBar.tsx)
+- [apps/web/src/features/logs/SaveFailure.tsx](../../apps/web/src/features/logs/SaveFailure.tsx)
+- [apps/web/src/features/logs/YesterdayCorrection.tsx](../../apps/web/src/features/logs/YesterdayCorrection.tsx)
+- [apps/web/src/features/logs/YesterdayPrompt.tsx](../../apps/web/src/features/logs/YesterdayPrompt.tsx)
+- [apps/web/src/features/logs/record-log.ts](../../apps/web/src/features/logs/record-log.ts)
+- [apps/web/src/features/logs/useSaveLog.ts](../../apps/web/src/features/logs/useSaveLog.ts)
+- [apps/web/src/features/today/TodayPage.tsx](../../apps/web/src/features/today/TodayPage.tsx)
+- [apps/web/src/features/today/snapshot.ts](../../apps/web/src/features/today/snapshot.ts)
+- [apps/web/tests/fixtures/issue148-compose.yaml](../../apps/web/tests/fixtures/issue148-compose.yaml)
+- [apps/web/tests/goal-form.test.mjs](../../apps/web/tests/goal-form.test.mjs)
+- [apps/web/tests/goal-integrity.test.mjs](../../apps/web/tests/goal-integrity.test.mjs)
+- [apps/web/tests/issue148-browser.mjs](../../apps/web/tests/issue148-browser.mjs)
+- [apps/web/tests/record-log.test.mjs](../../apps/web/tests/record-log.test.mjs)
+- [apps/web/tests/today-data.test.mjs](../../apps/web/tests/today-data.test.mjs)
+- [docs/architecture.md](../../docs/architecture.md)
+- [docs/change-map.md](../../docs/change-map.md)
+- [docs/operations/issue148-verification.md](../../docs/operations/issue148-verification.md)
+- [docs/product-spec.md](../../docs/product-spec.md)
+- [scripts/smoke-compose.sh](../../scripts/smoke-compose.sh)
+- [scripts/smoke-container.sh](../../scripts/smoke-container.sh)

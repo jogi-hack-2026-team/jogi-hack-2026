@@ -103,9 +103,9 @@ test('Todayは実Engineと完全一致し、昨日補完・今日記録を通常
     assert.equal(today.yesterdayMissing, true);
     assert.equal(today.todayLog, null);
     assert.deepEqual(today.prediction, predict(data[i]!.input));
-    assert.equal((await owner.call('PUT', `/api/goals/${goal.id}/logs/2026-12-30`, { status: 'DONE' })).status, 422);
+    assert.equal((await owner.call('PUT', `/api/goals/${goal.id}/logs/2026-12-30`, { status: 'DONE', amount: 1, expectedGoalSettingsRevision: 0 })).status, 422);
     assert.equal((await owner.call('PUT', `/api/goals/${goal.id}/logs/2026-12-31`, { status: 'SKIPPED' })).status, 200);
-    assert.equal((await owner.call('PUT', `/api/goals/${goal.id}/logs/2027-01-01`, { status: 'DONE' })).status, 200);
+    assert.equal((await owner.call('PUT', `/api/goals/${goal.id}/logs/2027-01-01`, { status: 'DONE', amount: 1, expectedGoalSettingsRevision: 0 })).status, 200);
     const recorded = (await owner.call('GET', `/api/goals/${goal.id}/today`)).json as unknown as Today;
     assert.equal(recorded.yesterdayMissing, false);
     assert.deepEqual(recorded.todayLog, { localDate: '2027-01-01', status: 'DONE', amount: 1 });

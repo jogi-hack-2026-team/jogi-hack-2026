@@ -159,7 +159,7 @@ P-18の0／1／59／60／61／1240分と達成まで残り1分の固定例、元
 
 ## #148 phase1：量・設定版・作成再送
 
-R-02〜R-04の現行追加契約は[Product P-19](product-spec.md#p-19-量の意味と保存操作の保全148)・[Architecture D-28](architecture.md#d-28-量と作成操作の保全148)。コードは[Goal契約](../apps/api/src/contracts/goal.ts)・[Log契約](../apps/api/src/contracts/log.ts)・[Goal store](../apps/api/src/goals/store.ts)・[Log store](../apps/api/src/logs/store.ts)・[migration 0005](../apps/api/migrations/0005_goal_data_integrity.sql)、R-11 contextは[prediction store](../apps/api/src/prediction/store.ts)。FEは[フォーム](../apps/web/src/features/goals/GoalFormPage.tsx)・[作成操作の復元](../apps/web/src/features/goals/create-attempt.ts)・[記録回復](../apps/web/src/features/logs/useSaveLog.ts)。
+R-02〜R-04の現行追加契約は[Product P-20](product-spec.md#p-20-量の意味と保存操作の保全148)・[Architecture D-29](architecture.md#d-29-量と作成操作の保全148)。コードは[Goal契約](../apps/api/src/contracts/goal.ts)・[Log契約](../apps/api/src/contracts/log.ts)・[Goal store](../apps/api/src/goals/store.ts)・[Log store](../apps/api/src/logs/store.ts)・[migration 0005](../apps/api/migrations/0005_goal_data_integrity.sql)、R-11 contextは[prediction store](../apps/api/src/prediction/store.ts)。FEは[フォーム](../apps/web/src/features/goals/GoalFormPage.tsx)・[作成操作の復元](../apps/web/src/features/goals/create-attempt.ts)・[記録回復](../apps/web/src/features/logs/useSaveLog.ts)。
 
 [API/DB受入](../apps/api/tests/goal-data-integrity.test.ts)、[FE固定値／回復回帰](../apps/web/tests/goal-integrity.test.mjs)、[単位フォーム回帰](../apps/web/tests/goal-form.test.mjs)、[明示実行のブラウザrunner](../apps/web/tests/issue148-browser.mjs)と[検証範囲・残件](operations/issue148-verification.md)へ追跡できる。既存API testsのcallerを新必須値へ追従し、必須値欠落・stale・同キー再送は補完しないrawCallで検証する。
 
