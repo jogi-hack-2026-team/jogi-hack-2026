@@ -1,15 +1,28 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFile } from 'node:fs/promises';
-import { stripTypeScriptTypes } from 'node:module';
+import { registerHooks } from 'node:module';
 
 // 製品moduleそのものを読み、transport/storeだけを差し替える。独立HTTP確認は行わない。
 const authClient = { $store: { atoms: {} } };
 globalThis.__sessionConfirmClient = authClient;
-const source = (await readFile(new URL('../src/auth/session.ts', import.meta.url), 'utf8'))
-  .replace("import { authClient } from './client.ts';", 'const authClient = globalThis.__sessionConfirmClient;');
-const { checkSession } = await import('data:text/javascript;base64,' + Buffer.from(stripTypeScriptTypes(source)).toString('base64'));
-delete globalThis.__sessionConfirmClient;
+const sessionUrl = new URL('../src/auth/session.ts', import.meta.url).href;
+const clientUrl = new URL('../src/auth/client.ts', import.meta.url).href;
+const hooks = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    const resolved = nextResolve(specifier, context);
+    if (context.parentURL === sessionUrl && resolved.url === clientUrl) {
+      return { url: 'data:text/javascript,export const authClient = globalThis.__sessionConfirmClient;', shortCircuit: true };
+    }
+    return resolved;
+  },
+});
+let checkSession;
+try {
+  ({ checkSession } = await import(sessionUrl));
+} finally {
+  hooks.deregister();
+  delete globalThis.__sessionConfirmClient;
+}
 
 test('router confirmation shares the hook store and waits for a replacing refresh', async () => {
   const original = authClient.$store.atoms.session;
