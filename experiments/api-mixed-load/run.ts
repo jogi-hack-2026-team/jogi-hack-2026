@@ -6,7 +6,7 @@
 //   node experiments/api-mixed-load/run.ts
 // DATABASE_URL未設定なら、apps/api のテストhelperと同じembedded PostgreSQL（apps/api/.local、Git除外）へ専用databaseを作って削除する。
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { cpus, platform, release, totalmem } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -125,7 +125,7 @@ async function startServer(): Promise<Server> {
 }
 
 // ---- synthetic users and goals -----------------------------------------------------------------
-type User = { index: number; ip: string; sessionIps: string[]; cookie: string; userId: string; writeGoalId: string; predictedGoalId: string; requiredFutureDone: number; demoGoalIds: string[]; today: string };
+type User = { index: number; ip: string; sessionIps: string[]; cookie: string; userId: string; writeGoalId: string; writeGoalRevision: number; predictedGoalId: string; requiredFutureDone: number; demoGoalIds: string[]; today: string };
 type Expected = { oldBody: string; r11Body: string };
 const users: User[] = [];
 const expectedToday = new Map<string, Expected>(); // goalId -> 決定的な期待応答（Engineはseed固定）
@@ -134,10 +134,10 @@ function cookieHeader(res: Response): string {
   return res.headers.getSetCookie().map((line) => line.split(';')[0]!.trim()).filter((pair) => !pair.endsWith('=')).join('; ');
 }
 
-async function call(server: Server, method: string, path: string, u: { cookie: string; ip: string }, body?: unknown) {
+async function call(server: Server, method: string, path: string, u: { cookie: string; ip: string }, body?: unknown, extraHeaders: Record<string, string> = {}) {
   const res = await fetch(server.url + path, {
     method,
-    headers: { cookie: u.cookie, 'x-forwarded-for': u.ip, origin: server.url, ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
+    headers: { cookie: u.cookie, 'x-forwarded-for': u.ip, origin: server.url, ...(body !== undefined ? { 'content-type': 'application/json' } : {}), ...extraHeaders },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
   const text = await res.text();
@@ -159,9 +159,10 @@ async function seed(server: Server) {
     const cookie = cookieHeader(res);
     const userId = (await admin.query<{ id: string }>('select id from "user" where email = $1', [email])).rows[0]!.id;
     const u = { cookie, ip };
-    const write = await call(server, 'POST', '/api/goals', u, goalInput(`write ${i + 1}`));
-    const predicted = await call(server, 'POST', '/api/goals', u, goalInput(`predicted ${T14_SIZES[i]}`));
-    if (write.status !== 201 || predicted.status !== 201) throw new Error('goal creation failed');
+    // #148以降、Goal作成はUUIDのIdempotency-Keyが必須
+    const write = await call(server, 'POST', '/api/goals', u, goalInput(`write ${i + 1}`), { 'idempotency-key': randomUUID() });
+    const predicted = await call(server, 'POST', '/api/goals', u, goalInput(`predicted ${T14_SIZES[i]}`), { 'idempotency-key': randomUUID() });
+    if (write.status !== 201 || predicted.status !== 201) throw new Error(`goal creation failed: ${write.status} ${predicted.status}`);
     const today = write.json.today as string;
     // 60日分の合成記録（昨日・今日は未記録）。total_requiredを「今日DONEにしたあと残りN回」になるよう調整する。
     await admin.query(
@@ -180,7 +181,7 @@ async function seed(server: Server) {
     users.push({
       index: i, ip, cookie, userId, today,
       sessionIps: Array.from({ length: SESSION_IPS_PER_USER }, (_, k) => `203.0.113.${i * 16 + k + 1}`),
-      writeGoalId: write.json.id, predictedGoalId: predicted.json.id, requiredFutureDone: T14_SIZES[i]!,
+      writeGoalId: write.json.id, writeGoalRevision: write.json.goalSettingsRevision as number, predictedGoalId: predicted.json.id, requiredFutureDone: T14_SIZES[i]!,
       demoGoalIds: demo.goals.map((g) => g.id),
     });
   }
@@ -277,7 +278,7 @@ async function demoLoopScenario() {
       while (performance.now() < end) {
         await cohort.fire('today', timed(server, 'GET', todayPath(u.predictedGoalId, 'r11'), u, undefined, expectFor(u.predictedGoalId, 'r11')));
         await sleep(DEMO_LOOP.thinkMs[0]);
-        await cohort.fire('write', timed(server, 'PUT', `/api/goals/${u.writeGoalId}/logs/${u.today}`, u, { status: n % 2 ? 'SKIPPED' : 'DONE', ...(n % 2 ? {} : { amount: SESSION_AMOUNT }) }));
+        await cohort.fire('write', timed(server, 'PUT', `/api/goals/${u.writeGoalId}/logs/${u.today}`, u, { status: n % 2 ? 'SKIPPED' : 'DONE', ...(n % 2 ? {} : { amount: SESSION_AMOUNT }), expectedGoalSettingsRevision: u.writeGoalRevision }));
         await sleep(DEMO_LOOP.thinkMs[1]);
         await cohort.fire('list', timed(server, 'GET', '/api/goals', u));
         await cohort.fire('session', timed(server, 'GET', '/api/auth/get-session', u));
@@ -318,7 +319,7 @@ async function openLoopScenario(view: 'old' | 'r11', todayPerSec: number) {
       const n = crud++;
       const u = users[n % users.length]!;
       if (n % 3 === 0) cohort.fire('list', timed(server, 'GET', '/api/goals', u));
-      else if (n % 3 === 1) cohort.fire('write', timed(server, 'PUT', `/api/goals/${u.writeGoalId}/logs/${u.today}`, u, { status: 'DONE', amount: SESSION_AMOUNT }));
+      else if (n % 3 === 1) cohort.fire('write', timed(server, 'PUT', `/api/goals/${u.writeGoalId}/logs/${u.today}`, u, { status: 'DONE', amount: SESSION_AMOUNT, expectedGoalSettingsRevision: u.writeGoalRevision }));
       else cohort.fire('session', timed(server, 'GET', '/api/auth/get-session', { cookie: u.cookie, ip: u.sessionIps[Math.floor(n / 3) % u.sessionIps.length]! }));
     }, 1000 / OPEN_LOOP.crudPerSec);
     let sent = 0;
