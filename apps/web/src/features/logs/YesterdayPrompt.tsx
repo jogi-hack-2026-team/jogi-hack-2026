@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { longDate } from '../../copy/date.ts';
-import { todayCopy } from '../../copy/today.ts';
+import { todayCopy, unitLabel } from '../../copy/today.ts';
 import { AmountEditor } from './AmountEditor.tsx';
 import { classifySaveError, type RecordChoice } from './record-log.ts';
 import { SaveFailure } from './SaveFailure.tsx';
@@ -42,7 +42,7 @@ export function YesterdayPrompt({
       <SaveFailure
           settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
         kind={failureKind}
-        body={saver.failure?.vars?.choice.status === 'DONE' ? `未保存の量：${saver.failure.vars.choice.amount}${saver.failure.vars.unit === 'minutes' ? '分' : '回'}` : '休みの記録は未保存です。'}
+        body={saver.failure?.vars?.choice.status === 'DONE' ? todayCopy.unsavedAmount(saver.failure.vars.choice.amount, unitLabel(saver.failure.vars.unit)) : todayCopy.unsavedRest}
         localDate={yesterday}
         onRetry={saver.retry}
         onReselect={saver.reset}

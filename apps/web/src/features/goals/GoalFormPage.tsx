@@ -201,6 +201,9 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const count = errorCount(errors);
 
   const finishCreateAttempt = (operation: CreateAttempt): boolean => {
+    // 離脱後に別フォームが同じ操作を復元・再送している可能性がある。
+    // 旧応答ではstorageを終了せず、表示中のフォームの確定応答へ引き継ぐ。
+    if (!mounted.current) return false;
     try {
       if (!clearCreateAttempt(operation, sessionStorage)) return false;
       setAttempt(current => current?.owner === operation.owner && current.key === operation.key && current.raw === operation.raw ? null : current);
@@ -217,6 +220,8 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     mutationFn: async ({ values: v, operation }: { values: FormValues; operation: CreateAttempt | null }): Promise<Goal | null> => {
       if (mode === 'create') {
         if (!operation || operation.owner !== owner) throw new Error('作成操作を確認できません。');
+        // 描画後に別タブでcookieが変わった場合、POST前に止めて元の操作を保持する。
+        // このGETの後の切替はAPIのX-Create-Owner検証で拒否する。取得失敗でも新しいキーは作らない。
         const current = await authClient.getSession({ query: { disableCookieCache: true } });
         if (current.error) throw new Error('アカウントを確認できません。作成操作は保持しています。');
         if (current.data?.user.id !== operation.owner) throw new ApiError(409, { error: { code: 'CREATE_OWNER_CHANGED', message: '作成時のアカウントでログインし直してから再試行してください。' } });
@@ -271,7 +276,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     event.preventDefault();
     // 送信中は二重に送らない（ボタンも押せなくしている）
     if (saving.current || reloadInFlight.current || prepareError instanceof CreateRecoveryError ||
-      (save.isError && (isAnswerConflict(save.error) || ['conflict', 'deleted'].includes(createFailureKind(save.error) ?? '')))) return;
+      (save.isError && (isEditConflict(save.error) || ['conflict', 'deleted'].includes(createFailureKind(save.error) ?? '')))) return;
     setSubmitted(true);
     setServerErrors({});
     const found = validate(values, { locked, ...(mode === 'edit' ? { goal } : {}) });
@@ -281,8 +286,9 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     }
     setPrepareError(null);
     try {
-      // mutation varsに送信操作を固定する。旧画面のcallbackでも該当キーだけを終了する。
-      const operation = mode === 'create' ? prepareCreateAttempt(owner!, toCreateBody(values), sessionStorage) : null;
+      // 再表示で復元した操作を優先する。旧画面の遅延成功がstorageを消しても、
+      // 保持中の操作を新しいキーへ切り替えず同じキー・元bodyで結果を確認する。
+      const operation = mode === 'create' ? attempt ?? prepareCreateAttempt(owner!, toCreateBody(values), sessionStorage) : null;
       if (operation) setAttempt(operation);
       saving.current = true;
       save.mutate({ values, operation }, { onSuccess: leaveToList });
@@ -314,7 +320,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     save.variables?.operation?.owner === owner && save.variables.operation.key === attempt?.key ? attempt : null;
   const showSaveFailure = saveFailure !== null && (count === 0 || prepareError instanceof CreateRecoveryError);
   // 通信・サーバーの失敗は「もう一度保存」。ログイン切れはログインし直すまで同じ文言のままにする
-  const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isAnswerConflict(saveFailure) && createFailureKind(saveFailure) === null;
+  const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isEditConflict(saveFailure) && createFailureKind(saveFailure) === null;
   const restartCreate = () => {
     if (!deletedAttempt || busy || !mounted.current) return;
     try {
@@ -351,8 +357,8 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       <DeskHeader back={goal ? <GoalCrumb goal={goal} /> : <ListCrumb />} title={mode === 'create' ? f.createTitle : f.editTitle} />
       <form ref={formRef} className={`fr-goalform fr-goalform--${mode}`} noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">
-          {attempt ? <p role="status">作成結果を確認するまで、元の入力と同じ作成キーを保持します。「保存」で同じ操作を確認・再送できます。</p> : null}
-          {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isAnswerConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} answerConflict={isAnswerConflict(save.error)} /> : null}
+          {attempt ? <p role="status">{f.createRecovery.pending}</p> : null}
+          {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isEditConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} editConflict={isEditConflict(save.error)} /> : null}
           {count > 0 ? (
             <div className="fr-goalform__summary" role="alert">
               <Icon name="alert" size={20} />
@@ -375,8 +381,8 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
           <Field id="goal-unit" label={f.unit} group error={errors.unit} help={mode === 'edit' && goal.unitLocked ? (
             <>
               <LockedNote>{goalsCopy.errors.unitLocked}</LockedNote>
-              {values.unit !== goal.unit ? <Button variant="secondary" disabled={inputDisabled} onClick={() => update('unit', goal.unit)}>保存済みの単位に戻す</Button> : null}
-              <Link to="/goals/new">新しいGoalを作成</Link>
+              {values.unit !== goal.unit ? <Button variant="secondary" disabled={inputDisabled} onClick={() => update('unit', goal.unit)}>{f.restoreSavedUnit}</Button> : null}
+              <Link to="/goals/new">{f.createNewGoal}</Link>
             </>
           ) : undefined}>
             <SegmentedControl
@@ -497,8 +503,8 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
                   {f.cancel}
                 </Link>
               )}
-              <Button type="submit" variant="primary" block busy={busy} disabled={reloadingLatest || isAnswerConflict(saveFailure) || recoveryBlocked || ['conflict', 'deleted'].includes(createFailureKind(saveFailure) ?? '')} {...(canRetry ? { icon: 'retry' as const } : {})}>
-                {busy ? f.saving : createFailureKind(saveFailure) === 'owner' ? '作成時のアカウントで再確認' : canRetry ? f.saveFailed.retry : mode === 'create' ? f.save : f.saveEdit}
+              <Button type="submit" variant="primary" block busy={busy} disabled={reloadingLatest || isEditConflict(saveFailure) || recoveryBlocked || ['conflict', 'deleted'].includes(createFailureKind(saveFailure) ?? '')} {...(canRetry ? { icon: 'retry' as const } : {})}>
+                {busy ? f.saving : createFailureKind(saveFailure) === 'owner' ? f.createRecovery.ownerRetry : canRetry ? f.saveFailed.retry : mode === 'create' ? f.save : f.saveEdit}
               </Button>
             </div>
           </div>
@@ -550,7 +556,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
 }
 
 /** 表示した後の再取得の失敗。フォームと入力はそのまま残す。 */
-function RefreshFailed({ error, onRetry, answerConflict }: { error: unknown; onRetry: () => void; answerConflict: boolean }) {
+function RefreshFailed({ error, onRetry, editConflict }: { error: unknown; onRetry: () => void; editConflict: boolean }) {
   if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
   return (
     <ErrorPanel
@@ -561,7 +567,7 @@ function RefreshFailed({ error, onRetry, answerConflict }: { error: unknown; onR
         </Button>
       }
     >
-      {isNotFound(error) ? f.refreshFailed.notFound : answerConflict ? f.refreshFailed.conflictBody : f.refreshFailed.body}
+      {isNotFound(error) ? f.refreshFailed.notFound : editConflict ? f.refreshFailed.conflictBody : f.refreshFailed.body}
     </ErrorPanel>
   );
 }
@@ -606,22 +612,22 @@ function SaveFailure({ error, mode, onReloadLatest, reloadingLatest, onRestartCr
   if (isUnauthenticated(error)) return <SignedOutPanel body={c.signedOut.formBody} newTab />;
   if (mode === 'create' && (createFailureKind(error) === 'recovery' || createFailureKind(error) === 'conflict')) return (
     <ErrorPanel
-      title={createFailureKind(error) === 'recovery' ? '作成の回復情報を確認できません' : '作成操作の入力が一致しません'}
-      action={<Link to="/goals" className="fr-btn fr-btn--secondary">Goal一覧で確認する</Link>}
+      title={createFailureKind(error) === 'recovery' ? f.createRecovery.unreadableTitle : f.createRecovery.conflictTitle}
+      action={<Link to="/goals" className="fr-btn fr-btn--secondary">{f.createRecovery.checkList}</Link>}
     >
-      作成済みか確認できないため、保存を止めています。元の回復情報は保持しています。Goal一覧で作成結果を確認してください。
+      {f.createRecovery.checkBody}
     </ErrorPanel>
   );
   if (mode === 'create' && createFailureKind(error) === 'owner') return (
-    <SignedOutPanel body="作成時のアカウントと現在のアカウントが違います。元の入力と作成キーは保持しています。作成時のアカウントでログインし直してから、同じ操作を確認してください。" newTab />
+    <SignedOutPanel body={f.createRecovery.ownerBody} newTab />
   );
   if (mode === 'create' && isCreateResultDeleted(error)) return (
-    <ErrorPanel title="作成したGoalは削除されています" action={onRestartCreate ? <Button onClick={onRestartCreate}>新しいGoalとして作成</Button> : undefined}>
-      この作成操作のGoalは復元できません。入力は保持しています。新しいGoalとして始める場合は、上の操作を選んでから保存してください。
+    <ErrorPanel title={f.createRecovery.deletedTitle} action={onRestartCreate ? <Button onClick={onRestartCreate}>{f.createRecovery.restart}</Button> : undefined}>
+      {f.createRecovery.deletedBody}
     </ErrorPanel>
   );
-  if (isAnswerConflict(error)) {
-    // ほかの画面で回答や単位が変わった（R-11 の回答の版が古い）。保存済みに見せず、入力を残したまま最新を読み直してもらう
+  if (isEditConflict(error)) {
+    // 回答またはGoal設定の版が古い。保存済みに見せず、入力を残して最新を読み直してもらう。
     return (
       <ErrorPanel
         title={f.answerConflict.title}
@@ -631,7 +637,7 @@ function SaveFailure({ error, mode, onReloadLatest, reloadingLatest, onRestartCr
           </Button>
         }
       >
-        入力は保持しています。最新の設定・回答を読み込んでから、保存する内容を確認してください。
+        {f.answerConflict.body}
       </ErrorPanel>
     );
   }
@@ -642,8 +648,8 @@ function SaveFailure({ error, mode, onReloadLatest, reloadingLatest, onRestartCr
   );
 }
 
-/** 古い回答の版で保存しようとした（409 ANSWER_CONFLICT）。 */
-function isAnswerConflict(error: unknown): boolean {
+/** 回答またはGoal設定の古い版で保存しようとした409。 */
+function isEditConflict(error: unknown): boolean {
   return error instanceof ApiError && error.status === 409 && ['ANSWER_CONFLICT', 'GOAL_SETTINGS_CONFLICT'].includes(error.body?.error.code ?? '');
 }
 function isCreateResultDeleted(error: unknown): boolean {

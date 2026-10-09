@@ -215,7 +215,7 @@ export function fieldErrorsFromApi(error: unknown): FieldErrors | null {
     // 回答の版（expectedAnswerRevision）の誤りも、回答の欄のエラーとして出す
     const raw = field.path.replace(/^body\//, '').split('/')[0];
     const name = (raw === 'expectedAnswerRevision' ? 'questionPrior' : raw) as FieldName;
-    if (FIELD_ORDER.includes(name) && !errors[name]) errors[name] = unitLocked && name === 'unit' ? e.unitLocked : locked ? e.locked : serverMessage[name];
+    if (FIELD_ORDER.includes(name) && !errors[name]) errors[name] = locked ? e.locked : serverMessage[name];
   }
   return errors;
 }

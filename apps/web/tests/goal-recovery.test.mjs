@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { registerHooks } from 'node:module';
+// Load the declared dependency before the hooks below replace its hook exports.
+import { QueryClient } from '@tanstack/react-query';
 
 // The actual hook and QueryClient run with a held GET. React lifecycle/session
 // inputs are controlled; this is not a DOM or real-auth acceptance test.
@@ -31,7 +33,6 @@ registerHooks({
     return nextLoad(url, context);
   },
 });
-const { QueryClient } = await import('../../../node_modules/@tanstack/query-core/build/modern/index.js');
 const { ApiError } = await import('../src/api/client.ts');
 const { useSaveLog } = await import('../src/features/logs/useSaveLog.ts');
 const { goalKeys } = await import('recovery:stubs');

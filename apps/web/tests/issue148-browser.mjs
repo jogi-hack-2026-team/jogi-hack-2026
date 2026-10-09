@@ -19,6 +19,11 @@ const pool = new pg.Pool({ host: '127.0.0.1', port: Number(process.env.ISSUE148_
 assert.deepEqual((await pool.query('select current_database() db,current_user owner')).rows[0], { db: 'futureroi_issue148', owner: 'issue148_synthetic' });
 const browser = await chromium.launch({ executablePath: process.env.ISSUE148_BROWSER_EXE, headless: true });
 const cases = []; const contexts = [];
+async function delivered(responsePromise, page) {
+ const response=await responsePromise;await response.finished();
+ // Transport completion followed by render turns; no Storage-read side effect is required.
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+}
 const wait = async fn => { for(let i=0;i<100;i++){ if(await fn()) return; await new Promise(r=>setTimeout(r,50)); } throw Error('condition timeout'); };
 async function fixture() {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'Asia/Tokyo', reducedMotion: 'reduce' }); contexts.push(context);
@@ -118,7 +123,6 @@ try {
  });
  await run('F06-late-operation',async()=>{
   const f=await fixture();await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').waitFor();
-  await f.page.evaluate(owner=>{const get=Storage.prototype.getItem;window.__attemptReads=[];Storage.prototype.getItem=function(key){const value=get.call(this,key);if(this===sessionStorage && key===`future-roi:create-attempt:${owner}`)window.__attemptReads.push(value?JSON.parse(value).key:null);return value;};},f.owner);
   let releaseOld;const oldBarrier=new Promise(r=>releaseOld=r);let committed=false;let count=0;
   await f.page.route('**/api/goals',async route=>{
     if(route.request().method()!=='POST'){await route.continue();return;}
@@ -132,9 +136,9 @@ try {
   await f.page.getByRole('link',{name:'閉じる',exact:true}).click();await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();
   assert.equal(await f.page.locator('#goal-title').inputValue(),'K1 遅延成功');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
   await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();await fill('K2 応答不明');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('button',{name:'もう一度保存',exact:true}).waitFor();
-  const reads=await f.page.evaluate(()=>window.__attemptReads.length);const secondKey=f.requests[2].key;releaseOld();
-  // Observe the old hook's cleanup read, rather than assuming a callback after a delay.
-  await wait(async()=>(await f.page.evaluate(()=>window.__attemptReads.length))>reads);
+  const secondKey=f.requests[2].key;
+  const oldResponse=f.page.waitForResponse(r=>r.request().method()==='POST' && r.status()===201 && r.request().headers()['idempotency-key']===f.requests[0].key);
+  releaseOld();await delivered(oldResponse,f.page);
   assert.equal(await f.page.evaluate(owner=>JSON.parse(sessionStorage.getItem(`future-roi:create-attempt:${owner}`)).key,f.owner),secondKey);
   await f.page.reload();assert.equal(await f.page.locator('#goal-title').inputValue(),'K2 応答不明');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
   assert.deepEqual(f.requests[0],f.requests[1]);assert.deepEqual(f.requests[2],f.requests[3]);assert.equal((await f.request('GET','/api/goals')).json.length,2);return f.requests;
@@ -238,7 +242,6 @@ try {
  });
  await run('F18-late-422',async()=>{
   const f=await fixture();await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').waitFor();
-  await f.page.evaluate(owner=>{const get=Storage.prototype.getItem;window.__attemptReads=0;Storage.prototype.getItem=function(key){if(this===sessionStorage && key===`future-roi:create-attempt:${owner}`)window.__attemptReads++;return get.call(this,key);};},f.owner);
   let releaseOld,firstSent=false,count=0;const barrier=new Promise(r=>releaseOld=r);
   await f.page.route('**/api/goals',async route=>{
    if(route.request().method()!=='POST')return route.continue();count++;
@@ -250,7 +253,9 @@ try {
   await fill('K1 人工遅延422');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await wait(()=>Promise.resolve(firstSent));
   await f.page.getByRole('link',{name:'閉じる',exact:true}).click();await f.page.getByRole('link',{name:'最初のGoalをつくる',exact:true}).click();await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
   await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();await fill('K2 422逆対');await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('button',{name:'もう一度保存',exact:true}).waitFor();
-  const raw=await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),reads=await f.page.evaluate(()=>window.__attemptReads);releaseOld();await wait(async()=>(await f.page.evaluate(()=>window.__attemptReads))>reads);
+  const raw=await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner);
+  const oldResponse=f.page.waitForResponse(r=>r.request().method()==='POST' && r.status()===422 && r.request().headers()['idempotency-key']===f.requests[0].key);
+  releaseOld();await delivered(oldResponse,f.page);
   assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);assert.equal(await f.page.locator('#goal-title').inputValue(),'K2 422逆対');assert.equal(await f.page.locator('#goal-title').isDisabled(),true);
   await f.page.reload();await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);assert.deepEqual(f.requests[0],f.requests[1]);assert.deepEqual(f.requests[2],f.requests[3]);assert.equal((await f.request('GET','/api/goals')).json.length,2);
   return {artificialLate422:true,k2RawPreserved:true,sameKeyAndBodyRecovery:true,requests:f.requests};
@@ -273,8 +278,65 @@ try {
   await f.page.evaluate(method=>{Storage.prototype[method]=window.__originalStorage;},method);assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);await f.page.locator('form').evaluate(form=>form.requestSubmit());assert.equal(f.requests.length,1);assert.deepEqual((await f.request('GET','/api/goals')).json,[]);assert.deepEqual(errors,[]);
   return {realApi422:true,artificialStorageFailure:method,rawPreserved:true,fieldErrorAndRecoveryAlert:true,noAutomaticPost:true};
  });
+ await run('F21-remount-before-late-success',async()=>{
+  const f=await fixture();let releaseOld,created;
+  const held=new Promise(resolve=>{releaseOld=resolve;});let first=true;
+  await f.page.route('**/api/goals',async route=>{
+   if(route.request().method() !== 'POST' || !first) return route.continue();
+   first=false;const response=await route.fetch();assert.equal(response.status(),201);created=await response.json();
+   await held;await route.fulfill({response});
+  });
+  await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').fill('再表示と遅延成功');
+  await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await wait(()=>Promise.resolve(Boolean(created)));
+  await f.page.getByRole('link',{name:'閉じる',exact:true}).click();
+  await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();await f.page.locator('#goal-title').waitFor();
+  assert.equal(await f.page.locator('#goal-title').inputValue(),'再表示と遅延成功');
+  assert.equal(await f.page.locator('#goal-title').isDisabled(),true);
+  const raw=await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner);assert.ok(raw);
+  const oldResponse=f.page.waitForResponse(r=>r.request().method()==='POST' && r.status()===201 && r.request().headers()['idempotency-key']===f.requests[0].key);
+  releaseOld();await delivered(oldResponse,f.page);
+  assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);
+  assert.equal(await f.page.locator('#goal-title').isDisabled(),true);
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
+  assert.equal(f.requests.length,2);assert.deepEqual(f.requests[1],f.requests[0]);
+  const goals=(await f.request('GET','/api/goals')).json;assert.equal(goals.length,1);assert.equal(goals[0].id,created.id);
+  return {restoredBeforeOldResponse:true,rawPreserved:true,heldK1Retried:true,oneGoal:true,requests:f.requests};
+ });
+ await run('F22-remount-unknown-result-both-orders',async()=>{
+  const evidence=[];
+  for(const oldFirst of [true,false]) {
+   const f=await fixture();let releaseOld,releaseRetry,created,count=0,retrySent=false;
+   const heldOld=new Promise(resolve=>{releaseOld=resolve;});const heldRetry=new Promise(resolve=>{releaseRetry=resolve;});
+   await f.page.route('**/api/goals',async route=>{
+    if(route.request().method() !== 'POST') return route.continue();count++;
+    if(count===1){const response=await route.fetch();assert.equal(response.status(),201);created=await response.json();await heldOld;await route.fulfill({response});}
+    else if(count===2){retrySent=true;await heldRetry;await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'UNAVAILABLE',message:'synthetic retry unknown'}})});}
+    else await route.continue();
+   });
+   await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').fill('再表示・再送不明');
+   await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');
+   await f.page.getByRole('button',{name:'保存する',exact:true}).click();await wait(()=>Promise.resolve(Boolean(created)));
+   await f.page.getByRole('link',{name:'閉じる',exact:true}).click();await f.page.getByRole('link',{name:'Goalを追加',exact:true}).click();await f.page.locator('#goal-title').waitFor();
+   const raw=await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner);assert.ok(raw);
+   const oldResponse=f.page.waitForResponse(r=>r.request().method()==='POST' && r.status()===201 && r.request().headers()['idempotency-key']===f.requests[0].key);
+   if(oldFirst){releaseOld();await delivered(oldResponse,f.page);}
+   await f.page.getByRole('button',{name:'保存する',exact:true}).click();await wait(()=>Promise.resolve(retrySent));
+   if(!oldFirst){releaseOld();await delivered(oldResponse,f.page);}
+   releaseRetry();await f.page.getByRole('button',{name:'もう一度保存',exact:true}).waitFor();
+   assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);
+   await f.page.reload();await f.page.locator('#goal-title').waitFor();assert.equal(await f.page.locator('#goal-title').isDisabled(),true);
+   assert.equal(await f.page.locator('#goal-title').inputValue(),'再表示・再送不明');assert.equal(f.requests.length,2);
+   await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);
+   assert.equal(f.requests.length,3);assert.deepEqual(f.requests[1],f.requests[0]);assert.deepEqual(f.requests[2],f.requests[0]);
+   const goals=(await f.request('GET','/api/goals')).json;assert.equal(goals.length,1);assert.equal(goals[0].id,created.id);
+   evidence.push({oldFirst,unknown503:true,rawPreserved:true,sameOperationAfterReload:true,oneGoal:true,requests:f.requests});
+   await f.context.close();contexts.splice(contexts.indexOf(f.context),1);
+  }
+  return evidence;
+ });
 } finally {
- writeFileSync(`${out}/results.json`,JSON.stringify({level:'REAL_CHROME_SYNTHETIC_IMAGE',source:'current worktree image; Docker image ID in verification log',cases},null,2));
+ writeFileSync(`${out}/results.json`,JSON.stringify({level:'REAL_CHROME_SYNTHETIC_IMAGE',source:'Docker image ID and source revision in verification log',cases},null,2));
  for(const context of contexts)await context.close();await browser.close();await pool.end();
 }
 if(cases.some(c=>c.status!=='PASS'))process.exitCode=1;

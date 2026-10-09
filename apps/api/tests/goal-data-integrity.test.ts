@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import pg from 'pg';
 import type { Goal, GoalCreate } from '../src/contracts/goal.ts';
@@ -168,6 +168,43 @@ test('#148 API/DB acceptance: raw requests, no contract defaults', async t => {
   await t.test('I05 same UUID under two owners is independent', async () => {
     const key: string = randomUUID(); const one = await create(a, input, key); const two = await create(b, input, key); assert.notEqual(one.goal.id, two.goal.id);
   });
+  await t.test('I11 X-Create-Owner mismatch rejects fresh/replay without Goal/log/ledger writes', async () => {
+    const ownerB = ((await b.rawCall('GET', '/api/auth/get-session')).json!.user as { id: string }).id;
+    assert.notEqual(owner.id, ownerB);
+    // Auth may refresh a session. The no-write contract concerns application data,
+    // including original prior metadata, timestamps and idempotency reservations.
+    const snapshot = async () => ({
+      goals: (await db.pool.query('select * from goal order by id')).rows,
+      logs: (await db.pool.query('select * from action_log order by goal_id, local_date')).rows,
+      operations: (await db.pool.query('select * from goal_create_operation order by user_id, idempotency_key')).rows,
+    });
+    const original = { ...input, questionPrior: { a: 'LOW', b: 'HIGH' } } as const;
+    const { goal, key } = await create(a, original);
+    assert.equal((await log(a, goal, { status: 'DONE', amount: 10 })).status, 200);
+    const other = await create(b, original, key);
+    assert.notEqual(other.goal.id, goal.id);
+    assert.equal((await log(b, other.goal, { status: 'DONE', amount: 10 })).status, 200);
+    const before = await snapshot();
+    for (const attemptedKey of [randomUUID(), key]) {
+      for (const [client, claimedOwner] of [[a, ownerB], [b, owner.id]] as const) {
+        const res = await client.rawCall('POST', '/api/goals', original,
+          { 'idempotency-key': attemptedKey, 'x-create-owner': claimedOwner });
+        assert.equal(res.status, 409, res.body);
+        assert.equal(code(res.json), 'CREATE_OWNER_CHANGED');
+        assert.deepEqual(await snapshot(), before);
+      }
+    }
+    // Prove both supported paths reach normal creation/replay rather than rejecting every POST.
+    for (const headers of [{ 'x-create-owner': owner.id }, {}]) {
+      const key = randomUUID();
+      const first = await a.rawCall('POST', '/api/goals', input, { ...headers, 'idempotency-key': key });
+      assert.equal(first.status, 201, first.body);
+      const replay = await a.rawCall('POST', '/api/goals', input, { ...headers, 'idempotency-key': key });
+      assert.equal(replay.status, 200, replay.body);
+      assert.equal(replay.json!.id, first.json!.id);
+      assert.equal(replay.headers['idempotency-replayed'], 'true');
+    }
+  });
   await t.test('I06 defaults and UUID case canonicalize equally', async () => {
     const key: string = randomUUID(); const { goal } = await create(a, input, key.toUpperCase());
     const replay = await a.rawCall('POST', '/api/goals', { ...input, initialProgress: 0, questionPrior: { a: null, b: null } }, { 'idempotency-key': key });
@@ -203,6 +240,11 @@ test('M01 migration first/repeated preserves old quantities/dates/metadata and c
   const db = await createTestDatabase(); t.after(() => db.close()); await migrate(db.pool, 'auth');
   const base = resolve('apps/api/.local'); mkdirSync(base, { recursive: true });
   const dir = mkdtempSync(join(base, '148-old-migrations-'));
+  t.after(() => {
+    // Only this test's newly created direct child may be removed, including on failure.
+    assert.equal(dirname(resolve(dir)), base);
+    rmSync(dir, { recursive: true, force: true });
+  });
   for (const name of ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql', '0004_demo_seed_goal.sql']) writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
   await migrateApp(db.pool, pathToFileURL(dir + '/'));
   await db.pool.query(`insert into "user" (id,name,email,"emailVerified","createdAt","updatedAt") values ('legacy','legacy','legacy@example.test',false,now(),now())`);

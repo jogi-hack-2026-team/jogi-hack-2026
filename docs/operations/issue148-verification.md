@@ -113,6 +113,18 @@ remote `608df0c3de388e25338ce8393fd453e07c7948fc`から別worktree／local branc
 
 API・共有schema・SQL・dependency・CI・製品のauth設定に新しい変更を追加しない。取り込んだmainの私的API no-storeは保持する。#159の最新SHAとの併用は親タスクの独立確認対象で、本修正単独の成功から統合成功を主張しない。Human Approve・チーム採択・内部3人／初見受入・macOS実機・本番migration・merge・deployは未実施。
 
+### 09:39レビューの追補と独立レビューの追加修正
+
+Goal作成・設定競合・昨日未保存の既存表示文言を`copy/goals.ts`／`copy/today.ts`へ移し、表示文字列・操作条件を保持した。APIのI11は、新規キーと既存キーの同body再送に対するowner不一致を両accountで409と確認し、Goal・Log・作成台帳の全列が変わらないことを比較する。正しいownerヘッダーと省略の201／200を対照とする。APIソース・migrationの変更ではない。到達不能分岐、局所の競合判定名、宣言済み依存からのQueryClient import、P-20の節順、一時migration fixtureの限定cleanupも整理した。
+
+独立静的レビューで、K1送信→離脱→再表示でK1復元→旧K1の遅延成功がstorageを削除→新フォーム再保存、の順に新K2を発行する欠陥が見つかった。旧`555db235`のimageと新しいF21を使った実Chromeでキーが変わる失敗を再現した。保持attempt優先だけでは再送503後のreloadで情報が消えると再レビューで指摘され、離脱済みフォームのcleanupも停止した。表示中のフォームで結果を確認するまで同operationを保つ。F21は旧応答の受信完了と描画後のraw保全・同key／body・Goal1件、F22は旧応答が再送開始の前／後に届く両順序で503→reload→同K1と1件をassertする。これは人工的な応答保留・503を使う機能回帰で、人による受入ではない。
+
+最新GETに失敗した記録409は、現在「この量で再保存」と「選び直す」の両方を止める。再取得成功か画面離脱が復帰経路で、取得前の明示破棄は未採択。壊れた作成JSONもPOST・自動破棄を止め原文を残す。一覧への離脱は可能だが、同タブの同ownerで新規入力を再開する破棄操作は未実装。上の正常な同キー回復と混同しない。
+
+#163は統合未実施。異なる全文ファイル名の二つの0005を番号だけで改名しない。適用済みファイルのrenameは別migrationとして再適用されるため、必要な変更は追加migrationで扱う。統合順の採択、targetDateの作成hash・設定版・rebase・固定attemptへの接続と合成回帰は残件。今回これらの仕様を再採択しない。
+
+初回の全回帰は接続変数を`TEST_DATABASE_URL`と誤記し、worktree内のembeddedクラスタを選んだため途中停止した（PASSに含めない）。自分のrunner／initdbの親子関係を確認して止め、正しい`DATABASE_URL`の専用合成DBで再実行する。最終HEADの型・全回帰・build・Foundation・空DBのcompiled migration／no-op・実Chrome全24ケース（F22は両順序）・CI・独立再レビューの結果はPR #175に記録する。
+
 ## 変更ファイル
 
 - [.github/workflows/application.yml](../../.github/workflows/application.yml)
@@ -142,6 +154,7 @@ API・共有schema・SQL・dependency・CI・製品のauth設定に新しい変�
 - [apps/web/src/api/http.ts](../../apps/web/src/api/http.ts)
 - [apps/web/src/api/today-http.ts](../../apps/web/src/api/today-http.ts)
 - [apps/web/src/copy/goals.ts](../../apps/web/src/copy/goals.ts)
+- [apps/web/src/copy/today.ts](../../apps/web/src/copy/today.ts)
 - [apps/web/src/features/goals/GoalFormPage.tsx](../../apps/web/src/features/goals/GoalFormPage.tsx)
 - [apps/web/src/features/goals/create-attempt.ts](../../apps/web/src/features/goals/create-attempt.ts)
 - [apps/web/src/features/goals/goal-form.ts](../../apps/web/src/features/goals/goal-form.ts)
