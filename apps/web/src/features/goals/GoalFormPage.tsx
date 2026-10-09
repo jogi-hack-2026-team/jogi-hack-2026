@@ -1,6 +1,6 @@
 import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useRouter } from '@tanstack/react-router';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
 import { authClient } from '../../auth/client.ts';
 import { clearCreateAttempt, loadCreateAttempt, prepareCreateAttempt, CreateRecoveryError, createFailureKind, type CreateAttempt } from './create-attempt.ts';
@@ -65,10 +65,11 @@ function useInterruptedOperation(ready: boolean, operationKey: readonly unknown[
 function useConfirmedSave(current: PrivateEpoch, generation: number, scope: string) {
   const navigate = useNavigate();
   const router = useRouter();
+  const instance = useId();
   const mounted = useRef(false);
   const activeScope = useRef(scope);
-  const visit = useRef({ scope, token: {} });
-  if (visit.current.scope !== scope) visit.current = { scope, token: {} };
+  const visit = useRef({ scope, token: {}, generation: 0 });
+  if (visit.current.scope !== scope) visit.current = { scope, token: {}, generation: visit.current.generation + 1 };
   activeScope.current = scope;
   const token = visit.current.token;
   const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object; complete?: () => boolean }>();
@@ -77,7 +78,7 @@ function useConfirmedSave(current: PrivateEpoch, generation: number, scope: stri
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   // 同routeのGoal1→Goal2→Goal1でも親は再利用される。commit前の離脱開始も旧訪問を失効させる。
   useLayoutEffect(() => router.subscribe('onBeforeNavigate', ({ pathChanged }) => {
-    if (pathChanged) visit.current = { ...visit.current, token: {} };
+    if (pathChanged) visit.current = { ...visit.current, token: {}, generation: visit.current.generation + 1 };
   }), [router]);
   const owner = current.owner;
   const onSaved = useCallback((complete?: () => boolean) => {
@@ -98,7 +99,7 @@ function useConfirmedSave(current: PrivateEpoch, generation: number, scope: stri
       void navigate({ to: '/goals' });
     }
   }, [confirmed, error, saved, scope, navigate]);
-  return { onSaved, confirmed, error };
+  return { onSaved, confirmed, error, operationVisit: [instance, visit.current.generation] as const };
 }
 
 /** Goal の作成（R-02、#78）。/goals/new */
@@ -107,7 +108,9 @@ export function GoalCreatePage() {
   const current = usePrivateEpoch();
   const draft = useMemoryDraft<FormDraft>(current, 'create');
   const completion = useConfirmedSave(current, draft.generation, '/goals/new');
-  const operationKey = ['goal-form', current.owner, 'create'];
+  // 同キーを別訪問で確認済みなら、旧訪問の保留応答で次の作成を待たせない。
+  // 未確定K1の再訪は175のattemptを復元し、同じ訪問中のsession確認は引き続き待つ。
+  const operationKey = ['goal-form', current.owner, 'create', ...completion.operationVisit];
   const operating = useInterruptedOperation(privateDataReady(current), operationKey);
   if (current.owner === null) return <FormShell title={f.createTitle} body={<SignedOutPanel />} />;
   if (!privateDataReady(current) || operating) return <FormShell title={f.createTitle} body={<FormLoading />} />;

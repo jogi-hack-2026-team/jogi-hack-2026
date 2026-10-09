@@ -179,10 +179,24 @@ async function run() {
     await navigate('/goals'); await navigate('/goals/new'); await recoverAttempt();
     safety.push('success receipt '+method+' failure preserves raw and requires explicit recovery');
   }
+  // K1の別訪問での明示確認が先に成功しても、元応答は保留のまま残せる。
+  // 次の作成の通常確認が、この旧mutationの終了待ちにならないことを検査する。
+  await prepare(); await click('button[type="submit"]'); await settle(); const oldFinish = finishSave!;
+  const heldRaw = sessionStorage.getItem('future-roi:create-attempt:A'); ensure(heldRaw, 'K1 operation missing before revisit');
+  await navigate('/goals'); await navigate('/goals/new'); ensure(input()?.disabled, 'pending K1 reentered as editable draft');
+  await recoverAttempt(); await prepare();
+  ensure(input()?.value === 'A-PRIVATE-UX-DRAFT' && !input()?.disabled, 'new visit waited for already-confirmed previous-visit mutation');
+  await click('button[type="submit"]'); await settle(); const k2Finish = finishSave!;
+  const latestRaw = sessionStorage.getItem('future-roi:create-attempt:A'); ensure(latestRaw && latestRaw !== heldRaw, 'next explicit create did not prepare distinct K2');
+  await act(async () => { oldFinish(goal()); await tick(); }); await settle();
+  ensure(location.pathname === '/goals/new' && sessionStorage.getItem('future-roi:create-attempt:A') === latestRaw, 'old confirmed K1 adopted current visit or deleted K2');
+  await act(async () => { k2Finish(goal()); await tick(); }); await settle();
+  ensure(location.pathname === '/goals' && sessionStorage.getItem('future-roi:create-attempt:A') === null && sessionStorage.getItem('future-roi:create-attempt:B') === other, 'K2 completion failed or changed B raw');
+  safety.push('confirmed replay ends K1 while original response held; next-visit session check and K2 proceed; old K1 cannot affect K2/B');
   ensure(!captures.some(c => c.checking && (c.input !== null || c.text.includes('-PRIVATE'))), 'private DOM observed while checking');
   ensure(transport.writes === 0, 'unexpected auth/private network write');
   await act(async () => root.unmount()); client.clear(); Date.now = realNow;
-  ensure(saved.length === 26, 'unexpected automatic or duplicate save');
+  ensure(saved.length === 29, 'unexpected automatic or duplicate save');
   return { operations, safety, writes: saved.length, observations: captures.length };
 }
 run().then(result => { document.getElementById('result')!.textContent = JSON.stringify({ ok: true, ...result }); }).catch(error => { document.getElementById('result')!.textContent = JSON.stringify({ ok: false, error: error.stack ?? String(error) }); });
