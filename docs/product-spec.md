@@ -2,7 +2,7 @@
 
 ## 現行状態（2026-09-30）
 
-**Productは「Future ROI」。** 2026-09-30の依頼者決定で、Problem・Target User・Core Value・MVP要件・Must / Should / Couldを本書に確定した（[P-11](#p-11-future-roiの採用とcoreの境界)〜[P-14](#p-14-記録のルール)）。Product機能は未実装であり、実ユーザーでの需要・効果は未検証。予測方式と技術構成は[Architecture](architecture.md#現行状態2026-09-30)を正本とする。
+**Productは「Future ROI」。** 2026-09-30の依頼者決定で、Problem・Target User・Core Value・MVP要件・Must / Should / Couldを本書に確定した（[P-11](#p-11-future-roiの採用とcoreの境界)〜[P-14](#p-14-記録のルール)）。2026-10-08時点の実装と既存ローカル検証記録は[対応表](change-map.md#現在地の読み方)から確認する。実ユーザーでの需要・効果は未検証。予測方式と技術構成は[Architecture](architecture.md#現行状態2026-09-30)を正本とする。
 
 2026-10-05、[PR #115の公開レビューに基づきR-11のMust追加と分担を採択](#p-15-質問由来の見通しのmust追加方針)した。現行MVPのMustはR-01〜R-11とPrediction Engineのテスト。KaitoがEngine・追加質問UI／出所別表示、BEが回答保存／API、FEが既存画面・追加UIの組み込みを担う。2026-10-07に[任意回答・編集・保存と予測への接続方針を依頼者が承認](#r-11の保存予測接続方針2026-10-07)した。チームレビュー・FE結合・製品の受入は別に確認する。Scope採択を実装完了の証拠にしない。
 
