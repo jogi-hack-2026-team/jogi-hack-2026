@@ -8,11 +8,13 @@
 
 #70向けの[mise・環境設定共有の準備案](environment-sharing-preparation.md)には、現在の共通タスク、空の設定例と共有前の確認項目をまとめた。Secret管理方式・runtimeを採択したものではなく、Engine単体検証には環境値を渡さない。
 
+公開先は2026-10-08の依頼者方針により、**本人アカウント・厳密0円でFE／BEともVercel Hobby、DBはNeon Free、ローカルはDocker**を第一候補にしています。[D-25](../architecture.md#d-25)の非商用・無料枠・共有制限と[採用前の最小検証](release-demo.md#公開候補の採用前に行う最小検証)を#83で追跡します。採用確定・デプロイ済みではなく、Cloud Runの旧候補はD-25に保持します。
+
 ## 現在の未決定事項
 
 - 認証／公開先の最終受入・検証・運用条件（[D-24](../architecture.md#d-24)／[D-25](../architecture.md#d-25)）。Runtime・runner・migration方式は[#70/#74の記録](../architecture.md#2026-10-06の版固定と起動構成)で固定済み。ローカルのDB migration・認証は実装済みで、[Docker一式起動](../DEVELOPMENT_GUIDE.md#dockerで一式を起動する)は#130で補完する。
-- 公開先のアカウント・課金設定・regionの作成と最終受入（確定後、承認を受けてから）。
-- stagingへのhealthコンテナ配置とManaged PostgreSQL接続（公開先の承認後。#70から#75へ移管）。
+- 本人アカウントの無料プラン・非商用適合・接続／共有条件・region・運用担当・最終受入。外部作成・権限・公開操作は承認後とし、有料への切替を前提にしない。
+- stagingのhealth／SPA／APIとManaged PostgreSQL接続、HTTPS／Cookie／proxy、休止後応答・メモリ・遅延。従来のhealthコンテナ配置を含む#70→#75→#83の[移管記録](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83#issuecomment-6007399074)を保持し、Functionでの確認を追加する。
 - 退避した旧構成のうち使わない部分の削除。
 
 ## 履歴への入口

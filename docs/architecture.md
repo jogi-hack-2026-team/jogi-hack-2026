@@ -2,17 +2,17 @@
 
 ## 現行状態（2026-09-30）
 
-Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Modelと記載済みの業務API・Prediction Engineの規則は確定。成功応答のデータ項目（DTO）・HTTP status等の未定義部分と文書間の解釈差は[契約の判断事項](contract-review-proposal.md)へ分ける。**2026-10-03、依頼者によるチーム合意報告を受け[D-23](#d-23)の基本構成を採用。[D-24](#d-24)／[D-25](#d-25)は検証・運用条件付きの第一候補。** [合意範囲](#2026-10-03の技術構成合意)を超えて認証・公開先・API細則を確定しない。**Goal・記録・`/today`のAPIはローカル実装済み（#76・#77、画面と公開環境は未実装）。** 純粋Prediction Engineと関連テストは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みで、#77で`/today`から呼ぶ形でアプリへ結合した。構成の採用や下記の契約をアプリ動作確認済みとは扱わない。
+Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Modelと記載済みの業務API・Prediction Engineの規則は確定。成功応答のデータ項目（DTO）・HTTP status等の未定義部分と文書間の解釈差は[契約の判断事項](contract-review-proposal.md)へ分ける。**2026-10-03、依頼者によるチーム合意報告を受け[D-23](#d-23)の基本構成を採用。[D-24](#d-24)／[D-25](#d-25)は検証・運用条件付きの第一候補。** [合意範囲](#2026-10-03の技術構成合意)を超えて認証・公開先・API細則を確定しない。2026-10-08時点のGoal・記録・Today APIと実APIを使う画面、既存ローカル検証記録、製品受入・公開配置等の残条件は[対応表](change-map.md#現在地の読み方)から確認する。純粋Prediction Engineと関連テストは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みで、#77で`/today`から呼ぶ形でアプリへ結合した。構成の採用や下記の契約をアプリ動作確認済みとは扱わない。
 
 旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
-2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMust追加と分担をPR #115でチーム採択した。数値・保存編集・API／Engine・表示の具体契約と判断日は[D-26](#d-26)でOPEN。以下の実績由来Engine契約・D-20の共通priorは具体方式の判断まで現行契約として保持する。機能実装は未完了。
+2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMust追加と分担をPR #115でチーム採択した。当時のOPEN事項と2026-10-07の依頼者承認範囲の保存・予測接続契約は[D-26](#d-26)で区別する。旧`predict`の実績由来Engine契約・D-20の共通priorを保ちながら、別のR-11公開入口を使う。mainのFE接続状況は[対応表](change-map.md#r-11の既存issueへの対応)を参照し、製品受入とは分ける。
 
 ## System構成
 
 Productと予測仕様から必要になる性質は「本人だけが記録を操作できる認証・記録と予測の整合・純粋な計算モジュール・決定的なテスト」。[D-23](#d-23)で、これを満たす基本構成として**1つのNodeアプリ（API＋静的配信）＋PostgreSQL** を採用し、コード上はモジュールで責務を分ける（モジュラーモノリス）。配備するサービスを増やさず、計算だけを切り離して検証・改善できる形を狙う。Microservices、Queue、Cache、ML frameworkは現時点で追加する根拠がない。下図のReact／Fastify／PostgreSQLはD-23の採用範囲、認証ライブラリ・テーブルは[D-24](#d-24)の条件付き第一候補。確定しているのは「Prediction EngineをUI・DB・HTTPから独立した純粋関数にする」という責務の分け方。[比較理由・弱点・増強の再検討条件](../experiments/architecture-verification/SELECTION-v3.1.md#9-技術を選ぶ理由と残る判断2026-10-02)を参照。
 
-低い月額費用と1〜2年の保守・継続開発は、2026-10-02に依頼者が説明整理の中心として指定した**比較の観点**であり、チーム合意済みの非機能要件ではない。月額の上限や保守期間の受入条件は未決定で、Product Specへ要件を追加しない。3人での開発、Code Freeze（2026-10-12）までの学習・実装・検証への影響も[共通ルール](../AGENTS.md#11-技術選定)に従って確認する。TypeScript経験や締切の近さを技術の採用理由には使わず、実現可能性・負担の確認と分ける。全員に必要な操作と保守を説明できるかは採択前に確認する。
+1〜2年の保守・継続開発は、2026-10-02に依頼者が説明整理の中心として指定した**比較の観点**であり、チーム合意済みの保守期間の受入条件ではない。2026-10-08、公開構成の検討条件を**本人アカウント・厳密に費用0円**とする依頼を受けた。[D-25](#d-25)の第一候補を更新し、無料枠上限では停止を受け入れる。1〜2年の無料継続や可用性を保証するものではなく、Product Specへ新しい要件を追加しない。3人での開発、Code Freeze（2026-10-12）までの学習・実装・検証への影響も[共通ルール](../AGENTS.md#11-技術選定)に従って確認する。TypeScript経験や締切の近さを技術の採用理由には使わず、実現可能性・負担の確認と分ける。全員に必要な操作と保守を説明できるかは採択前に確認する。
 
 ```mermaid
 flowchart LR
@@ -37,7 +37,7 @@ interfaceは差替えやテストに必要な境界だけに置く。大がか�
 
 ### Repository構成
 
-`packages/prediction` は実在する純粋Engineで、[利用条件と検証手順](../packages/prediction/README.md)を参照する。root workspace・health/SPA配信・Compose・単一コンテナ・Application CIは#70、DB schema/migrationは#74、認証/API保護/認証画面は#75で導入済み（[起動・検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。Goal APIは#76、記録・Today APIとEngine結合は#77でローカル実装済み。Goal・記録・Today画面と公開配置は未完了で、Docker起動成功を業務機能全体の完成としない。
+`packages/prediction` は実在する純粋Engineで、[利用条件と検証手順](../packages/prediction/README.md)を参照する。root workspace・health/SPA配信・Compose・単一コンテナ・Application CIは#70、DB schema/migrationは#74、認証/API保護/認証画面は#75で導入済み（[起動・検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。Goal APIは#76、記録・Today APIとEngine結合は#77でローカル実装済み。業務画面のmain実装と受入・公開の残条件は[対応表](change-map.md#現在地の読み方)へ集約し、Docker起動成功を業務機能全体の完成としない。
 
 ```text
 package.json            npm workspaces（apps/web, apps/api, packages/prediction。2026-10-05に管理方式を採択、#70で導入）
@@ -67,10 +67,12 @@ Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 
 **残る作業：** [#71](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/71)〜#73の純粋Engineは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みで、#77でToday APIへ結合した。#70の基盤に対するローカル一式起動は#130で補完する。業務画面・公開配置・製品としての正式受入は未完了。FE担当は#78〜#81の具体的な先行範囲・依存変更を各Issueで確認する（[PR #92の確認](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/92#issuecomment-5944800922)）。合意だけでHard依存・BLOCKEDを解除せず、[着手前の確認](DEVELOPMENT_GUIDE.md#着手前に読み直す)と対象Issueの承認済み範囲に従う。担当者氏名・ProjectsのStatusは推測しない。
 
-| 条件付き第一候補 | 引き続き残る条件 |
+| 2026-10-03時点の条件付き第一候補 | 当時から引き続き残る条件 |
 | --- | --- |
 | Better Auth（D-24） | 採用版、認証更新／DB復旧担当、CSRF／Origin細則・回数制限、復元後の削除user／password／account巻戻し対処、公開HTTPSの確認 |
 | Cloud Run＋Neon（D-25） | 最終受入、regionの組合せ、予算・利用前提・運用担当、実Cloud／proxy／1 vCPU／休止後応答の確認。アカウント・課金・リソース作成と一般公開は別承認 |
+
+この表は当時の合意範囲の履歴。**2026-10-08時点の公開第一候補はFE・BEともVercel Hobby、DBはNeon Free、ローカル開発はDocker**へ更新した（[D-25](#d-25)）。D-23の基本構成や当時の採用理由を置換した記録ではなく、公開ランタイムの差は採用前に検証する。
 
 API成功DTO・status・PATCH・昨日の既存記録変更・unit編集はこの合意の対象外。[契約の判断事項](contract-review-proposal.md)で現行契約・#101のmain統合済み記録境界方針・残る未採択案を区別し、D-19〜D-22、DONEのサーバー量補完、SKIPPED入力amount禁止／保存NULL、T-14の500ms未満を変えない。#84のClose、Projects変更、本実装開始、Merge、クラウド作成はこの文書から自動実行しない。
 
@@ -240,8 +242,8 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 | CSRF / Origin | 状態を変えるAPIは、別originからのCookie付き要求を受け付けない方針を決める（`SameSite=Lax`だけでは同一siteの別originを防げない） | 方針は未決（F-8）。Origin検査を足すかをチームで決め、実ブラウザで確認する | #75・#76 |
 | 予測計算によるAPIの停止 | 予測の計算中も、記録・Goal操作・セッション確認を待たせない | T-14（500ms未満）を維持して計測する。計算時間に応じて同一プロセス内のworkerで実行する案（混合負荷で、同期実行では計算時間がそのままCRUDの待ち時間になり、worker 2本では数msのままだった） | #72・#73・#77 |
 | migrationの版固定 | CI・本番で依存ツールの`@latest`を取得しない | 固定版のライブラリから`getMigrations`を呼ぶ（F-9） | #74 |
-| 公開先のリージョン | DBとアプリの距離を作成前に決める | Neonに東京リージョンはない。Cloud Runとの組を決めてから作成する | #70・#83 |
-| 配備先での未確認項目 | 本番でしか見えない問題を最終公開前に確認する | コンテナ、休止後の応答、転送ヘッダーの実形式とhop数、1 vCPUでのworker、リージョン間の遅延 | #70・#75 |
+| 公開先のリージョン | DBとアプリの距離を作成前に決める | #85のNeon／Cloud Runのregion調査は履歴。現在のVercel Hobby／Neon Freeで選べるregionの組と遅延を再確認する | #70・#83 |
+| 配備先での未確認項目 | 本番でしか見えない問題を最終公開前に確認する | [D-25](#d-25)の公開ランタイムとDockerの差、休止後の応答、proxy／hop数、DB接続数、予測CPUと混合負荷。[採用前の最小検証](operations/release-demo.md#公開候補の採用前に行う最小検証)で#70→#75→#83の未確認項目を追う | #70・#75・#83 |
 
 ### 検証コードとの差分（変更案・未合意）
 
@@ -546,11 +548,40 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 | 項目 | 内容 |
 | --- | --- |
-| 形 | D-23で採用した単一SPA／APIコンテナ（Fastifyで同一origin配信）＋PostgreSQL。Cookie方式はD-24の候補、Managed DBの提供先はD-25の条件付き第一候補 |
-| 公開先 | [D-25](#d-25)：Cloud Run＋Neonを推奨。アカウント・課金設定の作成は承認後 |
-| 早期のstaging確認 | 本番でしか見えない問題（Cookie・`BETTER_AUTH_URL`・proxy・migration・環境変数・DB接続・cold start・SPA fallback・HTTPS）を早く見つけるため、最終公開を待たずに2段階で確認する。①I-01：healthだけのコンテナをstagingへ出し、DBへ接続できる ②I-06：stagingで登録・ログイン・セッション維持ができる。I-14は最終確認・E2E・Demo Seed・仕上げを担う。公開先の承認が遅れた場合の既存移管例外（[#70](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/70)のstaging項目を[#75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)へ、#75のstaging確認を[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)へ）に従い、移管先で未確認項目を追跡する。移管を公開確認済みと扱わない |
+| 形 | D-23の単一SPA／APIコンテナ＋PostgreSQLはローカルDockerで維持。公開候補はSPAの静的assets＋Fastifyの単一Fluid Function＋Neonで、同一originの`/api`と既存の業務・認証境界を保つ。コンテナを公開する方式との差は未検証 |
+| 公開先 | [D-25](#d-25)：**FE・BEともVercel Hobby、DBはNeon Free、ローカル開発はDocker**が第一候補。本人アカウント・費用0円が前提で、採用確定・配備済みではない。作成・権限・公開操作は別途承認後 |
+| 早期のstaging確認 | 本番でしか見えない問題（Cookie・`BETTER_AUTH_URL`・proxy・migration・環境変数・DB接続・cold start・SPA fallback・HTTPS）を早く見つけるため、最終公開を待たずに2段階で確認する。①I-01：healthだけのコンテナ（当時の候補）をstagingへ出し、DBへ接続できる ②I-06：stagingで登録・ログイン・セッション維持ができる。I-14は最終確認・E2E・Demo Seed・仕上げを担う。現在の第一候補ではFunctionで同等のhealth／DB・SPA確認を行う。公開先の承認が遅れた場合の既存移管例外（[#70](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/70)のstaging項目を[#75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)へ、#75のstaging確認を[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)へ）に従い、移管先で未確認項目を追跡する。移管を公開確認済みと扱わない |
 | 環境変数 | `DATABASE_URL`（必須）、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`。任意の`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`・`SHUTDOWN_TIMEOUT_MS`は[.env.example](../.env.example)を参照。実値はProviderのSecret設定に置き、Gitへ入れない |
 | デモ | Demo Seed（合成記録）を開発データと分けて投入。手順は[リリースとデモ](operations/release-demo.md) |
+
+### 第一候補の評価理由と代替案
+
+R-10の主要Flowを公開URLから使えるようにし、3人で機能QAを行うための候補。[VercelのネイティブFastify対応](https://vercel.com/docs/frameworks/backend/fastify)は`listen()`を使う既存APIを単一Vercel Functionとして扱い、Fluid Computeを使う。これを利用するため、Fastifyの全面的なフレームワーク置換は不要と考える。ただし本リポジトリのworkspace・静的配信・DB接続まで動くという推論は未検証で、設定・entrypoint等の最小適合は必要になり得る。公開運用をまとめ、NeonにDBサーバー管理を任せる利点と、無料枠・休止・関数のlifecycleへの適合コストを比較する。
+
+| 候補 | 評価と残る弱点 |
+| --- | --- |
+| Vercel Hobby＋Neon Free（第一候補） | 既存Fastifyを使い、本人アカウント・無料プランで検討できる。非商用条件・共有制限・無料枠内の利用、CPU／DB／Cookie／SPAの実測が採用条件 |
+| Render Free＋Neon Free（予備候補） | Dockerの変更が少ない。[15分無通信後に停止し、復帰は約1分](https://render.com/docs/free)。CPUの従来比較値は0.1 CPUだが、[現行料金表](https://render.com/pricing)は「1 CPU未満」と表記しているため実割当てを再確認する。予測性能とデモ開始時の待ち時間が弱点 |
+| Cloud Run＋Neon（過去の第一候補） | 単一コンテナを維持できるが、[90日試用後は有料請求アカウントで無料枠外が課金対象](https://docs.cloud.google.com/free/docs/free-cloud-features)。試用を根拠に1〜2年の厳密0円を保証できない。従来の[比較理由・費用仮定](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)は履歴として保持 |
+| Cloudflare Workers Free | [HTTP要求のCPU上限10ms](https://developers.cloudflare.com/workers/platform/limits/)に両予測経路が適合するか未確認。Nodeのwall timeから適否を断定せず、現時点では第一候補にしない |
+
+### 無料運用の条件
+
+2026-10-08に公式ページを確認した資料上の条件であり、本人アカウントの設定・利用量は未確認。作成前・採用前と運用中に実プランを確認する。
+
+- [Hobby](https://vercel.com/docs/plans/hobby)／[Functions料金](https://vercel.com/docs/functions/usage-and-pricing)の現在の月間枠はActive CPU 4 CPU-hours、Provisioned Memory 360 GB-hours、100万関数呼出し等。CPUはコードを実行する時間で、DB待ちを含む経過時間とは異なる。無料枠到達では停止を受け入れ、有料への切替・追加購入で継続しない。Hobbyは多くの上限で30日待ちとなるが、対象ごとの停止・再開条件を実プランで確認する。通知は費用の強制上限ではない。
+- [Fair Use](https://vercel.com/docs/limits/fair-use-guidelines)は個人・非商用用途に限定する。無収益だけで自動的に適合すると断定せず、制作への報酬等を含むプロジェクトの用途を採用前に照合する。用途が適合しなければ再検討する。
+- 対象GitHubリポジトリは2026-10-08にAPIで`visibility=public`を確認。[Git文書](https://vercel.com/docs/git)の公開Organizationリポジトリ対応とprivate OrganizationのHobby制限を区別する。[一般limits](https://vercel.com/docs/limits)にはOrganization全般を制限する広い表記が残るため、具体的なGit文書を優先し、接続可否を採用前に確認する。公開設定を変更しない。[共有の制限](https://vercel.com/docs/deployments/troubleshoot-project-collaboration)もあり、3人へPro相当の管理権限を無料共有できるとは扱わない。本人による運用と、他2人が公開URLで機能QAを行う役割を分け、commit作者・Login Connections・forkの承認など自動配備の条件を確認する。
+- [Neon Free](https://neon.com/docs/introduction/plans)も上限内で使う。CU-hours／通信枠到達ではcompute停止、storage上限では容量を増やす操作が失敗するため、DB書込失敗・復帰を利用者へ説明できるようにする。有料upgradeで回避しない。DBを頻繁に起こす監視を入れず、利用量・復旧担当と確認方法を公開前に決める。
+- 無料枠・規約・料金・提供regionは将来変わり得る。1〜2年の継続は見通しであって保証ではない。条件変更、上限接近、必要な共有権限が無料で得られない場合は公開を止めるか構成を再検討する。独自ドメイン・有料追加機能等も0円の前提へ含めず、実費のある機能を追加しない。
+
+### 公開ランタイムの残条件
+
+Dockerを廃止せず、開発・再現・配信の確認に使う。公開は常駐NodeコンテナではなくFluid Functionで、休止・多instance・配信経路が異なる。[Node 24.xは対応するがmajorのみ選択でき、minor／patchは更新される](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)。ローカルの24.21.0を公開でも厳密に固定できるとは扱わず、実際のbuild／runtime版と互換性を記録する。
+
+[`server.ts`](../apps/api/src/server.ts)が作る2つの`pg` pool（アプリ用5＋認証用2）について、[Vercelのpool lifecycleの説明](https://vercel.com/kb/guide/connection-pooling-with-functions)に従い休止前のidle接続解放・復帰・多instance時の総接続数を検証する。常駐サーバーのSIGTERM処理だけでは関数の休止を検証したことにならない。認証用の安全なbigint（`int8`）parser、アプリ用の文字列型、切断時の処理とtimeoutを保全し、単一poolやグローバルparserへ統合しない。[Neonのtransaction poolerはsession advisory lockを扱えない](https://neon.com/docs/connect/connection-pooling)ため、migrationはHTTP用poolと別の実行で**直結URL**を使い、transaction poolerへ流さない。現行runnerの認証→アプリ順・checksum・transaction・session lockを保つ。接続値や設定の変更は今回行わない。
+
+[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)の最大約216.01ms（`predict`）／227.02ms（`predictWithQuestionPrior`）はWindows・Node24でのwall time（経過時間）で、Vercel Active CPUの実測ではない。同資料の旧mixed-loadは25PASS/1FAIL、overallExitCode=1、inline4rpsの546.83msによるE4 FAILとinline10rpsのCRUD p95 5秒超を保持する。[10-08の追加記録](../experiments/architecture-verification/REAL-ENGINE-2026-10-08.md)もこれを解消済みにしていない。単体成功から公開性能・無料枠内・同時利用可能人数を保証しない。T-14の500ms未満を維持し、両経路のCPUと混合負荷を測る。具体的な最小検証と記録先は[公開手順](operations/release-demo.md#公開候補の採用前に行う最小検証)・[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)。
 
 ## Demo Seedの所有権とreset（#82）
 
@@ -571,7 +602,7 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
 | D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74)。既存方式の[Docker一式起動補完](#docker一式起動の補完130)は#130でレビュー |
 | D-24 | 2026-09-30 → 2026-10-03（2026-10-06実装） | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24)。[#74で版固定、#75で実装](#2026-10-06の認証実装75)。公開HTTPS・運用担当は残条件 |
-| D-25 | 2026-09-30 → 2026-10-03 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [Cloud Run＋Neonは条件付き。作成・課金・公開は別承認](#d-25) |
+| D-25 | 2026-09-30 → 2026-10-03 → 2026-10-08 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [FE・BEともVercel Hobby＋Neon Free、ローカルDocker。厳密0円・非商用・検証条件付き](#d-25)。Cloud Runの旧候補記録を保持 |
 | D-26 | 2026-10-05 / 2026-10-07 | 保存・予測接続と明示query読取は依頼者承認・チームレビュー対象。FE結合・製品受入の残条件を分離 | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 | D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
 
@@ -626,6 +657,10 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち）** / 2026-09-30の候補Better Authを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。メール＋パスワードの業務要件はR-01、DBセッション／Cookieは候補方式。版・認証更新／DB復旧担当・CSRF／Origin・回数制限・復元対処・公開HTTPSの確認を#75・#74・#84で追跡する。管理対象をDBへ寄せて記録との整合を設計しやすくする狙い。認証ライブラリの更新・復旧・障害対応を継続して担えることを条件とする。[比較理由と条件](../experiments/architecture-verification/SELECTION-v3.1.md#認証better-authとmanaged認証)を参照。PR #96のレビューやFirebase／Supabase Auth等の不採用まで合意したと扱わない。2026-10-06、#74で認証テーブルの作成に使う版を1.7.7に固定し、回数制限のDB保存テーブルをmigrationへ含めた（[migration方式](#2026-10-06のmigration方式74)）。本項の残条件は変えない。同日、#75で登録・ログイン・ログアウト・保護hook・回数制限・画面を[実装](#2026-10-06の認証実装75)した（ローカルとCIで検証。公開HTTPSは未確認）。
 
 ### D-25
+
+2026-10-08 / **RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち）** / 依頼者の本人アカウント・厳密0円・1〜2年の継続を視野に置く方針により、**FE・BEともVercel Hobby、DBはNeon Free、ローカル開発はDocker**を現在の第一候補とする。VercelのネイティブFastify対応を利用し、既存の業務・認証・Prediction境界と同一originを維持する狙い。[評価理由・代替案](#第一候補の評価理由と代替案)、[無料運用の条件](#無料運用の条件)、[公開ランタイムの残条件](#公開ランタイムの残条件)を参照。採用確定・デプロイ済み・外部作成や課金の許可ではない。機能QAは開発者3人、UX改善・初見理解確認は後続として分ける。[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)で採用前の検証・公開受入・運用条件を追跡し、既存の完了条件とHard依存を維持する。D-23の採用とローカルDockerは変更しない。
+
+**2026-10-03の候補履歴（現在の公開第一候補は上記）：**
 
 2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち）** / Cloud Run＋Neonを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。利用が少ない時間の計算資源を抑え、DBサーバー自体の管理を減らす狙い。[費用・代替案・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)を参照。単一SPA／APIコンテナとPostgreSQLはD-23の採用範囲だが、サービスの最終受入・一般公開・課金作成の許可ではない。#85のregion確認は2026-09-30の記録で、現在の提供地域と組合せは作成前に再確認する。予算・利用前提・担当・実Cloud／proxy／1 vCPU／休止後応答・費用は未確認。アカウント・課金・リソース作成は対象と費用を示した別承認後。旧比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)に保持する。
 
