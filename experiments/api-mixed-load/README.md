@@ -8,7 +8,7 @@
 
 | 要素 | 内容 |
 | --- | --- |
-| DB | `apps/api/tests/helpers/database.ts` と同じembedded PostgreSQL（`apps/api/.local`、Git除外）に専用databaseを作り、終了時に削除する。外部DBは使わない |
+| DB | `apps/api/tests/helpers/database.ts` と同じembedded PostgreSQL（`apps/api/.local`、Git除外）に専用databaseを作り、終了時に削除する（`DATABASE_URL`未設定の場合）。helperは`DATABASE_URL`による管理用DBの指定も受け付けるため、実DBや共有DBを指定しない |
 | 利用者 | 合成3人。sign-upはHTTP経由。各利用者は記録用Goal 1、予測用Goal 1（60日分の合成記録、今日・昨日は未記録）、Demo Seed（`seedDemo`）の2Goalを持つ |
 | 予測用Goal | `requiredFutureDone` が既定でT-14の3入力（120／400／1095）になるよう `total_required` を調整する。`MIXED_LOAD_SIZES=a,b,c` で差し替えられる |
 | oracle | DBの事実から `predict` / `predictWithQuestionPrior` を直接呼び、負荷前に `/today`（旧表現・`?view=r11`）と完全一致を確認する。負荷中の応答はこの期待bodyとの一致を数える（Engineはseed固定で決定的） |
@@ -18,7 +18,7 @@
 ### シナリオ
 
 1. **3人デモ相当（closed loop）**：3利用者が「予測GoalのToday（r11）→1秒→記録PUT→0.5秒→Goal一覧→session確認→DemoGoalのToday（r11）→1秒」を繰り返す。warmup 5秒、測定30秒。3人が手を止めずに操作し続ける上限側の想定。
-2. **候補spikeと同じopen loop**：CRUD 20rps（一覧／記録PUT／session確認を順番に）、Todayを1／4／10rpsで固定送信。warmup 1秒、測定8秒。計算なしの基準（Today 0rps）と、旧表現・r11表現のそれぞれで実行する。open loopのsession確認は固定版Better Authの100回／60秒／IPに当たるため、利用者ごとに複数のX-Forwarded-For IPへ分散する（回数制限の鍵が変わるだけで、API処理は同じ）。
+2. **候補spikeと同じ送信rateのopen loop**：CRUD 20rps（一覧／記録PUT／session確認を順番に）、Todayを1／4／10rpsで固定送信。warmup 1秒、測定8秒。計算なしの基準（Today 0rps）と、旧表現・r11表現のそれぞれで実行する。open loopのsession確認は固定版Better Authの100回／60秒／IPに当たるため、利用者ごとに複数のX-Forwarded-For IPへ分散する（回数制限の鍵が変わるだけで、API処理は同じ）。
 
 ## 実行
 
@@ -39,6 +39,10 @@ node experiments/api-mixed-load/engine-sweep.mjs
 - `run.ts` は `results/<UTC時刻>/mixed-load.json` に生結果（条件・provenance（`run.ts` 自身のSHA256とexperiments配下のdirty状態を含む）・各種p50/p95/p99/max・件数・HTTP status別件数・server metrics・生の遅延配列）を保存する。wiring・全cohortの収束・要求失敗0・oracle不一致0をすべて満たしたときだけexit 0。
 - `engine-sweep.mjs` は純粋Engine単体で `requiredFutureDone` を変えながら計測し、この端末で最も重いサイズを探す。`results/<UTC時刻>/engine-sweep.json` に保存する。
 - server processは `LOG_LEVEL=warn`（製品既定はinfo。応答ごとのaccess logを書かない）、`TRUST_PROXY_HOPS=1`、認証回数上限1000で起動する。`NODE_ENV` は未設定（loopback HTTP）。
+- `run.ts` はspawn直後からchildを追跡し、起動待ち・seed・wiring・scenario・結果保存の例外時にもfinallyで全childの終了と専用DBのcloseを試みる。SIGTERM後5秒で終了を確認できなければ、このハーネスがspawnしたchildだけへSIGKILLを送り、さらに5秒でも終了未確認ならcleanup失敗として非zero終了する。stop失敗でも他childとDB closeは試み、元の例外とcleanup例外をまとめて報告する。
+- 新しい結果は別のUTC時刻ディレクトリへ保存し、既存の`mixed-load.json`は上書きしない。手元の試行は未追跡のまま保持し、正式に残す証拠は条件・provenance・終了codeを確認してからファイルを指定してstageする。過去の保存JSONやFAILを新結果で置換しない。
+
+異常終了時の回帰とハーネス単体の型検査は、repository rootで`npm --prefix experiments/api-mixed-load test`、`npm --prefix experiments/api-mixed-load run typecheck`を実行する。実childの終了・loopback port解放、DB closeの順序、cleanup失敗時の継続、spawn失敗を確認する。workspace外のためApplication CIの通常test/typecheckには含まれない。
 
 ## 読み方の注意
 
