@@ -2,11 +2,11 @@
 // 現在状態と照合する。DBを変更しない（DDL・DML・migration適用・schema_migrationsの作成を行わない）。
 // 既存runner（migrate.ts）と同じSQL選択規則・名前順・SHA-256を使うが、適用関数は呼ばない。
 import { getMigrations } from 'better-auth/db/migration';
-import { createHash } from 'node:crypto';
+import { getSchema } from 'better-auth/db';
 import { readdir, readFile } from 'node:fs/promises';
 import pg from 'pg';
 import { authSchemaOptions } from '../auth/options.ts';
-import { defaultMigrationsDir } from './migrate.ts';
+import { defaultMigrationsDir, MIGRATION_FILE, migrationChecksum } from './migrate.ts';
 
 export type FindingCode =
   | 'empty_database'
@@ -25,6 +25,7 @@ export type FindingCode =
   | 'timeout'
   | 'unknown_error';
 
+// auth_unsafe_changeのtargetは固定版ライブラリの説明文で、文言は版依存。機械判定はcodeで行う。
 export type Finding = { code: FindingCode; target?: string };
 
 export type DatabaseStatus = 'ok' | 'connection' | 'authentication' | 'permission' | 'timeout' | 'unknown';
@@ -61,7 +62,7 @@ export type SchemaCheckOptions = {
   migrationsDir?: URL;
   /** 接続・1query・1文それぞれの上限。既定5秒。 */
   queryTimeoutMs?: number;
-  /** 検査全体の上限。既定30秒。 */
+  /** DB検査の上限。既定30秒。終了処理はqueryTimeoutMsを上限に別途待つ。 */
   totalTimeoutMs?: number;
 };
 
@@ -70,15 +71,25 @@ export const SCHEMA_CHECK_APPLICATION_NAME = 'futureroi-schema-check';
 export const DEFAULT_QUERY_TIMEOUT_MS = 5_000;
 export const DEFAULT_TOTAL_TIMEOUT_MS = 30_000;
 
-// runnerと同じ規則（migrate.ts migrateApp）。番号だけでなく全文ファイル名で扱う。
-const MIGRATION_FILE = /^\d{4}_[\w-]+\.sql$/;
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+export class SchemaCheckConfigurationError extends Error {}
+
+function validateTimeout(name: string, value: number): void {
+  if (!Number.isInteger(value) || value < 1 || value > 600_000) {
+    throw new SchemaCheckConfigurationError(`${name} は1〜600000の整数で指定してください。`);
+  }
+}
 
 export async function listCheckoutMigrations(dir: URL = defaultMigrationsDir): Promise<{ name: string; sha256: string }[]> {
-  const names = (await readdir(dir)).filter((f) => MIGRATION_FILE.test(f)).sort();
-  const files: { name: string; sha256: string }[] = [];
-  for (const name of names) files.push({ name, sha256: sha256(await readFile(new URL(name, dir), 'utf8')) });
-  return files;
+  try {
+    const names = (await readdir(dir)).filter((f) => MIGRATION_FILE.test(f)).sort();
+    // 間違った空directoryを「差分なし」としない。原文のpathや例外は出さない。
+    if (names.length === 0) throw new Error('no numbered SQL');
+    const files: { name: string; sha256: string }[] = [];
+    for (const name of names) files.push({ name, sha256: migrationChecksum(await readFile(new URL(name, dir), 'utf8')) });
+    return files;
+  } catch {
+    throw new SchemaCheckConfigurationError('migrationsDirの番号付きSQLを読み取れません。directoryとファイルを確認してください。');
+  }
 }
 
 // 例外のname/message/detailは出さず、既知のcodeだけを固定の分類へ変換する（startup-error.tsと同じ考え方）。
@@ -143,7 +154,7 @@ function compareFindings(a: Finding, b: Finding): number {
 }
 
 async function checkAppMigrations(pool: pg.Pool, files: { name: string; sha256: string }[]): Promise<NonNullable<SchemaCheckReport['app']>> {
-  const exists = (await pool.query<{ name: string | null }>(`select to_regclass('schema_migrations')::text as name`)).rows[0]?.name !== null;
+  const exists = (await pool.query<{ name: string | null }>(`select to_regclass('schema_migrations')::text as name`)).rows[0]?.name != null;
   if (!exists) {
     return { historyTable: 'missing', applied: [], pending: files.map((f) => f.name), checksumMismatch: [], unknownHistory: [] };
   }
@@ -165,14 +176,28 @@ async function checkAppMigrations(pool: pg.Pool, files: { name: string; sha256: 
 
 async function checkAuthSchema(pool: pg.Pool): Promise<NonNullable<SchemaCheckReport['auth']>> {
   const warnings: string[] = [];
+  const options = authSchemaOptions(pool);
   // runMigrations/compileMigrationsは呼ばない。差分計画の取得だけ行う（introspectionと select 1 limit 1 のみ）。
   const plan = await getMigrations(
-    { ...authSchemaOptions(pool), logger: { level: 'warn', log: (level, message) => { if (level === 'warn' || level === 'error') warnings.push(message); } } },
+    { ...options, logger: { level: 'warn', log: (level, message) => { if (level === 'warn' || level === 'error') warnings.push(message); } } },
     { throwOnUnsafe: false },
   );
   const missingTables = sortStrings(plan.toBeCreated.map((t) => t.table));
-  const missingColumns = plan.toBeAdded
-    .flatMap((t) => Object.keys(t.fields).map((column) => ({ table: t.table, column })))
+  // 固定版の差分計画は既存tableの暗黙idを比較しない。getSchemaの実名にidを加え、
+  // search_pathで解決したtableの列の存在だけを別途読む（型・PK・field indexの全面監査ではない）。
+  const schema = getSchema(options);
+  const tables = Object.keys(schema).filter((table) => !schema[table]!.disableMigrations);
+  const actual = (await pool.query<{ table: string; column: string }>(`
+    select expected.table_name as "table", a.attname as "column"
+    from unnest($1::text[]) as expected(table_name)
+    join pg_attribute a on a.attrelid = to_regclass(format('%I', expected.table_name))
+    where a.attnum > 0 and not a.attisdropped`, [tables])).rows;
+  const present = new Set(actual.map((c) => `${c.table}\0${c.column}`));
+  const absentTables = new Set(missingTables);
+  const missingColumns = tables
+    .filter((table) => !absentTables.has(table))
+    .flatMap((table) => [...new Set(['id', ...Object.keys(schema[table]!.fields)])]
+      .filter((column) => !present.has(`${table}\0${column}`)).map((column) => ({ table, column })))
     .sort((a, b) => (a.table !== b.table ? (a.table < b.table ? -1 : 1) : a.column < b.column ? -1 : a.column > b.column ? 1 : 0));
   const missingIndexes = plan.toBeAddedIndexes
     .map((i) => ({ table: i.table, index: i.name }))
@@ -208,6 +233,8 @@ async function inspect(pool: pg.Pool, files: { name: string; sha256: string }[])
 export async function runSchemaCheck(options: SchemaCheckOptions): Promise<SchemaCheckReport> {
   const queryTimeoutMs = options.queryTimeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
   const totalTimeoutMs = options.totalTimeoutMs ?? DEFAULT_TOTAL_TIMEOUT_MS;
+  validateTimeout('queryTimeoutMs', queryTimeoutMs);
+  validateTimeout('totalTimeoutMs', totalTimeoutMs);
   const files = await listCheckoutMigrations(options.migrationsDir);
   const pool = createSchemaCheckPool({ connectionString: options.connectionString, queryTimeoutMs });
   let result: Pick<SchemaCheckReport, 'app' | 'auth' | 'database'>;

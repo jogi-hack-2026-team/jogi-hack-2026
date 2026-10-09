@@ -1,16 +1,17 @@
 // #179 公開前のDB整合チェック。fixtureの準備（migrate・DDL・行挿入）と検査の実行を分け、検査がDBを変更しないことを
-// schema・履歴・行数のsnapshot比較とDDL event triggerで確認する。
+// schema・履歴・全合成行値のdigest比較とDDL event triggerで確認する。
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import pg from 'pg';
 import { migrate } from '../src/db/migrate.ts';
-import { listCheckoutMigrations, runSchemaCheck, SCHEMA_CHECK_APPLICATION_NAME, type SchemaCheckReport } from '../src/db/schema-check.ts';
+import { listCheckoutMigrations, runSchemaCheck, SCHEMA_CHECK_APPLICATION_NAME, SchemaCheckConfigurationError, type SchemaCheckReport } from '../src/db/schema-check.ts';
 import { createTestDatabase, type TestDatabase } from './helpers/database.ts';
 
 const migrationsUrl = new URL('../migrations/', import.meta.url);
@@ -18,7 +19,20 @@ const migrationsUrl = new URL('../migrations/', import.meta.url);
 const APP_MIGRATIONS = readdirSync(migrationsUrl).filter((name) => /^\d{4}_[\w-]+\.sql$/.test(name)).sort();
 const apiDir = fileURLToPath(new URL('../', import.meta.url));
 const sourceCli = join(apiDir, 'src', 'db', 'schema-check-cli.ts');
-const compiledCli = join(apiDir, 'dist', 'db', 'schema-check-cli.js');
+let compiledDir: string | undefined;
+let compiledCli: string;
+
+// API直下の新規directoryなら、compiledの../../migrationsも実SQLを指す。古いdistは読まず触らない。
+before(() => {
+  compiledDir = mkdtempSync(join(apiDir, '.schema-check-build-'));
+  const tsc = join(apiDir, '..', '..', 'node_modules', 'typescript', 'bin', 'tsc');
+  const build = spawnSync(process.execPath, [tsc, '-p', 'tsconfig.build.json', '--outDir', compiledDir], {
+    cwd: apiDir, encoding: 'utf8', timeout: 180_000,
+  });
+  assert.equal(build.status, 0, `${build.error?.message ?? ''}\n${build.stdout}${build.stderr}`);
+  compiledCli = join(compiledDir, 'db', 'schema-check-cli.js');
+});
+after(() => { if (compiledDir) rmSync(compiledDir, { recursive: true, force: true }); });
 
 type Snapshot = Record<string, unknown>;
 
@@ -31,10 +45,17 @@ async function snapshot(pool: pg.Pool): Promise<Snapshot> {
   const tables = (await pool.query<{ table_name: string }>(`select table_name from information_schema.tables
     where table_schema = 'public' and table_type = 'BASE TABLE' order by 1`)).rows.map((r) => r.table_name);
   const rowCounts: Record<string, number> = {};
-  for (const t of tables) rowCounts[t] = (await pool.query<{ n: number }>(`select count(*)::int as n from "${t}"`)).rows[0]!.n;
+  const rowDigests: Record<string, string> = {};
+  for (const t of tables) {
+    const name = `"${t.replaceAll('"', '""')}"`;
+    // jsonbのキー順と行のソートで、物理行順に依存しない。assert失敗時も合成行そのものを出さない。
+    const values = (await pool.query<{ value: string }>(`select to_jsonb(r)::text as value from ${name} r`)).rows.map((r) => r.value).sort();
+    rowCounts[t] = values.length;
+    rowDigests[t] = createHash('sha256').update(JSON.stringify(values)).digest('hex');
+  }
   const history = tables.includes('schema_migrations')
     ? (await pool.query('select name, checksum, applied_at from schema_migrations order by name')).rows : null;
-  return { columns, indexes, constraints, tables, rowCounts, history };
+  return { columns, indexes, constraints, tables, rowCounts, rowDigests, history };
 }
 
 // 検査中にDDLが発行されたら失敗させる。検査結果（status）にも現れるので、黙って通らない。
@@ -76,6 +97,25 @@ function copyMigrations(t: test.TestContext, names: string[] = APP_MIGRATIONS): 
 function runCli(cli: string, env: Record<string, string | undefined>, args: string[] = []) {
   const result = spawnSync(process.execPath, [cli, ...args], { env: { PATH: process.env.PATH, ...env }, encoding: 'utf8', timeout: 60_000 });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}
+
+async function checkCliPairUnchanged(db: TestDatabase, report: SchemaCheckReport, env: Record<string, string | undefined> = {}, args: string[] = []) {
+  const before = await snapshot(db.pool);
+  await withDdlGuard(db.pool, async () => {
+    for (const cli of [sourceCli, compiledCli]) {
+      const result = runCli(cli, { DATABASE_URL: db.connectionString, ...env }, args);
+      const exit = report.status === 'ok' ? 0 : report.status === 'drift' ? 1 : 3;
+      assert.equal(result.status, exit, result.stderr);
+      assert.deepEqual(JSON.parse(result.stdout), report);
+      const url = new URL(db.connectionString);
+      for (const output of [result.stdout, result.stderr]) {
+        assert.ok(!output.includes(db.connectionString) && !output.includes(decodeURIComponent(url.password)));
+        assert.ok(!output.includes('secret-person-7f3a') && !output.includes('value-control@example.test'));
+      }
+    }
+  });
+  assert.deepEqual(await snapshot(db.pool), before, 'both CLIs leave schema, history and row values unchanged');
+  await noLeftoverConnections(db);
 }
 
 function codes(report: SchemaCheckReport): string[] {
@@ -126,14 +166,10 @@ test('最新の正常fixtureで差分なし・exit 0。source／compiled CLIのJ
     assert.ok(!output.includes('secret-person-7f3a'), 'no personal data in output');
   }
 
-  if (!existsSync(compiledCli)) {
-    const tsc = join(apiDir, '..', '..', 'node_modules', 'typescript', 'bin', 'tsc');
-    const build = spawnSync(process.execPath, [tsc, '-p', 'tsconfig.build.json'], { cwd: apiDir, encoding: 'utf8' });
-    assert.equal(build.status, 0, build.stdout + build.stderr);
-  }
   const compiled = runCli(compiledCli, env);
   assert.equal(compiled.status, 0, compiled.stderr);
   assert.deepEqual(JSON.parse(compiled.stdout), JSON.parse(source.stdout));
+  await checkCliPairUnchanged(db, report);
   await noLeftoverConnections(db);
 });
 
@@ -152,6 +188,7 @@ test('空DBは empty_database・履歴table欠落・全SQL未適用・認証tabl
   const cli = runCli(sourceCli, { DATABASE_URL: db.connectionString });
   assert.equal(cli.status, 1);
   assert.deepEqual(JSON.parse(cli.stdout), report);
+  await checkCliPairUnchanged(db, report);
 });
 
 test('旧schema・未適用・同番号の異名を全文名で区別し、新しいSQLを追加すると定義の手修正なしに未適用を検出する', async (t) => {
@@ -176,6 +213,7 @@ test('旧schema・未適用・同番号の異名を全文名で区別し、新�
   assert.deepEqual(added.app?.pending, ['0005_schema_check_b.sql', '9999_schema_check_new.sql']);
   assert.deepEqual(added.checkout.files.map((f) => f.name), [...APP_MIGRATIONS, '0005_schema_check_a.sql', '0005_schema_check_b.sql', '9999_schema_check_new.sql']);
   assert.equal((await db.pool.query("select to_regclass('schema_check_new') as t")).rows[0]?.t, null);
+  await checkCliPairUnchanged(db, added, {}, [checkout]);
 
   // 旧schema: 先頭2ファイルだけ適用したDBを最新checkoutで検査する。
   const old = await createTestDatabase();
@@ -186,6 +224,7 @@ test('旧schema・未適用・同番号の異名を全文名で区別し、新�
   assert.deepEqual(oldReport.app?.pending, APP_MIGRATIONS.slice(2));
   assert.equal(oldReport.auth?.status, 'ok');
   assert.equal(oldReport.status, 'drift');
+  await checkCliPairUnchanged(old, oldReport);
 });
 
 test('checksum不一致とcheckoutにない履歴を失敗にし、履歴行を無視・削除・修正しない', async (t) => {
@@ -207,6 +246,7 @@ test('checksum不一致とcheckoutにない履歴を失敗にし、履歴行を�
   const rows = (await db.pool.query<{ name: string }>('select name from schema_migrations order by name')).rows.map((r) => r.name);
   assert.deepEqual(rows, [...APP_MIGRATIONS, '0042_elsewhere.sql'].sort());
   assert.equal(runCli(sourceCli, { DATABASE_URL: db.connectionString }, [checkout]).status, 1);
+  await checkCliPairUnchanged(db, report, {}, [checkout]);
 });
 
 test('認証の必要table・columnの欠落を検出し、DDLを適用しない。field単位のindex欠落は検出範囲外', async (t) => {
@@ -226,6 +266,7 @@ test('認証の必要table・columnの欠落を検出し、DDLを適用しない
   assert.deepEqual(codes(report), ['auth_column_missing:user.image', 'auth_table_missing:rateLimit']);
   assert.equal((await db.pool.query("select to_regclass('\"rateLimit\"') as t")).rows[0]?.t, null);
   assert.equal(runCli(sourceCli, { DATABASE_URL: db.connectionString }).status, 1);
+  await checkCliPairUnchanged(db, report);
 });
 
 test('接続失敗・認証失敗は exit 3 で有限時間に終わり、URL・passwordを出力しない', async (t) => {
@@ -252,6 +293,7 @@ test('query待機のtimeoutと全体timeoutで有限時間に終わり、接続�
   const db = await createTestDatabase();
   t.after(() => db.close());
   await migrate(db.pool, 'all');
+  const before = await snapshot(db.pool);
   const blocker = await db.pool.connect();
   await blocker.query('begin; lock table schema_migrations in access exclusive mode');
   try {
@@ -268,6 +310,7 @@ test('query待機のtimeoutと全体timeoutで有限時間に終わり、接続�
     await blocker.query('rollback');
     blocker.release();
   }
+  assert.deepEqual(await snapshot(db.pool), before);
   assert.equal((await runSchemaCheck({ connectionString: db.connectionString })).status, 'ok');
 });
 
@@ -281,4 +324,123 @@ test('CLIの使い方・設定の誤りは exit 2 で、DATABASE_URL未設定で
   const badTimeout = runCli(sourceCli, { DATABASE_URL: 'postgres://u:p@127.0.0.1:1/x', SCHEMA_CHECK_TIMEOUT_MS: '5' });
   assert.equal(badTimeout.status, 2);
   assert.ok(!badTimeout.stderr.includes('postgres://'));
+});
+
+test('認証の暗黙id列の欠落も非zeroになり、session.idの見逃しを防ぐ', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  await migrate(db.pool, 'all');
+  await db.pool.query('alter table "session" drop column id');
+  const report = await checkUnchanged(db, { connectionString: db.connectionString });
+  assert.equal(report.status, 'drift');
+  assert.deepEqual(report.auth?.missingColumns, [{ table: 'session', column: 'id' }]);
+  assert.ok(codes(report).includes('auth_column_missing:session.id'));
+  await checkCliPairUnchanged(db, report);
+});
+
+test('行の値のsnapshotは行数が変わらないUPDATEを検出する（検査外の負の対照）', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  await migrate(db.pool, 'all');
+  await db.pool.query(`insert into "user" (id, name, email, "emailVerified", "createdAt", "updatedAt")
+    values ('value-control', 'before', 'value-control@example.test', false, now(), now())`);
+  const before = await snapshot(db.pool);
+  // 検査の副作用ではなく、snapshotの観測力を確かめるfixture準備中の意図的な更新。
+  await db.pool.query(`update "user" set name = 'after' where id = 'value-control'`);
+  const after = await snapshot(db.pool);
+  assert.deepEqual(after.rowCounts, before.rowCounts);
+  assert.notDeepEqual(after, before, 'same-count UPDATE must change the snapshot');
+  assert.notDeepEqual(after.rowDigests, before.rowDigests);
+});
+
+test('現行認証設定の全tableの暗黙idを検出するが、型・PK・field indexの全driftへ広げない', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  await migrate(db.pool, 'all');
+  const tables = ['account', 'rateLimit', 'session', 'user', 'verification'];
+  for (const table of tables) await db.pool.query(`alter table "${table}" drop column id cascade`);
+  const report = await checkUnchanged(db, { connectionString: db.connectionString });
+  assert.equal(report.status, 'drift');
+  assert.deepEqual(report.auth?.missingColumns, tables.map((table) => ({ table, column: 'id' })));
+  await checkCliPairUnchanged(db, report);
+});
+
+test('CLIで接続/query上限を明示でき、timeoutは判定不能・非zero・秘匿を保つ', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  await migrate(db.pool, 'all');
+  const before = await snapshot(db.pool);
+  const blocker = await db.pool.connect();
+  await blocker.query('begin; lock table schema_migrations in access exclusive mode');
+  try {
+    for (const cli of [sourceCli, compiledCli]) {
+      const result = runCli(cli, { DATABASE_URL: db.connectionString, SCHEMA_CHECK_QUERY_TIMEOUT_MS: '1000', SCHEMA_CHECK_TIMEOUT_MS: '10000' });
+      assert.equal(result.status, 3, result.stderr);
+      const report = JSON.parse(result.stdout) as SchemaCheckReport;
+      assert.deepEqual([report.status, report.database.status, codes(report)], ['unavailable', 'timeout', ['timeout']]);
+      assert.ok(!result.stdout.includes(db.connectionString) && !result.stderr.includes(db.connectionString));
+      await noLeftoverConnections(db);
+    }
+  } finally {
+    await blocker.query('rollback');
+    blocker.release();
+  }
+  // lock中の履歴SELECTは待つため、全schema・履歴・行値を解除後に比較する。
+  assert.deepEqual(await snapshot(db.pool), before);
+  const report = await checkUnchanged(db, { connectionString: db.connectionString });
+  await checkCliPairUnchanged(db, report, { SCHEMA_CHECK_QUERY_TIMEOUT_MS: '15000', SCHEMA_CHECK_TIMEOUT_MS: '30000' });
+});
+
+test('設定エラー・空/missing directory・無効timeoutはexit 2、原文pathやSecretは出さない', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'futureroi-schema-check-empty-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const env = { DATABASE_URL: 'postgres://u:config-secret@127.0.0.1:1/x' };
+  for (const cli of [sourceCli, compiledCli]) {
+    for (const args of [[dir], [join(dir, 'private-missing-path')]]) {
+      const result = runCli(cli, env, args);
+      assert.equal(result.status, 2);
+      assert.ok(!result.stderr.includes(dir) && !result.stderr.includes('config-secret'));
+    }
+    for (const value of ['0', 'NaN', 'Infinity', '999', '600001']) {
+      assert.equal(runCli(cli, { ...env, SCHEMA_CHECK_QUERY_TIMEOUT_MS: value }).status, 2);
+    }
+  }
+  await assert.rejects(() => runSchemaCheck({ connectionString: env.DATABASE_URL, queryTimeoutMs: 0 }), SchemaCheckConfigurationError);
+});
+
+test('pipeに大きいJSONを出してもsource/fresh compiledとも1行を完全に読める', async (t) => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  const dir = copyMigrations(t);
+  for (let i = 0; i < 500; i++) writeFileSync(join(dir, `9000_large_${String(i).padStart(4, '0')}.sql`), '-- synthetic only\n');
+  const report = await checkUnchanged(db, { connectionString: db.connectionString, migrationsDir: pathToFileURL(`${dir}/`) });
+  assert.ok(JSON.stringify(report).length > 65_536);
+  await checkCliPairUnchanged(db, report, {}, [dir]);
+  // OSのpipe buffer容量に依存しない負例。出力callbackが返らないsinkを注入し、有限にexit 3とする。
+  const stalledOutput = join(dir, 'stalled-output.mjs');
+  writeFileSync(stalledOutput, 'process.stdout.write = () => { setTimeout(() => {}, 5000); return true; };\n');
+  const before = await snapshot(db.pool);
+  await withDdlGuard(db.pool, async () => {
+    for (const cli of [sourceCli, compiledCli]) {
+      const started = Date.now();
+      const result = spawnSync(process.execPath, ['--import', pathToFileURL(stalledOutput).href, cli, dir], {
+        env: { PATH: process.env.PATH, DATABASE_URL: db.connectionString, SCHEMA_CHECK_QUERY_TIMEOUT_MS: '1000' },
+        encoding: 'utf8', timeout: 15_000,
+      });
+      assert.equal(result.status, 3, result.stderr);
+      assert.equal(result.stdout, '');
+      assert.ok(Date.now() - started < 10_000);
+    }
+    // callbackのerrorがerror eventより先でも、DB判定のexit 0/1にしてしまわない。
+    writeFileSync(stalledOutput, 'process.stdout.write = (_chunk, callback) => { callback(new Error("synthetic output failure")); return false; };\n');
+    for (const cli of [sourceCli, compiledCli]) {
+      const result = spawnSync(process.execPath, ['--import', pathToFileURL(stalledOutput).href, cli, dir], {
+        env: { PATH: process.env.PATH, DATABASE_URL: db.connectionString }, encoding: 'utf8', timeout: 15_000,
+      });
+      assert.equal(result.status, 3, result.stderr);
+      assert.equal(result.stdout, '');
+    }
+  });
+  assert.deepEqual(await snapshot(db.pool), before);
+  await noLeftoverConnections(db);
 });

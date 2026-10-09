@@ -17,7 +17,9 @@ export type AppMigrationResult = { applied: string[] };
 export type MigrationTarget = 'auth' | 'app' | 'all';
 export type MigrationResult = { target: MigrationTarget; auth?: AuthMigrationResult; app?: AppMigrationResult };
 
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+// runnerと読み取り専用preflightで、SQL選択と既存checksumの意味を1か所に保つ。
+export const MIGRATION_FILE = /^\d{4}_[\w-]+\.sql$/;
+export const migrationChecksum = (text: string) => createHash('sha256').update(text).digest('hex');
 
 // 起動ログで履歴不一致を分類する。ファイル名や例外原文をログへ出す必要はない。
 export class MigrationChecksumError extends Error {}
@@ -57,7 +59,7 @@ async function applyFile(client: PoolClient, name: string, sql: string, checksum
 // migrations/ の `NNNN_name.sql` を名前順に、1ファイル1トランザクションで適用する。
 // 適用済みファイルはschema_migrationsのchecksumで照合し、内容が変わっていれば失敗させる（履歴を黙って書き換えない）。
 export async function migrateApp(pool: Pool, dir: URL = defaultMigrationsDir): Promise<AppMigrationResult> {
-  const files = (await readdir(dir)).filter((f) => /^\d{4}_[\w-]+\.sql$/.test(f)).sort();
+  const files = (await readdir(dir)).filter((f) => MIGRATION_FILE.test(f)).sort();
   const client = await pool.connect();
   try {
     await client.query(
@@ -69,7 +71,7 @@ export async function migrateApp(pool: Pool, dir: URL = defaultMigrationsDir): P
     const applied: string[] = [];
     for (const name of files) {
       const sql = await readFile(new URL(name, dir), 'utf8');
-      const checksum = sha256(sql);
+      const checksum = migrationChecksum(sql);
       const previous = recorded.get(name);
       if (previous !== undefined) {
         if (previous !== checksum) {
