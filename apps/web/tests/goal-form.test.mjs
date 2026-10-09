@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient, QueryObserver } from '@tanstack/react-query';
 import { ApiError } from '../src/api/client.ts';
 import { goalsCopy } from '../src/copy/goals.ts';
-import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, reloadLatestGoal, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
+import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, reloadLatestGoal, targetDateChecks, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
 
 const e = goalsCopy.errors;
 const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', targetDate: '', questionPrior: { a: null, b: null } };
@@ -204,6 +204,24 @@ test('保存済みの到達予定日が今日以前になっても、日付を�
   assert.equal(validate({ ...titleOnly, targetDate: '2026-10-09' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }).targetDate, e.targetDatePast);
   assert.equal(validate({ ...titleOnly, targetDate: '2026-10-08' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }).targetDate, e.targetDatePast);
   assert.deepEqual(validate({ ...titleOnly, targetDate: '2026-10-10' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }), {});
+});
+
+test('画面に出すエラーと送る前の検査は、同じ到達予定日の条件を使う（#157、P-19）', () => {
+  // 2026-10-09 09:00 JST。Asia/Tokyo の今日は 2026-10-09
+  const now = new Date('2026-10-09T00:00:00Z');
+  // 新規作成：今日以前の日付は、画面に出すエラーとして文言が返る
+  const createChecks = targetDateChecks('Asia/Tokyo', undefined, now);
+  assert.deepEqual(createChecks, { today: '2026-10-09' });
+  assert.equal(validate({ ...valid, targetDate: '2026-10-09' }, createChecks).targetDate, e.targetDatePast);
+  assert.deepEqual(validate({ ...valid, targetDate: '2026-10-10' }, createChecks), {});
+  // 編集：保存済みの過去日は変えなければ通り、別の過去日へ変えると文言が返る
+  const editChecks = targetDateChecks('Asia/Tokyo', '2026-10-07', now);
+  assert.deepEqual(validate({ ...valid, targetDate: '2026-10-07' }, editChecks), {});
+  assert.equal(validate({ ...valid, targetDate: '2026-10-08' }, editChecks).targetDate, e.targetDatePast);
+  // 保存済みが未設定（null）の編集で今日を入れたら文言が返る
+  assert.equal(validate({ ...valid, targetDate: '2026-10-09' }, targetDateChecks('Asia/Tokyo', null, now)).targetDate, e.targetDatePast);
+  // タイムゾーンが違えば今日も違う（同じ時刻で Honolulu は 2026-10-08）
+  assert.deepEqual(targetDateChecks('Pacific/Honolulu', undefined, now), { today: '2026-10-08' });
 });
 
 test('時間のGoalの量は整数分のまま入力・保存し、編集で触らなければ元の分を保つ（P-18）', () => {

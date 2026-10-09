@@ -15,7 +15,7 @@ export function toLogPut(choice: RecordChoice): LogPut {
   return { status: 'DONE', amount: choice.amount };
 }
 
-/** 画面に出す記録の要約（「やった・20分」「やった・1.5時間」「休んだ」）。amount は記録の単位で量を書く（copy/amount.ts）。 */
+/** 画面に出す記録の要約（「やった・20分」「やった・90分」「休んだ」）。amount は記録の単位で量を書く（copy/amount.ts）。 */
 export function describeChoice(choice: RecordChoice, sessionAmount: number, amount: (n: number) => string, restLabel: string): string {
   if (choice.status === 'SKIPPED') return restLabel;
   return `やった・${amount(choice.amount ?? sessionAmount)}`;

@@ -82,3 +82,20 @@ test('編集：記録があっても到達予定日を変更・削除でき、�
   assert.deepEqual(fieldPaths(invalid.json), ['body/targetDate']);
   assert.deepEqual((await a.call('GET', `/api/goals/${goal.id}`)).json, before);
 });
+
+test('編集：timezoneと到達予定日を一緒に変えるときは、変更後のtimezoneの今日で検査する', async (t) => {
+  const { stack } = await setup(t, { now: () => NOW });
+  const a = await signedInClient(stack.app, 'target-timezone');
+  const goal = (await a.call('POST', '/api/goals', base)).json as unknown as Goal;
+
+  // Asia/Tokyoの今日（10/6）でも、Los Angelesへ変えるならLos Angelesの今日（10/5）より後なので通る
+  const moved = await a.call('PATCH', `/api/goals/${goal.id}`, { timezone: 'America/Los_Angeles', targetDate: '2026-10-06' });
+  assert.equal(moved.status, 200, moved.body);
+  assert.deepEqual([(moved.json as unknown as Goal).timezone, (moved.json as unknown as Goal).targetDate], ['America/Los_Angeles', '2026-10-06']);
+
+  // Asia/Tokyoへ戻しながら10/6を送ると、Asia/Tokyoの今日なので422で、timezoneも変えない
+  const back = await a.call('PATCH', `/api/goals/${goal.id}`, { timezone: 'Asia/Tokyo', targetDate: '2026-10-06' });
+  assert.equal(back.status, 422, back.body);
+  assert.deepEqual(fieldPaths(back.json), ['body/targetDate']);
+  assert.equal(((await a.call('GET', `/api/goals/${goal.id}`)).json as unknown as Goal).timezone, 'America/Los_Angeles');
+});

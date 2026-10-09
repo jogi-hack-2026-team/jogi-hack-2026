@@ -319,8 +319,8 @@ CREATE TABLE action_log (
 | --- | --- |
 | `/api/auth/*` | Better Authのハンドラ（`sign-up/email`・`sign-in/email`・`sign-out`・`get-session`等。#75で実装）。業務APIの確定契約とは別。回数制限超過は429と`X-Retry-After`（整数秒） |
 | `GET /api/goals` | 自分のGoal一覧。作成順の配列で、各Goalに`today`（Goalのtimezoneでの暦日）・`todayStatus`・`hasLogs`を含む（#76）。Goal DTOは記録した累計`progressDone`（`initialProgress`＋今日までのDONEの量。Todayの`prediction.progress.done`と同じ数え方で、総量を超えうる）も含み、一覧の進捗表示に使う（#146）。到達予定日`targetDate`（未設定はnull）も含む。作成・編集で送る`targetDate`はGoalのtimezoneの今日より後だけ（`null`で未設定に戻す）（#157、P-19） |
-| `POST /api/goals` | 作成（201＋Goal DTO）。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone`。初期量の既定は0で、記録開始日の前日までの量。timezoneは有効なIANA名のみ（それ以外は422）。記録開始日は作成時のtimezoneの暦日で固定し`recordStartDate`で返す（#76） |
-| `GET / PATCH / DELETE /api/goals/:goalId` | 取得（200）・編集（200。省略は維持、`null`・空bodyは422）・削除（204。記録も連鎖削除）。他人・存在しないidは404。記録があるGoalで`timezone`・`initialProgress`を異なる値へ変えようとすると422 `GOAL_HAS_LOGS`（#76） |
+| `POST /api/goals` | 作成（201＋Goal DTO）。body：`title, unit, totalRequired, initialProgress, sessionAmount, timezone, targetDate?`。初期量の既定は0で、記録開始日の前日までの量。timezoneは有効なIANA名のみ（それ以外は422）。記録開始日は作成時のtimezoneの暦日で固定し`recordStartDate`で返す（#76）。`targetDate`は任意の`YYYY-MM-DD`で、timezoneの今日以前は422（#157、P-19） |
+| `GET / PATCH / DELETE /api/goals/:goalId` | 取得（200）・編集（200。省略は維持、`null`・空bodyは422）・削除（204。記録も連鎖削除）。他人・存在しないidは404。記録があるGoalで`timezone`・`initialProgress`を異なる値へ変えようとすると422 `GOAL_HAS_LOGS`（#76）。PATCHの`targetDate`は`YYYY-MM-DD`か`null`（未設定に戻す）で、送ったときだけ変更後のtimezoneの今日以前を422にし、記録があっても変更できる（#157、P-19） |
 | `PUT /api/goals/:goalId/logs/:localDate` | 記録の作成・上書き（200＋Log）。body：`status, amount?`。`localDate`がGoalのtimezoneで今日・昨日以外なら422 `LOG_DATE_OUT_OF_WINDOW`、固定した記録開始日より前なら422 `LOG_DATE_BEFORE_START`。どちらの違反でも記録・初期量を変更しない（#77） |
 | `GET /api/goals/:goalId/logs?from&to` | 記録済みの一覧（行動日の昇順、両端を含む任意の期間。履歴表示用、#77） |
 | `GET /api/goals/:goalId/today` | query省略は`{ today, yesterday, todayLog, yesterdayMissing, prediction: PredictionResult }`。`yesterdayMissing`は昨日が記録開始日以降で未記録のときだけtrue。1つのDB snapshotと1回の時計読み取りから組み立てる（#77） |
