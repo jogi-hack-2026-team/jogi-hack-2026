@@ -530,7 +530,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 
 ## Test Strategy
 
-性質（T-01〜T-15）と各層で確かめる内容は確定。runnerはNode標準`node:test`を#70で採用（[版固定](#2026-10-06の版固定と起動構成)）。fast-check・Playwrightは[D-23](#d-23)の候補。
+性質（T-01〜T-15）と各層で確かめる内容は確定。runnerはNode標準`node:test`を#70で採用（[版固定](#2026-10-06の版固定と起動構成)）。fast-checkは[D-23](#d-23)の未採択候補。Playwright CLIはE2E方針として採択済み・未導入。
 
 | 層 | 方法 | 内容 |
 | --- | --- | --- |
