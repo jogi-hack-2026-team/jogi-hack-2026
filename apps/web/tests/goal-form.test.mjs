@@ -193,6 +193,19 @@ test('到達予定日：任意で、今日より後だけ。空にすると未�
   assert.deepEqual(toPatchBody({ ...valuesFromGoal(withTarget), targetDate: '' }, withTarget), { targetDate: null });
 });
 
+test('保存済みの到達予定日が今日以前になっても、日付を変えない編集は止めない。変えた日付は今日より後だけ（#157、P-19）', () => {
+  const passed = { ...goal, targetDate: '2026-10-07' };
+  const titleOnly = { ...valuesFromGoal(passed), title: '英単語アプリ（改）' };
+  // 当日・過去日になった保存済みの日付は、送らないので検査しない
+  assert.deepEqual(validate(titleOnly, { today: '2026-10-07', savedTargetDate: '2026-10-07' }), {});
+  assert.deepEqual(validate(titleOnly, { today: '2026-10-09', savedTargetDate: '2026-10-07' }), {});
+  assert.deepEqual(toPatchBody(titleOnly, passed), { title: '英単語アプリ（改）' });
+  // 当日・過去日へ変えたときは拒否する
+  assert.equal(validate({ ...titleOnly, targetDate: '2026-10-09' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }).targetDate, e.targetDatePast);
+  assert.equal(validate({ ...titleOnly, targetDate: '2026-10-08' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }).targetDate, e.targetDatePast);
+  assert.deepEqual(validate({ ...titleOnly, targetDate: '2026-10-10' }, { today: '2026-10-09', savedTargetDate: '2026-10-07' }), {});
+});
+
 test('時間のGoalの量は整数分のまま入力・保存し、編集で触らなければ元の分を保つ（P-18）', () => {
   // 1240分のような時間＋分で表す値も、入力欄は分の整数で出し、未変更なら送らない
   const g = { ...goal, totalRequired: 3000, sessionAmount: 25, initialProgress: 1240 };

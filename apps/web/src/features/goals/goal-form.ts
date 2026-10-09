@@ -84,8 +84,12 @@ export function isValidTimezone(timezone: string): boolean {
 /**
  * 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。
  * today は到達予定日の比較に使う「今日」（選んだ timezone の今日）。API でも同じ検査をする。
+ * savedTargetDate は編集前の到達予定日。変えていなければ送らないので（toPatchBody）、今日以前になっていても止めない（P-19）。
  */
-export function validate(values: FormValues, { locked = false, today }: { locked?: boolean; today?: string } = {}): FieldErrors {
+export function validate(
+  values: FormValues,
+  { locked = false, today, savedTargetDate }: { locked?: boolean; today?: string; savedTargetDate?: string } = {},
+): FieldErrors {
   const errors: FieldErrors = {};
   if (!/\S/.test(values.title)) errors.title = e.titleRequired;
   else if (titleLength(values.title) > TITLE_MAX) errors.title = e.titleTooLong;
@@ -94,7 +98,7 @@ export function validate(values: FormValues, { locked = false, today }: { locked
   const session = amountError(values.sessionAmount, 1);
   if (session) errors.sessionAmount = session;
   // YYYY-MM-DD どうしなので文字列の比較で日付の前後が分かる
-  if (values.targetDate && (!/^\d{4}-\d{2}-\d{2}$/.test(values.targetDate) || (today !== undefined && values.targetDate <= today))) {
+  if (values.targetDate && (!/^\d{4}-\d{2}-\d{2}$/.test(values.targetDate) || (today !== undefined && values.targetDate !== savedTargetDate && values.targetDate <= today))) {
     errors.targetDate = e.targetDatePast;
   }
   if (!locked) {

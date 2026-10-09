@@ -235,9 +235,9 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     if (saving.current || reloadInFlight.current || (save.isError && isAnswerConflict(save.error))) return;
     setSubmitted(true);
     setServerErrors({});
-    // 到達予定日は、選んでいるタイムゾーンの今日より後だけ（APIも同じ検査をする）
+    // 到達予定日は、選んでいるタイムゾーンの今日より後だけ（APIも同じ検査をする）。変えていない保存済みの日付は送らないので検査しない
     const today = localDateIn(values.timezone, new Date()) ?? undefined;
-    const found = validate(values, { locked, ...(today ? { today } : {}) });
+    const found = validate(values, { locked, ...(today ? { today } : {}), ...(baseline ? { savedTargetDate: baseline.targetDate ?? '' } : {}) });
     if (errorCount(found) > 0) {
       focusFirstError(found);
       return;
