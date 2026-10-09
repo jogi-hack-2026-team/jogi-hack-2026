@@ -71,7 +71,7 @@ const benchJson = JSON.parse(bench.stdout) as { cases: { requiredFutureDone: num
 // ---- database ----------------------------------------------------------------------------------
 const db = await createTestDatabase();
 const ownedStops: Stop[] = [];
-await withHarnessCleanup(ownedStops, () => db.close(), async () => {
+const passed = await withHarnessCleanup(ownedStops, () => db.close(), async () => {
 await migrate(db.pool, 'all');
 const admin = db.pool;
 const dbVersion = (await admin.query('select version()')).rows[0]!.version as string;
@@ -406,6 +406,8 @@ const outDir = join(here, 'results', tag);
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'mixed-load.json'), JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
 console.log(`\nchecks: wiring ${wired.ok} settled ${settled} noFail ${result.checks.noRequestFailed} noMismatch ${result.checks.noOracleMismatch} -> ${outDir}`);
-// process.exit()でfinallyを飛ばさず、child/DBのcleanup完了後に自然終了する。
-process.exitCode = wired.ok && settled && result.checks.noRequestFailed && result.checks.noOracleMismatch ? 0 : 1;
+return wired.ok && settled && result.checks.noRequestFailed && result.checks.noOracleMismatch;
 });
+// child/DBのcleanup完了後に終了する。embedded-postgresが登録するasync-exit-hookは自然終了（beforeExit）で
+// process.exit(0)を呼びprocess.exitCodeを上書きするため、判定結果を明示的に渡す。
+process.exit(passed ? 0 : 1);
