@@ -29,6 +29,8 @@ export function nextEpoch(prev: PrivateEpoch, userId: string | null | undefined)
 }
 
 let epoch: PrivateEpoch = { owner: undefined, clearedAt: 0 };
+/** 非queryの回復GETも、開始時の同じ境界へだけ結果を反映する。ownerの値だけではA→B→Aを区別できない。 */
+export const getPrivateEpoch = (): PrivateEpoch => epoch;
 const listeners = new Set<() => void>();
 function setEpoch(next: PrivateEpoch) {
   if (next === epoch) return;

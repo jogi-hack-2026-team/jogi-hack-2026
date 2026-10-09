@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { captureSave, rebaseSave } from '../src/features/logs/useSaveLog.ts';
-import { loadCreateAttempt, prepareCreateAttempt, clearCreateAttempt } from '../src/features/goals/create-attempt.ts';
+import { loadCreateAttempt, prepareCreateAttempt, clearCreateAttempt, CreateRecoveryError, createFailureKind } from '../src/features/goals/create-attempt.ts';
+import { ApiError } from '../src/api/client.ts';
 import { toLogPut } from '../src/features/logs/record-log.ts';
 const context = { id: 'g1', unit: 'minutes', timezone: 'Asia/Tokyo', goalSettingsRevision: 0 };
 const body = { title: '合成Goal', unit: 'minutes', totalRequired: 100, sessionAmount: 10, timezone: 'Asia/Tokyo' };
@@ -50,4 +51,26 @@ test('F06逆対: 離脱したK1の遅延成功/422で、進行中K2の回復情�
   }
   clearCreateAttempt('a', key2, db);
   assert.equal(loadCreateAttempt('a', db), null);
+});
+
+
+test('破損JSON・旧schema・不正ownerの回復原文を保全し、新key・書込・削除を行わない', () => {
+  const valid = { owner: 'a', key, body: { ...body, title: '合成Goal' } };
+  for (const raw of ['{', 'null', JSON.stringify({ ...valid, body: { ...valid.body, unit: 'legacy' } }), JSON.stringify({ ...valid, owner: 'b' })]) {
+    const writes = [];
+    const db = { getItem: () => raw, setItem: (...args) => writes.push(args), removeItem: (...args) => writes.push(args) };
+    assert.throws(() => loadCreateAttempt('a', db), CreateRecoveryError);
+    assert.throws(() => prepareCreateAttempt('a', body, db, () => { throw Error('新key禁止'); }), CreateRecoveryError);
+    assert.equal(db.getItem(), raw);
+    assert.deepEqual(writes, []);
+  }
+});
+
+test('作成の409競合・owner変更・410削除を、通信失敗・他のHTTP失敗と区別する', () => {
+  const error = (status, code) => new ApiError(status, { error: { code, message: 'synthetic' } });
+  assert.equal(createFailureKind(error(409, 'IDEMPOTENCY_CONFLICT')), 'conflict');
+  assert.equal(createFailureKind(error(409, 'CREATE_OWNER_CHANGED')), 'owner');
+  assert.equal(createFailureKind(error(410, 'CREATE_RESULT_DELETED')), 'deleted');
+  assert.equal(createFailureKind(new CreateRecoveryError()), 'recovery');
+  for (const failure of [new TypeError('通信失敗'), error(500, 'IDEMPOTENCY_CONFLICT'), error(422, 'CREATE_RESULT_DELETED'), new ApiError(409, null)]) assert.equal(createFailureKind(failure), null);
 });

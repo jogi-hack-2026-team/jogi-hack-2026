@@ -7,9 +7,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import pg from 'pg';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.ISSUE148_PLAYWRIGHT_ROOT ?? 'C:/Users/kaito/Documents/Github/for_test/node_modules/playwright-core');
-const origin = 'http://127.0.0.1:8097';
+const origin = process.env.ISSUE148_ORIGIN ?? 'http://127.0.0.1:8097';
+const selected = process.env.ISSUE148_CASES?.split(',');
 const out = '.tools/issue148/browser'; mkdirSync(out, { recursive: true });
-const pool = new pg.Pool({ host: '127.0.0.1', port: 15488, database: 'futureroi_issue148', user: 'issue148_synthetic', password: 'issue148-synthetic-only', max: 1 });
+const pool = new pg.Pool({ host: '127.0.0.1', port: Number(process.env.ISSUE148_DB_PORT ?? 15488), database: 'futureroi_issue148', user: 'issue148_synthetic', password: 'issue148-synthetic-only', max: 1 });
 assert.deepEqual((await pool.query('select current_database() db,current_user owner')).rows[0], { db: 'futureroi_issue148', owner: 'issue148_synthetic' });
 const browser = await chromium.launch({ executablePath: process.env.ISSUE148_BROWSER_EXE ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const cases = []; const contexts = [];
@@ -31,7 +32,7 @@ async function fixture() {
   const patch = async (g,extra) => { const res=await request('PATCH',`/api/goals/${g.id}`,{expectedGoalSettingsRevision:g.goalSettingsRevision,...extra});assert.equal(res.status,200);return res.json; };
   return { context,page,requests,request,create,open,patch,creds,owner:session.user.id };
 }
-async function run(id,fn) { const start=Date.now(); try { const evidence=await fn(); cases.push({id,status:'PASS',milliseconds:Date.now()-start,evidence});console.log(`${id}: PASS`); } catch(error){ cases.push({id,status:'FAIL',milliseconds:Date.now()-start,error:String(error.stack)});console.log(`${id}: FAIL ${error.message}`); const p=contexts.at(-1)?.pages().at(-1); if(p) { writeFileSync(`${out}/${id}-failure.txt`,await p.locator('body').innerText().catch(()=>'')); } } finally { if(id !== 'F03') for(const c of contexts.splice(0)) await c.close(); } }
+async function run(id,fn) { if (selected && !selected.includes(id)) return; const start=Date.now(); try { const evidence=await fn(); cases.push({id,status:'PASS',milliseconds:Date.now()-start,evidence});console.log(`${id}: PASS`); } catch(error){ cases.push({id,status:'FAIL',milliseconds:Date.now()-start,error:String(error.stack)});console.log(`${id}: FAIL ${error.message}`); const p=contexts.at(-1)?.pages().at(-1); if(p) { writeFileSync(`${out}/${id}-failure.txt`,await p.locator('body').innerText().catch(()=>'')); } } finally { if(id !== 'F03') for(const c of contexts.splice(0)) await c.close(); } }
 try {
  await run('F01',async()=>{
   const f=await fixture(),g=await f.create();
@@ -145,6 +146,71 @@ try {
   const f=await fixture(),g=await f.create();await f.open(g);await f.page.route(`**/api/goals/${g.id}/today?view=r11`,route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'UNAVAILABLE',message:'synthetic'}})}));
   await f.page.getByRole('button',{name:/^やった/}).last().click();await f.page.getByText('記録は保存しました',{exact:true}).waitFor();assert.equal(f.requests.length,1);assert.equal((await f.request('GET',`/api/goals/${g.id}/logs`)).json[0].amount,10);return f.requests;
  });
+ await run('F11',async()=>{
+  const f=await fixture();await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').fill('削除結果から明示新規');await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');
+  let created;await f.page.route('**/api/goals',async route=>{if(route.request().method()==='POST'){created=await (await route.fetch()).json();await route.abort('failed');}else await route.continue();});
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('button',{name:'もう一度保存',exact:true}).waitFor();
+  const old=f.requests[0];await f.page.unroute('**/api/goals');assert.equal((await f.request('DELETE',`/api/goals/${created.id}`)).status,204);await f.page.getByRole('button',{name:'もう一度保存',exact:true}).click();
+  const restart=f.page.getByRole('button',{name:'新しいGoalとして作成',exact:true});await restart.waitFor();assert.equal(f.requests.length,2);assert.equal(await f.page.locator('#goal-title').isDisabled(),true);
+  await restart.click();assert.equal(f.requests.length,2);assert.equal(await f.page.locator('#goal-title').inputValue(),'削除結果から明示新規');assert.equal(await f.page.locator('#goal-title').isDisabled(),false);
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);assert.notEqual(f.requests[2].key,old.key);assert.equal(f.requests[1].key,old.key);
+  const goals=(await f.request('GET','/api/goals')).json;assert.equal(goals.length,1);assert.notEqual(goals[0].id,created.id);return {oldKeyRetried:true,newKeyOnlyAfterExplicitAction:true,deletedIdNotRevived:true};
+ });
+ await run('F12',async()=>{
+  const f=await fixture(),g=await f.create();await f.page.goto(`${origin}/goals/${g.id}/edit`);await f.page.locator('#goal-title').waitFor();await f.page.locator('#goal-title').fill('残した編集名');await f.page.getByRole('button',{name:'回',exact:true}).click();
+  const latest=await f.patch(g,{title:'別画面の編集'});assert.equal((await f.request('PUT',`/api/goals/${g.id}/logs/${g.today}`,{status:'DONE',amount:10,expectedGoalSettingsRevision:latest.goalSettingsRevision})).status,200);
+  await f.page.getByRole('button',{name:'変更を保存',exact:true}).click();await f.page.getByRole('button',{name:'最新の内容を読み込む',exact:true}).click();
+  const restore=f.page.getByRole('button',{name:'保存済みの単位に戻す',exact:true});await restore.waitFor();assert.equal(await f.page.getByRole('button',{name:'回',exact:true}).isDisabled(),true);await restore.click();
+  assert.equal(await f.page.locator('#goal-title').inputValue(),'残した編集名');assert.equal(await f.page.locator('#goal-sessionAmount').inputValue(),'10');assert.equal(f.requests.length,1);
+  await f.page.getByRole('button',{name:'変更を保存',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);const saved=(await f.request('GET',`/api/goals/${g.id}`)).json;assert.equal(saved.title,'残した編集名');assert.equal(saved.unit,'minutes');assert.equal((await f.request('GET',`/api/goals/${g.id}/logs`)).json[0].amount,10);return {otherInputPreserved:true,noAutomaticSave:true,unitAndLogMeaningPreserved:true};
+ });
+
+
+ await run('F13',async()=>{
+  for(const kind of ['malformed','legacy']) {
+   const f=await fixture();const raw=kind==='malformed'?'{':JSON.stringify({owner:f.owner,key:randomUUID(),body:{title:'旧形式',unit:'legacy',totalRequired:100,sessionAmount:10,timezone:'Asia/Tokyo'}});const errors=[];f.page.on('pageerror',error=>errors.push(String(error)));
+   await f.page.goto(`${origin}/goals`);await f.page.evaluate(({owner,raw})=>sessionStorage.setItem(`future-roi:create-attempt:${owner}`,raw),{owner:f.owner,raw});
+   await f.page.goto(`${origin}/goals/new`);await f.page.getByRole('heading',{name:'作成の回復情報を確認できません',exact:true}).waitFor();
+   assert.equal(await f.page.getByRole('button',{name:'保存する',exact:true}).isDisabled(),true);
+   await f.page.locator('form').evaluate(form=>form.requestSubmit());await f.page.reload();await f.page.getByRole('heading',{name:'作成の回復情報を確認できません',exact:true}).waitFor();
+   assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);assert.equal(f.requests.length,0);assert.deepEqual(errors,[]);
+   await f.page.getByRole('link',{name:'Goal一覧で確認する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);assert.deepEqual((await f.request('GET','/api/goals')).json,[]);
+  }
+  return {malformedAndLegacyRender:true,rawPreserved:true,noPostOrNewKey:true};
+ });
+ await run('F14',async()=>{
+  const f=await fixture(),key=randomUUID(),body={title:'元のGoal',unit:'minutes',totalRequired:100,sessionAmount:10,timezone:'Asia/Tokyo'};
+  const created=await f.request('POST','/api/goals',body,{'Idempotency-Key':key});assert.equal(created.status,201);
+  const raw=JSON.stringify({owner:f.owner,key,body:{...body,title:'違う入力'}});await f.page.goto(`${origin}/goals`);await f.page.evaluate(({owner,raw})=>sessionStorage.setItem(`future-roi:create-attempt:${owner}`,raw),{owner:f.owner,raw});
+  await f.page.goto(`${origin}/goals/new`);await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('heading',{name:'作成操作の入力が一致しません',exact:true}).waitFor();
+  assert.equal(await f.page.getByRole('button',{name:'保存する',exact:true}).isDisabled(),true);assert.equal(await f.page.getByRole('button',{name:'もう一度保存',exact:true}).count(),0);
+  await f.page.locator('form').evaluate(form=>form.requestSubmit());assert.equal(f.requests.length,1);assert.equal(f.requests[0].key,key);
+  assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);assert.equal((await f.request('GET','/api/goals')).json.length,1);
+  return {real409:true,rawPreserved:true,noBlindRetry:true};
+ });
+ await run('F15',async()=>{
+  const f=await fixture();await f.page.goto(`${origin}/goals/new`);await f.page.locator('#goal-title').fill('owner競合から回復');await f.page.locator('#goal-totalRequired').fill('100');await f.page.locator('#goal-sessionAmount').fill('10');
+  let guarded;await f.page.route('**/api/goals',async route=>{
+   if(route.request().method()!=='POST')return route.continue();
+   await f.request('POST','/api/auth/sign-out',{});assert.equal((await f.request('POST','/api/auth/sign-up/email',{name:'B',email:`${randomUUID()}@example.test`,password:'Synthetic-148-only-password!'})).status,200);
+   const response=await route.fetch();guarded={status:response.status(),body:await response.json()};await route.fulfill({response});
+  });
+  await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByText(/作成時のアカウントと現在のアカウントが違います/).waitFor();assert.equal(guarded.status,409);assert.equal(guarded.body.error.code,'CREATE_OWNER_CHANGED');
+  const checked=f.page.waitForResponse(response=>new URL(response.url()).pathname==='/api/auth/get-session');await f.page.getByRole('button',{name:'作成時のアカウントで再確認',exact:true}).click();await checked;await wait(()=>f.page.getByRole('button',{name:'作成時のアカウントで再確認',exact:true}).isEnabled());assert.equal(f.requests.length,1,'非cache session確認で別ownerへのPOSTを止める');assert.deepEqual((await f.request('GET','/api/goals')).json,[]);
+  const original=f.requests[0];assert.equal(await f.page.evaluate(owner=>JSON.parse(sessionStorage.getItem(`future-roi:create-attempt:${owner}`)).key,f.owner),original.key);
+  await f.page.unroute('**/api/goals');await f.request('POST','/api/auth/sign-out',{});assert.equal((await f.request('POST','/api/auth/sign-in/email',f.creds)).status,200);
+  await f.page.reload();await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);assert.deepEqual(f.requests[1],original);assert.equal((await f.request('GET','/api/goals')).json.length,1);
+  return {real409OwnerRace:true,preflightStopsWrongOwner:true,sameKeyAndBodyAfterReauth:true};
+ });
+ await run('F16',async()=>{
+  const f=await fixture(),g=await f.create({initialProgress:10,totalRequired:100});assert.equal((await f.request('PUT',`/api/goals/${g.id}/logs/${g.today}`,{status:'DONE',amount:20,expectedGoalSettingsRevision:g.goalSettingsRevision})).status,200);
+  await f.page.setViewportSize({width:1280,height:900});await f.page.goto(`${origin}/goals`);await f.page.getByRole('progressbar').waitFor();assert.equal(await f.page.getByRole('progressbar').getAttribute('aria-valuenow'),'30');
+  await f.page.screenshot({path:`${out}/F16-desktop-list.png`,fullPage:true});await f.page.goto(`${origin}/goals/${g.id}/edit`);await f.page.locator('#goal-title').waitFor();
+  const total=await f.page.locator('#goal-totalRequired').boundingBox(),session=await f.page.locator('#goal-sessionAmount').boundingBox();assert.ok(Math.abs(total.y-session.y)<2 && session.x>total.x,'#147のdesktop配置を保持');
+  assert.equal(await f.page.getByRole('button',{name:'回',exact:true}).isDisabled(),true);await f.page.screenshot({path:`${out}/F16-desktop-edit.png`,fullPage:true});
+  await f.page.setViewportSize({width:390,height:844});await f.page.screenshot({path:`${out}/F16-mobile-edit.png`,fullPage:true});return {progressDone30:true,desktopPairPreserved:true,unitLocked:true};
+ });
+
 } finally {
  writeFileSync(`${out}/results.json`,JSON.stringify({level:'REAL_CHROME_SYNTHETIC_IMAGE',source:'current worktree image; Docker image ID in verification log',cases},null,2));
  for(const context of contexts)await context.close();await browser.close();await pool.end();

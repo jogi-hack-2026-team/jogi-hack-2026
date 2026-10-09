@@ -1,8 +1,10 @@
 import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Goal } from '@contracts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
+import { getPrivateEpoch, usePrivateEpoch } from '../../api/session-cache.ts';
+import { authClient } from '../../auth/client.ts';
 import { classifySaveError, TodayDateChangedError, toLogPut, type RecordChoice } from './record-log.ts';
 
 export type RecordContext = Pick<Goal, 'id' | 'unit' | 'timezone' | 'goalSettingsRevision'>;
@@ -26,6 +28,13 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
   canSaveDate?: (date: string) => boolean; context?: RecordContext | undefined;
 } = {}) {
   const queryClient = useQueryClient();
+  const epoch = usePrivateEpoch();
+  const session = authClient.useSession();
+  const owner = session.isPending || session.error ? undefined : session.data?.user.id;
+  const ownerRef = useRef(owner);
+  ownerRef.current = owner;
+  const alive = useRef(true);
+  const reloadRequest = useRef<AbortController | null>(null);
   const inFlight = useRef(false);
   const canSaveDateRef = useRef(canSaveDate);
   canSaveDateRef.current = canSaveDate;
@@ -35,6 +44,17 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
   const [reloadingSettings, setReloadingSettings] = useState(false);
   const [settingsReloadFailed, setSettingsReloadFailed] = useState(false);
   const reloadInFlight = useRef(false);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; reloadRequest.current?.abort(); };
+  }, []);
+  useEffect(() => {
+    setLatest(null); setSettingsReloadFailed(false); setReloadingSettings(false);
+    return () => {
+      reloadRequest.current?.abort(); reloadRequest.current = null;
+      reloadInFlight.current = false;
+    };
+  }, [epoch, owner]);
   const mutation = useMutation({
     mutationKey: saveLogKey(goalId), retry: false,
     mutationFn: (vars: SaveVars) => {
@@ -76,14 +96,28 @@ export function useSaveLog(goalId: string, { onSaved, localDate, canSaveDate, co
     },
     reloadSettings: async () => {
       if (!conflict || reloadInFlight.current || inFlight.current) return;
+      const startedEpoch = getPrivateEpoch();
+      const startedOwner = ownerRef.current;
+      if (!startedOwner || startedEpoch.owner !== startedOwner || !Number.isFinite(startedEpoch.clearedAt)) return;
+      const request = new AbortController();
+      reloadRequest.current = request;
+      // fetchの中断を無視する遅延応答にも、所有者と境界の同一性を要求する。
+      const current = () => alive.current && !request.signal.aborted &&
+        ownerRef.current === startedOwner && getPrivateEpoch() === startedEpoch;
       reloadInFlight.current = true; setReloadingSettings(true); setLatest(null);
       try {
-        const goal = await goalsHttp.getGoal(goalId);
+        const goal = await goalsHttp.getGoal(goalId, request.signal);
+        if (!current()) return;
         setLatest(goal); setSettingsReloadFailed(false);
         queryClient.setQueryData(goalKeys.detail(goalId), goal);
         await queryClient.invalidateQueries({ queryKey: goalKeys.all });
-      } catch { setSettingsReloadFailed(true); }
-      finally { reloadInFlight.current = false; setReloadingSettings(false); }
+      } catch { if (current()) setSettingsReloadFailed(true); }
+      finally {
+        if (reloadRequest.current === request) {
+          reloadRequest.current = null; reloadInFlight.current = false;
+          if (current()) setReloadingSettings(false);
+        }
+      }
     },
     settingsReady: conflict && latest !== null,
     meaningChanged: conflict && latest !== null && rebased === null,

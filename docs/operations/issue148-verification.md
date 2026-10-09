@@ -1,8 +1,8 @@
 # #148 phase1の検証記録
 
-対象はIssue #148と引継ぎZIPのACCEPTANCE-DESIGN.mdにある36ケース。通常checkoutのEngine2・.vscode、元spec-harnessの途中FE6ファイルを保全し、独立worktreeで25f473feを起点に実装した。最新main ca002394を取り込み、2026-10-09の最終再確認でも同SHAだった。元タスクのAPI/migration実行審査拒否を解消済みとは扱わず、今回の直接実装指示を根拠とする具体操作の審査が通過した。承認転記・他経路の回避は行わない。本番変更・merge・deployは未実施。
+対象はIssue #148と引継ぎZIPのACCEPTANCE-DESIGN.mdにある36ケース。通常checkoutのEngine2・.vscode、元spec-harnessの途中FE6ファイルを保全し、独立worktreeで25f473feを起点に実装した。初回引継ぎではmain ca002394を取り込んだ。後続FE引継ぎの基準mainと検証は下記へ分ける。元タスクのAPI/migration実行審査拒否を解消済みとは扱わず、今回の直接実装指示を根拠とする具体操作の審査が通過した。承認転記・他経路の回避は行わない。本番変更・merge・deployは未実施。
 
-## 最終ローカル結果
+## 初回引継ぎのローカル結果（ffe7604まで）
 
 実装commit 3a5b10cと、その後のDemo試験の明示量1の送信修正を対象に再実行した。後続変更は検証記録・参照番号・合成専用Compose。リモート最終HEADのCIはDraft PRのChecksで別に確認し、ここへ過去SHAのCI成功を流用しない。
 
@@ -44,10 +44,25 @@ F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然
 
 - 内部3人での担当交代・初見利用者の理解確認：NOT_RUN。
 - Human Approve、チームによる契約採択、main反映、本番migration、公開配置：未実施。
-- `CREATE_RESULT_DELETED`のAPI410・台帳保持・復活禁止は検証済み。FEは未確定attemptを維持し自動再作成しないが、410から新しい作成へ進む明示操作のUXは今回未追加。終端時の画面契約をチームレビューで確認する。
+- 初回HEADでは`CREATE_RESULT_DELETED`のAPI410・台帳保持・復活禁止を検証した。FEの明示新規操作は初回では未追加で、下記の追加引継ぎで対応する。
 - 同日ログ一般の競合解消、削除CAS、全mutation冪等性、#147の画面再設計、#153/#155のcache方針は範囲外。
 
-セルフレビューのBlockingは修正済み。上記410 UXと実利用受入を残件として明示し、ローカル・CI・人工障害の成功で代替しない。READMEの一般setupや製品runtime環境変数は変わらないため追加更新不要。
+初回セルフレビューのBlockingは修正済み。実利用受入・チームの契約採択・Human Approveは残件であり、ローカル・CI・人工障害の成功で代替しない。READMEの一般setupや製品runtime環境変数は変わらないため追加更新不要。
+
+## FEの追加引継ぎ（2026-10-09）
+
+元のworktreeを上書きせず、`ffe76048c3858101e4ed2d7bf3c225c53a8c8f8e`から専用worktree／ローカルbranchで継続する。今回の直接指示でstashの3件に加えて409分類・破損回復情報・旧change-mapの同期を扱う。#147（main 685e7d0）・#176（main 10c1df73）のmerge競合を解消し、progressDone・画面配置・単位固定・設定版・明示量と動的migration checkerを両方保持する。追加のschemaやdependencyは導入しない。元の審査拒否の撤回や他のbranchの承認として扱わない。
+
+- 409回復の直接GETはAbortSignalを渡し、離脱・境界変更で中断する。ownerと開始時のPrivateEpochの同一性を確認してからcacheへ反映し、同じownerに戻るA→B→Aも旧世代の応答を捨てる。
+- 410が確定した同owner／keyに限って「新しいGoalとして作成」を出す。操作を選ぶまで入力・キーを保持し、選んだ後も新キーは次の保存で初めて発行する。通信結果不明は同じキーで回復する。削除Goalは復活しない。
+- 壊れたJSON・旧schemaは初期描画を止めず、原文を保持してPOSTを止める。409の入力不一致は一覧確認、owner変更は作成時accountでの再認証へ案内する。通信失敗での同key/body保全と区別し、自動破棄・新key発行・自動再作成をしない。
+- 409後に最新unitLockedと編集単位が食い違った場合は「保存済みの単位に戻す」を出す。ほかの入力を残し、自動保存しない。
+
+修正前：Node24.21.0の遅延GET回帰は同世代1成功、A→B／A→B→A／離脱3失敗。実ChromeのF11（410）・F12（単位固定）は必要なボタンが存在せず2失敗。修正後の遅延GET回帰4件は成功。これは実hookとQueryClientを使う制御回帰で、Reactの描画・実認証でのアカウント切替の証明ではない。
+
+途中の実Chrome再実行は専用appのmigration checksum不一致（LF/CRLFのartifact差）により接続拒否で失敗した。PASSとしていない。SQLや適用履歴のchecksumは変更せず、停止済みtmpfsの新しい合成DBを今回の同一imageだけで初期化して再検証する。最終結果は完了後に追記する。
+
+#159／#163の全統合は別段階。初回のGit比較では#147と3、#159と1、#163と13ファイルが競合し、#164は競合しなかった。二つの0005は全文ファイル名が異なり、runnerはファイル名・checksumで管理するため番号重複だけでは失敗しない。統合時は両migration・実ファイルinventory・M01を照合する（#174/#176の動的checkerは今回保持）。targetDateは作成hash・設定版・rebase・固定attemptにも接続する必要があり、このFE修正では未実装。
 
 ## 変更ファイル
 
