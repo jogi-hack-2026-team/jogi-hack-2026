@@ -26,7 +26,7 @@ export const todayCopy = {
   p80Over3YearsNote: '10回あれば8回終わっている時期は、3年より先になる見込みです。',
   thisWeekNote: '今日やれば、この週に届く見込みです。',
   progressLabel: 'これまでの積み上げ',
-  /** initial は記録開始日の前日までの量を単位付きで書いたもの（例「6.7時間」）。0 なら null。 */
+  /** initial は記録開始日の前日までの量を単位付きで書いたもの（例「6時間40分」）。0 なら null。 */
   progressHelp: (initial: string | null) => (initial ? `記録した累計（記録開始日の前日までの${initial}を含む）` : '記録した累計'),
   outlookLabel: 'これからの見通し',
   // 到達予定日（#157、B案）

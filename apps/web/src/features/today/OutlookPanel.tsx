@@ -90,7 +90,7 @@ function GapLine({ today, days, targetDate }: { today: string; days: number | nu
     <p className={`fr-gap fr-gap--${gap.kind}`}>
       <Icon name="flag" size={16} strokeWidth={2} />
       <span>
-        {todayCopy.targetGapPrefix}
+        {gap.kind === 'near' ? null : todayCopy.targetGapPrefix}
         <b>{targetGapText(gap)}</b>
       </span>
     </p>

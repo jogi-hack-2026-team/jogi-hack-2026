@@ -82,3 +82,21 @@ test('編集：記録があっても到達予定日を変更・削除でき、�
   assert.deepEqual(fieldPaths(invalid.json), ['body/targetDate']);
   assert.deepEqual((await a.call('GET', `/api/goals/${goal.id}`)).json, before);
 });
+
+test('timezoneと到達予定日を同時に変えると、変更後timezoneの今日で検査し、拒否時は全体を戻す', async (t) => {
+  const { stack } = await setup(t, { now: () => NOW });
+  const a = await signedInClient(stack.app, 'target-timezone-patch');
+  const goal = (await a.call('POST', '/api/goals', { ...base, targetDate: null })).json as unknown as Goal;
+  assert.equal(goal.targetDate, null);
+  // 東京では今日だが、変更後のLAでは明日なので保存できる。
+  const accepted = await a.call('PATCH', '/api/goals/' + goal.id, { timezone: 'America/Los_Angeles', targetDate: '2026-10-06' });
+  assert.equal(accepted.status, 200, accepted.body);
+  assert.equal((accepted.json as unknown as Goal).timezone, 'America/Los_Angeles');
+  assert.equal((accepted.json as unknown as Goal).targetDate, '2026-10-06');
+  const before = (await a.call('GET', '/api/goals/' + goal.id)).json;
+  // LAでは明日だが、変更後の東京では今日なので、title・timezoneを含めて変更しない。
+  const rejected = await a.call('PATCH', '/api/goals/' + goal.id, { title: '変更しない', timezone: 'Asia/Tokyo', targetDate: '2026-10-06' });
+  assert.equal(rejected.status, 422, rejected.body);
+  assert.deepEqual(fieldPaths(rejected.json), ['body/targetDate']);
+  assert.deepEqual((await a.call('GET', '/api/goals/' + goal.id)).json, before);
+});

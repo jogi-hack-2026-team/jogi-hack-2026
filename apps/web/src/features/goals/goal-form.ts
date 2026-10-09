@@ -1,6 +1,7 @@
 import type { Goal, GoalCreate, GoalPatch, GoalUnit, QuestionAnswers } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { goalsCopy } from '../../copy/goals.ts';
+import { localDateIn } from '../today/day-rollover.ts';
 
 /**
  * Goal の作成・編集フォームの値と検査（R-02、#78）。画面から切り離し、Node のテストで確かめられるようにする。
@@ -107,6 +108,15 @@ export function validate(
     if (!isValidTimezone(values.timezone)) errors.timezone = e.timezone;
   }
   return errors;
+}
+
+/** 表示時と送信時で同じ検査を使う。選択中のtimezoneと編集の比較元から、日付の条件を毎回組み立てる。 */
+export function validateGoalForm(
+  values: FormValues,
+  { locked = false, baseline, now = new Date() }: { locked?: boolean; baseline?: GoalWithAnswers | undefined; now?: Date } = {},
+): FieldErrors {
+  const today = localDateIn(values.timezone, now) ?? undefined;
+  return validate(values, { locked, ...(today ? { today } : {}), ...(baseline ? { savedTargetDate: baseline.targetDate ?? '' } : {}) });
 }
 
 export const errorCount = (errors: FieldErrors) => FIELD_ORDER.filter((name) => errors[name]).length;

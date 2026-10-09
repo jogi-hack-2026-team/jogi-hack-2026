@@ -8,7 +8,6 @@ import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { usePrivateEpoch } from '../../api/session-cache.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
-import { localDateIn } from '../today/day-rollover.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { DeskHeader } from '../../ui/components/DeskHeader.tsx';
@@ -35,7 +34,7 @@ import {
   titleLength,
   toCreateBody,
   toPatchBody,
-  validate,
+  validateGoalForm,
   valuesFromGoal,
   type FieldErrors,
   type FieldName,
@@ -181,7 +180,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     };
   }, []);
 
-  const clientErrors = submitted ? validate(values, { locked }) : {};
+  const clientErrors = submitted ? validateGoalForm(values, { locked, baseline }) : {};
   const errors: FieldErrors = { ...serverErrors, ...clientErrors };
   const count = errorCount(errors);
 
@@ -236,8 +235,7 @@ function GoalForm({ mode, goal, refreshError, onRetryRefresh, onReloadLatest }: 
     setSubmitted(true);
     setServerErrors({});
     // 到達予定日は、選んでいるタイムゾーンの今日より後だけ（APIも同じ検査をする）。変えていない保存済みの日付は送らないので検査しない
-    const today = localDateIn(values.timezone, new Date()) ?? undefined;
-    const found = validate(values, { locked, ...(today ? { today } : {}), ...(baseline ? { savedTargetDate: baseline.targetDate ?? '' } : {}) });
+    const found = validateGoalForm(values, { locked, baseline });
     if (errorCount(found) > 0) {
       focusFirstError(found);
       return;

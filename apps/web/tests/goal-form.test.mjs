@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient, QueryObserver } from '@tanstack/react-query';
 import { ApiError } from '../src/api/client.ts';
 import { goalsCopy } from '../src/copy/goals.ts';
-import { answersLockReason, changesAnswerContext, emptyValues, fieldErrorsFromApi, parseInteger, rebaseValues, reloadLatestGoal, toCreateBody, toPatchBody, validate, valuesFromGoal } from '../src/features/goals/goal-form.ts';
+import { answersLockReason, changesAnswerContext, emptyValues, errorCount, fieldErrorsFromApi, parseInteger, rebaseValues, reloadLatestGoal, toCreateBody, toPatchBody, validate, validateGoalForm, valuesFromGoal } from '../src/features/goals/goal-form.ts';
 
 const e = goalsCopy.errors;
 const valid = { title: '英単語アプリ', unit: 'minutes', totalRequired: '3000', sessionAmount: '20', initialProgress: '0', timezone: 'Asia/Tokyo', targetDate: '', questionPrior: { a: null, b: null } };
@@ -214,4 +214,24 @@ test('時間のGoalの量は整数分のまま入力・保存し、編集で触�
   assert.equal(toPatchBody(shown, g), null);
   // 小数は受け付けない（小数の時間で入力しない）
   assert.equal(validate({ ...valid, sessionAmount: '1.5' }).sessionAmount, e.positiveInteger);
+});
+
+test('フォーム共通検査は選択中timezoneの今日を使い、過去日を文言と件数に含める', () => {
+  const now = new Date('2026-10-05T15:30:00Z'); // 東京6日、LA5日
+  const values = { ...valid, targetDate: '2026-10-06' };
+  const errors = validateGoalForm(values, { now });
+  assert.deepEqual(errors, { targetDate: e.targetDatePast });
+  assert.equal(errorCount(errors), 1);
+  assert.deepEqual(validateGoalForm({ ...values, timezone: 'America/Los_Angeles' }, { now }), {});
+});
+
+test('フォーム共通検査は経過した保存日を維持し、別の過去日への変更だけを拒否する', () => {
+  const baseline = { ...goal, targetDate: '2026-10-07' };
+  const now = new Date('2026-10-09T00:00:00Z');
+  const values = { ...valuesFromGoal(baseline), title: '名前だけ変更' };
+  assert.deepEqual(validateGoalForm(values, { baseline, now }), {});
+  assert.deepEqual(toPatchBody(values, baseline), { title: '名前だけ変更' });
+  assert.equal(validateGoalForm({ ...values, targetDate: '2026-10-08' }, { baseline, now }).targetDate, e.targetDatePast);
+  assert.deepEqual(validateGoalForm({ ...values, targetDate: '' }, { baseline, now }), {});
+  assert.deepEqual(validateGoalForm({ ...values, targetDate: '2026-10-10' }, { baseline, now }), {});
 });

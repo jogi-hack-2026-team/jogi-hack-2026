@@ -33,17 +33,17 @@ const horizon = 1095;
 const outsideText = '10回中8回の完了時期の目安は、計算範囲の約3年以内には収まりません。';
 const quantiles = (a) => mixtureCompletionQuantiles([{ a, b: 0 }], 'DONE', 1, horizon);
 
-function present(q, provenance, recorded = false) {
+function present(q, provenance, recorded = false, date = today) {
   // b=0の人工境界条件。利用者の実データ・発生頻度・予測精度を検証する例ではない。
-  const prediction = { ...base, today, todayStatus: recorded ? 'DONE' : 'UNRECORDED', completion: { status: 'available', scenario: recorded ? 'CURRENT_STATE' : 'TODAY_DONE', ...q } };
+  const prediction = { ...base, today: date, todayStatus: recorded ? 'DONE' : 'UNRECORDED', completion: { status: 'available', scenario: recorded ? 'CURRENT_STATE' : 'TODAY_DONE', ...q } };
   const extras = provenance ? { provenance, plan: null, sessionAmount: 15 } : undefined;
   const view = toForecastView(prediction, 'minutes', extras);
   assertForecastPresentation(view);
   return view;
 }
 
-function render(completion) {
-  return renderToStaticMarkup(createElement(OutlookPanel, { completion, today, title: '完了の目安', fmt: amountFormat({ unit: 'minutes' }) }));
+function render(completion, options = {}) {
+  return renderToStaticMarkup(createElement(OutlookPanel, { completion, today, ...options, title: '完了の目安', fmt: amountFormat({ unit: 'minutes' }) }));
 }
 
 test('F(H)=0.79では有限P50を保持し、P80の範囲外を期間外80%と説明しない', () => {
@@ -126,3 +126,20 @@ test('達成済み・不足・条件付き計画はP80 nullの説明と混同し
   assert.match(planHtml, /あと3回分|日数の予測ではありません/);
   assert.ok(!planHtml.includes(outsideText));
 });
+
+// 到達予定日との差は実部品の最終文言を検査する。純粋な差分計算だけではprefixの重複を検出できない。
+for (const { kind, days, expected } of [
+  { kind: 'near', days: 177, expected: '到達予定日ごろ' },
+  { kind: 'early', days: 163, expected: '到達予定日より約2週早い' },
+  { kind: 'late', days: 191, expected: '到達予定日より約2週遅い' },
+]) {
+  test('到達予定日の' + kind + '比較をP50・P80の最終文言として表示する', () => {
+    const date = '2026-10-05';
+    const targetDate = '2027-03-31';
+    const html = render(present({ p50Days: days, p80Days: days }, undefined, false, date).completion, { today: date, targetDate });
+    const text = html.replace(/<[^>]*>/g, '');
+    assert.equal(text.split(expected).length - 1, 2);
+    assert.doesNotMatch(text, /到達予定日より到達予定日/);
+    assert.match(html, new RegExp('fr-gap--' + kind));
+  });
+}
