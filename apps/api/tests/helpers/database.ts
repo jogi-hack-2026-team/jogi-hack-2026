@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import { restoreEmbeddedLinks } from './embedded-binaries.ts';
 import { createWindowsEmbeddedStop } from './windows-embedded-stop.ts';
+import { cleanupAfterFailure, cleanupAll, closeOnce } from './cleanup.ts';
 
 export type TestDatabase = {
   connectionString: string;
@@ -62,12 +63,19 @@ async function startEmbedded(): Promise<AdminConnection> {
     onLog: () => {},
     onError: (message) => console.error(String(message).replaceAll(credential.password, '[redacted]')),
   });
-  if (isNew) await server.initialise();
-  await server.start();
   if (process.platform === 'win32') {
     // 固定platform配布物の公開binaryだけを使う。Linuxのsignal停止・外部DBには適用しない。
     const { pg_ctl } = await import(`@embedded-postgres/windows-${process.arch}`) as { pg_ctl: string };
     server.stop = createWindowsEmbeddedStop(pg_ctl, dataDir);
+  }
+  try {
+    if (isNew) await server.initialise();
+    await server.start();
+  } catch (error) {
+    return cleanupAfterFailure(error, async () => {
+      // 起動途中で作られた、このrunだけのPID fileがある場合に停止を試みる。
+      if (existsSync(join(dataDir, 'postmaster.pid'))) await server.stop();
+    });
   }
   return {
     url: `postgres://${credential.user}:${encodeURIComponent(credential.password)}@127.0.0.1:${port}/postgres`,
@@ -93,29 +101,37 @@ async function waitForNoBackends(adminPool: pg.Pool, name: string): Promise<void
   throw new Error('Test database still has connections after its pools were closed');
 }
 
-export async function createTestDatabase(): Promise<TestDatabase> {
-  const admin = await adminConnection();
+type DatabaseFactories = {
+  connectAdmin: typeof adminConnection;
+  createPool: (options: pg.PoolConfig) => pg.Pool;
+};
+
+export async function createTestDatabase(factories: Partial<DatabaseFactories> = {}): Promise<TestDatabase> {
+  const deps = { connectAdmin: adminConnection, createPool: (options: pg.PoolConfig) => new pg.Pool(options), ...factories };
+  const admin = await deps.connectAdmin();
   const name = `t_${randomBytes(6).toString('hex')}`;
-  const adminPool = new pg.Pool({ connectionString: admin.url, max: 1 });
-  await adminPool.query(`create database "${name}"`);
-  const url = new URL(admin.url);
-  url.pathname = `/${name}`;
-  const connectionString = url.toString();
-  const pool = new pg.Pool({ connectionString, max: 3 });
-  return {
-    connectionString,
-    pool,
-    close: async () => {
-      await pool.end();
-      try {
-        // pg-pool.end() may resolve before PostgreSQL observes the socket closing.
-        // A remaining connection is a cleanup failure; never terminate it with FORCE.
-        await waitForNoBackends(adminPool, name);
-        await adminPool.query(`drop database "${name}"`);
-      } finally {
-        await adminPool.end();
-        await admin.stop();
-      }
+  let adminPool: pg.Pool | undefined;
+  let pool: pg.Pool | undefined;
+  let created = false;
+  const close = closeOnce(() => cleanupAll([
+    async () => { await pool?.end(); },
+    async () => {
+      if (!created || !adminPool) return;
+      // 自分のCREATE成功を確認したdatabaseだけを削除する。FORCEや既存DBの操作はしない。
+      await waitForNoBackends(adminPool, name);
+      await adminPool.query(`drop database "${name}"`);
     },
-  };
+    async () => { await adminPool?.end(); },
+    () => admin.stop(),
+  ]));
+  try {
+    adminPool = deps.createPool({ connectionString: admin.url, max: 1 });
+    await adminPool.query(`create database "${name}"`);
+    created = true;
+    const url = new URL(admin.url);
+    url.pathname = `/${name}`;
+    const connectionString = url.toString();
+    pool = deps.createPool({ connectionString, max: 3 });
+    return { connectionString, pool, close };
+  } catch (error) { return cleanupAfterFailure(error, close); }
 }
