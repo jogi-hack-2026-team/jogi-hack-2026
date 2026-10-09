@@ -8,6 +8,7 @@
     "dev": "vite",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node --import ./tests/register-contracts.mjs --test tests/*.test.mjs",
+    "test:browser": "node --import ./tests/register-contracts.mjs --test tests/session-cache.browser-check.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173"
   },

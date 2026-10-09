@@ -1,13 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from '@tanstack/react-router';
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate, useRouter } from '@tanstack/react-router';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Goal } from '@contracts';
 import { authClient } from '../../auth/client.ts';
 import { clearCreateAttempt, loadCreateAttempt, prepareCreateAttempt, CreateRecoveryError, createFailureKind, type CreateAttempt } from './create-attempt.ts';
 import { ApiError } from '../../api/client.ts';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
-import { usePrivateEpoch } from '../../api/session-cache.ts';
+import { privateDataReady, usePrivateEpoch, type PrivateEpoch } from '../../api/session-cache.ts';
+import { isDraftOwner, useMemoryDraft } from '../../api/session-draft.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
 import { todayCopy, unitLabel } from '../../copy/today.ts';
@@ -52,21 +53,74 @@ import './goals.css';
 const c = goalsCopy;
 const f = goalsCopy.form;
 const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+function useInterruptedOperation(ready: boolean, operationKey: readonly unknown[]) {
+  const pending = useIsMutating({ mutationKey: operationKey }) > 0;
+  const interrupted = useRef(false);
+  if (!ready) interrupted.current = true;
+  else if (!pending) interrupted.current = false;
+  return interrupted.current && pending;
+}
+
+/** Formが確認中にunmountされても、確定成功だけは同じページの親へ伝える。 */
+function useConfirmedSave(current: PrivateEpoch, generation: number, scope: string) {
+  const navigate = useNavigate();
+  const router = useRouter();
+  const mounted = useRef(false);
+  const activeScope = useRef(scope);
+  const visit = useRef({ scope, token: {} });
+  if (visit.current.scope !== scope) visit.current = { scope, token: {} };
+  activeScope.current = scope;
+  const token = visit.current.token;
+  const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object }>();
+  const delivered = useRef<typeof saved>(undefined);
+  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  // 同routeのGoal1→Goal2→Goal1でも親は再利用される。commit前の離脱開始も旧訪問を失効させる。
+  useLayoutEffect(() => router.subscribe('onBeforeNavigate', ({ pathChanged }) => {
+    if (pathChanged) visit.current = { ...visit.current, token: {} };
+  }), [router]);
+  const owner = current.owner;
+  const onSaved = useCallback(() => {
+    if (mounted.current && visit.current.token === token && typeof owner === 'string' && activeScope.current === scope && window.location.pathname === scope && isDraftOwner(owner, generation))
+      setSaved({ owner, generation, scope, token });
+  }, [owner, generation, scope, token]);
+  const confirmed = saved !== undefined && saved.token === visit.current.token && saved.scope === scope && window.location.pathname === scope && saved.generation === generation &&
+    isDraftOwner(saved.owner, saved.generation) && current.owner === saved.owner && privateDataReady(current);
+  useEffect(() => {
+    if (confirmed && saved?.token === visit.current.token && window.location.pathname === scope && isDraftOwner(saved.owner, saved.generation) && delivered.current !== saved) {
+      delivered.current = saved;
+      void navigate({ to: '/goals' });
+    }
+  }, [confirmed, saved, scope, navigate]);
+  return { onSaved, confirmed };
+}
 
 /** Goal の作成（R-02、#78）。/goals/new */
 export function GoalCreatePage() {
   // ログインしている人が替わったら作り直し、前の人の入力を持ち越さない
-  const session = authClient.useSession();
-  const owner = session.data?.user.id;
-  if (session.isPending) return <FormShell title={f.createTitle} body={<FormLoading />} />;
-  if (!owner) return <SignedOutPanel body={c.signedOut.formBody} />;
-  return <GoalForm key={owner} mode="create" owner={owner} />;
+  const current = usePrivateEpoch();
+  const draft = useMemoryDraft<FormDraft>(current, 'create');
+  const completion = useConfirmedSave(current, draft.generation, '/goals/new');
+  const operationKey = ['goal-form', current.owner, 'create'];
+  const operating = useInterruptedOperation(privateDataReady(current), operationKey);
+  if (current.owner === null) return <FormShell title={f.createTitle} body={<SignedOutPanel />} />;
+  if (!privateDataReady(current) || operating) return <FormShell title={f.createTitle} body={<FormLoading />} />;
+  if (completion.confirmed) return <FormShell title={f.createTitle} body={<p role="status">保存しました。Goal一覧へ移動します。</p>} />;
+  return <GoalForm key={`${current.owner}:${draft.generation}`} mode="create" owner={current.owner!} operationKey={operationKey} draft={draft.restored} onDraftChange={draft.remember} onSaved={completion.onSaved} />;
 }
 
 /** Goal の編集・削除（R-02、#78）。/goals/$goalId/edit。Goal を読み込んでからフォームを出す。 */
 export function GoalEditPage({ goalId }: { goalId: string }) {
-  const { owner } = usePrivateEpoch();
-  const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
+  const current = usePrivateEpoch();
+  const draft = useMemoryDraft<FormDraft>(current, `edit:${goalId}`);
+  const completion = useConfirmedSave(current, draft.generation, `/goals/${goalId}/edit`);
+  const operationKey = ['goal-form', current.owner, 'edit', goalId];
+  const operating = useInterruptedOperation(privateDataReady(current), operationKey);
+  const { owner } = current;
+  const ready = privateDataReady(current);
+  const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), enabled: ready, ...fetchPolicy });
+  if (owner === null) return <FormShell title={f.editTitle} body={<SignedOutPanel />} />;
+  if (!ready || operating || (query.data && query.dataUpdatedAt <= current.clearedAt)) return <FormShell title={f.editTitle} body={<FormLoading />} />;
+  if (completion.confirmed) return <FormShell title={f.editTitle} body={<p role="status">保存しました。Goal一覧へ移動します。</p>} />;
   if (!query.data) {
     if (!query.isError) return <FormShell title={f.editTitle} body={<FormLoading />} />;
     // 最初の読み込みの失敗。入力はまだないので、フォームの代わりにエラーを出す
@@ -81,9 +135,13 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
   // 表示した後の再取得（focus・reconnect）の失敗では、フォームを残したまま知らせる（未保存の入力を消さない）
   return (
     <GoalForm
-      key={`${owner ?? ''}:${goalId}`}
+      key={`${owner ?? ''}:${goalId}:${draft.generation}`}
       mode="edit"
       goal={query.data}
+      draft={draft.restored}
+      onDraftChange={draft.remember}
+      operationKey={operationKey}
+      onSaved={completion.onSaved}
       refreshError={query.isError ? query.error : null}
       onRetryRefresh={() => void query.refetch()}
       onReloadLatest={() => reloadLatestGoal(() => query.refetch())}
@@ -139,7 +197,20 @@ function FormLoading() {
   );
 }
 
-type Props =
+type FormDraft = {
+  values: FormValues;
+  baseline: GoalWithAnswers | undefined;
+  sourceGoal: GoalWithAnswers | undefined;
+  submitted: boolean;
+  priorOpen: boolean;
+  latestAnswers: GoalWithAnswers['questionPrior'] | null;
+};
+function sameEditableGoal(left: GoalWithAnswers, right: GoalWithAnswers) {
+  return left.id === right.id && left.answerRevision === right.answerRevision && left.hasLogs === right.hasLogs &&
+    ('goalSettingsRevision' in left ? left.goalSettingsRevision : undefined) === ('goalSettingsRevision' in right ? right.goalSettingsRevision : undefined) &&
+    JSON.stringify(valuesFromGoal(left)) === JSON.stringify(valuesFromGoal(right));
+}
+type Props = { draft: FormDraft | undefined; onDraftChange: (draft: FormDraft | undefined) => void; operationKey: readonly unknown[]; onSaved: () => void } & (
   | { mode: 'create'; owner: string; goal?: undefined; refreshError?: undefined; onRetryRefresh?: undefined; onReloadLatest?: undefined }
   | {
       mode: 'edit';
@@ -149,9 +220,9 @@ type Props =
       onRetryRefresh: () => void;
       /** 最新の Goal（回答と回答の版を含む）を読み直す。古い版で保存できなかったとき（409）に使う。 */
       onReloadLatest: () => Promise<GoalWithAnswers | undefined>;
-    };
+    });
 
-function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLatest }: Props) {
+function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSaved, refreshError, onRetryRefresh, onReloadLatest }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const locked = mode === 'edit' && goal.hasLogs;
@@ -165,9 +236,11 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const recoveryValues = attempt ? { ...emptyValues(attempt.body.timezone), ...attempt.body,
     totalRequired: String(attempt.body.totalRequired), sessionAmount: String(attempt.body.sessionAmount),
     initialProgress: String(attempt.body.initialProgress ?? 0), questionPrior: attempt.body.questionPrior ?? NO_ANSWERS } : null;
-  const [values, setValues] = useState<FormValues>(() => (goal ? valuesFromGoal(goal) : recoveryValues ?? emptyValues(browserTimezone())));
+  const restored = !attempt && !recovery.error && draft && (!goal || (draft.sourceGoal && sameEditableGoal(draft.sourceGoal, goal))) ? draft : undefined;
+  const [discardedDraft] = useState(Boolean(goal && draft && !restored));
+  const [values, setValues] = useState<FormValues>(() => restored?.values ?? (goal ? valuesFromGoal(goal) : recoveryValues ?? emptyValues(browserTimezone())));
   // 保存を押すまでは項目のエラーを出さない。押した後は入力のたびに検査し直す
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(restored?.submitted ?? false);
   const [serverErrors, setServerErrors] = useState<FieldErrors>({});
   const [deleteOpen, setDeleteOpen] = useState(false);
   // APIの422で見つかったエラー項目。送信中は入力欄が押せないため、送信が終わってからフォーカスを移す
@@ -180,11 +253,11 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   // 編集を始めた時点の Goal。変えた項目だけを送るための比較元で、再取得で goal が新しくなっても変えない
   // （変えると、別のタブでの変更を、触っていない項目まで古い値で巻き戻してしまう）
   // 古い版で保存できなかったとき（409）に、利用者が最新を読み直したら、その Goal を新しい比較元にする（入力は残す）
-  const [baseline, setBaseline] = useState(goal);
+  const [baseline, setBaseline] = useState(restored?.baseline ?? goal);
   // 最新を読み直したときの回答。入力中の回答で上書きする前に確かめられるよう、知らせとして出す
-  const [latestAnswers, setLatestAnswers] = useState<GoalWithAnswers['questionPrior'] | null>(null);
+  const [latestAnswers, setLatestAnswers] = useState<GoalWithAnswers['questionPrior'] | null>(restored?.latestAnswers ?? null);
   // 初期質問の開閉。保存済みの回答がある編集では開いた状態から始める
-  const [priorOpen, setPriorOpen] = useState(() => values.questionPrior.a !== null || values.questionPrior.b !== null);
+  const [priorOpen, setPriorOpen] = useState(() => restored?.priorOpen ?? (values.questionPrior.a !== null || values.questionPrior.b !== null));
   const [reloadingLatest, setReloadingLatest] = useState(false);
   const reloadInFlight = useRef(false);
   // この画面がまだ表示されているか。保存の途中で離れた後に、別の画面を一覧へ移さないために使う
@@ -216,6 +289,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   };
 
   const save = useMutation({
+    mutationKey: [...operationKey, 'save'],
     retry: false,
     mutationFn: async ({ values: v, operation }: { values: FormValues; operation: CreateAttempt | null }): Promise<Goal | null> => {
       if (mode === 'create') {
@@ -231,10 +305,11 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       const patch = toPatchBody(v, { ...baseline!, hasLogs: goal.hasLogs });
       return patch ? goalsHttp.updateGoal(goal.id, patch) : null;
     },
-    // 一覧などの取り直しは、画面を離れていても必ず行う。一覧への移動は mutate に渡す onSuccess で、表示中のときだけ行う
+    // attempt終了とinvalidateは離脱後も行い、確定成功はowner/連続性/訪問に束縛した親へ伝える。
     onSuccess: async (_goal, vars) => {
       if (vars.operation) finishCreateAttempt(vars.operation);
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
+      onSaved();
     },
     onError: (error, vars) => {
       saving.current = false;
@@ -248,6 +323,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   });
 
   const remove = useMutation({
+    mutationKey: [...operationKey, 'delete'],
     mutationFn: () => goalsHttp.deleteGoal(goal!.id),
     onSuccess: async () => {
       queryClient.removeQueries({ queryKey: goalKeys.detail(goal!.id) });
@@ -260,6 +336,12 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     },
   });
 
+  useLayoutEffect(() => {
+    // 送信/結果不明/回復中の状態はdraftと別責務。mutationやcallbackを復元しない。
+    onDraftChange?.(attempt !== null || prepareError instanceof CreateRecoveryError || saving.current || deleting.current || reloadInFlight.current || save.isPending || save.isError || remove.isPending || remove.isError || reloadingLatest
+      ? undefined : { values, baseline, sourceGoal: goal, submitted, priorOpen, latestAnswers });
+  }, [values, baseline, goal, submitted, priorOpen, latestAnswers, reloadingLatest, save.isPending, save.isError, remove.isPending, remove.isError, attempt, prepareError, onDraftChange]);
+
   // 保存・削除が終わったとき、この画面がまだ表示されていれば一覧へ戻る（離れた後なら、いま表示中の別の画面を動かさない）
   const leaveToList = () => {
     if (!mounted.current) return;
@@ -268,6 +350,10 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   };
 
   const update = <K extends FieldName>(name: K, value: FormValues[K]) => {
+    // 契約のvalidation 422は保存前の確定拒否。訂正を始めた入力は再び未送信draftとして扱う。
+    // 通信失敗/500/409など結果不明・競合はresetせず、通常draftへ戻さない。
+    if (save.isError && save.error instanceof ApiError && save.error.status === 422 &&
+      save.error.body?.error.code === 'VALIDATION_ERROR') save.reset();
     setValues((prev) => ({ ...prev, [name]: value }));
     if (serverErrors[name]) setServerErrors((prev) => ({ ...prev, [name]: undefined }));
   };
@@ -284,6 +370,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       focusFirstError(found);
       return;
     }
+    onDraftChange(undefined);
     setPrepareError(null);
     try {
       // 再表示で復元した操作を優先し、storageから別の操作を準備し直さない。
@@ -291,7 +378,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       const operation = mode === 'create' ? attempt ?? prepareCreateAttempt(owner!, toCreateBody(values), sessionStorage) : null;
       if (operation) setAttempt(operation);
       saving.current = true;
-      save.mutate({ values, operation }, { onSuccess: leaveToList });
+      save.mutate({ values, operation });
     } catch (error) { saving.current = false; setPrepareError(error); }
   };
 
@@ -335,6 +422,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const reloadLatest = async () => {
     if (reloadInFlight.current || saving.current) return;
     reloadInFlight.current = true;
+    onDraftChange?.(undefined);
     setReloadingLatest(true);
     try {
       const latest = await onReloadLatest?.();
@@ -357,6 +445,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
       <DeskHeader back={goal ? <GoalCrumb goal={goal} /> : <ListCrumb />} title={mode === 'create' ? f.createTitle : f.editTitle} />
       <form ref={formRef} className={`fr-goalform fr-goalform--${mode}`} noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <div className="fr-goalform__fields">
+          {discardedDraft ? <p role="status">別の更新があったため最新のGoalを表示しています。未保存の入力は復元していません。</p> : null}
           {attempt ? <p role="status">{f.createRecovery.pending}</p> : null}
           {refreshError && onRetryRefresh ? <RefreshFailed error={refreshError} onRetry={isEditConflict(save.error) ? () => void reloadLatest() : onRetryRefresh} editConflict={isEditConflict(save.error)} /> : null}
           {count > 0 ? (
@@ -522,6 +611,7 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
           onConfirm={() => {
             if (deleting.current) return;
             deleting.current = true;
+            onDraftChange(undefined);
             remove.mutate(undefined, {
               onSuccess: leaveToList,
               // すでに削除されていた（別のタブなど）場合は、一覧へ戻る

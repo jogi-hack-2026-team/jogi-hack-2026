@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
-import { isNotFound } from '../../api/http.ts';
+import { isNotFound, isUnauthenticated } from '../../api/http.ts';
+import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { useMemoryDraft } from '../../api/session-draft.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { appCopy } from '../../copy/app.ts';
 import { todayCopy } from '../../copy/today.ts';
@@ -11,7 +13,7 @@ import { DeskHeader } from '../../ui/components/DeskHeader.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
-import { GoalNotFoundPanel, LoadErrorPanel } from '../goals/GoalStates.tsx';
+import { GoalNotFoundPanel, LoadErrorPanel, SignedOutPanel } from '../goals/GoalStates.tsx';
 import { fetchPolicy } from '../today/fetch-policy.ts';
 import { dayState, monthCells, shiftMonth } from './calendar.ts';
 import { DayMark } from './DayMark.tsx';
@@ -29,13 +31,32 @@ const WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日'];
  * Goal（記録開始日・今日）と記録の一覧は Today と同じキャッシュを使い、表示のために計算し直さない。
  */
 export function HistoryPage({ goalId }: { goalId: string }) {
+  const current = usePrivateEpoch();
+  const draft = useMemoryDraft<string>(current, `history:${goalId}`);
+  if (!privateDataReady(current)) return <HistoryWaiting goalId={goalId} signedOut={current.owner === null} />;
+  // 利用者が替わったら表示月も捨てる。旧cacheの消去が完了するまで取得部品をmountしない。
+  return <PrivateHistory key={`${current.owner}:${goalId}:${draft.generation}`} goalId={goalId} clearedAt={current.clearedAt} initialMonth={draft.restored} onMonthChange={draft.remember} />;
+}
+
+function HistoryWaiting({ goalId, signedOut }: { goalId: string; signedOut: boolean }) {
+  const back = <Link to="/goals/$goalId" params={{ goalId }} className="fr-icon-btn" aria-label={c.backToGoal}><Icon name="back" /></Link>;
+  return <div className="fr fr-page fr-page--desk">
+    <PageTitle title={c.historyTitle} />
+    <AppBar title={c.historyTitle} leading={back} />
+    <DeskHeader back={back} title={c.historyTitle} />
+    <div className="fr-history__pad">{signedOut ? <SignedOutPanel /> : <p className="fr-history__legend" role="status"><Spinner />{appCopy.loading}</p>}</div>
+  </div>;
+}
+
+function PrivateHistory({ goalId, clearedAt, initialMonth, onMonthChange }: { goalId: string; clearedAt: number; initialMonth: string | undefined; onMonthChange: (month: string) => void }) {
   const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
   const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: ({ signal }) => todayHttp.listLogs(goalId, signal), ...fetchPolicy });
-  const [month, setMonth] = useState<string | null>(null);
+  const [month, setMonth] = useState<string | null>(initialMonth ?? null);
 
-  const goal = goalQuery.data;
-  const logs = logsQuery.data;
+  const goal = goalQuery.dataUpdatedAt > clearedAt ? goalQuery.data : undefined;
+  const logs = logsQuery.dataUpdatedAt > clearedAt ? logsQuery.data : undefined;
   const error = goalQuery.error ?? logsQuery.error;
+  if ([goalQuery.error, logsQuery.error].some(isUnauthenticated)) return <HistoryWaiting goalId={goalId} signedOut />;
   const back = (
     <Link to="/goals/$goalId" params={{ goalId }} className="fr-icon-btn" aria-label={c.backToGoal}>
       <Icon name="back" />
@@ -73,7 +94,8 @@ export function HistoryPage({ goalId }: { goalId: string }) {
 
   const first = goal.recordStartDate.slice(0, 7);
   const last = goal.today.slice(0, 7);
-  const shown = month ?? last;
+  const shown = month === null ? last : month < first ? first : month > last ? last : month;
+  const chooseMonth = (next: string) => { setMonth(next); onMonthChange(next); };
   return (
     <div className="fr fr-page fr-page--desk">
       <PageTitle title={`${c.historyTitle}（${goal.title}）`} />
@@ -83,11 +105,11 @@ export function HistoryPage({ goalId }: { goalId: string }) {
       <div className="fr-history__box">
         <section className="fr-history__top">
           <div className="fr-history__month">
-            <button type="button" className="fr-icon-btn" aria-label={c.prevMonth} disabled={shown <= first} onClick={() => setMonth(shiftMonth(shown, -1))}>
+            <button type="button" className="fr-icon-btn" aria-label={c.prevMonth} disabled={shown <= first} onClick={() => chooseMonth(shiftMonth(shown, -1))}>
               <Icon name="back" />
             </button>
             <h1 aria-live="polite">{c.monthLabel(shown)}</h1>
-            <button type="button" className="fr-icon-btn" aria-label={c.nextMonth} disabled={shown >= last} onClick={() => setMonth(shiftMonth(shown, 1))}>
+            <button type="button" className="fr-icon-btn" aria-label={c.nextMonth} disabled={shown >= last} onClick={() => chooseMonth(shiftMonth(shown, 1))}>
               <Icon name="chevronRight" />
             </button>
           </div>
