@@ -4,6 +4,8 @@
 export const goalsCopy = {
   appTitle: 'Future ROI',
   listTitle: 'あなたのGoal',
+  /** デスクトップ幅の戻り先（デザイン Desk-create）。 */
+  crumbList: 'Goal一覧',
   loading: 'Goalを読み込んでいます',
   loadingVisible: '読み込んでいます',
   add: 'Goalを追加',
@@ -12,8 +14,8 @@ export const goalsCopy = {
     SKIPPED: '今日：休んだ',
     UNRECORDED: '今日：まだ記録していません',
   },
-  /** 一覧の2行目。Goal API は現在の累計を返さないため、設定（1回の量と総量）を出す。 */
-  settingsLine: (sessionAmount: string, totalRequired: string) => `1回の量 ${sessionAmount}・総量 ${totalRequired}`,
+  /** 一覧の累計の進捗バーの読み上げ名（デザイン B-home）。 */
+  progressLabel: (title: string) => `${title}の累計`,
   empty: {
     title: '最初のGoalをつくりましょう',
     body: '毎日1回、量で表せる行動を1つ登録します。記録がたまると、今日やらなかった場合にゴールが何日遠ざかるかの目安を表示します。',
@@ -40,8 +42,12 @@ export const goalsCopy = {
   },
   form: {
     createTitle: 'Goalを作成',
+    /** 初期質問の見出し（開閉の見出し。PR #120 の部品と同じ文言）。 */
+    priorTitle: '最初の見通しを調整する（任意）',
     editTitle: 'Goalを編集',
     close: '閉じる',
+    /** デスクトップ幅で、保存の横に置く取りやめ（スマートフォン幅の「×」の代わり。デザイン Desk-create・Desk-edit）。 */
+    cancel: 'キャンセル',
     title: 'タイトル',
     unit: '単位',
     units: { minutes: '分', sessions: '回' },

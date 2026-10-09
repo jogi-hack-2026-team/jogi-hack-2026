@@ -40,7 +40,7 @@ export function SaveFailure({
       <ErrorPanel
         title={todayCopy.signedOutTitle}
         action={
-          <Link to="/login" search={{ redirect: location.href }} className="fr-btn fr-btn--secondary">
+          <Link to="/login" search={{ redirect: location.href, reason: 'expired' }} className="fr-btn fr-btn--secondary">
             {todayCopy.signIn}
           </Link>
         }

@@ -1,0 +1,129 @@
+/* ログイン・新規登録（デザイン A1〜A5）。色・大きさは tokens.css の値だけを使う。 */
+.fr-auth {
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 56px var(--fr-gutter) var(--fr-space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-6);
+}
+.fr-auth__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-2);
+}
+.fr-auth__name {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.fr-auth__tagline {
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+  color: var(--fr-ink-2);
+}
+
+/* ログイン／新規登録の切り替え（2つのルートへのリンク） */
+.fr-auth__seg {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fr-space-1);
+  padding: var(--fr-space-1);
+  border-radius: 6px;
+  background: var(--fr-surface-2);
+  box-shadow: inset 0 0 0 1px var(--fr-line);
+}
+.fr-auth__seg a {
+  min-height: var(--fr-tap);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--fr-radius-button);
+  font-size: var(--fr-fs-body);
+  font-weight: 700;
+  color: var(--fr-ink-2);
+  text-decoration: none;
+}
+.fr-auth__seg a[aria-current='page'] {
+  background: var(--fr-surface);
+  color: var(--fr-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+.fr-auth__summary {
+  padding: 14px 18px;
+}
+.fr-auth__summary .fr-error__title {
+  font-size: var(--fr-fs-body);
+}
+.fr-auth__summary:focus {
+  outline: none;
+}
+.fr-auth__summary:focus-visible {
+  outline: var(--fr-focus);
+  outline-offset: 2px;
+}
+
+/* 回数制限の待ち：エラーではなく、時刻を待つお知らせとして中立の色で出す */
+.fr-auth__wait {
+  border: 1.5px solid var(--fr-btn-line);
+  border-radius: var(--fr-radius-notice);
+  background: var(--fr-surface);
+  padding: 18px var(--fr-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+}
+.fr-auth__wait-title {
+  font-size: var(--fr-fs-button);
+  font-weight: 700;
+  display: flex;
+  gap: var(--fr-space-2);
+  align-items: center;
+}
+
+.fr-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-4);
+}
+.fr-auth__form > .fr-btn {
+  margin-top: var(--fr-space-2);
+}
+.fr-auth__form .fr-inwrap .fr-input {
+  padding-right: 52px;
+}
+.fr-auth__eye {
+  position: absolute;
+  right: var(--fr-space-1);
+}
+
+/* 公開トップ（P-16） */
+.fr-auth__lead {
+  font-size: var(--fr-fs-body);
+  line-height: var(--fr-lh-body);
+}
+.fr-auth__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-4);
+}
+.fr-auth__link {
+  min-height: var(--fr-tap);
+  display: inline-flex;
+  align-items: center;
+  color: var(--fr-dot);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.fr-auth__status {
+  display: flex;
+  gap: var(--fr-space-2);
+  align-items: center;
+  font-size: var(--fr-fs-help);
+  color: var(--fr-ink-2);
+}

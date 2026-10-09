@@ -14,3 +14,8 @@ test('外部URLや戻り先の型違反は認証後の転送先にせずGoal一�
     assert.deepEqual(authSearch({ redirect }), { redirect: '/goals' });
   }
 });
+
+test('ログイン切れで来たときの理由（expired）だけを残し、知らない値は捨てる', () => {
+  assert.deepEqual(authSearch({ redirect: '/goals/x', reason: 'expired' }), { redirect: '/goals/x', reason: 'expired' });
+  assert.deepEqual(authSearch({ reason: 'other' }), { redirect: '/goals' });
+});

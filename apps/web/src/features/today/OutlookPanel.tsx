@@ -34,6 +34,7 @@ function Estimate({ completion, today }: { completion: Extract<CompletionPresent
         <p className="fr-outlook__p50">{completion.p50Label ? todayCopy.completionP50(completion.p50Label) : todayCopy.over3Years}</p>
         <p className="fr-outlook__p80">{completion.p80Label ? todayCopy.completionP80(completion.p80Label) : todayCopy.completionP80Over3Years}</p>
       </div>
+      <EstimateNote completion={completion} />
       <SourceRows sources={completion.sources} />
       {completion.p50Days !== null ? (
         <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} />
@@ -44,6 +45,24 @@ function Estimate({ completion, today }: { completion: Extract<CompletionPresent
       </p>
     </>
   );
+}
+
+/**
+ * 日付が出ない・特別な場合の補足（デザインキャンバス D4・D4b・D8）。日数は Engine の値をそのまま見るだけで、計算しない。
+ * - 目安が3年より先（p50 なし）：日付を出していない理由
+ * - 10回中8回だけが3年より先（p80 なし）：その意味
+ * - 今日やった場合に今週で届く（TODAY_DONE で p50 が 0 日）：今日やれば今週に届く
+ */
+function EstimateNote({ completion }: { completion: Extract<CompletionPresentation, { kind: 'estimate' }> }) {
+  const note =
+    completion.p50Days === null
+      ? todayCopy.over3YearsNote
+      : completion.p80Days === null
+        ? todayCopy.p80Over3YearsNote
+        : completion.scenario === 'TODAY_DONE' && completion.p50Days === 0
+          ? todayCopy.thisWeekNote
+          : null;
+  return note ? <p className="fr-note">{note}</p> : null;
 }
 
 /** a／b 別の出所（R-11）。どちらも記録だけなら出さない（記録だけのモードの表示を変えない）。 */

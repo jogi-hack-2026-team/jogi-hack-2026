@@ -1,0 +1,24 @@
+/* ルーター全体の既定の画面（404・エラー・読込中）。色・大きさは tokens.css の値だけを使う。 */
+.fr-route__top {
+  padding: var(--fr-space-2) var(--fr-gutter) var(--fr-space-4);
+}
+.fr-route__heading {
+  font-size: var(--fr-fs-question);
+  font-weight: 700;
+  line-height: 1.55;
+}
+.fr-route__pad {
+  padding: 0 var(--fr-gutter);
+}
+.fr-route__pad--top {
+  padding-top: var(--fr-space-4);
+}
+.fr-route__loading {
+  display: flex;
+  gap: var(--fr-space-2);
+  align-items: center;
+  justify-content: center;
+  padding: var(--fr-space-4);
+  font-size: var(--fr-fs-help);
+  color: var(--fr-ink-2);
+}
