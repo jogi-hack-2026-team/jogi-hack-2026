@@ -6,6 +6,7 @@
 
 - PR163の取込み前：`7d4a3b0a8e3d59f86897132f64b1d6fe31a7e022`。
 - PR175の取込み対象：`f575741c416b5c8e09ccf1365d27f51fcf8a558d`。PR159とmainの`92332486b41f7682edb66b9027c0523f78eb9b55`（#172）を含む。
+- #175のsquash後のmain `593e126348d261f5342e3312cf97308b40d64528` も通常mergeした。`f575741`とmainのtreeは完全一致し、衝突解消直後のtreeも検証済み`2ba40ac`と完全一致を確認した。以後の差分は本記録と対応表の文書更新だけ。
 - Windowsの専用worktree。独立Compose project `codex-task3-pr163-final`、合成アカウント／DBだけを使用。通常checkoutのEngine未commit変更、既存app8080、DB・volume・sessionを変更しない。
 - 最終コードを含むDocker image：`sha256:0a76d555e96cf625cbe6dfdc7a8db3ec1b97866800920ca10f303c746efa8a28`。初回起動13:43:43 UTC。以降の追加は文書・証拠画像だけ。
 - Codex In-app Browserの2タブ。PC/lightのみを今回再確認。過去の画像はこの実画面確認の根拠に使用しない。各画像は保存したファイルを開いて内容を確認した。
