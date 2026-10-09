@@ -60,7 +60,26 @@ F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然
 
 修正前：Node24.21.0の遅延GET回帰は同世代1成功、A→B／A→B→A／離脱3失敗。実ChromeのF11（410）・F12（単位固定）は必要なボタンが存在せず2失敗。修正後の遅延GET回帰4件は成功。これは実hookとQueryClientを使う制御回帰で、Reactの描画・実認証でのアカウント切替の証明ではない。
 
-途中の実Chrome再実行は専用appのmigration checksum不一致（LF/CRLFのartifact差）により接続拒否で失敗した。PASSとしていない。SQLや適用履歴のchecksumは変更せず、停止済みtmpfsの新しい合成DBを今回の同一imageだけで初期化して再検証する。最終結果は完了後に追記する。
+途中の実Chrome再実行は専用appのmigration checksum不一致（LF/CRLFのartifact差）により接続拒否で失敗した。PASSとしていない。SQLや適用履歴のchecksumは変更せず、停止済みtmpfsを起動した新しい合成DBでpublic表0件を確認し、Gitのartifactから作った同一imageだけで初期化した。
+
+### 追加引継ぎのローカル結果
+
+実装commit `45000427739d1afa381676dd86e3c0fac7cc8574`と追加のbrowser runner修正を対象に、Node24.21.0で再実行した。記録・runnerの最終commit後にも同HEADで型・全test・build・Foundation、Git artifactのimageとブラウザを再実行し、最終remote HEADとCIのSHA・結果は[PR #175](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/175)へ記録する。初回の275件・旧image・旧SHAのCIは本追加の成功へ流用しない。
+
+| 検証 | 結果と範囲 |
+| --- | --- |
+| `npm run typecheck` / `npm run build` | 全workspace成功 |
+| `npm test` | API147・FE75・Prediction70、合計292成功／失敗0／skip0。遅延GET4件・回復情報破損・409分類を含む |
+| Foundation / 動的migration checker | `scripts/check-foundation.ps1`成功。`node --test scripts/tests/check-migrations.test.mjs`の5件成功。#176のcheckerとmigration実ファイルinventoryを保持 |
+| compiled migration | 空の合成DBへauth・app0001〜0005を適用。same imageの再実行はauth tables/columnsとapp appliedがすべて空、checker `noop`成功 |
+| 実Chrome / 専用SPA・API image | F01〜F16＋F06-late-operationの17件を通し実行して成功。409・410・応答切断・単位復帰・破損情報・別owner・#147の進捗/desktop配置を確認 |
+| 保全 | 通常checkoutと元spec-harnessのtracked差分hashは開始時と一致。元直接worktreeはcleanのまま。stash `5615001f7c41ddbbed7e8ee3d13dd81b17ec43bc`はapply後も保持 |
+
+専用環境はworktree内`.tools/issue148-fe/compose.yaml`、project `future-roi-148-fe-followup`、SPA/API `18097`、DB `15588`。browser runnerへ`ISSUE148_ORIGIN=http://127.0.0.1:18097`と`ISSUE148_DB_PORT=15588`を渡す。`git archive HEAD`のtracked artifact（SQLはGitのLF）をstandard Dockerfileでbuildする。上記実装commitのimageは`sha256:78c127937875314775b81bef31321a3dcc5df92b1a9eeb50964b1cab25d68be7`、revision labelは同commit。以後の記録・runnerだけのcommitでも新HEADのartifactを作り直す。DBの適用履歴・checksum・認証制限行は書き換えない。停止はこのprojectの`stop`だけを使う。
+
+追加実行の途中では、Docker依存取得の通信timeout、実DOMの`p`をheadingとして探したselector、保存ボタンの待機timeout、通し実行での認証GET429が発生した。Oracle（保存量・件数・owner/key/body・raw保持）は弱めず、DOM selectorと待機を修正した。固定版のDB limiterは直前の許可要求から60秒間要求が途切れるとresetするため、5ケースごとに認証要求を止めて待つ。製品の制限値やDB行は変更していない。全workspace初回のAPI146/147・FE75・Prediction70はDemo登録時のDB接続失敗による500で全体失敗。Demo12件の単独再実行と、その後の全workspace292件の再実行は成功した。単独で再現しなかった原因をFEロジックの欠陥と断定しない。
+
+今回のセルフレビューはIssue契約、owner/epoch、回復情報の保全、両側merge内容、文書と実装を照合しBlockingなし。独立した再レビューやHuman Approve、内部3人・初見利用者の受入、本番migration・merge・deployは未実施。
 
 #159／#163の全統合は別段階。初回のGit比較では#147と3、#159と1、#163と13ファイルが競合し、#164は競合しなかった。二つの0005は全文ファイル名が異なり、runnerはファイル名・checksumで管理するため番号重複だけでは失敗しない。統合時は両migration・実ファイルinventory・M01を照合する（#174/#176の動的checkerは今回保持）。targetDateは作成hash・設定版・rebase・固定attemptにも接続する必要があり、このFE修正では未実装。
 
@@ -107,6 +126,7 @@ F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然
 - [apps/web/tests/fixtures/issue148-compose.yaml](../../apps/web/tests/fixtures/issue148-compose.yaml)
 - [apps/web/tests/goal-form.test.mjs](../../apps/web/tests/goal-form.test.mjs)
 - [apps/web/tests/goal-integrity.test.mjs](../../apps/web/tests/goal-integrity.test.mjs)
+- [apps/web/tests/goal-recovery.test.mjs](../../apps/web/tests/goal-recovery.test.mjs)
 - [apps/web/tests/issue148-browser.mjs](../../apps/web/tests/issue148-browser.mjs)
 - [apps/web/tests/record-log.test.mjs](../../apps/web/tests/record-log.test.mjs)
 - [apps/web/tests/today-data.test.mjs](../../apps/web/tests/today-data.test.mjs)

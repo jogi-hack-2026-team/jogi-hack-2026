@@ -16,15 +16,15 @@ const browser = await chromium.launch({ executablePath: process.env.ISSUE148_BRO
 const cases = []; const contexts = [];
 const wait = async fn => { for(let i=0;i<100;i++){ if(await fn()) return; await new Promise(r=>setTimeout(r,50)); } throw Error('condition timeout'); };
 async function fixture() {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'Asia/Tokyo' }); contexts.push(context);
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'Asia/Tokyo', reducedMotion: 'reduce' }); contexts.push(context);
   const creds = { name: '合成ユーザー', email: `${randomUUID()}@example.test`, password: 'Synthetic-148-only-password!' };
   const request = async (method,path,data,extra={}) => {
     const response = await context.request.fetch(origin+path, { method, headers: { origin, ...extra }, ...(data ? { data } : {}) });
     const text = await response.text(); return { status: response.status(), json: text ? JSON.parse(text) : null };
   };
   assert.equal((await request('POST','/api/auth/sign-up/email',creds)).status,200);
-  const session = (await request('GET','/api/auth/get-session')).json;
-  const page = await context.newPage(); page.setDefaultTimeout(7000);
+  const sessionResponse = await request('GET','/api/auth/get-session'); assert.equal(sessionResponse.status,200,'合成fixtureのsession確認'); const session=sessionResponse.json;
+  const page = await context.newPage(); page.setDefaultTimeout(15000);
   const requests=[];
   page.on('request', r=> { if (r.method() !== 'GET' && new URL(r.url()).pathname.startsWith('/api/goals')) requests.push({ method:r.method(),path:new URL(r.url()).pathname,body:r.postDataJSON(), key:r.headers()['idempotency-key'] }); });
   const create = async (extra={}) => { const body={ title:'合成Goal',unit:'minutes',totalRequired:1000,sessionAmount:10,timezone:'Asia/Tokyo',...extra }; const res=await request('POST','/api/goals',body,{'Idempotency-Key':randomUUID()}); assert.equal(res.status,201);return res.json; };
@@ -32,7 +32,14 @@ async function fixture() {
   const patch = async (g,extra) => { const res=await request('PATCH',`/api/goals/${g.id}`,{expectedGoalSettingsRevision:g.goalSettingsRevision,...extra});assert.equal(res.status,200);return res.json; };
   return { context,page,requests,request,create,open,patch,creds,owner:session.user.id };
 }
-async function run(id,fn) { if (selected && !selected.includes(id)) return; const start=Date.now(); try { const evidence=await fn(); cases.push({id,status:'PASS',milliseconds:Date.now()-start,evidence});console.log(`${id}: PASS`); } catch(error){ cases.push({id,status:'FAIL',milliseconds:Date.now()-start,error:String(error.stack)});console.log(`${id}: FAIL ${error.message}`); const p=contexts.at(-1)?.pages().at(-1); if(p) { writeFileSync(`${out}/${id}-failure.txt`,await p.locator('body').innerText().catch(()=>'')); } } finally { if(id !== 'F03') for(const c of contexts.splice(0)) await c.close(); } }
+async function run(id,fn) { if (selected && !selected.includes(id)) return; const start=Date.now(); try { const evidence=await fn(); cases.push({id,status:'PASS',milliseconds:Date.now()-start,evidence});console.log(`${id}: PASS`); } catch(error){ cases.push({id,status:'FAIL',milliseconds:Date.now()-start,error:String(error.stack)});console.log(`${id}: FAIL ${error.message}`); const p=contexts.at(-1)?.pages().at(-1); if(p) { writeFileSync(`${out}/${id}-failure.txt`,await p.locator('body').innerText().catch(()=>'')); await p.screenshot({path:`${out}/${id}-failure.png`,fullPage:true}).catch(()=>{}); } } finally { if(id !== 'F03') for(const c of contexts.splice(0)) await c.close();
+  // 固定版のDB limiterは直前の許可要求から60秒無要求でresetする。制限行を変えず小さなbatch間で待つ。
+  if(cases.length % 5 === 0) {
+   console.log('合成認証の制限windowを待機');
+   await new Promise(resolve=>setTimeout(resolve,31000));
+   await new Promise(resolve=>setTimeout(resolve,31000));
+  }
+ } }
 try {
  await run('F01',async()=>{
   const f=await fixture(),g=await f.create();
@@ -170,9 +177,9 @@ try {
   for(const kind of ['malformed','legacy']) {
    const f=await fixture();const raw=kind==='malformed'?'{':JSON.stringify({owner:f.owner,key:randomUUID(),body:{title:'旧形式',unit:'legacy',totalRequired:100,sessionAmount:10,timezone:'Asia/Tokyo'}});const errors=[];f.page.on('pageerror',error=>errors.push(String(error)));
    await f.page.goto(`${origin}/goals`);await f.page.evaluate(({owner,raw})=>sessionStorage.setItem(`future-roi:create-attempt:${owner}`,raw),{owner:f.owner,raw});
-   await f.page.goto(`${origin}/goals/new`);await f.page.getByRole('heading',{name:'作成の回復情報を確認できません',exact:true}).waitFor();
+   await f.page.goto(`${origin}/goals/new`);await f.page.getByRole('alert').getByText('作成の回復情報を確認できません',{exact:true}).waitFor();
    assert.equal(await f.page.getByRole('button',{name:'保存する',exact:true}).isDisabled(),true);
-   await f.page.locator('form').evaluate(form=>form.requestSubmit());await f.page.reload();await f.page.getByRole('heading',{name:'作成の回復情報を確認できません',exact:true}).waitFor();
+   await f.page.locator('form').evaluate(form=>form.requestSubmit());await f.page.reload();await f.page.getByRole('alert').getByText('作成の回復情報を確認できません',{exact:true}).waitFor();
    assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);assert.equal(f.requests.length,0);assert.deepEqual(errors,[]);
    await f.page.getByRole('link',{name:'Goal一覧で確認する',exact:true}).click();await f.page.waitForURL(`${origin}/goals`);assert.deepEqual((await f.request('GET','/api/goals')).json,[]);
   }
@@ -182,7 +189,7 @@ try {
   const f=await fixture(),key=randomUUID(),body={title:'元のGoal',unit:'minutes',totalRequired:100,sessionAmount:10,timezone:'Asia/Tokyo'};
   const created=await f.request('POST','/api/goals',body,{'Idempotency-Key':key});assert.equal(created.status,201);
   const raw=JSON.stringify({owner:f.owner,key,body:{...body,title:'違う入力'}});await f.page.goto(`${origin}/goals`);await f.page.evaluate(({owner,raw})=>sessionStorage.setItem(`future-roi:create-attempt:${owner}`,raw),{owner:f.owner,raw});
-  await f.page.goto(`${origin}/goals/new`);await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('heading',{name:'作成操作の入力が一致しません',exact:true}).waitFor();
+  await f.page.goto(`${origin}/goals/new`);await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByRole('alert').getByText('作成操作の入力が一致しません',{exact:true}).waitFor();
   assert.equal(await f.page.getByRole('button',{name:'保存する',exact:true}).isDisabled(),true);assert.equal(await f.page.getByRole('button',{name:'もう一度保存',exact:true}).count(),0);
   await f.page.locator('form').evaluate(form=>form.requestSubmit());assert.equal(f.requests.length,1);assert.equal(f.requests[0].key,key);
   assert.equal(await f.page.evaluate(owner=>sessionStorage.getItem(`future-roi:create-attempt:${owner}`),f.owner),raw);assert.equal((await f.request('GET','/api/goals')).json.length,1);
@@ -193,7 +200,8 @@ try {
   let guarded;await f.page.route('**/api/goals',async route=>{
    if(route.request().method()!=='POST')return route.continue();
    await f.request('POST','/api/auth/sign-out',{});assert.equal((await f.request('POST','/api/auth/sign-up/email',{name:'B',email:`${randomUUID()}@example.test`,password:'Synthetic-148-only-password!'})).status,200);
-   const response=await route.fetch();guarded={status:response.status(),body:await response.json()};await route.fulfill({response});
+   const cookie=(await f.context.cookies(origin)).map(({name,value})=>`${name}=${value}`).join('; ');
+   const response=await route.fetch({headers:{...route.request().headers(),cookie}});guarded={status:response.status(),body:await response.json()};await route.fulfill({response});
   });
   await f.page.getByRole('button',{name:'保存する',exact:true}).click();await f.page.getByText(/作成時のアカウントと現在のアカウントが違います/).waitFor();assert.equal(guarded.status,409);assert.equal(guarded.body.error.code,'CREATE_OWNER_CHANGED');
   const checked=f.page.waitForResponse(response=>new URL(response.url()).pathname==='/api/auth/get-session');await f.page.getByRole('button',{name:'作成時のアカウントで再確認',exact:true}).click();await checked;await wait(()=>f.page.getByRole('button',{name:'作成時のアカウントで再確認',exact:true}).isEnabled());assert.equal(f.requests.length,1,'非cache session確認で別ownerへのPOSTを止める');assert.deepEqual((await f.request('GET','/api/goals')).json,[]);
