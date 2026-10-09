@@ -29,3 +29,13 @@ FE修正HEAD a9b839aで全workspace typecheck/build、通常Web test64成功・b
 正常focus再確認でも未保存入力・履歴選択月を破棄し、同じownerでも復元しない。実ユーザーでの頻度・UX受入は人間のレビュー対象。通知のない直接Cookie置換＋手動query/明示session確認は補助実験であり、通常UI/SDKや認識前の一般的保証に含めない。DTOにresponse ownerがなく、owner付きquery keyだけでも実Cookieと応答ownerを証明できない。
 
 瞬間のpixel描画、公開環境、実ユーザー、共有回線のrate制限受入は未検証。既存build chunk警告とCIのrateLimit lastRequest型警告が残る。#148の回復契約には触れず、auth資格情報/権限/保護設定変更・Approve・merge・deployは実施しない。通常checkoutの未コミットEngine2/.vscode、既存worktree/container・ユーザーデータを保全する。
+
+## 2026-10-09の同一owner入力消失の訂正と限定修正
+
+上の正常focusでも入力を破棄する説明はHEAD `6b3cf98d7db500c1ad23f03bfbb0f6bfe32ffdae` 時点の制約。固定HEADで実SDK/実router/APIと制御イベントによる15操作を測定し、可視復帰/onlineの5秒抑制を越えた再確認、同path/search navigationで入力中の作成/編集値と履歴月の消失を確認した。visibleのままwindow focus、hidden/offlineだけ、直前の自動確認から5秒未満の復帰では作成入力を保持した。OS native focus/NIC切断・実人頻度は未測定。
+
+2026-10-09 08:10 UTCにユーザーが、入力消失の限定修正と#175回復処理との合成環境での整合検証を承認した。後回しの大規模整理と分け、正常同一ownerの未送信draftだけをメモリへ退避する。私的DOM除去とquery消去は維持する。session atomの確認開始・owner/error/認証変更を追い、query世代は毎確認で、draft連続性は失敗/logout/owner変更/認証通知で無効化する。正常同一ownerだけsnapshotを戻す。中間B/errorをReactが同じ描画へまとめても安全境界を維持する。
+
+編集の元baselineと最新の編集値・revision・記録有無を照合し、変更がある場合は復元を止めて理由を表示する。送信中のmutationは別に追い、同じowner/画面の送信終了まで再作成フォームを開かず、古いcallbackで移動しない。作成結果不明attemptと#175の回復処理はsnapshotへ含めず、既存責務へ委ねる。localStorage永続化・認証設定・API/DB変更は追加しない。
+
+新しい[実router/hook回帰](../../apps/web/tests/session-draft.browser.tsx)は15操作を保持し、正常復帰、失敗→A、高速A→B→A/正常確認/429/null、認証通知、編集のanswer/settings revision、保存中と明示保存を検査する。合成HTTPテスト、実認証、#175との隔離統合は異なる証拠であり、最終HEAD・実施結果・残る制約はPRの最新記録から確認する。既存の旧失敗と未検証事項を保全し、正式Decision・Scope・製品完成の状態は変更しない。

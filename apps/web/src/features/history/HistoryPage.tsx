@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { goalKeys, goalsHttp } from '../../api/goals-http.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
 import { privateDataReady, usePrivateEpoch } from '../../api/session-cache.ts';
+import { useMemoryDraft } from '../../api/session-draft.ts';
 import { todayHttp, todayKeys } from '../../api/today-http.ts';
 import { appCopy } from '../../copy/app.ts';
 import { todayCopy } from '../../copy/today.ts';
@@ -31,9 +32,10 @@ const WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日'];
  */
 export function HistoryPage({ goalId }: { goalId: string }) {
   const current = usePrivateEpoch();
+  const draft = useMemoryDraft<string>(current, `history:${goalId}`);
   if (!privateDataReady(current)) return <HistoryWaiting goalId={goalId} signedOut={current.owner === null} />;
   // 利用者が替わったら表示月も捨てる。旧cacheの消去が完了するまで取得部品をmountしない。
-  return <PrivateHistory key={`${current.owner}:${goalId}`} goalId={goalId} clearedAt={current.clearedAt} />;
+  return <PrivateHistory key={`${current.owner}:${goalId}:${draft.generation}`} goalId={goalId} clearedAt={current.clearedAt} initialMonth={draft.restored} onMonthChange={draft.remember} />;
 }
 
 function HistoryWaiting({ goalId, signedOut }: { goalId: string; signedOut: boolean }) {
@@ -46,10 +48,10 @@ function HistoryWaiting({ goalId, signedOut }: { goalId: string; signedOut: bool
   </div>;
 }
 
-function PrivateHistory({ goalId, clearedAt }: { goalId: string; clearedAt: number }) {
+function PrivateHistory({ goalId, clearedAt, initialMonth, onMonthChange }: { goalId: string; clearedAt: number; initialMonth: string | undefined; onMonthChange: (month: string) => void }) {
   const goalQuery = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), ...fetchPolicy });
   const logsQuery = useQuery({ queryKey: todayKeys.logs(goalId), queryFn: ({ signal }) => todayHttp.listLogs(goalId, signal), ...fetchPolicy });
-  const [month, setMonth] = useState<string | null>(null);
+  const [month, setMonth] = useState<string | null>(initialMonth ?? null);
 
   const goal = goalQuery.dataUpdatedAt > clearedAt ? goalQuery.data : undefined;
   const logs = logsQuery.dataUpdatedAt > clearedAt ? logsQuery.data : undefined;
@@ -92,7 +94,8 @@ function PrivateHistory({ goalId, clearedAt }: { goalId: string; clearedAt: numb
 
   const first = goal.recordStartDate.slice(0, 7);
   const last = goal.today.slice(0, 7);
-  const shown = month ?? last;
+  const shown = month === null ? last : month < first ? first : month > last ? last : month;
+  const chooseMonth = (next: string) => { setMonth(next); onMonthChange(next); };
   return (
     <div className="fr fr-page fr-page--desk">
       <PageTitle title={`${c.historyTitle}（${goal.title}）`} />
@@ -102,11 +105,11 @@ function PrivateHistory({ goalId, clearedAt }: { goalId: string; clearedAt: numb
       <div className="fr-history__box">
         <section className="fr-history__top">
           <div className="fr-history__month">
-            <button type="button" className="fr-icon-btn" aria-label={c.prevMonth} disabled={shown <= first} onClick={() => setMonth(shiftMonth(shown, -1))}>
+            <button type="button" className="fr-icon-btn" aria-label={c.prevMonth} disabled={shown <= first} onClick={() => chooseMonth(shiftMonth(shown, -1))}>
               <Icon name="back" />
             </button>
             <h1 aria-live="polite">{c.monthLabel(shown)}</h1>
-            <button type="button" className="fr-icon-btn" aria-label={c.nextMonth} disabled={shown >= last} onClick={() => setMonth(shiftMonth(shown, 1))}>
+            <button type="button" className="fr-icon-btn" aria-label={c.nextMonth} disabled={shown >= last} onClick={() => chooseMonth(shiftMonth(shown, 1))}>
               <Icon name="chevronRight" />
             </button>
           </div>

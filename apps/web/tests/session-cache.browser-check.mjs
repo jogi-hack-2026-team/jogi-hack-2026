@@ -45,7 +45,7 @@ function setupSessionTransport() {
   };
 }
 
-async function runBrowser(t, entry, mockAuth) {
+async function runBrowser(t, entry, mockAuth, realRouter = false) {
   const browser = await browserPath();
   const dir = await mkdtemp(join(tmpdir(), 'futureroi-session-test-'));
   t.after(() => {
@@ -54,7 +54,7 @@ async function runBrowser(t, entry, mockAuth) {
   });
   const bundle = await build({
     configFile: false, logLevel: 'silent',
-    resolve: { alias: { '@contracts': fileURLToPath(new URL('../../api/src/contracts/index.ts', import.meta.url)), '@tanstack/react-router': 'test:router' }, conditions: ['development'] },
+    resolve: { alias: { '@contracts': fileURLToPath(new URL('../../api/src/contracts/index.ts', import.meta.url)), ...(!realRouter && { '@tanstack/react-router': 'test:router' }) }, conditions: ['development'] },
     define: { 'process.env.NODE_ENV': '"development"' },
     plugins: [react(), {
       name: 'isolated-test-router',
@@ -101,5 +101,13 @@ test('Better Auth 1.7.7: visibility refetch failure masks draft and successful r
   const result = await runBrowser(t, './session-focus.browser.tsx', false);
   assert.equal(result.results.length, 4);
   assert.equal(result.writes, 0);
+  t.diagnostic(JSON.stringify(result));
+});
+
+test('same-owner draft: actual router/hooks preserve idle input only across successful continuous checks', { timeout: 180000 }, async (t) => {
+  const result = await runBrowser(t, './session-draft.browser.tsx', false, true);
+  assert.equal(result.operations.length, 15);
+  assert.equal(result.safety.length, 11);
+  assert.equal(result.writes, 2);
   t.diagnostic(JSON.stringify(result));
 });

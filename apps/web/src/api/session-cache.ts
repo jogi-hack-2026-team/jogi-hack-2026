@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { authClient } from '../auth/client.ts';
 import { goalKeys } from './goals-http.ts';
+import { getPrivateGeneration, useDraftContinuityTracking, usePrivateGeneration } from './session-draft.ts';
 
 /**
  * ログインしている人の識別。undefined はまだ分からない（session の読み込み中）、null は未ログイン。
@@ -29,6 +30,15 @@ export function nextEpoch(prev: PrivateEpoch, userId: string | null | undefined)
 }
 
 let epoch: PrivateEpoch = { owner: undefined, clearedAt: 0 };
+let clearedGeneration = 0;
+const waitingEpoch: PrivateEpoch = { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
+/** 非queryの回復GETも、描画/effectより先に始まった確認やowner変更で無効にする。 */
+export function getPrivateEpoch(): PrivateEpoch {
+  const session = authClient.$store?.atoms?.session?.get();
+  if (getPrivateGeneration() !== clearedGeneration || session?.isPending || session?.isRefetching || session?.error ||
+      (session && (session.data?.user.id ?? null) !== epoch.owner)) return waitingEpoch;
+  return epoch;
+}
 const listeners = new Set<() => void>();
 function setEpoch(next: PrivateEpoch) {
   if (next === epoch) return;
@@ -43,11 +53,12 @@ function subscribe(listener: () => void) {
 /** いまの利用者と、その利用者のデータとして使ってよい取得の下限時刻。 */
 export function usePrivateEpoch(): PrivateEpoch {
   const stored = useSyncExternalStore(subscribe, () => epoch);
+  const generation = usePrivateGeneration();
   const session = authClient.useSession();
   // effect の消去を待つ前の描画でも、いま認識している session と照合する。
   // 取得失敗は未ログインと取り違えず、私的な表示・入力だけを停止する。
   // 再取得中は旧 data が残り isPending=false でも、Cookie の所有者と一致するとは限らない。
-  if (session.isPending || session.isRefetching || session.error) return { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
+  if (session.isPending || session.isRefetching || session.error || generation !== clearedGeneration) return { owner: undefined, clearedAt: Number.POSITIVE_INFINITY };
   return nextEpoch(stored, session.data?.user.id ?? null);
 }
 
@@ -66,6 +77,7 @@ export function privateDataReady(current: PrivateEpoch): boolean {
  */
 export function PrivateCacheGuard() {
   const session = authClient.useSession();
+  const generation = useDraftContinuityTracking(session);
   const queryClient = useQueryClient();
   const last = useRef<string | null | undefined>(undefined);
   const needsReset = useRef(false);
@@ -81,26 +93,28 @@ export function PrivateCacheGuard() {
       }
       return;
     }
-    const transition = needsReset.current
+    const resetNeeded = needsReset.current || generation !== clearedGeneration;
+    const transition = resetNeeded
       ? { owner: userId, clearedAt: Number.POSITIVE_INFINITY }
       : nextEpoch(epoch, userId);
     setEpoch(transition);
-    if (needsReset.current || sessionChanged(last.current, userId)) {
+    if (resetNeeded || sessionChanged(last.current, userId)) {
       needsReset.current = false;
       const owner = userId;
       void queryClient.cancelQueries({ queryKey: goalKeys.all }).then(() => {
         // 前の人の取得が止まった後なら、ここから先に届くデータは新しい利用者のもの
         // A→B→A のような連続切替でも、古い中断完了で新しい境界を開かない。
-        if (epoch !== transition) return;
+        if (epoch !== transition || getPrivateGeneration() !== generation) return;
         // 先に消去する。時刻を公開してから reset すると、間に旧 cache を読めてしまう。
         const reset = queryClient.resetQueries({ queryKey: goalKeys.all });
+        clearedGeneration = generation;
         // cache はすでに空。同じ millisecond に成功した新取得も許可する。
         setEpoch({ owner, clearedAt: Date.now() - 1 });
         return reset;
       });
     }
     if (userId !== undefined) last.current = userId;
-  }, [userId, queryClient]);
+  }, [userId, queryClient, generation]);
 
   return null;
 }
