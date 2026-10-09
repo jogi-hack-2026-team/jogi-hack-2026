@@ -1,7 +1,10 @@
 import type { Goal, GoalCreate, GoalPatch, GoalUnit, QuestionAnswers } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { goalsCopy } from '../../copy/goals.ts';
-import { localDateIn } from '../today/day-rollover.ts';
+import { isValidTimezone, localDateIn } from '../../calendar.ts';
+
+// 既存のフォーム検査callerの入口を保持する。
+export { isValidTimezone } from '../../calendar.ts';
 
 /**
  * Goal の作成・編集フォームの値と検査（R-02、#78）。画面から切り離し、Node のテストで確かめられるようにする。
@@ -70,16 +73,6 @@ function amountError(raw: string, minimum: 0 | 1): string | undefined {
   if (value === null || value < minimum) return minimum === 1 ? e.positiveInteger : e.nonNegativeInteger;
   if (value > INT4_MAX) return e.tooLarge;
   return undefined;
-}
-
-export function isValidTimezone(timezone: string): boolean {
-  if (timezone.length === 0 || timezone.length > 64) return false;
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: timezone });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
