@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "ab02bc085f4ebe15ddb860c20c2cd8b9fe0f9ac0",
+  "moves": [
+    {
+      "id": "d28-context-and-proposal",
+      "source": "docs/architecture.md",
+      "after": "### D-28",
+      "before": "#### D-28の採択状態を反映する手順",
+      "destination": "docs/prediction/decision-log.md",
+      "destinationAfter": "<!-- d28-context:start -->",
+      "destinationBefore": "<!-- d28-context:end -->",
+      "headingMap": {}
+    },
+    {
+      "id": "d28-alternatives-and-evidence",
+      "source": "docs/architecture.md",
+      "after": null,
+      "fromLine": "Alternatives: 同一process内のworker pool",
+      "before": "旧D-01〜D-14・D-16と比較・代替案は",
+      "destination": "docs/prediction/decision-log.md",
+      "destinationAfter": "<!-- d28-comparison:start -->",
+      "destinationBefore": "<!-- d28-comparison:end -->",
+      "headingMap": {}
+    }
+  ],
+  "preserveHeadings": [
+    "docs/architecture.md"
+  ],
+  "preserveUnmovedLines": [
+    "docs/architecture.md"
+  ]
+}
