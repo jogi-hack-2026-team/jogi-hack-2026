@@ -10,7 +10,7 @@ import { Icon } from '../../ui/components/Icon.tsx';
 import { StatusBadge } from '../../ui/components/StatusBadge.tsx';
 import { Band } from '../../ui/components/Section.tsx';
 import { fetchPolicy } from '../today/fetch-policy.ts';
-import { LoadErrorPanel } from './GoalStates.tsx';
+import { LoadErrorPanel, SignedOutPanel } from './GoalStates.tsx';
 import '../../ui/tokens.css';
 import '../../ui/page.css';
 import '../../ui/components/Button.css';
@@ -39,7 +39,9 @@ export function GoalListPage() {
         <h1 className="fr-goals__heading">{c.listTitle}</h1>
       </section>
 
-      {!ready || query.isPending || (query.data !== undefined && !fresh) ? (
+      {current.owner === null ? (
+        <div className="fr-goals__pad"><SignedOutPanel /></div>
+      ) : !ready || query.isPending || (query.data !== undefined && !fresh) ? (
         <ListLoading />
       ) : query.isError ? (
         <div className="fr-goals__pad">

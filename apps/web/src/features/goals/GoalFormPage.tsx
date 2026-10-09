@@ -53,6 +53,7 @@ const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 export function GoalCreatePage() {
   // ログインしている人が替わったら作り直し、前の人の入力を持ち越さない
   const current = usePrivateEpoch();
+  if (current.owner === null) return <FormShell title={f.createTitle} body={<SignedOutPanel />} />;
   if (!privateDataReady(current)) return <FormShell title={f.createTitle} body={<FormLoading />} />;
   return <GoalForm key={current.owner} mode="create" />;
 }
@@ -63,6 +64,7 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
   const { owner } = current;
   const ready = privateDataReady(current);
   const query = useQuery({ queryKey: goalKeys.detail(goalId), queryFn: ({ signal }) => goalsHttp.getGoal(goalId, signal), enabled: ready, ...fetchPolicy });
+  if (owner === null) return <FormShell title={f.editTitle} body={<SignedOutPanel />} />;
   if (!ready || (query.data && query.dataUpdatedAt <= current.clearedAt)) return <FormShell title={f.editTitle} body={<FormLoading />} />;
   if (!query.data) {
     if (!query.isError) return <FormShell title={f.editTitle} body={<FormLoading />} />;

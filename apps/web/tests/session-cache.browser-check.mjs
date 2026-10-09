@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { build } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -24,7 +25,25 @@ async function browserPath() {
   throw new Error('Chromium not found: set TEST_BROWSER to an installed Chrome/Edge/Chromium executable (not a skipped PASS)');
 }
 
-test('session ownership: real React hooks/Goal screens reject old cache and drafts in every DOM commit', { timeout: 60000 }, async (t) => {
+// Better Auth は client 作成時に fetch を保持するため、bundle 評価前に transport を用意する。
+function setupSessionTransport() {
+  const state = globalThis.__sessionTransport = { owner: 'A', failure: null, reads: 0, writes: 0 };
+  globalThis.fetch = async (request, init) => {
+    const url = typeof request === 'string' ? request : request instanceof URL ? request.href : request.url;
+    if (!url.endsWith('/api/auth/get-session') || (init?.method && init.method !== 'GET')) {
+      state.writes++; throw new Error('unexpected request: ' + url);
+    }
+    state.reads++;
+    if (state.failure === 'network') throw new TypeError('synthetic offline');
+    if (state.failure === '503') return Response.json({ code: 'SYNTHETIC_UNAVAILABLE', message: 'synthetic 503' }, { status: 503 });
+    return Response.json({
+      user: { id: state.owner, name: 'Synthetic ' + state.owner, email: state.owner + '@example.invalid', emailVerified: true, createdAt: '2026-10-09T00:00:00Z', updatedAt: '2026-10-09T00:00:00Z' },
+      session: { id: 'synthetic-' + state.owner, userId: state.owner, token: 'synthetic-test-token', expiresAt: '2099-01-01T00:00:00Z', createdAt: '2026-10-09T00:00:00Z', updatedAt: '2026-10-09T00:00:00Z' },
+    });
+  };
+}
+
+async function runBrowser(t, entry, mockAuth) {
   const browser = await browserPath();
   const dir = await mkdtemp(join(tmpdir(), 'futureroi-session-test-'));
   t.after(() => {
@@ -38,29 +57,47 @@ test('session ownership: real React hooks/Goal screens reject old cache and draf
     plugins: [react(), {
       name: 'isolated-test-router',
       enforce: 'pre',
-      resolveId: (id) => id === 'test:router' ? '\0test:router' : id.endsWith('/auth/client.ts') ? '\0test:auth' : null,
+      resolveId: (id) => id === 'test:router' ? '\0test:router' : mockAuth && id.endsWith('/auth/client.ts') ? '\0test:auth' : null,
       load: (id) => id === '\0test:auth' ? 'export const authClient = {};' : id === '\0test:router' ? `import {createElement} from 'react';
         export const Link=({to,params,search,children,...props})=>createElement('a',{href:to,...props},children);
         export const useNavigate=()=>()=>{}; export const useLocation=()=>({href:'/goals'});` : null,
     }],
-    build: { write: false, minify: false, lib: { entry: fileURLToPath(new URL('./session-cache.browser.tsx', import.meta.url)), formats: ['iife'], name: 'SessionTests' } },
+    build: { write: false, minify: false, lib: { entry: fileURLToPath(new URL(entry, import.meta.url)), formats: ['iife'], name: 'SessionTests' } },
   });
   const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap((b) => b.output);
   const code = outputs.filter((out) => out.type === 'chunk').map((out) => out.code).join('\n');
   const page = join(dir, 'index.html');
-  await writeFile(page, `<div id="app"></div><pre id="result">PENDING</pre><script>
+  const prelude = mockAuth ? '' : '(' + setupSessionTransport.toString() + ')();';
+  const html = `<meta charset="utf-8"><div id="app"></div><pre id="result">PENDING</pre><script>${prelude}
     onerror=(message)=>{document.getElementById('result').textContent=JSON.stringify({ok:false,error:String(message)});};
     onunhandledrejection=(event)=>{document.getElementById('result').textContent=JSON.stringify({ok:false,error:String(event.reason)});};
-    </script><script>${code.replaceAll('</script', '<\\/script')}</script>`);
+    </script><script>${code.replaceAll('</script', '<\\/script')}</script>`;
+  await writeFile(page, html);
+  const server = createServer((_, res) => { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(html); });
+  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const { port } = server.address();
   const { stdout, stderr } = await promisify(execFile)(browser, [
     '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
-    `--user-data-dir=${join(dir, 'profile')}`, '--dump-dom', '--virtual-time-budget=15000', pathToFileURL(page).href,
+    `--user-data-dir=${join(dir, 'profile')}`, '--dump-dom', '--virtual-time-budget=15000', `http://127.0.0.1:${port}/`,
   ], { timeout: 45000, maxBuffer: 4 * 1024 * 1024, windowsHide: true });
   const text = stdout.match(/<pre id="result">([\s\S]*?)<\/pre>/)?.[1];
   assert.ok(text && text !== 'PENDING', `browser did not finish hook regression: ${stderr.slice(-1500)}`);
   const result = JSON.parse(text.replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"'));
   assert.equal(result.ok, true, result.error);
-  assert.equal(result.results.length, 8);
+  return result;
+}
+
+test('session ownership: real React hooks/Goal screens reject old cache and drafts in every DOM commit', { timeout: 60000 }, async (t) => {
+  const result = await runBrowser(t, './session-cache.browser.tsx', true);
+  assert.equal(result.results.length, 9);
+  assert.equal(result.writes, 0);
+  t.diagnostic(JSON.stringify(result));
+});
+
+test('Better Auth 1.7.7: visibility refetch failure masks draft and successful recovery starts a fresh form', { timeout: 60000 }, async (t) => {
+  const result = await runBrowser(t, './session-focus.browser.tsx', false);
+  assert.equal(result.results.length, 2);
   assert.equal(result.writes, 0);
   t.diagnostic(JSON.stringify(result));
 });

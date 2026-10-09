@@ -115,8 +115,20 @@ async function run() {
 
   page = 'create'; await render(); await setTitle('A-PRIVATE-CREATE-DRAFT');
   await change(null); ensure(!input(), 'logout retained create form');
+  ensure(host.querySelector('a[href="/login"]') && !host.querySelector('[role="status"]'), 'logout/create never reached sign-in UI');
   await change('B'); ensure(input()?.value === '', 'logout→B carried create draft');
-  results.push('explicit logout→B: create draft discarded');
+  results.push('explicit logout→B: create draft discarded and sign-in UI displayed');
+
+  for (const mountedPage of ['list', 'edit', 'today']) {
+    page = mountedPage; await render(); await settle();
+    await change('A'); await change(null);
+    ensure(!input() && !host.textContent?.includes('A-PRIVATE'), `logout/${page} exposed A`);
+    ensure(host.querySelector('a[href="/login"]') && !host.querySelector('[role="status"]'), `logout/${page} never reached sign-in UI`);
+    await change('B'); await settle();
+    ensure(host.textContent?.includes('B-PRIVATE-GOAL') || input()?.value === 'B-PRIVATE-GOAL', `logout/${page}→B did not recover`);
+  }
+  results.push('mounted list/edit/Today logout: sign-in UI without disabled-query loading; B recovery');
+  page = 'create'; await render();
 
   await change('A'); await setTitle('A-PRIVATE-CREATE-DRAFT'); from = commits.length;
   await change('B'); noA('same-tab/create', from); ensure(input()?.value === '', 'direct switch carried create draft');

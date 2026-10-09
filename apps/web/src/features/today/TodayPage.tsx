@@ -40,6 +40,7 @@ import './today.css';
 export function TodayPage({ goalId }: { goalId: string }) {
   const current = usePrivateEpoch();
   const { owner, clearedAt } = current;
+  if (owner === null) return <SignedOutPage />;
   if (!privateDataReady(current)) return <Loading />;
   return <TodayScreen key={`${owner ?? ''}:${goalId}`} goalId={goalId} notBefore={clearedAt} />;
 }
