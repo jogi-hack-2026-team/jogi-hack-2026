@@ -147,6 +147,7 @@ test('認証の回数制限はDBに保存され、再起動（別instance）後�
   assert.ok(last && validRetryAfter(retryAfter(last)), `X-Retry-After=${last && retryAfter(last)}`);
   const correct = await attempt(stack.app, '203.0.113.5', cred.password);
   assert.equal(correct.status, 429, 'while limited, even the correct password is refused');
+  assert.equal(correct.headers['cache-control'], 'no-store');
   const stored = await db.pool.query('select count(*)::int as n from "rateLimit"');
   assert.ok((stored.rows[0]?.n as number) >= 1, 'limit is stored in PostgreSQL');
 
