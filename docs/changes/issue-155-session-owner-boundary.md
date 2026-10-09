@@ -39,3 +39,5 @@ FE修正HEAD a9b839aで全workspace typecheck/build、通常Web test64成功・b
 編集の元baselineと最新の編集値・revision・記録有無を照合し、変更がある場合は復元を止めて理由を表示する。送信中のmutationは別に追い、同じowner/画面の送信終了まで再作成フォームを開かず、古いcallbackで移動しない。作成結果不明attemptと#175の回復処理はsnapshotへ含めず、既存責務へ委ねる。localStorage永続化・認証設定・API/DB変更は追加しない。
 
 新しい[実router/hook回帰](../../apps/web/tests/session-draft.browser.tsx)は15操作を保持し、正常復帰、失敗→A、高速A→B→A/正常確認/429/null、認証通知、編集のanswer/settings revision、保存中と明示保存を検査する。合成HTTPテスト、実認証、#175との隔離統合は異なる証拠であり、最終HEAD・実施結果・残る制約はPRの最新記録から確認する。既存の旧失敗と未検証事項を保全し、正式Decision・Scope・製品完成の状態は変更しない。
+
+追加レビューで、validation 422の確定拒否後に訂正した入力もmutation errorにより通常draftから除外される経路を実hookで再現した。契約検査の422 VALIDATION_ERRORだけ、訂正開始時にmutation errorを解除して未送信入力へ戻す。通信失敗/500/409や削除errorは解除しない。回帰に422→訂正→正常確認、通信結果不明→訂正→正常確認、送信中→確認→通信失敗を追加し、15操作＋14安全性ケース・明示mock書込5件として検証する。確定拒否の訂正前、通信結果不明、競合、削除失敗の入力保持は通常draft復帰の対象外であり、全idle入力保持の保証ではない。

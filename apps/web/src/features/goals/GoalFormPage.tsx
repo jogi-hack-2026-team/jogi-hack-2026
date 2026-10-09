@@ -271,6 +271,10 @@ function GoalForm({ mode, goal, draft, onDraftChange, operationKey, refreshError
   };
 
   const update = <K extends FieldName>(name: K, value: FormValues[K]) => {
+    // 契約のvalidation 422は保存前の確定拒否。訂正を始めた入力は再び未送信draftとして扱う。
+    // 通信失敗/500/409など結果不明・競合はresetせず、通常draftへ戻さない。
+    if (save.isError && save.error instanceof ApiError && save.error.status === 422 &&
+      save.error.body?.error.code === 'VALIDATION_ERROR') save.reset();
     setValues((prev) => ({ ...prev, [name]: value }));
     if (serverErrors[name]) setServerErrors((prev) => ({ ...prev, [name]: undefined }));
   };
