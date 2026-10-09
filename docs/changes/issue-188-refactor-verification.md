@@ -6,7 +6,7 @@ Supporting Artifact / Not a Source of Truth。2026-10-09、[Issue #188](https://
 
 FEは製品側の`PriorForecast`から純粋検査を抽出し、制御されたGoal入力描画、親routeの成功receipt、共有暦日関数を分けた。候補UIを本番と誤認せず、draft・attempt・owner・訪問と保存の責任を維持する。BEは純粋policy・fingerprint・IDを抽出し、DB読込を名前で明示する。lock／時計／CAS／拒否順とtransactionはstoreに維持する。Engineは公開R-11型の所有者と結果構築を明示し、数値核と既存exportを保つ。
 
-テストhelperは補完あり／要求そのままの明示名と、獲得資源の初期化・終了失敗時の掃除を整理した。CIは既存command順・job名・required checks・権限を保ち、SHA・層別件数・未実行と安全な失敗診断を追加した。速度改善や新しい製品機能の主張ではない。
+テストhelperは補完あり／要求そのままの明示名と、獲得資源の初期化・終了失敗時の掃除を整理した。CIは製品commandの順・job名・required checks・権限を保ち、SHA・層別件数・未実行と安全な失敗診断を追加した。集計gateはcommand exit codeに加わる新しい失敗条件で、成功条件は厳しくなる。診断self-testはその判定器の信頼性を先に検査する必須step。migration helperの`set -euo pipefail`も旧inline stepより厳しい。速度改善や新しい製品機能の主張ではない。
 
 ## 固定Git履歴への保全
 
@@ -26,13 +26,20 @@ FEは製品側の`PriorForecast`から純粋検査を抽出し、制御された
 | Engine基準比較 | 同じ`4f5523a`、1,430比較すべて一致（正常1,402・拒否28） | 値・own key順・undefined/省略・descriptor・prototype名・frozen・入力非変更・runtime export・構造化errorを比較。stackのファイル位置は比較対象外 |
 | 数値核の保持 | 基準mainと11ファイルのGit blobが一致 | RNG・seed・K/H・計算/config/exportを含む。[比較記録](issue-188-engine-equivalence.json)に対象・blobを残す |
 | CI診断・migration checker | `297635f`、6＋5＝11成功、fail/skip/cancel/todo 0 | 以前の診断4件を消さず、表示修正後の6件を別の結果として扱う |
-| 最終証拠のlocal Foundation | 96 text files／1,419 local links、fail0 | 環境例・7 ignore cases・作業差分とstage差分のwhitespaceを検査。アプリ実行検証とは別 |
+| `554afa2`証拠追加のlocal Foundation | 96 text files／1,419 local links、fail0 | 環境例・7 ignore cases・作業差分とstage差分のwhitespaceを検査。アプリ実行検証とは別 |
 | remote CI | `297635f`、既存7チェックすべてsuccess | PR source SHAと実checkout merge SHA `0834de11f182696a533180792a7e20be1f0c0f9c`を区別。[Application run](https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37959651796)で型・Engine 73/API 189/Web 104の366成功・fail/skip/cancel/todo 0、診断6、migration checker 5、migration再実行、container/Compose smokeを確認 |
+| 証跡追加後のremote CI | `554afa277f11f05a97332a6431862d4e317ab49c`、既存7チェックすべてsuccess | checkout merge SHA `ca5e0490b474e2dc7abe64d3b1f66d8ffa23b34f`。[Application run](https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/37961503322)も同じ層別件数・fail/skip/cancel/todo 0。追加は文書・画像・確認値だけ |
 | 独立レビュー | FE・BE・Engine・helper・文書のBlocking/ShouldFixなし | CIの未集計表示P2は修正後に独立再レビュー、新指摘なし。レビューは挙動を絶対保証するものではない |
 
 分担段階のBE 184件、helper追加5件、CI診断4件、Draft作成前Foundationの95 text files／1,408 local links、Draft統合時の96／1,411は当時の結果であり、後の件数に置換しない。最終の文書・画像追加commitのHEADとチェック状態は[PR #189](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/189)で読み戻して記録する。製品sourceは上記検証SHAから変更しない。
 
 CIのP2はworkspace testが集計前に失敗したときの`N/A (command)`表示と、一部集計時に未報告workspaceが消える点だった。元のexit 7／failedは維持されており、false greenではない。修正はscopeの期待workspaceを列挙して「集計不明／未到達」とする。修正前の新規回帰は4成功・2失敗、修正後は6成功。CLIのexit 7、失敗record、artifact allowlistが保たれることも確認した。workflow・権限・required check名は変更しない。
+
+### Review 5472927560への文書対応
+
+[承認レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/189#pullrequestreview-5472927560)のShould Fixは、PRの最終結果同期、Testing表のPlaywright CLI採択済み・未導入の明記、AGENTSの追加段落を正本へのリンク1文へ短縮、CIの集計gate追加による厳格化の明記。E2E方針は変更しない。READMEに固定SHAの`git show`読取例と保存範囲表の正本を明示し、CONTRIBUTINGから表へリンクした。Decision LogのD-15/D-17/D-18/D-25・P-01は固定履歴へのリンク更新だけで、当時の判断本文は変更していない。今回の追加は文書だけで、製品source・workflow・testを追加変更しない。最新HEADの検証と未対応Optionalの理由は同じPRの返信に記録する。
+
+この文書対応のlocal Foundationは96 text files／1,420 local links・fail0（7 ignore cases、作業/stage whitespaceを含む）。runnerのNode版変更・故障注入fixtureの`.ts`化・互換shim削除・export interfaceのalias化は、実行環境または既存型/入口の追加検証が必要なため今回見送った。
 
 ## 実ブラウザ・実API/DBの確認
 

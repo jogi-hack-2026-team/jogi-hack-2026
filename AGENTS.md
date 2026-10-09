@@ -696,7 +696,7 @@ Branch名は `CONTRIBUTING.md` に従う。
 
 他人の変更を勝手に削除・上書きしない。
 
-責務・配置・テストを整理する作業では、[Architectureの境界](docs/architecture.md#責務と配置を変えるとき)と[検証の範囲](docs/DEVELOPMENT_GUIDE.md#検証)を確認する。抽出で状態や副作用の所有者を増やさず、公開契約・数値・保存と認証の安全境界を維持する。結果・未実行・比較の条件は対象Issue/PRへ記録し、過去の件数を固定gateにしない。
+責務・配置・テストを整理する作業では、[Architectureの境界](docs/architecture.md#責務と配置を変えるとき)と[検証の範囲](docs/DEVELOPMENT_GUIDE.md#検証)を確認する。
 
 ---
 

@@ -536,7 +536,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 | --- | --- | --- |
 | `packages/prediction` | `node:test`＋固定例・固定seed・独立オラクル（性質T-01〜T-15を具体例と閉形式で検査）。fast-check（性質ベースの入力生成）は未採択の候補 | 下表T-01〜T-15。CIで毎回実行 |
 | `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 認証（未ログイン401、登録→再読み込み→ログアウト→旧Cookie 401、期限切れ、別origin403、https Cookie、DB保存の回数制限と再起動。[auth.test.ts](../apps/api/tests/auth.test.ts)）、Goal API（契約違反の422と全項目列挙、無効timezone、他人・uuidでないidの404、記録があるGoalの変更禁止、削除の連鎖、timezoneの日付境界。[goals.test.ts](../apps/api/tests/goals.test.ts)）、記録API（DONEの明示量必須、同日上書き、SKIPPEDの量拒否、今日・昨日の窓と開始日前、Asia/Tokyoの23:59→0:00、期間指定の一覧。[logs.test.ts](../apps/api/tests/logs.test.ts)）、Today API（`yesterdayMissing`の条件、Engineの`predict`との完全一致、記録後の再計算、達成済み。[today.test.ts](../apps/api/tests/today.test.ts)）、所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
-| `apps/web` | `node:test`の純粋module・HTTP契約・SSR、実React/Router/SDKのブラウザ回帰（合成transport）、実API/DBの手動ブラウザ確認 | 前者は所有者切替・再確認・draft・保存成功の訪問寿命を検査。実認証・実HTTP・DBの通し確認とは分ける。登録→Goal作成→記録→前日補完→Today Decisionの実環境結果は対象SHAと操作をPRへ記録する |
+| `apps/web` | `node:test`の純粋module・HTTP契約・SSR、実React/Router/SDKのブラウザ回帰（合成transport）、実API/DBの手動ブラウザ確認。Playwright CLIは採択済み・未導入 | 前者は所有者切替・再確認・draft・保存成功の訪問寿命を検査。実認証・実HTTP・DBの通し確認とは分ける。登録→Goal作成→記録→前日補完→Today Decisionの実環境結果は対象SHAと操作をPRへ記録する |
 
 | ID | Prediction Engineの性質 |
 | --- | --- |

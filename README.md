@@ -97,9 +97,11 @@ AIは最初にAGENTS.mdを読み、必要な文書とSkillを参照してくだ�
 
 ローカルで調べる場合は、そのcommitの別checkoutから `archive/music-exploration` を参照してください。現行checkoutの設定やDBへ復元して動かす前に、[再利用時の確認事項](docs/operations/reuse-handoff.md)を確認します。
 
+固定履歴のfile内容だけを読むには、`<path>`を当時のrepository相対pathに置き換えて `git show 77c71a5f248a4dce4ce9fb8af6619b41541be9d8:<path>` を実行します。現在の作業ツリーへ書き戻す操作ではありません。
+
 ## 比較実験の保存範囲
 
-`experiments` は製品runtimeと分け、現在使う検証と過去の比較を次のように扱います。過去の成功・失敗・採択理由を現在の製品受入へ読み替えません。
+`experiments` は製品runtimeと分け、現在使う検証と過去の比較を次のように扱います。比較実験の保存範囲はこの表を正本とします。過去の成功・失敗・採択理由を現在の製品受入へ読み替えません。
 
 | 実験群 | 配置と用途 |
 | --- | --- |
