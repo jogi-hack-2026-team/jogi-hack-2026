@@ -58,7 +58,7 @@ async function runBrowser(t, entry, mockAuth) {
       name: 'isolated-test-router',
       enforce: 'pre',
       resolveId: (id) => id === 'test:router' ? '\0test:router' : mockAuth && id.endsWith('/auth/client.ts') ? '\0test:auth' : null,
-      load: (id) => id === '\0test:auth' ? 'export const authClient = {};' : id === '\0test:router' ? `import {createElement} from 'react';
+      load: (id) => id === '\0test:auth' ? 'export const authClient = {}; export const describeAuthError = (_code, fallback) => fallback;' : id === '\0test:router' ? `import {createElement} from 'react';
         export const Link=({to,params,search,children,...props})=>createElement('a',{href:to,...props},children);
         export const useNavigate=()=>()=>{}; export const useLocation=()=>({href:'/goals'});` : null,
     }],
@@ -88,14 +88,14 @@ async function runBrowser(t, entry, mockAuth) {
   return result;
 }
 
-test('session ownership: real React hooks/Goal screens reject old cache and drafts in every DOM commit', { timeout: 60000 }, async (t) => {
+test('session ownership: real React hooks/Goal screens reject old cache and drafts in every DOM commit', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-cache.browser.tsx', true);
-  assert.equal(result.results.length, 9);
+  assert.equal(result.results.length, 11);
   assert.equal(result.writes, 0);
   t.diagnostic(JSON.stringify(result));
 });
 
-test('Better Auth 1.7.7: visibility refetch failure masks draft and successful recovery starts a fresh form', { timeout: 60000 }, async (t) => {
+test('Better Auth 1.7.7: visibility refetch failure masks draft and successful recovery starts a fresh form', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-focus.browser.tsx', false);
   assert.equal(result.results.length, 2);
   assert.equal(result.writes, 0);

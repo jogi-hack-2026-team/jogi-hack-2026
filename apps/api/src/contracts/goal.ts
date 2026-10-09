@@ -34,6 +34,11 @@ export const Goal = Type.Object(
     today: LocalDate,
     /** 今日の記録状態。行がなければUNRECORDED（SKIPPEDとみなさない）。 */
     todayStatus: TodayStatus,
+    /**
+     * 記録した累計（#146）。initialProgress＋今日までのDONEの量（記録は記録開始日以降だけ）。
+     * Todayの予測のprogress.doneと同じ数え方で、一覧の進捗表示に使う。totalRequiredを超えることがある（R-02・R-08）。
+     */
+    progressDone: Type.Integer(),
   },
   strict,
 );

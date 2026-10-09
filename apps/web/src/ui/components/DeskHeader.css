@@ -1,0 +1,22 @@
+.fr-deskhead {
+  display: none;
+}
+@media (min-width: 960px) {
+  .fr-deskhead {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--fr-space-4);
+    padding-bottom: var(--fr-space-4);
+  }
+  .fr-deskhead .fr-btn--text {
+    padding: 0 var(--fr-space-1);
+  }
+  .fr-deskhead__title {
+    margin: 0;
+    padding: 0 var(--fr-space-1);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+}

@@ -17,7 +17,7 @@ export function SignedOutPanel({ body = c.signedOut.body, newTab = false }: { bo
       action={
         <Link
           to="/login"
-          search={{ redirect: location.href }}
+          search={{ redirect: location.href, reason: 'expired' }}
           className="fr-btn fr-btn--secondary"
           {...(newTab ? { target: '_blank', rel: 'noopener' } : {})}
         >

@@ -45,10 +45,30 @@ async function todayStatuses(db: Queryable, pairs: { goalId: string; today: stri
   return statuses;
 }
 
+/**
+ * 記録した累計のうち、日々の記録（DONEの量）の合計。initialProgressを足したものがTodayの予測のprogress.doneと一致する
+ * （Engineは渡した記録のDONEをすべて足す。記録APIは記録開始日より前・今日より後の行を作らない）。
+ * Todayと同じく、応答時点の今日までに限って数える。
+ */
+async function doneTotals(db: Queryable, rows: { goalId: string; today: string }[]): Promise<Map<string, number>> {
+  const totals = new Map<string, number>();
+  if (rows.length === 0) return totals;
+  const result = await db.query<{ goal_id: string; done: string }>(
+    `select l.goal_id, sum(l.amount)::text as done from action_log l
+       join unnest($1::uuid[], $2::date[]) as t(goal_id, today) on l.goal_id = t.goal_id
+      where l.status = 'DONE' and l.local_date <= t.today
+      group by l.goal_id`,
+    [rows.map((r) => r.goalId), rows.map((r) => r.today)],
+  );
+  for (const r of result.rows) totals.set(r.goal_id, Number(r.done));
+  return totals;
+}
+
 export type GoalRead = Goal & { questionPrior: QuestionPriorAnswers; answerRevision: number };
 async function toGoals(db: Queryable, rows: GoalRow[], now: Date): Promise<GoalRead[]> {
   const todays = rows.map((r) => ({ goalId: r.id, today: localDateIn(now, r.timezone) }));
   const statuses = await todayStatuses(db, todays);
+  const done = await doneTotals(db, todays);
   return rows.map((r, i) => {
     const saved = validateSavedQuestion(r, { unit: r.unit, sessionAmount: r.session_amount, recordStartDate: r.record_start_date });
     return {
@@ -63,6 +83,7 @@ async function toGoals(db: Queryable, rows: GoalRow[], now: Date): Promise<GoalR
     hasLogs: r.has_logs,
     today: todays[i]!.today,
     todayStatus: statuses.get(r.id) ?? 'UNRECORDED',
+    progressDone: r.initial_progress + (done.get(r.id) ?? 0),
     questionPrior: saved.answers, answerRevision: saved.revision,
     };
   });

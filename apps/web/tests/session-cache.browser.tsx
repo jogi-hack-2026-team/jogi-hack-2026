@@ -2,34 +2,39 @@ import { act, useLayoutEffect, useSyncExternalStore } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { authClient } from '../src/auth/client.ts';
+import { ApiError } from '../src/api/client.ts';
 import { PrivateCacheGuard } from '../src/api/session-cache.ts';
 import { goalKeys, goalsHttp } from '../src/api/goals-http.ts';
 import { todayKeys, todayHttp } from '../src/api/today-http.ts';
 import { GoalListPage } from '../src/features/goals/GoalListPage.tsx';
 import { GoalCreatePage, GoalEditPage } from '../src/features/goals/GoalFormPage.tsx';
 import { TodayPage } from '../src/features/today/TodayPage.tsx';
+import { HistoryPage } from '../src/features/history/HistoryPage.tsx';
 
 // 認証の transport だけを制御する。製品の guard・画面・hook・QueryClient を実DOMで動かす。
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-let session = { data: { user: { id: 'A' } }, isPending: false, error: null };
+const refetch = async () => {};
+let session = { data: { user: { id: 'A', email: 'A@example.invalid' } }, isPending: false, error: null, refetch };
 const listeners = new Set<() => void>();
 authClient.useSession = () => useSyncExternalStore((fn) => {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }, () => session);
 const publish = (owner: string | null, error = false, pending = false) => {
-  session = { data: owner ? { user: { id: owner } } : null, isPending: pending, error: error ? new Error('synthetic session failure') : null };
+  session = { data: owner ? { user: { id: owner, email: `${owner}@example.invalid` } } : null, isPending: pending, error: error ? new Error('synthetic session failure') : null, refetch };
   listeners.forEach((fn) => fn());
 };
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
 const ensure = (ok: unknown, message: string) => { if (!ok) throw new Error(message); };
 const goal = (owner: string) => ({
   id: 'shared-test-id', title: `${owner}-PRIVATE-GOAL`, unit: 'minutes', totalRequired: 100, sessionAmount: 10,
-  initialProgress: 0, timezone: 'UTC', recordStartDate: '2026-10-09', hasLogs: false,
+  initialProgress: 0, progressDone: 0, timezone: 'UTC', recordStartDate: '2026-09-01', hasLogs: false,
   today: '2026-10-09', todayStatus: 'UNRECORDED', questionPrior: owner === 'A' ? { a: 'HIGH', b: 'LOW' } : { a: null, b: null }, answerRevision: 1,
 });
 let listHold: ReturnType<typeof deferred> | null = null;
 let detailHold: ReturnType<typeof deferred> | null = null;
+let logsHold: ReturnType<typeof deferred> | null = null;
+let foreignGoal = false;
 const writes: unknown[] = [];
 function deferred() {
   let resolve!: (value: unknown) => void;
@@ -42,28 +47,33 @@ function read(hold: ReturnType<typeof deferred> | null, value: unknown, signal?:
   return hold.promise;
 }
 goalsHttp.listGoals = (signal) => read(session.data?.user.id === 'A' ? listHold : null, [goal(session.data?.user.id ?? 'NONE')], signal);
-goalsHttp.getGoal = (_, signal) => read(session.data?.user.id === 'A' ? detailHold : null, goal(session.data?.user.id ?? 'NONE'), signal);
+goalsHttp.getGoal = (_, signal) => foreignGoal && session.data?.user.id === 'B'
+  ? Promise.reject(new ApiError(404, { error: { code: 'NOT_FOUND', message: 'synthetic foreign goal' } }))
+  : read(session.data?.user.id === 'A' ? detailHold : null, goal(session.data?.user.id ?? 'NONE'), signal);
 goalsHttp.createGoal = async (body) => { writes.push(body); return goal(session.data?.user.id ?? 'NONE'); };
 // Today は失敗時の Goal fallback も私的データを持つため、その表示・操作を実際に通す。
 todayHttp.getToday = async () => { throw new Error('synthetic Today failure'); };
-todayHttp.listLogs = async () => [];
+const historyLogs = (owner: string) => [{ goalId: 'shared-test-id', localDate: '2026-10-09', status: owner === 'A' ? 'DONE' : 'SKIPPED', amount: owner === 'A' ? 11 : null }];
+todayHttp.listLogs = (_, signal) => read(session.data?.user.id === 'A' ? logsHold : null, page === 'history' ? historyLogs(session.data?.user.id ?? 'NONE') : [], signal);
 todayHttp.putLog = async (...args) => { writes.push(args); throw new Error('unexpected auto-submit'); };
 
 const host = document.getElementById('app')!;
 const root = createRoot(host);
 const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
-const commits: { owner: string | null; text: string; input: string | undefined }[] = [];
+const commits: { owner: string | null; text: string; input: string | undefined; calendar: string | undefined; title: string }[] = [];
+const observe = (owner: string | null) => commits.push({ owner, text: host.textContent ?? '', input: host.querySelector<HTMLInputElement>('#goal-title')?.value,
+  calendar: host.querySelector('.fr-history__cal li[aria-label^="10月9日"]')?.getAttribute('aria-label') ?? undefined, title: document.title });
 const mutations = new MutationObserver(() => {
-  commits.push({ owner: document.getElementById('owner')?.textContent ?? null, text: host.textContent ?? '', input: host.querySelector<HTMLInputElement>('#goal-title')?.value });
+  observe(document.getElementById('owner')?.textContent ?? null);
 });
 mutations.observe(host, { subtree: true, childList: true, characterData: true, attributes: true });
 let page = 'list';
 function Screen() {
   const current = authClient.useSession();
   useLayoutEffect(() => {
-    commits.push({ owner: current.data?.user.id ?? null, text: host.textContent ?? '', input: host.querySelector<HTMLInputElement>('#goal-title')?.value });
+    observe(current.data?.user.id ?? null);
   });
-  return <><output id="owner">{current.data?.user.id ?? 'NONE'}</output>{page === 'list' ? <GoalListPage /> : page === 'edit' ? <GoalEditPage goalId="shared-test-id" /> : page === 'create' ? <GoalCreatePage /> : <TodayPage goalId="shared-test-id" />}</>;
+  return <><output id="owner">{current.data?.user.id ?? 'NONE'}</output>{page === 'list' ? <GoalListPage /> : page === 'edit' ? <GoalEditPage goalId="shared-test-id" /> : page === 'create' ? <GoalCreatePage /> : page === 'history' ? <HistoryPage goalId="shared-test-id" /> : <TodayPage goalId="shared-test-id" />}</>;
 }
 const render = async () => act(async () => {
   root.render(<QueryClientProvider client={client}><PrivateCacheGuard /><Screen /></QueryClientProvider>);
@@ -119,7 +129,7 @@ async function run() {
   await change('B'); ensure(input()?.value === '', 'logout→B carried create draft');
   results.push('explicit logout→B: create draft discarded and sign-in UI displayed');
 
-  for (const mountedPage of ['list', 'edit', 'today']) {
+  for (const mountedPage of ['list', 'edit', 'today', 'history']) {
     page = mountedPage; await render(); await settle();
     await change('A'); await change(null);
     ensure(!input() && !host.textContent?.includes('A-PRIVATE'), `logout/${page} exposed A`);
@@ -127,7 +137,7 @@ async function run() {
     await change('B'); await settle();
     ensure(host.textContent?.includes('B-PRIVATE-GOAL') || input()?.value === 'B-PRIVATE-GOAL', `logout/${page}→B did not recover`);
   }
-  results.push('mounted list/edit/Today logout: sign-in UI without disabled-query loading; B recovery');
+  results.push('mounted list/edit/Today/history logout: sign-in UI without disabled-query loading; B recovery');
   page = 'create'; await render();
 
   await change('A'); await setTitle('A-PRIVATE-CREATE-DRAFT'); from = commits.length;
@@ -140,6 +150,32 @@ async function run() {
   from = commits.length; await change('B'); noA('Today fallback', from);
   ensure(host.textContent?.includes('B-PRIVATE-GOAL'), 'Today B fallback missing');
   results.push('Today error fallback never displays previous owner');
+
+  page = 'history'; await change('A'); await render(); await settle();
+  const aMark = host.querySelector('.fr-history__cal li[aria-label^="10月9日"]')?.getAttribute('aria-label');
+  ensure(aMark?.includes('やった'), 'history A log fixture missing');
+  await act(async () => { (host.querySelector('button[aria-label="前の月"]') as HTMLButtonElement).click(); await tick(); }); await settle();
+  ensure(host.querySelector('h1')?.textContent?.includes('9月'), 'history month selection missing');
+  const historyDetail = detailHold = deferred(); const historyLog = logsHold = deferred();
+  void client.refetchQueries({ queryKey: goalKeys.detail('shared-test-id') });
+  void client.refetchQueries({ queryKey: todayKeys.logs('shared-test-id') }); await act(tick);
+  from = commits.length; await change('B'); noA('history switch', from);
+  detailHold = null; logsHold = null; historyDetail.resolve(goal('A')); historyLog.resolve(historyLogs('A')); await settle();
+  noA('history late A goal/logs', from);
+  ensure(historyDetail.aborted && historyLog.aborted, 'history A reads were not cancelled');
+  ensure(host.querySelector('h1')?.textContent?.includes('10月'), 'history retained A selected month');
+  for (const commit of commits.slice(from).filter(c => c.owner === 'B')) ensure(!commit.calendar?.includes('やった'), 'B calendar displayed A DONE log');
+  ensure(host.querySelector('.fr-history__cal li[aria-label^="10月9日"]')?.getAttribute('aria-label')?.includes('休んだ'), 'history B logs missing');
+  ensure(!document.title.includes('A-PRIVATE'), 'history document title retained A');
+  results.push('history: late A detail/logs discarded, B marks/title and owner-specific month');
+
+  await change('A'); await change('A', true); ensure(!host.querySelector('.fr-history__cal'), 'history session error exposed calendar');
+  await change('B'); ensure(host.querySelector('.fr-history__cal'), 'history session recovery failed');
+  foreignGoal = true; await change('A'); await change('B'); await settle();
+  ensure(!host.querySelector('.fr-history__cal') && !host.textContent?.includes('A-PRIVATE'), 'foreign goal kept A history');
+  ensure(host.textContent?.includes('見つかりません'), 'foreign history did not show 404');
+  foreignGoal = false; await change('A'); await change('B'); await settle();
+  results.push('history: session failure masking, B recovery, foreign Goal 404');
 
   page = 'edit'; await render(); await settle();
   await change('A'); ensure(input()?.value === 'A-PRIVATE-GOAL', 'session recovery fixture missing');
