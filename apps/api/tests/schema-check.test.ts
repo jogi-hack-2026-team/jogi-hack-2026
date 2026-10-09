@@ -416,7 +416,8 @@ test('pipeに大きいJSONを出してもsource/fresh compiledとも1行を完�
   const report = await checkUnchanged(db, { connectionString: db.connectionString, migrationsDir: pathToFileURL(`${dir}/`) });
   assert.ok(JSON.stringify(report).length > 65_536);
   await checkCliPairUnchanged(db, report, {}, [dir]);
-  // OSのpipe buffer容量に依存しない負例。出力callbackが返らないsinkを注入し、有限にexit 3とする。
+  // writeが即returnしcallbackだけ返らない負例。実pipeの同期write停止を再現するものではない。
+  // event loopが進む経路のtimer／exit 3だけを検証する（ガイドのI/O限界を参照）。
   const stalledOutput = join(dir, 'stalled-output.mjs');
   writeFileSync(stalledOutput, 'process.stdout.write = () => { setTimeout(() => {}, 5000); return true; };\n');
   const before = await snapshot(db.pool);

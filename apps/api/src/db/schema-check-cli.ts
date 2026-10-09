@@ -37,7 +37,8 @@ if (args[0] !== undefined) options.migrationsDir = pathToFileURL(args[0].endsWit
 
 try {
   const report = await runSchemaCheck(options);
-  // pipeへの書込み完了を待つが、止まった出力先にもquery予算を上限にする。
+  // writeが戻りevent loopが進む出力経路で、callback待ちへquery予算を適用する。
+  // Windowsの同期pipe等でwrite自体が止まる場合、このtimerも動かない（ガイドのI/O限界を参照）。
   // DB/pool終了後に残ったhandleは最終process終了で閉じる。
   const outputTimer = setTimeout(() => process.exit(3), queryTimeoutMs);
   process.stdout.on('error', () => process.exit(3));
