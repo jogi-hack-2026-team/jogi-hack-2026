@@ -1,0 +1,11 @@
+{
+  "name": "@futureroi/api-mixed-load",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Supporting Artifact / Not a Source of Truth. Issue #161: mixed-load measurement of the current API.",
+  "scripts": {
+    "test": "node --test lifecycle.test.ts",
+    "typecheck": "tsc --noEmit --strict --exactOptionalPropertyTypes --noUncheckedIndexedAccess --allowImportingTsExtensions --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck run.ts lifecycle.ts lifecycle.test.ts"
+  }
+}
