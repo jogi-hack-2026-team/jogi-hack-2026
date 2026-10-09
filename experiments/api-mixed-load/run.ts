@@ -382,7 +382,8 @@ for (const r of open) {
 
 await db.close();
 
-const settled = [demo, ...open].every((r) => Object.values({ ...r.cohort, ...r.warmup }).every((c) => c.sent === c.success + c.failure));
+// 測定cohortとwarmup cohortは同じkind名を持つので、object spreadで合成せず別々に収束を確認する
+const settled = [demo, ...open].every((r) => [r.cohort, r.warmup].every((phase) => Object.values(phase).every((c) => c.sent === c.success + c.failure)));
 const result = {
   label: 'Supporting Artifact / Not a Source of Truth (Issue #161)',
   provenance: { ...provenance, finishedAt: new Date().toISOString(), database: dbVersion, databaseEncoding: encoding, todayInGoalTimezone: users[0]!.today },
