@@ -166,7 +166,7 @@ function AxisChart({ today, p50Days, p80Days, sameWeek, targetDate }: { today: s
   const axis = outlookAxis(today, p50Days, p80Days, sameWeek, width, targetDate ? daysUntil(today, targetDate) : null);
   const description =
     p80Days === null
-      ? `日付の軸。目安の日付に印。10回中8回の日付は3年以上先です。`
+      ? `日付の軸。目安の日付に印。${todayCopy.completionP80Over3Years}`
       : axis.sameWeek
         ? `日付の軸。目安も10回中8回の日付も同じ週です。`
         : `日付の軸。今日から目安の日付、10回中8回の日付の順に印。`;

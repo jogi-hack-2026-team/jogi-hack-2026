@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 import pg from 'pg';
 import { migrate, migrateApp, MigrationChecksumError } from '../src/db/migrate.ts';
@@ -32,7 +33,45 @@ async function insertUser(pool: pg.Pool, id: string) {
 
 const goalInsert = `insert into goal (user_id, title, unit, total_required, initial_progress, session_amount, timezone, record_start_date)
                     values ($1, $2, $3, $4, $5, $6, 'Asia/Tokyo', '2026-10-01') returning id`;
-const APP_MIGRATIONS = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql', '0004_demo_seed_goal.sql', '0005_goal_target_date.sql'];
+// runnerの結果から期待値を作らず、実在するSQLを同じ抽出規則・名前順で独立に列挙する。
+const APP_MIGRATIONS = readdirSync(new URL('../migrations/', import.meta.url)).filter(name => /^\d{4}_[\w-]+\.sql$/.test(name)).sort();
+
+test('CI checkerは追加SQL・同番号の異名・反復no-opを検証し、実在する未適用SQLを拒否する', async t => {
+  const db = await createTestDatabase();
+  t.after(() => db.close());
+  const dir = mkdtempSync(join(tmpdir(), 'futureroi-ci-inventory-'));
+  t.after(() => {
+    assert.equal(dirname(resolve(dir)), resolve(tmpdir()));
+    assert.ok(basename(dir).startsWith('futureroi-ci-inventory-'));
+    rmSync(dir, { recursive: true, force: true });
+  });
+  for (const name of APP_MIGRATIONS) writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
+  // #163/#175の全文名を使う合成fixture。製品SQLや適用済み履歴は変更しない。
+  const extras = ['0005_goal_target_date.sql', '0005_goal_data_integrity.sql'].filter(name => !APP_MIGRATIONS.includes(name));
+  extras.forEach((name, index) => writeFileSync(join(dir, name), `create table ci_inventory_${index} (id integer);`));
+  const expected = [...APP_MIGRATIONS, ...extras].sort();
+  const workflow = readFileSync(new URL('../../../.github/workflows/application.yml', import.meta.url), 'utf8');
+  const checker = fileURLToPath(new URL('../../../scripts/check-migrations.mjs', import.meta.url));
+  const check = (result: unknown, mode: string) => spawnSync(process.execPath, [checker, mode, dir], { input: JSON.stringify(result), encoding: 'utf8' });
+  const first = await migrate(db.pool, 'all', pathToFileURL(`${dir}/`));
+  assert.deepEqual(first.app?.applied, expected);
+  const verified = check(first, 'first');
+  assert.equal(verified.status, 0, verified.stderr);
+  for (let index = 0; index < extras.length; index++) {
+    assert.equal((await db.pool.query(`select to_regclass('ci_inventory_${index}')::text as name`)).rows[0]?.name, `ci_inventory_${index}`);
+  }
+  const second = await migrate(db.pool, 'all', pathToFileURL(`${dir}/`));
+  const repeated = check(second, 'noop');
+  assert.equal(repeated.status, 0, repeated.stderr);
+  const pending = '9999_ci_unapplied.sql';
+  writeFileSync(join(dir, pending), 'create table ci_unapplied (id integer);');
+  const rejected = check(first, 'first');
+  assert.equal(rejected.status, 1, 'the same CI checker rejects a file the runner has not applied');
+  assert.match(rejected.stderr, /9999_ci_unapplied\.sql/);
+  assert.equal((await db.pool.query("select to_regclass('ci_unapplied') as name")).rows[0]?.name, null);
+  assert.equal((await db.pool.query('select count(*)::int as n from schema_migrations where name = $1', [pending])).rows[0]?.n, 0);
+  assert.equal(readFileSync(new URL('../../../.github/workflows/application.yml', import.meta.url), 'utf8'), workflow, 'fixture additions do not edit the workflow');
+});
 
 test('R11 migration 0003 keeps existing Goals and logs, starts unanswered at revision 0, and is idempotent', async t => {
   const db = await createTestDatabase();

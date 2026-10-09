@@ -960,7 +960,7 @@ Merge前に修正が必要。
 
 実装・バグ修正を含む変更前に、関連仕様と[変更対応表](docs/change-map.md)を読み、コード検索で影響範囲を確認する。
 各機能の仕様は[配置ルール](CONTRIBUTING.md#仕様文書の配置)に従い、目的・操作・条件・状態・内部処理を説明する。コード一覧だけで仕様説明を代替しない。
-変更時・完了前は同Skillの執筆・保守手順に従い、必要な仕様・対応表・参照を更新する。更新不要の場合は理由を報告する。共通の完了条件は[CONTRIBUTING](CONTRIBUTING.md#definition-of-done)を正本とする。
+変更時・完了前は[CONTRIBUTINGの執筆・保守手順](CONTRIBUTING.md#文書を書く手順)に従い、必要な仕様・対応表・参照を更新する。Skillはこの規則を実行する入口とする。履歴の配置・全文移動・旧見出し保全は[履歴の配置と移動](CONTRIBUTING.md#履歴の配置と移動)に従い、AGENTS.mdへ履歴を追記しない。更新不要の場合は理由を報告する。共通の完了条件は[CONTRIBUTING](CONTRIBUTING.md#definition-of-done)を正本とする。
 
 確認対象：
 

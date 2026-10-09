@@ -2,11 +2,13 @@
 
 現行ProductはFuture ROI。要件は[Product Spec](product-spec.md)、実現方式は[Architecture](architecture.md)が正本。この対応表は実装を調べる入口で、正式仕様の追加正本ではない。下表のパスと[基本構成の採用・次作業・残条件](architecture.md#2026-10-03の技術構成合意)は[Repository構成](architecture.md#repository構成)から確認する。旧音楽案の対応表は[履歴](../archive/music-exploration/docs/change-map.md)へ保管した。
 
+運用と配置は[共通の文書規則](../CONTRIBUTING.md#変更に伴う文書更新)、草稿・実施結果の保存先は[履歴フォルダ](changes/)を参照する。新しい実測だけを追加する場合は中央表への毎回追記を要しない。現行の契約・処理経路・確認方法が変わる場合は該当行を更新する。
+
 ## 現在地の読み方
 
-2026-10-08のmain `25f473fe` を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
+2026-10-09のmain `10c1df7`（PR #176統合後）を基準に読む。Goal・記録・Today API、純粋Engine、実APIを使うGoal・今日の記録・昨日の補完／訂正・Today画面、R-11の質問入力・保存・予測／出所表示はコードにある。下表の「ローカル実装済み」「実ブラウザ確認」は各実装PRの既存記録を示し、本書の更新でアプリを再検証したという意味ではない。実ユーザーでの需要・効果・数値校正、製品受入、E2E・公開配置は別の残条件として各Issueで確認する。
 
-[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)（確認時HEAD `9a87a2c`）の画面・ルート変更とGoal一覧の`progressDone`はこの基準mainに含まれない（確認時は未merge）。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
+[PR #147](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/147)の画面・ルート変更とGoal一覧の`progressDone`はこの基準mainに含まれる。未mergeのPRの追加契約は取り込まず、各Issue/PRで状態を確認する。D-26や候補資料の2026-10-05時点のOPEN／提案は当時の記録。現利用は[2026-10-07の承認範囲](architecture.md#2026-10-07の保存予測接続133)と実コードで確認する。
 
 ## コードを読むための短いtrace
 
@@ -78,6 +80,7 @@ FEの「整合snapshot」は別GET間の日付・設定・累計・今日のロ�
 | 質問由来の見通し（R-11、Must採択済み） | [機能・未決事項](product-spec.md#質問から始める見通しr-11)、[質問たたき台](product-spec.md#初期質問のレビュー用たたき台)、[Scope・分担の採択P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)、[D-26](architecture.md#d-26) | 2026-10-05、PR #115でMust追加・分担を採択。追加UIは#117。#133では2026-10-07の依頼者承認範囲の保存・回答版・純粋Engine接続境界を実装し、チームレビュー対象とする。明示queryによるGoal/Today公開読取も依頼者承認範囲で接続済み。FE結合・出所表示は#137・#81でmainにあり、製品受入は残条件 | [受入・担当・判断時点の案](product-spec.md#r-11の受入条件担当判断時点の案)、[既存Issueごとの確認](#r-11の既存issueへの対応)。公開提案の計算一致を製品受入としない |
 | 予測モデルの根拠 | [判断記録](prediction/decision-log.md)、[Evidence](prediction/evidence.md) | [検証スクリプト](../experiments/prediction-model-validation/README.md)（本番コードではない） | スクリプトの再実行 |
 | 旧音楽案の機能・実験 | 履歴のみ | [保管場所](../archive/music-exploration/README.md) | — |
+| 私的APIのHTTP保存禁止（#153） | [認証実装の方式](architecture.md#2026-10-06の認証実装75)。成功・失敗ともno-store、health／SPA／assetsの既存方針を保持 | [app.ts](../apps/api/src/app.ts)の共通応答hook・router拒否、[apiBoundary](../apps/api/src/http/api-boundary.ts)の既存分類。FE cache消去と本番proxy/CDNの受入とは別 | [cache-control.test.ts](../apps/api/tests/cache-control.test.ts)（Goal／Log／Today旧・r11、auth、401／403／404／422／500、所有者8ケースとDB不変、Cookie）、[auth.test.ts](../apps/api/tests/auth.test.ts)、[spa.test.ts](../apps/api/tests/spa.test.ts)。公開先は未検証 |
 
 ### R-11の既存Issueへの対応
 
@@ -144,6 +147,8 @@ P-18の0／1／59／60／61／1240分と達成まで残り1分（2999／3000分�
 
 ## 確認記録と残課題
 
+DB migrationのCI一覧（[#174](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/174)）は[Application workflow](../.github/workflows/application.yml) → [check-migrations.mjs](../scripts/check-migrations.mjs)で、runnerと同じ番号付きSQL抽出規則・全文名の名前順によるfilesystem一覧と実行結果を比較する。初回の未適用・順序差・空一覧と、反復のauth/app差分を拒否し、source／compiledともno-opを確認する。[checker回帰](../scripts/tests/check-migrations.test.mjs)と[migrate回帰](../apps/api/tests/migrate.test.ts)が追加fixture・同番号の異名・未適用SQL・path差を検証する。SQL本体・migration runner・製品契約は変更しない。
+
 業務API・昨日補完・Engine集計／エラー・表示の判断事項は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日補完／訂正方針、#103のmetadata・公開エラー契約と純粋Engineはmain統合済み。未決の具体保存・DTO・再送／競合方式や表示案とは分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。
 
 表の実装予定は2026-09-30の仕様に基づく。現在のローカルAPI・DB・Engine結合の実装と検証は上表を参照。業務画面・外部Service・公開配置の完成を意味しない。
@@ -155,3 +160,5 @@ P-18の0／1／59／60／61／1240分と達成まで残り1分（2999／3000分�
 [#117](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/117)の[質問・出所表示部品と受け渡し案](../experiments/question-prior-ui-candidate/README.md)はSupporting Artifact。Scope・分担の採択記録はPR115、具体契約提案はPR118、計算adapter候補はPR119で別に追跡する。正式Goal/Today、API/Engine結合は未確認で、#70 Hard・D-26未採択・既存Ready/blockedを変更しない。[src](../experiments/question-prior-ui-candidate/src/presentation-types.ts)・[最小slot例](../experiments/question-prior-ui-candidate/examples/slots.tsx)・[型/SSR/preview buildの再現](../experiments/question-prior-ui-candidate/scripts/check.mjs)・[検証記録](../experiments/question-prior-ui-candidate/VERIFICATION.md)から調査できる。root依存・workspaceは追加していない。
 
 別checkoutのPR119実出力を渡す[FE所有の表示接続例](../experiments/question-prior-ui-candidate/examples/engine-view.ts)と[ローカル接続check](../experiments/question-prior-ui-candidate/scripts/check-connection.mjs)を追加。未採択のPR118共有18例・追加状態を実Engine→表示view→React SSRで確認した範囲と、保存・本番結合の未確認範囲は上の検証記録で分ける。
+
+TodayのP80計算範囲の文言（[#154](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/154)）は[補助指標2の表示仕様](product-spec.md#today-decision画面の表示仕様) → [todayCopy](../apps/web/src/copy/today.ts)・[OutlookPanel](../apps/web/src/features/today/OutlookPanel.tsx) → [completion-horizon.test.mjs](../apps/web/tests/completion-horizon.test.mjs)で追跡する。回帰は人工CDF境界0.79／0.20／0.80・既存ε・H日目・0日から実部品のHTMLと読み上げをSSR検査し、P50有限／両方null、出所、達成済み・不足・条件付き計画を区別する。実ブラウザ確認とは別に扱う。
