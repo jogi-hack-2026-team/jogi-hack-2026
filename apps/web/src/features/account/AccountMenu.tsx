@@ -26,6 +26,16 @@ export function AccountMenu({ variant = 'icon' }: { variant?: 'icon' | 'email' }
   // 開く前にフォーカスがあった場所（アカウントボタン）。閉じたら戻す
   const returnTo = useRef<HTMLElement | null>(null);
 
+  // ログインが必要な画面の中に置くので、ここではログイン済み。通信の失敗から「再読み込み」で戻った直後は、
+  // useSession の状態が失敗のまま空になっている（ルートの確認は取り直しても、こちらは取り直されない）ので、1回だけ取り直す
+  // （取り直しても失敗したときに繰り返さないよう、きっかけは「空になった」ことだけにする）
+  const refetchSession = useRef(session.refetch);
+  refetchSession.current = session.refetch;
+  const sessionMissing = !session.isPending && !session.data;
+  useEffect(() => {
+    if (sessionMissing) void refetchSession.current();
+  }, [sessionMissing]);
+
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
