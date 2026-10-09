@@ -200,6 +200,18 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const errors: FieldErrors = { ...serverErrors, ...clientErrors };
   const count = errorCount(errors);
 
+  const finishCreateAttempt = (operation: CreateAttempt): boolean => {
+    try {
+      if (!clearCreateAttempt(operation, sessionStorage)) return false;
+      setAttempt(current => current?.owner === operation.owner && current.key === operation.key && current.raw === operation.raw ? null : current);
+      return true;
+    } catch (error) {
+      // 保存情報を消せなければ回復情報を保持する。422のfield error処理は続ける。
+      setPrepareError(error);
+      return false;
+    }
+  };
+
   const save = useMutation({
     retry: false,
     mutationFn: async ({ values: v, operation }: { values: FormValues; operation: CreateAttempt | null }): Promise<Goal | null> => {
@@ -216,12 +228,12 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
     },
     // 一覧などの取り直しは、画面を離れていても必ず行う。一覧への移動は mutate に渡す onSuccess で、表示中のときだけ行う
     onSuccess: async (_goal, vars) => {
-      if (vars.operation) { clearCreateAttempt(vars.operation.owner, vars.operation.key, sessionStorage); setAttempt(null); }
+      if (vars.operation) finishCreateAttempt(vars.operation);
       await queryClient.invalidateQueries({ queryKey: goalKeys.all });
     },
     onError: (error, vars) => {
       saving.current = false;
-      if (vars.operation && error instanceof ApiError && error.status === 422) { clearCreateAttempt(vars.operation.owner, vars.operation.key, sessionStorage); setAttempt(null); }
+      if (vars.operation && error instanceof ApiError && error.status === 422) finishCreateAttempt(vars.operation);
       const fromApi = fieldErrorsFromApi(error);
       if (fromApi && errorCount(fromApi) > 0) {
         setServerErrors(fromApi);
@@ -300,16 +312,15 @@ function GoalForm({ mode, owner, goal, refreshError, onRetryRefresh, onReloadLat
   const saveFailure = prepareError ?? (save.isError && (apiFieldErrors === null || errorCount(apiFieldErrors) === 0) ? save.error : null);
   const deletedAttempt = mode === 'create' && isCreateResultDeleted(saveFailure) &&
     save.variables?.operation?.owner === owner && save.variables.operation.key === attempt?.key ? attempt : null;
-  const showSaveFailure = saveFailure !== null && count === 0;
+  const showSaveFailure = saveFailure !== null && (count === 0 || prepareError instanceof CreateRecoveryError);
   // 通信・サーバーの失敗は「もう一度保存」。ログイン切れはログインし直すまで同じ文言のままにする
   const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isAnswerConflict(saveFailure) && createFailureKind(saveFailure) === null;
   const restartCreate = () => {
     if (!deletedAttempt || busy || !mounted.current) return;
     try {
       // 410を確認した同owner/keyだけを終了する。新keyは次の明示保存まで作らない。
-      if (loadCreateAttempt(deletedAttempt.owner, sessionStorage)?.key !== deletedAttempt.key) return;
-      clearCreateAttempt(deletedAttempt.owner, deletedAttempt.key, sessionStorage);
-      setAttempt(null); setPrepareError(null); setSubmitted(false); save.reset();
+      if (!finishCreateAttempt(deletedAttempt)) return;
+      setPrepareError(null); setSubmitted(false); save.reset();
     } catch (error) { setPrepareError(error); }
   };
   // 単位か1回の量を変えている間は、回答を一緒に送れない（R-11、#133。保存済みの回答は API が取り消す）。

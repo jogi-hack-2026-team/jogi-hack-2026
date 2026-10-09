@@ -32,6 +32,17 @@ Nodeはpackage.jsonの24.21.0。`npm ci --ignore-scripts --no-audit --no-fund`�
 
 `/api/health`が成功した後、[browser runner](../../apps/web/tests/issue148-browser.mjs)を`node apps/web/tests/issue148-browser.mjs`で明示実行する。既存playwright-coreの絶対pathをISSUE148_PLAYWRIGHT_ROOT、既存Chrome/Edge executableをISSUE148_BROWSER_EXEへ指定する。依存・ブラウザを自動導入しない。runner冒頭でDB名・roleを照合し、結果はGit除外の`.tools/issue148/browser/results.json`に出す。終了時は同じComposeの`stop`で専用環境だけ停止する。
 
+`ISSUE148_PLAYWRIGHT_ROOT`と`ISSUE148_BROWSER_EXE`は必須で、個人のWindows pathへの既定値はない。未設定・空白なら不足変数と本手順を表示し、DB接続・ブラウザ起動前にexit 1となる（[入口の回帰](../../apps/web/tests/browser-configuration.test.mjs)）。OSごとの既存インストールpathを明示する。別専用projectで実行する場合は`ISSUE148_ORIGIN`と`ISSUE148_DB_PORT`もそのloopback endpointへ合わせる。smoke脚本の作成UUIDは起動済みapp内の固定Nodeから`node:crypto.randomUUID()`で取得する。hostの`/proc`やuuidgenは不要。macOSでの実行確認は別途必要。
+
+### 作成結果が不明な場合の確認手順
+
+1. POST応答の切断・5xxでは「失敗して未作成」と断定しない。同ownerのsessionStorage原文（キーと元body）を保持し、入力は固定する。自動POSTや新key発行はしない。
+2. 同accountで「もう一度保存」、または戻る／reload後の「保存する」を明示選択する。非cache sessionでownerを確認し、同key／元bodyを送る。作成済みなら現在DTOへ回復し、Goalは増えない（F06・F19）。
+3. 確定422では該当操作だけを終了し、項目エラーへ焦点を移す。利用者が訂正して保存すると初めて新keyを発行する（F08・実APIのF17）。読取／削除例外なら原文を残して回復エラーを示し、一覧で確認する（F20）。
+4. 409入力不一致は盲目的に再送せず一覧で確認する。owner変更は作成時accountで再確認する。削除結果410に限り「新しいGoalとして作成」を明示選択でき、新keyは次の保存で発行する（F11・F14・F15）。
+
+遅延応答の終了条件はowner・key・保存原文の一致。F06-late-operationは遅延成功、F18は人工遅延422とK2の応答切断を制御して逆順を確認する。NULの確定422はF17・F20で実APIを使い、Storage例外だけを人工条件にする。
+
 F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然な2日間の利用試験とは扱わない。F02の503、F03のGET503、F06のPOST commit後応答切断、F08の確定422、F10の保存後GET失敗は人工条件。I03のAPI試験は受信済み結果を捨てるケースで、実通信切断はF06で別に検証する。競合順は行lock待機を観測・制御し、sleepだけで成功を主張しない。F06-late-operationは古い送信の応答を保留し、新しい送信をcommit後に切断してから古い応答を返す。新キー保全とreload回復をassertした。
 
 ## 途中の失敗・中断
@@ -82,6 +93,21 @@ F01の昨日は合成Goalの開始日を1日前に設定して試験し、自然
 今回のセルフレビューはIssue契約、owner/epoch、回復情報の保全、両側merge内容、文書と実装を照合しBlockingなし。独立した再レビューやHuman Approve、内部3人・初見利用者の受入、本番migration・merge・deployは未実施。
 
 #159／#163の全統合は別段階。初回のGit比較では#147と3、#159と1、#163と13ファイルが競合し、#164は競合しなかった。二つの0005は全文ファイル名が異なり、runnerはファイル名・checksumで管理するため番号重複だけでは失敗しない。統合時は両migration・実ファイルinventory・M01を照合する（#174/#176の動的checkerは今回保持）。targetDateは作成hash・設定版・rebase・固定attemptにも接続する必要があり、このFE修正では未実装。
+
+## PR #175の再レビュー修正（2026-10-09）
+
+remote `608df0c3de388e25338ce8393fd453e07c7948fc`から別worktree／local branch `fix/148-review-followup`を作り、main `48b5f4270c855bb015f8b7b91ca7a7ae4b0bf891`を取り込んだ。change-mapの競合は#147／#176／#181の現在地と#148追加契約を保持して解消。旧175 worktree・stash・通常checkout・#159 branchへ書き込まない。
+
+- S2：browser runnerの個人Windows path既定値を廃止。必須2環境変数不足はDB・browser前に理由付きexit 1。片方／両方未設定の3回帰を追加。
+- S3：2 smoke脚本は起動済みapp内の固定NodeでUUIDを生成する。Git Bashの構文確認と専用app内でUUID取得を確認。macOS実機はNOT_RUN。
+- Q1：上の確認手順で切断／5xxと確定422／409／410を分ける。未知結果は同owner・key・元body／rawを保持し、自動POST・新key発行をしない。
+- NULの確定422：cleanupが初回ロードのbody schema検証を再利用して`CreateRecoveryError`となり、項目エラー表示と入力復帰を止めていた。修正前の単体回帰は実際に失敗。cleanupを送信snapshotのowner・key・raw照合に限定し、初回ロードの厳密検証を保持した。Storage例外時は操作と原文を残し、回復エラーと422の項目エラーを両方表示する。
+
+修正後の初回全workspace回帰はNode24.21.0でAPI149・FE81・Prediction70、計300成功／失敗0／skip0。型検査・Foundation・動的migration checker5件成功。新規Chrome回帰はF17（実NUL422から訂正）・F18（人工遅延422対K2）・F19（人工503）・F20のStorage読取／削除例外の5件成功。F18初回は未作成の一覧に存在しない「Goalを追加」を探してtimeoutとなり、K2の判定へ未到達だった。実画面の「最初のGoalをつくる」へselectorを訂正して再実行し、raw・キー・本文・件数のoracleを維持した。専用app初回health probeの接続切断もPASSに含めず、migration完了後のhealth成功を別に確認した。
+
+今回の専用ComposeはGit除外`.tools/review175/compose.yaml`、project `codex-task5-pr175-review`、app18175／DB15675、合成DB `futureroi_issue148`／role `issue148_synthetic`のtmpfs。最終commit後のGit artifact・revision labelを持つimageで空DBへのcompiled migration／再実行no-op・実Chrome全22ケースを確認する。最終HEAD・image ID・そのHEADでの全体回帰／CI／独立レビュー結果はPR #175に記録し、旧608のCIや過去imageを新HEADの成功へ流用しない。
+
+API・共有schema・SQL・dependency・CI・製品のauth設定に新しい変更を追加しない。取り込んだmainの私的API no-storeは保持する。#159の最新SHAとの併用は親タスクの独立確認対象で、本修正単独の成功から統合成功を主張しない。Human Approve・チーム採択・内部3人／初見受入・macOS実機・本番migration・merge・deployは未実施。
 
 ## 変更ファイル
 

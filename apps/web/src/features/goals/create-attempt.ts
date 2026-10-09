@@ -18,7 +18,7 @@ export function createFailureKind(error: unknown): 'recovery' | 'conflict' | 'ow
   return null;
 }
 
-export type CreateAttempt = { owner: string; key: string; body: GoalCreate };
+export type CreateAttempt = { owner: string; key: string; body: GoalCreate; readonly raw: string };
 export type AttemptStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 // GoalCreateのcustom formatをFEの同じtimezone検証で登録する。
 FormatRegistry.Set('iana-timezone', isValidTimezone);
@@ -32,7 +32,7 @@ export function loadCreateAttempt(owner: string, storage: AttemptStorage): Creat
     if (!value || typeof value !== 'object') throw new CreateRecoveryError();
     const attempt = value as CreateAttempt;
     if (attempt.owner !== owner || typeof attempt.key !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(attempt.key) || !Value.Check(GoalCreateSchema, attempt.body)) throw new CreateRecoveryError();
-    return attempt;
+    return { owner: attempt.owner, key: attempt.key, body: attempt.body, raw: text };
   } catch { throw new CreateRecoveryError(); }
 }
 export function prepareCreateAttempt(owner: string, body: GoalCreate, storage: AttemptStorage, key: () => string = () => crypto.randomUUID()): CreateAttempt {
@@ -40,10 +40,20 @@ export function prepareCreateAttempt(owner: string, body: GoalCreate, storage: A
   if (previous) return previous;
   const attempt = { owner, key: key(), body: JSON.parse(JSON.stringify(body)) as GoalCreate };
   // 永続化できない場合は送らない。応答不明後に新しいkeyで増殖させないため。
-  storage.setItem(storageKey(owner), JSON.stringify(attempt));
-  return attempt;
+  const raw = JSON.stringify(attempt);
+  storage.setItem(storageKey(owner), raw);
+  return { ...attempt, raw };
 }
-// 離脱した旧フォームの遅延応答が、同ownerの次の作成操作を消さない。
-export function clearCreateAttempt(owner: string, key: string, storage: AttemptStorage): void {
-  if (loadCreateAttempt(owner, storage)?.key === key) storage.removeItem(storageKey(owner));
+// 確定した実送信snapshotだけを終了する。APIに拒否されたbodyを再検証せず、
+// owner/key/rawの一致で遅延応答によるK2や別bodyの削除を防ぐ。初回ロードは上の厳密検証を使う。
+export function clearCreateAttempt(operation: CreateAttempt, storage: AttemptStorage): boolean {
+  try {
+    const raw = storage.getItem(storageKey(operation.owner));
+    if (raw === null) return true;
+    if (raw !== operation.raw) return false;
+    const stored = JSON.parse(raw) as { owner?: unknown; key?: unknown } | null;
+    if (stored?.owner !== operation.owner || stored?.key !== operation.key) return false;
+    storage.removeItem(storageKey(operation.owner));
+    return true;
+  } catch { throw new CreateRecoveryError(); }
 }

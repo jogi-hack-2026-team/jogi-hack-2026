@@ -29,7 +29,7 @@ test('F06/F07/F08: 未確定createは同ownerのキー・原bodyを復元し、�
   assert.deepEqual(prepareCreateAttempt('a', body, db, () => { throw Error('新keyは禁止'); }), a);
   assert.deepEqual(loadCreateAttempt('a', db), a);
   assert.equal(loadCreateAttempt('b', db), null);
-  clearCreateAttempt('a', key, db);
+  clearCreateAttempt(a, db);
   assert.equal(loadCreateAttempt('a', db), null);
   assert.equal(prepareCreateAttempt('a', body, db, () => key).body.title, '入力変更');
 });
@@ -38,18 +38,26 @@ test('回復情報の破損・保存失敗は新keyで送信を進めない', ()
   assert.throws(() => prepareCreateAttempt('a', body, { getItem: () => null, setItem() { throw Error('容量'); }, removeItem() {} }, () => key), /容量/);
 });
 
+test('確定422: 保存したNUL bodyの再検証でcleanupを止めない', () => {
+  const db = storage();
+  const rejected = prepareCreateAttempt('a', { ...body, title: 'NUL\u0000入り' }, db, () => key);
+  assert.throws(() => loadCreateAttempt('a', db), CreateRecoveryError, '初回ロードの厳密検証は維持する');
+  assert.equal(clearCreateAttempt(rejected, db), true);
+  assert.equal(db.getItem('future-roi:create-attempt:a'), null);
+});
+
 
 test('F06逆対: 離脱したK1の遅延成功/422で、進行中K2の回復情報を消さない', () => {
   const db = storage();
-  prepareCreateAttempt('a', body, db, () => key);
-  clearCreateAttempt('a', key, db);
+  const previous = prepareCreateAttempt('a', body, db, () => key);
+  clearCreateAttempt(previous, db);
   const key2 = '00000000-0000-4000-8000-000000000249';
   const current = prepareCreateAttempt('a', body, db, () => key2);
   for (const lateResponse of ['success', '422']) {
-    clearCreateAttempt('a', key, db);
+    assert.equal(clearCreateAttempt(previous, db), false);
     assert.deepEqual(loadCreateAttempt('a', db), current, lateResponse);
   }
-  clearCreateAttempt('a', key2, db);
+  clearCreateAttempt(current, db);
   assert.equal(loadCreateAttempt('a', db), null);
 });
 
@@ -73,4 +81,26 @@ test('作成の409競合・owner変更・410削除を、通信失敗・他のHTT
   assert.equal(createFailureKind(error(410, 'CREATE_RESULT_DELETED')), 'deleted');
   assert.equal(createFailureKind(new CreateRecoveryError()), 'recovery');
   for (const failure of [new TypeError('通信失敗'), error(500, 'IDEMPOTENCY_CONFLICT'), error(422, 'CREATE_RESULT_DELETED'), new ApiError(409, null)]) assert.equal(createFailureKind(failure), null);
+});
+
+test('終端cleanupは同keyのraw変更・別owner・別keyを削除しない', () => {
+  for (const change of ['raw', 'owner', 'key']) {
+    const db = storage();
+    const operation = prepareCreateAttempt('a', body, db, () => key);
+    const changed = change === 'raw' ? operation.raw + ' ' : operation.raw;
+    db.setItem('future-roi:create-attempt:a', changed);
+    const rejected = change === 'owner' ? { ...operation, owner: 'b' } : change === 'key' ? { ...operation, key: '00000000-0000-4000-8000-000000000249' } : operation;
+    clearCreateAttempt(rejected, db);
+    assert.equal(db.getItem('future-roi:create-attempt:a'), changed, change);
+  }
+});
+
+test('cleanupのstorage読取/削除例外は回復エラーになり、元rawを保持する', () => {
+  const db = storage();
+  const operation = prepareCreateAttempt('a', body, db, () => key);
+  for (const method of ['getItem', 'removeItem']) {
+    const failing = { ...db, [method]: () => { throw Error('storage synthetic'); } };
+    assert.throws(() => clearCreateAttempt(operation, failing), CreateRecoveryError);
+    assert.equal(db.getItem('future-roi:create-attempt:a'), operation.raw);
+  }
 });

@@ -75,7 +75,9 @@ curl --silent --cookie "$jar" "$base/api/auth/get-session" | grep -q "\"email\":
 # Goal API（#76）の往復: 空の一覧 → 作成201 → 一覧に含まれる → 削除204 → 一覧が空
 body=$(curl --silent --cookie "$jar" "$base/api/goals")
 [ "$body" = '[]' ] || fail "authenticated /api/goals must start empty: $body"
-created=$(curl --header "Idempotency-Key: $(cat /proc/sys/kernel/random/uuid)" --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
+# 実行中imageのNodeを使い、macOS/Windowsにもないhostの/procに依存しない。
+create_key=$(docker exec "$NAME" node --input-type=module -e 'import { randomUUID } from "node:crypto"; console.log(randomUUID());')
+created=$(curl --header "Idempotency-Key: $create_key" --silent --cookie "$jar" --header "origin: $AUTH_URL" --header 'content-type: application/json' \
   --data '{"title":"smoke goal","unit":"minutes","totalRequired":600,"sessionAmount":30,"timezone":"Asia/Tokyo"}' "$base/api/goals")
 echo "$created" | grep -q '"title":"smoke goal"' || fail "goal creation body: $created"
 echo "$created" | grep -q '"todayStatus":"UNRECORDED"' || fail "created goal must report todayStatus"
