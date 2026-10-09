@@ -5,7 +5,7 @@ import type { Pool } from 'pg';
 import { ErrorBody, Goal, GoalCreate, GoalList, GoalParams, GoalPatch, GoalR11, R11ViewQuery } from '../contracts/index.ts';
 import { errorBody } from '../http/errors.ts';
 import { requireUserId } from '../http/guards.ts';
-import { GoalFieldsInvalid } from './extras.ts';
+import { GoalFieldsInvalid } from './target-date-policy.ts';
 import { createGoalOnce, deleteGoal, getGoal, listGoals, updateGoal } from './store.ts';
 
 export type GoalRouteDeps = {

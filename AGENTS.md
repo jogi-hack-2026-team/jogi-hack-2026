@@ -78,7 +78,7 @@ Code Freeze後は、原則としてソースコードおよび事前提出資料
 3. [変更対応表](docs/change-map.md)から実在Code / Testsを調査する。
 4. 新Productの領域文書が作成された場合は、そのREADMEからdecision-log、design-intent、implementation-guideと必要なevidenceを確認する。
 
-[旧音楽案の保管資料](archive/music-exploration/README.md)は当時の判断・検証を調べる場合だけ参照し、現在の実装手順へ持ち込まない。
+[旧音楽案の保管資料](README.md#廃止した音楽案の履歴)は当時の判断・検証を調べる場合だけ参照し、現在の実装手順へ持ち込まない。
 
 Supporting Docsは理由・証拠・実装手順を展開する補助資料であり、正式な仕様の追加正本ではない。
 
@@ -696,6 +696,8 @@ Branch名は `CONTRIBUTING.md` に従う。
 
 他人の変更を勝手に削除・上書きしない。
 
+責務・配置・テストを整理する作業では、[Architectureの境界](docs/architecture.md#責務と配置を変えるとき)と[検証の範囲](docs/DEVELOPMENT_GUIDE.md#検証)を確認する。
+
 ---
 
 ## 21. Git Safety
@@ -969,7 +971,7 @@ Merge前に修正が必要。
 - `docs/DEVELOPMENT_GUIDE.md`
 - `docs/product-spec.md`
 - `docs/architecture.md`
-- [旧開発基盤ADR](archive/music-exploration/docs/decisions/0001-development-foundation.md)（既存基盤判断の履歴参照）
+- [旧開発基盤ADR](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/decisions/0001-development-foundation.md)（既存基盤判断の履歴参照）
 
 以下が変更された場合はDocumentation更新を検討する。
 

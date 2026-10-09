@@ -1,0 +1,329 @@
+{
+  "kind": "synthetic-real-browser-api-db-refactor-verification",
+  "capturedAt": "2026-10-09T16:37:40.008642+00:00",
+  "sourceHead": "4f5523a8e2775562206951234155007e3b6a0e7d",
+  "ciImplementationHead": "297635f4f17699ef7304df70ce4124689f76bbf0",
+  "syntheticOnly": true,
+  "origin": "http://refactor188.localhost:18188",
+  "project": "codex-task3-refactor188",
+  "appImage": "sha256:79e511b35a61d1066bce09cb0f300afe85ba0bab178f9e6faa56e4fc12bb3ab7",
+  "productionPathsUnchangedBetweenSourceAndCiHead": true,
+  "db": {
+    "goalCount": 5,
+    "actionLogCount": 1,
+    "createOperationCount": 5,
+    "goals": [
+      {
+        "owner": "A",
+        "id": "32adf592-9562-4e09-a068-f143dab1708d",
+        "title": "合成188・K1遅延",
+        "unit": "minutes",
+        "totalRequired": 50,
+        "sessionAmount": 5,
+        "targetDate": null,
+        "settingsRevision": 0,
+        "answerRevision": 0,
+        "questionPrior": {
+          "a": null,
+          "b": null
+        }
+      },
+      {
+        "owner": "A",
+        "id": "83c8f314-f552-4a7c-aaa5-f4f9645dc7d0",
+        "title": "合成188・K2保全",
+        "unit": "minutes",
+        "totalRequired": 60,
+        "sessionAmount": 6,
+        "targetDate": null,
+        "settingsRevision": 0,
+        "answerRevision": 0,
+        "questionPrior": {
+          "a": null,
+          "b": null
+        }
+      },
+      {
+        "owner": "A",
+        "id": "b22dd309-1550-4452-b4ad-154d6c6ab5df",
+        "title": "合成188・応答途絶",
+        "unit": "minutes",
+        "totalRequired": 40,
+        "sessionAmount": 5,
+        "targetDate": null,
+        "settingsRevision": 0,
+        "answerRevision": 0,
+        "questionPrior": {
+          "a": null,
+          "b": null
+        }
+      },
+      {
+        "owner": "A",
+        "id": "c97bb88e-980c-4641-becf-2918823f5fe9",
+        "title": "合成188・英語学習",
+        "unit": "minutes",
+        "totalRequired": 180,
+        "sessionAmount": 20,
+        "targetDate": "2026-10-12",
+        "settingsRevision": 1,
+        "answerRevision": 0,
+        "questionPrior": {
+          "a": "HIGH",
+          "b": "MID"
+        }
+      },
+      {
+        "owner": "B",
+        "id": "94e58c17-3a2e-4040-81da-9b6a5289f1bb",
+        "title": "合成188・Bの新規入力",
+        "unit": "minutes",
+        "totalRequired": 90,
+        "sessionAmount": 9,
+        "targetDate": null,
+        "settingsRevision": 0,
+        "answerRevision": 0,
+        "questionPrior": {
+          "a": null,
+          "b": null
+        }
+      }
+    ],
+    "logs": [
+      {
+        "goalId": "c97bb88e-980c-4641-becf-2918823f5fe9",
+        "localDate": "2026-10-10",
+        "status": "DONE",
+        "amount": 10
+      }
+    ]
+  },
+  "createReplays": [
+    {
+      "title": "合成188・応答途絶",
+      "originalStatus": 201,
+      "replayStatus": 200,
+      "sameKey": true,
+      "sameRequestHash": true,
+      "sameGoalId": true,
+      "originalInjection": "lose-response",
+      "confirmedAt": "2026-10-09T16:15:09.365Z"
+    },
+    {
+      "title": "合成188・K1遅延",
+      "originalStatus": 201,
+      "replayStatus": 200,
+      "sameKey": true,
+      "sameRequestHash": true,
+      "sameGoalId": true,
+      "originalInjection": "hold-response",
+      "confirmedAt": "2026-10-09T16:18:49.975Z"
+    },
+    {
+      "title": "合成188・K2保全",
+      "originalStatus": 201,
+      "replayStatus": 200,
+      "sameKey": true,
+      "sameRequestHash": true,
+      "sameGoalId": true,
+      "originalInjection": "hold-response",
+      "confirmedAt": "2026-10-09T16:31:30.942Z"
+    }
+  ],
+  "recordRevisionRecovery": [
+    {
+      "status": 409,
+      "amount": 10,
+      "expectedRevision": 0,
+      "time": "2026-10-09T16:11:41.459Z"
+    },
+    {
+      "status": 200,
+      "amount": 10,
+      "expectedRevision": 1,
+      "time": "2026-10-09T16:11:58.217Z"
+    }
+  ],
+  "writes": [
+    {
+      "time": "2026-10-09T16:09:07.342Z",
+      "id": 56,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 201,
+      "bodyHash": "f2fd69d18a9b7d8132ac9040551c1a3bea2b67339a8e4ca76074638f7cf77ba1",
+      "title": "合成188・英語学習",
+      "targetDate": "2026-10-12",
+      "goalId": "c97bb88e-980c-4641-becf-2918823f5fe9",
+      "replayed": null,
+      "injection": null,
+      "operationKeySha256": "26bc4505234054c28a89a083ab530c9021bc7b89f57a62be5c9c5681e65687e4"
+    },
+    {
+      "time": "2026-10-09T16:11:10.196Z",
+      "id": 93,
+      "method": "PATCH",
+      "path": "/api/goals/c97bb88e-980c-4641-becf-2918823f5fe9",
+      "status": 200,
+      "bodyHash": "b751d0ee9f6dcc2fdd42f9c25254097405d36fa2d3b098516b93430a0c320c5d",
+      "revision": 0,
+      "goalId": "c97bb88e-980c-4641-becf-2918823f5fe9",
+      "replayed": null,
+      "injection": null
+    },
+    {
+      "time": "2026-10-09T16:11:41.459Z",
+      "id": 98,
+      "method": "PUT",
+      "path": "/api/goals/c97bb88e-980c-4641-becf-2918823f5fe9/logs/2026-10-10",
+      "status": 409,
+      "bodyHash": "d5b58da410af663cf2b718b05db8d72193a96bb1c1882cf5805e0c913ab82d75",
+      "amount": 10,
+      "revision": 0,
+      "goalId": null,
+      "replayed": null,
+      "injection": null
+    },
+    {
+      "time": "2026-10-09T16:11:58.217Z",
+      "id": 103,
+      "method": "PUT",
+      "path": "/api/goals/c97bb88e-980c-4641-becf-2918823f5fe9/logs/2026-10-10",
+      "status": 200,
+      "bodyHash": "1a8e59b1ff80eeddc62d65d0e8b85ce94639000aecc8534035228a065e193a6b",
+      "amount": 10,
+      "revision": 1,
+      "goalId": null,
+      "replayed": null,
+      "injection": null
+    },
+    {
+      "time": "2026-10-09T16:14:05.251Z",
+      "id": 117,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 201,
+      "bodyHash": "a8264305f2cc5e0edd1170866c97a4335538ff7405bb8fe56d299f1262a09512",
+      "title": "合成188・応答途絶",
+      "goalId": "b22dd309-1550-4452-b4ad-154d6c6ab5df",
+      "replayed": null,
+      "injection": "lose-response",
+      "operationKeySha256": "412fe2e72c97c87fbdddf546ad7694fe7601354fd3436dc5a86a23c3a55cab3c"
+    },
+    {
+      "time": "2026-10-09T16:15:09.365Z",
+      "id": 119,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 200,
+      "bodyHash": "a8264305f2cc5e0edd1170866c97a4335538ff7405bb8fe56d299f1262a09512",
+      "title": "合成188・応答途絶",
+      "goalId": "b22dd309-1550-4452-b4ad-154d6c6ab5df",
+      "replayed": "true",
+      "injection": null,
+      "operationKeySha256": "412fe2e72c97c87fbdddf546ad7694fe7601354fd3436dc5a86a23c3a55cab3c"
+    },
+    {
+      "time": "2026-10-09T16:17:10.931Z",
+      "id": 126,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 201,
+      "bodyHash": "10c4e569185d3aec3ca76a15b36a56eeab5ae89bbd7848e254c07ce1d16b8cc2",
+      "title": "合成188・K1遅延",
+      "goalId": "32adf592-9562-4e09-a068-f143dab1708d",
+      "replayed": null,
+      "injection": "hold-response",
+      "operationKeySha256": "2555395734f3256a38fb04b087d9b26f09d30ed343e7ee54bc54e4d8b4493ea3"
+    },
+    {
+      "time": "2026-10-09T16:18:49.975Z",
+      "id": 133,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 200,
+      "bodyHash": "10c4e569185d3aec3ca76a15b36a56eeab5ae89bbd7848e254c07ce1d16b8cc2",
+      "title": "合成188・K1遅延",
+      "goalId": "32adf592-9562-4e09-a068-f143dab1708d",
+      "replayed": "true",
+      "injection": null,
+      "operationKeySha256": "2555395734f3256a38fb04b087d9b26f09d30ed343e7ee54bc54e4d8b4493ea3"
+    },
+    {
+      "time": "2026-10-09T16:21:14.248Z",
+      "id": 139,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 201,
+      "bodyHash": "0e30c7e1ae344005634ac6823eb8c3efb034705389a63a1a1ea5276aaba6c887",
+      "title": "合成188・K2保全",
+      "goalId": "83c8f314-f552-4a7c-aaa5-f4f9645dc7d0",
+      "replayed": null,
+      "injection": "hold-response",
+      "operationKeySha256": "346833ce319e8456c7745ff0601f6e0c6ce91a90e4fde1f463269ad34b02fba1"
+    },
+    {
+      "time": "2026-10-09T16:25:51.370Z",
+      "id": 152,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 201,
+      "bodyHash": "9eb99a2af5e72796dde873c25ec547679ad1ff6c09e9c35fa58ab628b66d8083",
+      "title": "合成188・Bの新規入力",
+      "goalId": "94e58c17-3a2e-4040-81da-9b6a5289f1bb",
+      "replayed": null,
+      "injection": null,
+      "operationKeySha256": "c4ff7dc5578e4bd662b3cc458b87ae0a88e00402472e9b5dc8e414076962f2ba"
+    },
+    {
+      "time": "2026-10-09T16:31:30.942Z",
+      "id": 172,
+      "method": "POST",
+      "path": "/api/goals",
+      "status": 200,
+      "bodyHash": "0e30c7e1ae344005634ac6823eb8c3efb034705389a63a1a1ea5276aaba6c887",
+      "title": "合成188・K2保全",
+      "goalId": "83c8f314-f552-4a7c-aaa5-f4f9645dc7d0",
+      "replayed": "true",
+      "injection": null,
+      "operationKeySha256": "346833ce319e8456c7745ff0601f6e0c6ce91a90e4fde1f463269ad34b02fba1"
+    }
+  ],
+  "images": [
+    {
+      "path": "01-create-integer-date.jpg",
+      "sha256": "91a28e457d0319a2a9916d03fdcf2b9879d048f2877fdb9d1f93e0f4006c8014",
+      "reviewedFromSavedBytes": true
+    },
+    {
+      "path": "02-question-today.jpg",
+      "sha256": "2c18f30e73295118a1948a084db3d0aab873e71b2c75ff9eb8a7d6399acfe4d8",
+      "reviewedFromSavedBytes": true
+    },
+    {
+      "path": "03-record-409.jpg",
+      "sha256": "99df3200a6b34b6574c81e6e170675d9c4c96f8ee2e307e2dcd14da4676f532e",
+      "reviewedFromSavedBytes": true
+    },
+    {
+      "path": "04-response-loss.jpg",
+      "sha256": "bb95031041e5a12128b87ea8b5f89db25c85bc8f8276f66913b48ddbaf2460e1",
+      "reviewedFromSavedBytes": true
+    },
+    {
+      "path": "05-k2-after-k1-release.jpg",
+      "sha256": "76a6314b40ac1f352645699c51376c19c0d31a1684b09fd6c514567d82e4bb3b",
+      "reviewedFromSavedBytes": true
+    },
+    {
+      "path": "06-b-draft-after-a-release.jpg",
+      "sha256": "c9af9791eb7301d6d523b5c6483ae65a34dde63b3a5ecda808efe8687d961d7a",
+      "reviewedFromSavedBytes": true
+    }
+  ],
+  "limits": [
+    "Manual CUA browser checks, not an automated real API E2E suite",
+    "Response hold/release is artificial proxy transport; release event does not prove all abandoned response bytes reached the browser",
+    "No full UX/WCAG or 390px/light-dark matrix rerun in this refactor verification"
+  ]
+}

@@ -4,7 +4,7 @@
 
 Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの境界)）の実現方式を記録する。予測モデル（[D-19](#d-19)〜[D-22](#d-22)）、Data Modelと記載済みの業務API・Prediction Engineの規則は確定。成功応答のデータ項目（DTO）・HTTP status等の未定義部分と文書間の解釈差は[契約の判断事項](contract-review-proposal.md)へ分ける。**2026-10-03、依頼者によるチーム合意報告を受け[D-23](#d-23)の基本構成を採用。[D-24](#d-24)／[D-25](#d-25)は検証・運用条件付きの第一候補。** [合意範囲](#2026-10-03の技術構成合意)を超えて認証・公開先・API細則を確定しない。2026-10-08時点のGoal・記録・Today APIと実APIを使う画面、既存ローカル検証記録、製品受入・公開配置等の残条件は[対応表](change-map.md#現在地の読み方)から確認する。純粋Prediction Engineと関連テストは[#103](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/103)でmain統合済みで、#77で`/today`から呼ぶ形でアプリへ結合した。構成の採用や下記の契約をアプリ動作確認済みとは扱わない。
 
-旧音楽案の設計・比較結果は[保管場所](../archive/music-exploration/README.md)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
+旧音楽案の設計・比較結果は[保管場所](../README.md#廃止した音楽案の履歴)に履歴として残す（[D-17](#d-17-音楽案に依存したarchitectureの適用終了)）。
 
 2026-10-05、[Product R-11・P-15](product-spec.md#p-15-質問由来の見通しのmust追加方針)のMust追加と分担をPR #115でチーム採択した。当時のOPEN事項と2026-10-07の依頼者承認範囲の保存・予測接続契約は[D-26](#d-26)で区別する。旧`predict`の実績由来Engine契約・D-20の共通priorを保ちながら、別のR-11公開入口を使う。mainのFE接続状況は[対応表](change-map.md#r-11の既存issueへの対応)を参照し、製品受入とは分ける。
 
@@ -46,6 +46,20 @@ interfaceは差替えやテストに必要な境界だけに置く。大がか�
 
 入力検証は、UIの入力支援、APIの信用できない外部入力の検証、application service／Engineの業務不変条件、DBの一意性・参照整合性等の制約で役割が異なる。共有できる形式定義を使っても、各境界に必要な検証をDRY（重複削減）だけを理由に消さない。値・日付・NULLの規則は[Data Model](#data-model)と[Prediction Engine](#prediction-engine)を参照する。
 
+### 責務と配置を変えるとき
+
+既存の契約を保つ整理では、同じ理由で変わる小さな処理を抽出する。状態・副作用・transactionの所有者を増やさず、呼出し順序と失敗の境界を維持する。
+
+| 境界 | 現行の配置と保つ条件 |
+| --- | --- |
+| FEの入力と訪問 | [GoalFormPage](../apps/web/src/features/goals/GoalFormPage.tsx)がdraft・作成attempt・保存を所有する。[GoalFormFields](../apps/web/src/features/goals/form/GoalFormFields.tsx)は制御された値・callbackで描画し、保存や認証を持たない。[成功receipt](../apps/web/src/features/goals/navigation/useConfirmedGoalSave.ts)はowner・世代・訪問を照合してから、同じattemptの掃除と遷移を一度だけ行う |
+| FEの純粋な境界 | [forecast-validation](../apps/web/src/features/prior/forecast-validation.ts)が表示へ渡す契約を検査し、[PriorForecast](../apps/web/src/features/prior/PriorForecast.tsx)は描画する。共有する[IANA timezone・暦日関数](../apps/web/src/calendar.ts)へ時計や画面stateを持ち込まない |
+| BEの判断と永続化 | [settings-policy](../apps/api/src/goals/settings-policy.ts)・[target-date-policy](../apps/api/src/goals/target-date-policy.ts)・[回答更新policy](../apps/api/src/questions/update-policy.ts)・[作成fingerprint](../apps/api/src/goals/create-request-fingerprint.ts)は純粋判定。[Goal store](../apps/api/src/goals/store.ts)はSQL・lock・時計・CAS・commit/rollbackを所有する。`loadGoalReadModels`等の名前でDB読込を明示し、拒否の優先順を抽出の都合で変えない |
+| Engineの公開型と計算 | [question-prior-types](../packages/prediction/src/question-prior-types.ts)がR-11の公開型を所有し、内部候補は型を参照する。公開入口は既存exportを保つ。数値核・演算順・乱数・K/H/seed・独立オラクルと凍結fixtureを保ち、結果の値・key・省略条件・拒否条件を比較する |
+| 検証の資源 | APIの[helper](../apps/api/tests/helpers/stack.ts)は獲得した資源を早期に所有し、初期化失敗でも獲得済み資源をすべて終了する。元の失敗と終了失敗を併記する。これはテストの境界で、製品へ新しいDI層を導入しない |
+
+変更時は[検証手順](DEVELOPMENT_GUIDE.md#検証)で純粋・描画・実ブラウザ・実DBの範囲を分ける。画面の直接操作や独立オラクルを、ソース文字列の一致や件数だけで置き換えない。
+
 ### Repository構成
 
 `packages/prediction` は実在する純粋Engineで、[利用条件と検証手順](../packages/prediction/README.md)を参照する。root workspace・health/SPA配信・Compose・単一コンテナ・Application CIは#70、DB schema/migrationは#74、認証/API保護/認証画面は#75で導入済み（[起動・検証手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する)）。Goal APIは#76、記録・Today APIとEngine結合は#77でローカル実装済み。業務画面のmain実装と受入・公開の残条件は[対応表](change-map.md#現在地の読み方)へ集約し、Docker起動成功を業務機能全体の完成としない。
@@ -61,7 +75,7 @@ Dockerfile              単一SPA／APIコンテナ（Node 24.21.0）
 
 ## Technology Stack
 
-**基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録（DECIDED）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../archive/music-exploration/README.md)として保持する。起動構成は#70で現行の場所へ導入し、版は[2026-10-06の版固定](#2026-10-06の版固定と起動構成)を参照する。
+**基本構成はFE側の依頼者報告とBE本人の了承記録に基づく採用記録（DECIDED）。認証・公開先は条件付き第一候補（RECOMMENDED / CONDITIONAL）。** 以下の合意範囲で分けて確認する。旧構成は[履歴](../README.md#廃止した音楽案の履歴)として保持する。起動構成は#70で現行の場所へ導入し、版は[2026-10-06の版固定](#2026-10-06の版固定と起動構成)を参照する。
 
 ### 2026-10-03の技術構成合意
 
@@ -516,13 +530,13 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 
 ## Test Strategy
 
-性質（T-01〜T-15）と各層で確かめる内容は確定。runnerはNode標準`node:test`を#70で採用（[版固定](#2026-10-06の版固定と起動構成)）。fast-check・Playwrightは[D-23](#d-23)の候補。
+性質（T-01〜T-15）と各層で確かめる内容は確定。runnerはNode標準`node:test`を#70で採用（[版固定](#2026-10-06の版固定と起動構成)）。fast-checkは[D-23](#d-23)の未採択候補。Playwright CLIはE2E方針として採択済み・未導入。
 
 | 層 | 方法 | 内容 |
 | --- | --- | --- |
 | `packages/prediction` | `node:test`＋固定例・固定seed・独立オラクル（性質T-01〜T-15を具体例と閉形式で検査）。fast-check（性質ベースの入力生成）は未採択の候補 | 下表T-01〜T-15。CIで毎回実行 |
 | `apps/api` | `node:test`＋PostgreSQL（Compose、CIのservice、または`embedded-postgres`） | 認証（未ログイン401、登録→再読み込み→ログアウト→旧Cookie 401、期限切れ、別origin403、https Cookie、DB保存の回数制限と再起動。[auth.test.ts](../apps/api/tests/auth.test.ts)）、Goal API（契約違反の422と全項目列挙、無効timezone、他人・uuidでないidの404、記録があるGoalの変更禁止、削除の連鎖、timezoneの日付境界。[goals.test.ts](../apps/api/tests/goals.test.ts)）、記録API（DONEの明示量必須、同日上書き、SKIPPEDの量拒否、今日・昨日の窓と開始日前、Asia/Tokyoの23:59→0:00、期間指定の一覧。[logs.test.ts](../apps/api/tests/logs.test.ts)）、Today API（`yesterdayMissing`の条件、Engineの`predict`との完全一致、記録後の再計算、達成済み。[today.test.ts](../apps/api/tests/today.test.ts)）、所有者チェック（他人は404）、`(goal_id, local_date)`の上書き、DB制約（DONE＋`amount`がNULLの挿入は失敗し、SKIPPED＋NULLは成功する）、今日・昨日以外、または記録開始日より前は422、timezoneの日付境界、無効なIANA名は422、記録があるGoalの`timezone`・`initialProgress`変更は422、`/today`の組み立て |
-| `apps/web` | 手動チェックリスト＋Playwright CLI（主要Flow 1本） | 登録→Goal作成→記録→前日補完→Today Decision表示 |
+| `apps/web` | `node:test`の純粋module・HTTP契約・SSR、実React/Router/SDKのブラウザ回帰（合成transport）、実API/DBの手動ブラウザ確認。Playwright CLIは採択済み・未導入 | 前者は所有者切替・再確認・draft・保存成功の訪問寿命を検査。実認証・実HTTP・DBの通し確認とは分ける。登録→Goal作成→記録→前日補完→Today Decisionの実環境結果は対象SHAと操作をPRへ記録する |
 
 | ID | Prediction Engineの性質 |
 | --- | --- |
@@ -648,19 +662,19 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 **#175後の再測定は未実施。** 現mainのGoal POSTは`Idempotency-Key`、Log PUTは`expectedGoalSettingsRevision`が必須だが、既存harnessは未対応で現APIへそのまま再実行できない。過去のM5測定（生JSONのrepositoryHeadは`bb8aa2a6b1199d6b6944a4793089a71129ccfe88`）は当時の実行元SHAの証拠として保持し、現main／公開runtimeの性能を再検証したとは扱わない。互換修正・公開向け送信/metricsは後続の別作業で、公開受入は#83に残す。本記録の採択とmainへのMerge・deployは別で、これらの操作は行わない。
 
-旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
+旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
 ### D-15
 
-2026-09-27 / **SUPERSEDED by D-18** / Node 24 LTSとnpmを当時の開発Toolchainに採用した。[当時の判断理由](../archive/music-exploration/docs/architecture.md#d-15) / [Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)。新Productでは[D-23](#d-23)でTypeScript／Nodeの基本構成を採用したが、Node 24 LTS／npmを含む版と管理方式は今回の合意では未確定。
+2026-09-27 / **SUPERSEDED by D-18** / Node 24 LTSとnpmを当時の開発Toolchainに採用した。[当時の判断理由](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/architecture.md#d-15) / [Issue #49](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/49)。新Productでは[D-23](#d-23)でTypeScript／Nodeの基本構成を採用したが、Node 24 LTS／npmを含む版と管理方式は今回の合意では未確定。
 
 ### D-17 音楽案に依存したArchitectureの適用終了
 
-2026-09-29 / **DECIDED（依頼者判断に伴う適用範囲変更）** / 旧案のD-08〜D-14・D-16、A-01〜A-07を次のProductへ自動適用しない。旧判断、実験、未検証事項は[履歴](../archive/music-exploration/docs/architecture.md#architecture-decision-log)として保持する。[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。
+2026-09-29 / **DECIDED（依頼者判断に伴う適用範囲変更）** / 旧案のD-08〜D-14・D-16、A-01〜A-07を次のProductへ自動適用しない。旧判断、実験、未検証事項は[履歴](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/architecture.md#architecture-decision-log)として保持する。[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)。
 
 ### D-18 旧開発スタックの一時退避
 
-2026-09-30の退避判断を、2026-10-03に**SUPERSEDED by D-23（基本構成の未定状態）**へ更新。旧Web/API・Compose・Application CIを[履歴](../archive/music-exploration/README.md)へ退避した理由と[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)は保持する。D-23で新Productの基本構成を採用したが、旧設定・版の再採用や復元済みを意味しない。必要部分の復元は#70で行い、[版固定と起動構成](#2026-10-06の版固定と起動構成)に記録した。
+2026-09-30の退避判断を、2026-10-03に**SUPERSEDED by D-23（基本構成の未定状態）**へ更新。旧Web/API・Compose・Application CIを[履歴](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/README.md)へ退避した理由と[整理Issue #67](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/67)は保持する。D-23で新Productの基本構成を採用したが、旧設定・版の再採用や復元済みを意味しない。必要部分の復元は#70で行い、[版固定と起動構成](#2026-10-06の版固定と起動構成)に記録した。
 
 ### D-19
 
@@ -694,7 +708,7 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 **2026-10-03の候補履歴（現在の公開第一候補は上記）：**
 
-2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち）** / Cloud Run＋Neonを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。利用が少ない時間の計算資源を抑え、DBサーバー自体の管理を減らす狙い。[費用・代替案・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)を参照。単一SPA／APIコンテナとPostgreSQLはD-23の採用範囲だが、サービスの最終受入・一般公開・課金作成の許可ではない。#85のregion確認は2026-09-30の記録で、現在の提供地域と組合せは作成前に再確認する。予算・利用前提・担当・実Cloud／proxy／1 vCPU／休止後応答・費用は未確認。アカウント・課金・リソース作成は対象と費用を示した別承認後。旧比較は[履歴](../archive/music-exploration/docs/architecture.md#deploymentと費用)に保持する。
+2026-10-03 / **RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち）** / Cloud Run＋Neonを、[合意範囲](#2026-10-03の技術構成合意)により検証・運用条件付きの第一候補として進める。利用が少ない時間の計算資源を抑え、DBサーバー自体の管理を減らす狙い。[費用・代替案・残条件](../experiments/architecture-verification/SELECTION-v3.1.md#配備cloud-runとneon)を参照。単一SPA／APIコンテナとPostgreSQLはD-23の採用範囲だが、サービスの最終受入・一般公開・課金作成の許可ではない。#85のregion確認は2026-09-30の記録で、現在の提供地域と組合せは作成前に再確認する。予算・利用前提・担当・実Cloud／proxy／1 vCPU／休止後応答・費用は未確認。アカウント・課金・リソース作成は対象と費用を示した別承認後。旧比較は[履歴](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/architecture.md#deploymentと費用)に保持する。
 
 ### D-26
 

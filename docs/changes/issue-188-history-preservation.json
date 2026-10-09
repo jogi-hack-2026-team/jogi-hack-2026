@@ -1,0 +1,980 @@
+{
+  "kind": "fixed-git-history-preservation",
+  "schemaVersion": 1,
+  "baseCommit": "77c71a5f248a4dce4ce9fb8af6619b41541be9d8",
+  "verifiedIntegrationCommit": "63e786a6d700b69f391078c7898666c8ce3f44fd",
+  "method": "Tracked deletion only; original modes and blobs remain at fixed commit; no body copy or history rewrite",
+  "directories": [
+    {
+      "path": "archive/music-exploration",
+      "tree": "a710489f6cf9c923e4f933036e7356c811c91807",
+      "fileCount": 111,
+      "files": [
+        {
+          "path": "archive/music-exploration/.agents/skills/ml-issue-execution/SKILL.md",
+          "blob": "ca2c34a75a07759bf1f35619282ca98a7476403a",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/.dockerignore",
+          "blob": "0657b10077b2c95ad00f6cee1f342be2c26de9b7",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/.env.example",
+          "blob": "44c7daa09884a8a2c423a41324e0e4244bd353b9",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/.github/workflows/application.yml",
+          "blob": "c89e3cfd325e2914db51bf4df3127db5fbbca3f5",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/Dockerfile",
+          "blob": "1e97448d5a598b94d6aaeb19f532375caa7d6b5c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/README.md",
+          "blob": "260e3ce4901ff4f4cbf009f34cc6fd5af0a7525d",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/api/package.json",
+          "blob": "0953669d200c3c5c2c1a7d5ec4b611f5bb0b08e6",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/api/src/app.ts",
+          "blob": "082d12a90431147e1a247b6031d311f5cf67d4ca",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/api/src/server.ts",
+          "blob": "163b3f19051af3443c9bf54cbf56c528c2bb58ca",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/api/tsconfig.json",
+          "blob": "8c895921530a27fac3e4c5e52cc3a73d9babe875",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/index.html",
+          "blob": "f876dda1f4d3710e10cf6bdd0417184f4fe8e225",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/package.json",
+          "blob": "c97b038baec96fe6addcdec0e67a08cae49c4274",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/src/Home.tsx",
+          "blob": "34e01a6d8c34191497c2a021bb1ad781f74a821d",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/src/main.tsx",
+          "blob": "5cfcb4716bc084fa6be457563fb8e1c3f6cce1e5",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/src/router.tsx",
+          "blob": "c81e5591d9db1870b7ea7582b75448762713971c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/src/styles.css",
+          "blob": "422eb1e169c0a52059aabf60ee769c032ca9927f",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/tsconfig.json",
+          "blob": "fac56b691b08255e2ae87b0399d99d26cbed4e0b",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/apps/web/vite.config.ts",
+          "blob": "bb6b421d3c2ad2f8cac4ea88d60db35fb7d7d22e",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/compose.yaml",
+          "blob": "27e88fda377991d6450c03a7a82daf7cc2892f07",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/BE/README.md",
+          "blob": "ea587557eeff3068bf4ecc9af2083f8a6dfaec3b",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/BE/decision-log.md",
+          "blob": "9b6570e4ca9c467fead7ca65ba07babef3b5b9ea",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/BE/design-intent.md",
+          "blob": "bfe43b3ccece21ac4d845061e6c634cb89bcf6af",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/BE/evidence.md",
+          "blob": "68b5021c9ff4f8c4a3ecc67a249b454e86341a13",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/BE/implementation-guide.md",
+          "blob": "f6bba940c5ea509f2a8a9246f7747c886d9ad0d6",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/DEVELOPMENT_GUIDE.md",
+          "blob": "eedb7fa00e880f1d2932799be9eb92d8c66935aa",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/FE/README.md",
+          "blob": "e5327045ed9e5036b60fe16d0873f58ce71cb86f",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/FE/decision-log.md",
+          "blob": "4c2a4ac09f00fb42150f235cba04f52b5c9fd875",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/FE/design-intent.md",
+          "blob": "570ba39be8c9af01990b887bf6df50418d9fc0b8",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/FE/evidence.md",
+          "blob": "151bb1d237cbbb0a08890391a8c5ad9367b993b3",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/FE/implementation-guide.md",
+          "blob": "08ac1db124938c1865f26f6f8fa72c09afd4b0ec",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/ML/README.md",
+          "blob": "5945b94cb60ec75dee13bf9c1488eb102ab86484",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/ML/decision-log.md",
+          "blob": "a607a810550f91d9af94caae30074e6956ed6717",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/ML/design-intent.md",
+          "blob": "3beb88b39b77cfc3dbc73dd250487190442b170b",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/ML/evaluation.md",
+          "blob": "4d22861b13652fb95aa8fda7d0b94b59ff2c928c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/ML/evidence.md",
+          "blob": "086f7adbd0a71ec696c8351315b9789c1b057987",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/ML/implementation-guide.md",
+          "blob": "67cf9de90130403a044dec64b3ed3b36f6ddbb94",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/architecture.md",
+          "blob": "fd30af66304c58b1115d31a919eccd2741eb1464",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/change-map.md",
+          "blob": "de2577f1b1798f292149e5d73250e91be45da051",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/decisions/0001-development-foundation.md",
+          "blob": "09be2b0f650d3e66592d25a8e8200cdd79c53042",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/operations/development-foundation-status.md",
+          "blob": "769142ade57e9253c77b9e8751c1a018bcfd24fe",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/operations/ml-agent-harness.md",
+          "blob": "31132dafb7c2868ea6ca91cf97f8e533345dabf0",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/product-spec.md",
+          "blob": "b2f2813ed7b0e5904c69b302bfe254d54cae85af",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/docs/references/jogi_hack_2026_dev_foundation_guide.html",
+          "blob": "30dd86b2a4a78f6bbcd59c8127f12dead6c17caa",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/.gitignore",
+          "blob": "f5c594c4a825ae511201b845ca1611a62efabedb",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/README.md",
+          "blob": "58bb695be0b5d460d6a5a6f38d8318cb098d6812",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/fastify/README.md",
+          "blob": "8734485628e1b5c14ebbc7cfb3b05518cd98bfec",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/fastify/app.ts",
+          "blob": "0baaa34fab42746b4115d2c33598e2926b4b8ff8",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/fastify/server.ts",
+          "blob": "97d7fe55ae899cd132e39183cf4a5c54939d7fbb",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/hono/README.md",
+          "blob": "acdbfb5f25a0848b6590098d8961e8338efd74ef",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/hono/app.ts",
+          "blob": "8453bad8d7d0f0539c1b3ea0327aa34d92fa1efe",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/hono/server.ts",
+          "blob": "65dc9cad19d8f3566c27091bf64e06b74c3c0e8d",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/shared/database.ts",
+          "blob": "1ac76d68b386190d9a24f444d255249b59831137",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/shared/lints.ts",
+          "blob": "2aaba5db4459ee22f7ec957777475d2610ebc249",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/backend/shared/service.ts",
+          "blob": "029196ed53be5f09a318b95100501dac85e256cd",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/compose.yaml",
+          "blob": "1dada42309afcbf5ce412432be0e422dc240132f",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/AGENTS.md",
+          "blob": "643577dfaef36ee8032915ef80a0f0638f7beda0",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/CLAUDE.md",
+          "blob": "43c994c2d3617f947bcb5adf1933e21dabe46bb5",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/README.md",
+          "blob": "530298291358e9e4032d147c5224dff4d0f7ab70",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/app/explore/page.tsx",
+          "blob": "1bf21be768ba845e6dd990f58eacee62b4bc39f7",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/app/layout.tsx",
+          "blob": "6ef20f90d86cca7741cec9ab0d353d0c24e57b76",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/app/page.tsx",
+          "blob": "eb3ab1250c8956a68ffa569cf39f835093c60098",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/next.config.mjs",
+          "blob": "2ed1b22b94109763dbfca26631d486b2fd436503",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/package.json",
+          "blob": "8f704e312476fdf55bbfa7811f8a7e3089706195",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/next/tsconfig.json",
+          "blob": "9299f4b7f65993159a69ad32a380465089c0661c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/shared/Screens.tsx",
+          "blob": "e1a16bf066b4f55038e5fd57ba26eb0eb8c16dd3",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/shared/api.ts",
+          "blob": "90c21028b49dd2c9465d56f3eadd9dfd166f15b6",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/shared/style.css",
+          "blob": "838a2405a9ba118763bf681235ace2471f7059bb",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/tanstack/README.md",
+          "blob": "e41484f11ec1c3d8db3cb1b5926f4f60934bc38b",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/tanstack/index.html",
+          "blob": "1e76b0be09642a6628383d4ecdf2d390b8e5f480",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/tanstack/main.tsx",
+          "blob": "36e9a39dd843a0a5be066f07660588868c22d0fa",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/tanstack/vite.config.ts",
+          "blob": "1826ab6ad8e4e57adc79e2767caf30fcd80e4953",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/vite/README.md",
+          "blob": "3d2ee4c63d4ed78efa80b2009546690413526482",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/vite/index.html",
+          "blob": "c26f4e33c8ec57b388e840bdae1cabe04b755a49",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/vite/main.tsx",
+          "blob": "d2fae20940b52d1dd1a795a398b5908be046e747",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/frontend/vite/vite.config.ts",
+          "blob": "1826ab6ad8e4e57adc79e2767caf30fcd80e4953",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/package-lock.json",
+          "blob": "26c8155e98ffa33da54c33faa711a9d3ad7ecac6",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/package.json",
+          "blob": "3ad78a847c20e66dbc9e17bf7c1af2434d48b21d",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/playwright.config.ts",
+          "blob": "5ae45f4ce8108a0f1cc945d32aaaadb658914768",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/backend-metrics.json",
+          "blob": "3be551a8f889487e6c39eb458aca8d00db55cb74",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/build-metrics.json",
+          "blob": "d25d566cfbba2008a4f72af74da3239dda324a88",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/integration.png",
+          "blob": "4d53bd929f7817698baafa24e4b77e727193251c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/ml-percentile-options.md",
+          "blob": "6fc59a5475d5fd1fdfc8e8eae858208ea932c653",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/ml-synthetic-evaluation.json",
+          "blob": "aec4fd7f13e8d0e7b7d48b301a36294523a630ea",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/ml-synthetic-evaluation.md",
+          "blob": "e02ad8d63e20863bf8c79542fa9f74020ae174d5",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/reevaluation-build-metrics.json",
+          "blob": "85b687ddaccc04cda8c55e96975645f9a7153e7d",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/reevaluation-verification.json",
+          "blob": "bed43e492ab437f886ccee1cd3643f93d7fa0205",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/research-releases.json",
+          "blob": "cb9b2d0d524b597f41744bf51bebd51450cf7921",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/scale-metrics.json",
+          "blob": "f27dcca2ade97d056e6d985ecb32aca49167f584",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/results/verification.json",
+          "blob": "80c4db19f20c0252f1f071cd215bf81989796faf",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/integration-server.ts",
+          "blob": "1440d88ad8c76ba1bae9bbb75beed5ed59901401",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/measure-backend.ts",
+          "blob": "c923ecf4cc3f72b538006db24a333e6a35ce7833",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/measure.mjs",
+          "blob": "571769bef3330fa7d2efae04497a09a255cc6b2b",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/ml-percentile-options.mjs",
+          "blob": "fe98e1c07f16f72ec8481be689e4b7adddee4cf4",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/ml-synthetic-evaluation.ts",
+          "blob": "eff3f93cf4d0984d9502e8c1eb66e8b86b0414ee",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/research-releases.mjs",
+          "blob": "69ad790d8d3ae0498dac3187505a6f56c6122b4b",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/scale-instance.ts",
+          "blob": "ab4a9cec87fd13f5652eec9584ea4e0dfda4fe8d",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/scripts/scale.ts",
+          "blob": "01b3b9cfc86db7188d35c4a99484222cb75dbc6f",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/shared/assets.d.ts",
+          "blob": "cbe652dbe00b29be433328013a005bbf5d5c44c1",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/shared/contract.ts",
+          "blob": "908e16bfa4e3099660f2243043c5bc8693eae8cb",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/tests/backend.test.ts",
+          "blob": "e2a6f24e9b264c315506b1fdcd64d8c0acb55c4f",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/tests/frontend.spec.ts",
+          "blob": "ed4486dc4df7dd17cca8fecb5b97562734550bec",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/tests/ml-synthetic-evaluation.test.ts",
+          "blob": "f1113c1cb83fa459b7954cdb347d9849bf972d66",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/experiments/stack-bakeoff/tsconfig.json",
+          "blob": "c721c145a89d008e978af0e6830aa9ee0c1e46ad",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/mise.toml",
+          "blob": "adc13d424485fa3da7a7499b9cb356e32df06bff",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/package-lock.json",
+          "blob": "9865389ccf51b00a3c5d0922eddd533fa874562c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/package.json",
+          "blob": "afa3386413866869a9d610467ea3ccb937a0ad6f",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/scripts/ml-agent-command-stub.cjs",
+          "blob": "2c45a12da8fe0cd325d2a63c574b052fafca9f34",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/scripts/ml-agent-core.mjs",
+          "blob": "e74ad336842eca5a70f074c80ccbdec9ab860432",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/scripts/ml-agent-core.test.mjs",
+          "blob": "15738c06e5c66b858ef5de957f49b1b9ac8eca7c",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/scripts/run-ml-agent.integration.test.mjs",
+          "blob": "c510d82cfaa916784c679951a4a15dd4edfcf5b4",
+          "mode": "100644"
+        },
+        {
+          "path": "archive/music-exploration/scripts/run-ml-agent.mjs",
+          "blob": "a2add2074124c50d5d4c256189ee5eb73b2ece14",
+          "mode": "100644"
+        }
+      ]
+    },
+    {
+      "path": "experiments/question-prior-proposal",
+      "tree": "37622902ae95409cd9eb661029a94da08bf8fa9e",
+      "fileCount": 57,
+      "files": [
+        {
+          "path": "experiments/question-prior-proposal/.gitattributes",
+          "blob": "3e785e23b4a78c07f75ecbddd15a0db6af570c47",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/README.md",
+          "blob": "953488bcfea36e3c4fb4decb81ba124d6144deb9",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/REVIEW.md",
+          "blob": "34bca691547eb8f175fb9fe160c6888f6cfecb80",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/ROOT_REVIEW_CHECKS.mjs",
+          "blob": "dd717ceca2e321dc0f2d08413a027b7351bbc7af",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/ROOT_REVIEW_RESULTS.json",
+          "blob": "bd347e963fc1ca23ea2afc3f572b2b1a80b4eada",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/SHORT_REPORT.md",
+          "blob": "19d4a32abb079a66e5ebb2a996533a43d77855b9",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/SOURCES.md",
+          "blob": "94b8e776dad27b52218d777bbe53f110ef7552bc",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/analyze.mjs",
+          "blob": "a3873923093f7480b98e6c9fe72e733c44984ade",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/README.md",
+          "blob": "aa71b91a44f0ea86c087634149359a6f136a8eec",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/REPORT.md",
+          "blob": "b6b0734370b2a1de6243b237ada565eabc6af707",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/reference/README.md",
+          "blob": "2e8398906a0012001d4d1eeeb4bc06fbba8b7257",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/reference/README.original.txt",
+          "blob": "7fd4ea28ba8802f928f61f8914c9a0a2c7f27c62",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/reference/bgq-boundary-check.mjs",
+          "blob": "df36fb8939319c2126a6064fb1a1c1b0e804943f",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/reference/completion-dp.mjs",
+          "blob": "246190e3d116b44f2bd1c9851f7f6060fdf73790",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/reference/dp-truncation-check.mjs",
+          "blob": "adb26ffc24eb9f0a39b8c21021a09b12691906d4",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/reference/engine2.mjs",
+          "blob": "76079731f0f297505308608873bbe4e1d26e55f1",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/bgq-boundary-check.out",
+          "blob": "9c5f7202cc5f0a3d80772e444de622b554d6c45a",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/dp-truncation-check.out",
+          "blob": "5f4f85ec4cb867692d874ba2ed582107efc396b1",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/issue-reference.json",
+          "blob": "4035010ee188a378af1c989d8c5761edae4a6a48",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/raw.json",
+          "blob": "63fdc0234ccdecc9bff19bf054e605a62f2f3f51",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/repo-preservation.txt",
+          "blob": "321856142dca2bf1d46755e056e217b16a3e769b",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/run.out",
+          "blob": "0b954b778846779e0adc15651f09729e6acc13f6",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/results/summary.json",
+          "blob": "978e01773deac50b114ac95d9e3c42c2f3a228b9",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/historical/run.mjs",
+          "blob": "a36a825a9963d2bd56f9f831089c5daf995981b3",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/package.json",
+          "blob": "1d6ec668db5cc35b380c569e28d44e7ef7f75c01",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/provenance-check.mjs",
+          "blob": "1fde38931215d512ec915774bf6109933ab02c61",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/reference/completion-dp.d.mts",
+          "blob": "d3f4b7a99d94227d41d588a77681321ea66ff558",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/reference/completion-dp.mjs",
+          "blob": "246190e3d116b44f2bd1c9851f7f6060fdf73790",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/VERIFICATION.md",
+          "blob": "324c95b3e110930bd0fbfaabd30244a7e0abfafd",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/VERIFICATION.original.txt",
+          "blob": "74e41a103a16ba73fb845047193c728bf0abc685",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/analysis.json",
+          "blob": "82b84a2629a02b9484c5959f93fd054d82096d25",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/analysis.out",
+          "blob": "45dbfb3f554d98793c2820c07b1d7333aa564059",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/bgq-boundary.out",
+          "blob": "4d9932f8472c776c4e4d7305d02054a656c025d2",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/dp-regression.out",
+          "blob": "5a06cd5dfedc891eb2a7b4020f1d96a030074cb7",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/historical580-reproduced.out",
+          "blob": "03c2f176915af1755109f023c82ca4097af38353",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/offline-analysis.json",
+          "blob": "6241f44851087e08c1f65356b1e52c3eb0efd0ca",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/prototype-test.out",
+          "blob": "3be77cc85665c82bec29f48754a6e8275d87b8c6",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/provenance.json",
+          "blob": "a93d0337ed3835f928a56c225ef9e58e28f2501c",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/provenance.out",
+          "blob": "9e319cdb754d587a8aa8c37dcb8731bc6637bdf9",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/reference/README.md",
+          "blob": "2e8398906a0012001d4d1eeeb4bc06fbba8b7257",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/reference/README.original.txt",
+          "blob": "7fd4ea28ba8802f928f61f8914c9a0a2c7f27c62",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/reference/bgq-boundary-check.mjs",
+          "blob": "df36fb8939319c2126a6064fb1a1c1b0e804943f",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/reference/completion-dp.mjs",
+          "blob": "246190e3d116b44f2bd1c9851f7f6060fdf73790",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/reference/dp-truncation-check.mjs",
+          "blob": "adb26ffc24eb9f0a39b8c21021a09b12691906d4",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/reference/engine2.mjs",
+          "blob": "76079731f0f297505308608873bbe4e1d26e55f1",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/results/raw.json",
+          "blob": "0f1b3f575797e082802a664a0e5d7f50190c59e1",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/results/summary.json",
+          "blob": "03c2f176915af1755109f023c82ca4097af38353",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/reproduced-580/run.mjs",
+          "blob": "a36a825a9963d2bd56f9f831089c5daf995981b3",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/root-review.out",
+          "blob": "ac8f1bc95cf8f764c3f3215412f6a2aeb8f13e03",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/typecheck.out",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/results/verify-all.out",
+          "blob": "3c9fa28384d06ef6354918e27a703f9d69c3a28b",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/src/prototype.ts",
+          "blob": "8cc6a8c9f4c1bec47f8c25e9abc51254637daafb",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/test/prototype.test.mjs",
+          "blob": "1d0d43a327119b007c6944d82790baddb6093b25",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/test/type-contract.ts",
+          "blob": "bbeb248c7b24ababc5e74b4fae6478f187e790cb",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/tsconfig.json",
+          "blob": "34463134ffa7b7eda1deda04520421a30b0a6bc8",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/verify.mjs",
+          "blob": "67afd7456d415930db37d1f0602b73a6473ee599",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/question-prior-proposal/verify.ps1",
+          "blob": "757ba96f1dcd8d4d006325eb7aecf71f0025c439",
+          "mode": "100644"
+        }
+      ]
+    },
+    {
+      "path": "experiments/prediction-model-validation",
+      "tree": "59aeca67b9906d48c5eeb70d972a07d53bde428b",
+      "fileCount": 22,
+      "files": [
+        {
+          "path": "experiments/prediction-model-validation/README.md",
+          "blob": "1369a97cedc28ee3babec85ac76fba6e32fe9d38",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/bench.mjs",
+          "blob": "b7f5115243d229a4412e9a449c87698effe41e83",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/bench2.mjs",
+          "blob": "3a5aab8f9ab299d76310bef548c1f893ebfed811",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/bgq-boundary-check.mjs",
+          "blob": "f4df4a26284782676abbfd4f4c435810678e522b",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/completion-dp.mjs",
+          "blob": "075a7456f86ab4f563fca084365a201b4e91a481",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/dp-truncation-check.mjs",
+          "blob": "aa1d4e96ae5fb52f1d3734ab5fbd862b1a89723b",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/engine2.mjs",
+          "blob": "d2361e3f605fa938a59d8526750e1edb3db57ba3",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/exp1.mjs",
+          "blob": "52bcd1f8abb89233d95e2c19c982d554474984e3",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/exp2.mjs",
+          "blob": "fe2c6aa1f8506e8e39287070a34f38732eeabd79",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/final.mjs",
+          "blob": "23cadbaa1dccd0b5b5edceb096b756c22320e2e3",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/final2.mjs",
+          "blob": "cd80216b78b75b6bdcd0d3f187f2e6ff8f0d14d4",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/final3.mjs",
+          "blob": "5e2d64b39438e1be5ee1b09985164040c49b6203",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/bench.out",
+          "blob": "dc47510c04ccf65a310ecf8fe089c8535b5e87c1",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/bench2.out",
+          "blob": "6e64a3f7e657fd657cd425b27471a204f737130b",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/bgq-boundary-check.out",
+          "blob": "4d9932f8472c776c4e4d7305d02054a656c025d2",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/dp-truncation-check.out",
+          "blob": "5a06cd5dfedc891eb2a7b4020f1d96a030074cb7",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/exp1.out",
+          "blob": "464115cbd1fb6a454ca74d30e2bdcdabdca72177",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/exp2.out",
+          "blob": "0fef7179e202650e37a57a6c61852943e1c1a70a",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/final-main.out",
+          "blob": "f7184009903b8f2bb15ffa86bf7b3817776a94a8",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/final-prior.out",
+          "blob": "65e4f9465e664f34a561e3b28e43809526eda3c6",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/final2.out",
+          "blob": "be74db214679f800f6da8833cc7ec4795b5e86d1",
+          "mode": "100644"
+        },
+        {
+          "path": "experiments/prediction-model-validation/results/final3.out",
+          "blob": "72609a685473648905c79fca90e539d7804bd515",
+          "mode": "100644"
+        }
+      ]
+    }
+  ]
+}

@@ -14,7 +14,7 @@ AIエージェントによるIssue・Projects・PRの操作はGitHub MCPを基�
 Playwright CLI＋Skillとdocumentation-syncを含む採択方針・導入状況は
 [AI開発ツールガイド](../AI_DEVELOPMENT_TOOLS.md#採択済みの運用方針)を参照してください。
 
-機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行mainのAPI・Engine・業務画面の実装と、製品受入・公開配置等の残条件は[現在地の読み方](change-map.md#現在地の読み方)を参照します。[保存から予測・表示を追うtrace](change-map.md#コードを読むための短いtrace)もあります。旧FE / BEの最小起動構成は[履歴](../archive/music-exploration/README.md)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
+機能の内容を知りたい場合は[仕様・実装・確認方法の対応表](change-map.md)から正式なProduct Spec・Architectureへ進んでください。現行mainのAPI・Engine・業務画面の実装と、製品受入・公開配置等の残条件は[現在地の読み方](change-map.md#現在地の読み方)を参照します。[保存から予測・表示を追うtrace](change-map.md#コードを読むための短いtrace)もあります。旧FE / BEの最小起動構成は[履歴](../README.md#廃止した音楽案の履歴)に保管しています。[初回セットアップ](#13-初回セットアップ)に文書・設定とアプリの確認方法があります。
 本ガイドの検索機能や例示用のIssue番号・Branch名は操作を説明する例です。[Future ROIのIssue運用](#future-roiのissue運用)に記載するIssueは、GitHub上の実在する追跡先です。
 
 ---
@@ -441,7 +441,7 @@ README更新
 
 # 13. 初回セットアップ
 
-基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75、Goal APIは#76、記録・Today APIとEngine結合は#77で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。Goal・記録・Today画面と公開配置は未完了です。旧構成は[履歴](../archive/music-exploration/README.md)に保持。PowerShell 7は文書・設定チェックに使用します。
+基本構成は[Architecture D-23](architecture.md#d-23)にFE側の依頼者報告とBE本人の了承記録に基づく採用として記録しています。版・追加ツールと認証／公開先の残条件は[合意範囲](architecture.md#2026-10-03の技術構成合意)に記録しています。起動基盤は#70、DB migrationは#74、認証は#75、Goal APIは#76、記録・Today APIとEngine結合は#77で導入済みです。手順は[アプリを起動・検証する](#アプリを起動検証する)に記載します。Goal・記録・Today画面と公開配置は未完了です。旧構成は[履歴](../README.md#廃止した音楽案の履歴)に保持。PowerShell 7は文書・設定チェックに使用します。
 GitとPowerShell 7を使える端末で操作します。以下のcloneだけはリポジトリを置きたい親ディレクトリ、それ以降はcloneしたリポジトリのルートで実行します。
 
 初めてこのRepositoryで作業する場合、RepositoryをローカルへCloneします。
@@ -478,7 +478,7 @@ mise run --skip-tools hooks:install
 
 miseがない場合は、リポジトリのルートで`pwsh -NoProfile -File scripts/check-foundation.ps1`を実行します。Hook導入はローカルの`core.hooksPath`を変更するため、既存Hookを確認してから行います。
 
-旧Web/API・Compose・Node/npmの起動手順は[履歴内の開発ガイド](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)に保管しています。現行の起動・検証手順は次節を参照してください。
+旧Web/API・Compose・Node/npmの起動手順は[履歴内の開発ガイド](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#13-初回セットアップ)に保管しています。現行の起動・検証手順は次節を参照してください。
 
 ## アプリを起動・検証する
 
@@ -560,6 +560,20 @@ migrationはHTTP listenerを開く前に専用poolで実行します。host開�
 `findings`の`code`と`target`で原因を読み、checkoutにない履歴は互換性未確認として成功にしません。`auth_unsafe_change`の`target`は固定版ライブラリの説明文で版に依存するため、機械判定は`code`を使います。限界として、接続roleの権限自体は制限せず、認証columnの型・PK・field単位のindex欠落や業務table全体のdrift、業務E2Eの成功は保証しません。
 
 ### 検証
+
+確認する範囲と結果を分け、対象HEAD・実行環境・fail/skip/未実行をIssue/PRへ記録します。内部整理の責務は[Architecture](architecture.md#責務と配置を変えるとき)が正本です。
+
+| 検証層 | 何を確認し、何を保証しないか |
+| --- | --- |
+| Engine | 固定例・独立オラクル・凍結fixture・型契約。`tests`配下の`*.test.mjs`を再帰収集し、境界監査も入れ子のTSを確認。DB/HTTP/UIの成功は保証しない |
+| API | 実Fastifyへの`inject`と専用PostgreSQLで契約・transaction・競合を確認。実TCP/ブラウザの確認とは別。[helperの新規caller](../apps/api/tests/helpers/stack.ts)は、表示済みDTOのkey/revision/DONE量を補う`callWithDisplayedGoal`、要求を補わない`sendExact`を選ぶ。既存`call`/`rawCall`は互換入口。欠落・stale CAS・再送の負例は`sendExact`を使い、暗黙GETで時計やsnapshotを変えない |
+| Web一般 | 純粋module、外部JSON検査、SSR等。session確認は製品moduleを直接importし、依存境界だけをテストtransportへ替える |
+| Webブラウザ | 実React/Router/SDKと合成transportによる所有者・再確認・draft/attemptの回帰。実認証API/DBのE2Eではない。下記の別コマンドでローカルのbrowser未実行を補う |
+| 実環境 | 専用アカウント・合成Goal・専用API/DBで操作し、通信・保存と再取得・画面を対応付ける。ユーザーのDB/sessionに故障を注入しない |
+
+API helperは獲得後すぐ終了処理を登録し、途中の初期化失敗や一資源の終了失敗でも残りを片付けます。[lifecycle回帰](../apps/api/tests/helper-lifecycle.test.ts)は実DBと子fixtureを使います。失敗したCREATEの成功を推測して未所有DBを削除せず、元の失敗と終了失敗を残します。
+
+CIのcommand・層別集計・安全な失敗artifactは[診断手順](../.github/scripts/README.md)を参照します。checkoutの合成merge SHAとPR source HEADを区別し、欠落/不明/0件/skipを成功へ置換しません。required check名・settings・閾値はこの整理で変更しません。速度比較は同条件の実測がある場合だけ行います。
 
 ```sh
 npm run typecheck
@@ -658,7 +672,7 @@ Git Hookはコミット前に[pre-commit](../.githooks/pre-commit)から`git dif
 | `missing link target` / `missing heading` | 表示されたMarkdownのリンクと実ファイル・見出しを照合して修正する |
 | 空白・文字コード・除外設定のエラー | 対象ファイルとチェック条件を確認し、全体チェックを再実行する |
 
-旧アプリ・DB・Dopplerのトラブルシュートは[履歴内の手順](../archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#文書チェックで困ったとき)に残しています。現行構成として起動する手順ではありません。
+旧アプリ・DB・Dopplerのトラブルシュートは[履歴内の手順](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/DEVELOPMENT_GUIDE.md#文書チェックで困ったとき)に残しています。現行構成として起動する手順ではありません。
 
 ---
 

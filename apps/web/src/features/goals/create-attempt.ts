@@ -1,6 +1,6 @@
 import { GoalCreate as GoalCreateSchema, type GoalCreate } from '@contracts';
 import { FormatRegistry } from '@sinclair/typebox';
-import { isValidTimezone } from './goal-form.ts';
+import { isValidTimezone } from '../../calendar.ts';
 import { Value } from '@sinclair/typebox/value';
 import { ApiError } from '../../api/client.ts';
 

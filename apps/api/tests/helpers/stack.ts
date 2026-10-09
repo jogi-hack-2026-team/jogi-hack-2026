@@ -7,6 +7,7 @@ import { createAuth } from '../../src/auth/options.ts';
 import { migrate } from '../../src/db/migrate.ts';
 import { createAuthPool } from '../../src/db/pool.ts';
 import { createTestDatabase, type TestDatabase } from './database.ts';
+import { cleanupAfterFailure, cleanupAll, closeOnce } from './cleanup.ts';
 
 export type CookieShape = { name: string; attributes: string[] };
 // Cookie値はSecretなので、属性だけを比較する。
@@ -32,8 +33,8 @@ export class Client {
   }
   // 既存機能の回帰は取得済みDTOを表示中のclientとして必須値を送る。
   // 新しいGETを暗黙に差し込まない（snapshot/時計/行lockの観測を変えない）。
-  // 欠落・stale CAS・同キー再送のnegative oracleはrawCallで送信内容を固定する。
-  async call(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
+  // 作成キー・設定版・DONE量を補完する。欠落・stale CAS・再送の負例にはsendExactを使う。
+  async callWithDisplayedGoal(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
     const path = url.split('?')[0]!;
     if (method === 'POST' && path === '/api/goals') headers = { 'idempotency-key': randomUUID(), ...headers };
     const match = /^\/api\/goals\/([^/]+)(?:\/logs\/[^/]+)?$/.exec(path);
@@ -43,7 +44,7 @@ export class Client {
       body = { expectedGoalSettingsRevision: current?.goalSettingsRevision ?? 0,
         ...(method === 'PUT' && input.status === 'DONE' && !Object.hasOwn(input, 'amount') ? { amount: current?.sessionAmount ?? 10 } : {}), ...input };
     }
-    const result = await this.rawCall(method, url, body, headers);
+    const result = await this.sendExact(method, url, body, headers);
     const keep = (dto: Record<string, unknown> | null) => {
       if (dto && typeof dto.id === 'string' && typeof dto.goalSettingsRevision === 'number') this.displayedGoals.set(dto.id, dto);
     };
@@ -53,7 +54,15 @@ export class Client {
     }
     return result;
   }
-  async rawCall(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
+  // 既存callerの互換入口。新規テストは補完の有無が分かる明示名を使う。
+  call(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
+    return this.callWithDisplayedGoal(method, url, body, headers);
+  }
+  rawCall(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
+    return this.sendExact(method, url, body, headers);
+  }
+  // Cookie/Origin以外はbody/headerをそのまま送る。Goal必須値も追加GETも補完しない。
+  async sendExact(method: Method, url: string, body?: unknown, headers: Record<string, string> = {}) {
     const res = await this.app.inject({
       method,
       url,
@@ -86,29 +95,33 @@ export class Client {
 export type Stack = { app: FastifyInstance; close: () => Promise<void> };
 export type StackOptions = { baseURL?: string; signInMax?: number; trustProxyHops?: number; now?: () => Date };
 
-export async function startStack(db: TestDatabase, o: StackOptions = {}): Promise<Stack> {
+type StackFactories = { createAuthPool: typeof createAuthPool; createAuth: typeof createAuth; buildApp: typeof buildApp };
+
+export async function startStack(db: TestDatabase, o: StackOptions = {}, factories: Partial<StackFactories> = {}): Promise<Stack> {
+  const deps = { createAuthPool, createAuth, buildApp, ...factories };
   const baseURL = o.baseURL ?? 'http://127.0.0.1:3000';
-  const authPool = createAuthPool({ connectionString: db.connectionString, max: 2 });
-  const auth = createAuth({
-    pool: authPool,
-    secret: randomBytes(32).toString('base64url'),
-    baseURL,
-    signInMax: o.signInMax ?? 50,
-    signUpMax: 50,
-  });
-  const app = await buildApp({
-    pool: db.pool,
-    logger: false,
-    auth: { instance: auth, baseURL, allowedOrigins: [baseURL], trustProxyHops: o.trustProxyHops ?? 0 },
-    ...(o.now ? { now: o.now } : {}),
-  });
-  return {
-    app,
-    close: async () => {
-      await app.close();
-      await authPool.end();
-    },
-  };
+  const authPool = deps.createAuthPool({ connectionString: db.connectionString, max: 2 });
+  let app: FastifyInstance | undefined;
+  const close = closeOnce(() => cleanupAll([
+    async () => { await app?.close(); },
+    () => authPool.end(),
+  ]));
+  try {
+    const auth = deps.createAuth({
+      pool: authPool,
+      secret: randomBytes(32).toString('base64url'),
+      baseURL,
+      signInMax: o.signInMax ?? 50,
+      signUpMax: 50,
+    });
+    app = await deps.buildApp({
+      pool: db.pool,
+      logger: false,
+      auth: { instance: auth, baseURL, allowedOrigins: [baseURL], trustProxyHops: o.trustProxyHops ?? 0 },
+      ...(o.now ? { now: o.now } : {}),
+    });
+    return { app, close };
+  } catch (error) { return cleanupAfterFailure(error, close); }
 }
 
 export const credentials = (tag: string) => ({
@@ -118,15 +131,22 @@ export const credentials = (tag: string) => ({
 });
 
 // テストごとに専用DB・migration済み・認証つきアプリを用意し、終了時に片付ける。
-export async function setup(t: test.TestContext, o: StackOptions = {}) {
-  const db = await createTestDatabase();
-  await migrate(db.pool);
-  const stack = await startStack(db, o);
-  t.after(async () => {
-    await stack.close();
-    await db.close();
-  });
-  return { db, stack };
+type SetupFactories = { createTestDatabase: typeof createTestDatabase; migrate: typeof migrate; startStack: typeof startStack };
+
+export async function setup(t: Pick<test.TestContext, 'after'>, o: StackOptions = {}, factories: Partial<SetupFactories> = {}) {
+  const deps = { createTestDatabase, migrate, startStack, ...factories };
+  const db = await deps.createTestDatabase();
+  let stack: Stack | undefined;
+  const close = closeOnce(() => cleanupAll([
+    async () => { await stack?.close(); },
+    () => db.close(),
+  ]));
+  try {
+    t.after(close);
+    await deps.migrate(db.pool);
+    stack = await deps.startStack(db, o);
+    return { db, stack };
+  } catch (error) { return cleanupAfterFailure(error, close); }
 }
 
 /** 登録してログイン済みのclientを返す。 */

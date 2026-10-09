@@ -1,6 +1,6 @@
 import type { Pool } from 'pg';
 import type { Log } from '../contracts/log.ts';
-import { isGoalId } from '../goals/store.ts';
+import { isGoalId } from '../goals/goal-id.ts';
 import type { QuestionRow } from '../questions/snapshot.ts';
 
 // Todayの材料。Goalと全記録を1つの読み取りsnapshot（repeatable read）で取り、途中で挟まる記録の更新と混ざらないようにする。
