@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { longDate } from '../../copy/date.ts';
-import { todayCopy, unitLabel } from '../../copy/today.ts';
+import { amountFormat, type AmountFormat } from '../../copy/amount.ts';
+import { todayCopy } from '../../copy/today.ts';
 import { AmountEditor } from './AmountEditor.tsx';
 import { classifySaveError, type RecordChoice } from './record-log.ts';
 import { SaveFailure } from './SaveFailure.tsx';
@@ -18,14 +19,14 @@ import './logs.css';
 export function YesterdayPrompt({
   yesterday,
   sessionAmount,
-  unit,
+  fmt,
   saver,
   onLater,
   onRefresh,
 }: {
   yesterday: string;
   sessionAmount: number;
-  unit: string;
+  fmt: AmountFormat;
   saver: ReturnType<typeof useSaveLog>;
   onLater: () => void;
   onRefresh: () => void;
@@ -42,7 +43,7 @@ export function YesterdayPrompt({
       <SaveFailure
           settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
         kind={failureKind}
-        body={saver.failure?.vars?.choice.status === 'DONE' ? todayCopy.unsavedAmount(saver.failure.vars.choice.amount, unitLabel(saver.failure.vars.unit)) : todayCopy.unsavedRest}
+        body={saver.failure?.vars?.choice.status === 'DONE' ? todayCopy.unsavedAmount(saver.failure.vars.choice.amount, amountFormat({ unit: saver.failure.vars.unit }).recordUnit) : todayCopy.unsavedRest}
         localDate={yesterday}
         onRetry={saver.retry}
         onReselect={saver.reset}
@@ -58,7 +59,7 @@ export function YesterdayPrompt({
         label={todayCopy.amountYesterdayLabel}
         initial={sessionAmount}
         sessionAmount={sessionAmount}
-        unit={unit}
+        fmt={fmt}
         busy={saver.isSaving}
         onSubmit={(amount) => save({ status: 'DONE', amount })}
         onCancel={() => setEditingAmount(false)}
@@ -76,7 +77,7 @@ export function YesterdayPrompt({
           </Button>
         </div>
         <p className="fr-yesterday__amount">
-          {todayCopy.doneAmount(`${sessionAmount.toLocaleString('ja-JP')}${unit}`)}
+          {todayCopy.doneAmount(fmt.record(sessionAmount))}
           <Button variant="text" disabled={saver.isSaving} onClick={() => setEditingAmount(true)}>
             {todayCopy.changeAmount}
           </Button>

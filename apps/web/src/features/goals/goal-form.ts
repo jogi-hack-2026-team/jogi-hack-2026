@@ -1,6 +1,7 @@
 import type { Goal, GoalCreate, GoalPatch, GoalUnit, QuestionAnswers } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { goalsCopy } from '../../copy/goals.ts';
+import { localDateIn } from '../today/day-rollover.ts';
 
 /**
  * Goal の作成・編集フォームの値と検査（R-02、#78）。画面から切り離し、Node のテストで確かめられるようにする。
@@ -16,6 +17,8 @@ export type FormValues = {
   sessionAmount: string;
   initialProgress: string;
   timezone: string;
+  /** 到達予定日（#157、P-19）。YYYY-MM-DD、空は未設定。 */
+  targetDate: string;
   /** R-11の2問の回答（任意。null は回答しない、UNKNOWN は経験がない・思い出せない）。 */
   questionPrior: QuestionAnswers;
 };
@@ -28,14 +31,14 @@ export type FieldName = keyof FormValues;
 export type FieldErrors = Partial<Record<FieldName, string>>;
 
 /** 画面に並ぶ順。エラーの件数を数え、最初のエラー項目へ移るときに使う。 */
-export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'timezone', 'questionPrior'];
+export const FIELD_ORDER: readonly FieldName[] = ['title', 'unit', 'totalRequired', 'sessionAmount', 'initialProgress', 'targetDate', 'timezone', 'questionPrior'];
 
 const INT4_MAX = 2_147_483_647;
 export const TITLE_MAX = 100;
 const e = goalsCopy.errors;
 
 export function emptyValues(timezone: string): FormValues {
-  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, questionPrior: NO_ANSWERS };
+  return { title: '', unit: 'minutes', totalRequired: '', sessionAmount: '', initialProgress: '0', timezone, targetDate: '', questionPrior: NO_ANSWERS };
 }
 
 export function valuesFromGoal(goal: GoalWithAnswers): FormValues {
@@ -46,6 +49,7 @@ export function valuesFromGoal(goal: GoalWithAnswers): FormValues {
     sessionAmount: String(goal.sessionAmount),
     initialProgress: String(goal.initialProgress),
     timezone: goal.timezone,
+    targetDate: goal.targetDate ?? '',
     questionPrior: goal.questionPrior ?? NO_ANSWERS,
   };
 }
@@ -78,8 +82,15 @@ export function isValidTimezone(timezone: string): boolean {
   }
 }
 
-/** 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。 */
-export function validate(values: FormValues, { locked = false, goal }: { locked?: boolean; goal?: Goal } = {}): FieldErrors {
+/**
+ * 送る前の検査。編集中で記録があるGoalは、変更できない2項目を検査しない（送らないため）。
+ * today は到達予定日の比較に使う「今日」（選んだ timezone の今日）。API でも同じ検査をする。
+ * savedTargetDate は編集前の到達予定日。変えていなければ送らないので（toPatchBody）、今日以前になっていても止めない（P-19）。
+ */
+export function validate(
+  values: FormValues,
+  { locked = false, today, savedTargetDate, goal }: { locked?: boolean; today?: string; savedTargetDate?: string; goal?: Goal } = {},
+): FieldErrors {
   const errors: FieldErrors = {};
   if (goal?.unitLocked && values.unit !== goal.unit) errors.unit = e.unitLocked;
   if (!/\S/.test(values.title)) errors.title = e.titleRequired;
@@ -88,12 +99,32 @@ export function validate(values: FormValues, { locked = false, goal }: { locked?
   if (total) errors.totalRequired = total;
   const session = amountError(values.sessionAmount, 1);
   if (session) errors.sessionAmount = session;
+  // YYYY-MM-DD どうしなので文字列の比較で日付の前後が分かる
+  if (values.targetDate && (!/^\d{4}-\d{2}-\d{2}$/.test(values.targetDate) || (today !== undefined && values.targetDate !== savedTargetDate && values.targetDate <= today))) {
+    errors.targetDate = e.targetDatePast;
+  }
   if (!locked) {
     const initial = amountError(values.initialProgress, 0);
     if (initial) errors.initialProgress = initial;
     if (!isValidTimezone(values.timezone)) errors.timezone = e.timezone;
   }
   return errors;
+}
+
+/** 到達予定日の条件。表示・送信の両経路から使い、検査のたびに選択中timezoneの今日を求める。 */
+export function targetDateChecks(timezone: string, savedTargetDate: string | null | undefined, now: Date): { today?: string; savedTargetDate?: string } {
+  const today = localDateIn(timezone, now);
+  return { ...(today ? { today } : {}), ...(savedTargetDate !== undefined ? { savedTargetDate: savedTargetDate ?? '' } : {}) };
+}
+
+/** 表示時と送信時で同じ検査を使う。選択中のtimezoneと編集の比較元から、日付の条件を毎回組み立てる。 */
+export function validateGoalForm(
+  values: FormValues,
+  { locked = false, baseline, goal = baseline, recoveryBody, now = new Date() }: { locked?: boolean; baseline?: GoalWithAnswers | undefined; goal?: Goal | undefined; recoveryBody?: GoalCreate | undefined; now?: Date } = {},
+): FieldErrors {
+  // 結果不明の作成は元bodyのまま再送する。期限経過で新規作成と同じ検査を掛けてreplayを妨げない。
+  const savedTargetDate = baseline ? baseline.targetDate : recoveryBody?.targetDate;
+  return validate(values, { locked, ...(goal ? { goal } : {}), ...targetDateChecks(values.timezone, savedTargetDate, now) });
 }
 
 export const errorCount = (errors: FieldErrors) => FIELD_ORDER.filter((name) => errors[name]).length;
@@ -108,9 +139,17 @@ export function toCreateBody(values: FormValues): GoalCreate {
     sessionAmount: int(values.sessionAmount),
     initialProgress: int(values.initialProgress),
     timezone: values.timezone,
+    // 未設定の到達予定日は送らない
+    ...(values.targetDate ? { targetDate: values.targetDate } : {}),
     // 回答しない問いは null のまま送る（POST は版を送らない。初版は 0）
     questionPrior: values.questionPrior,
   };
+}
+
+/** 回復した作成bodyを入力表示へ戻す。元bodyは変えず、nullable日付と整数量だけを文字列へ正規化する。 */
+export function valuesFromCreateBody(body: GoalCreate): FormValues {
+  return { ...emptyValues(body.timezone), ...body, totalRequired: String(body.totalRequired), sessionAmount: String(body.sessionAmount),
+    initialProgress: String(body.initialProgress ?? 0), targetDate: body.targetDate ?? '', questionPrior: body.questionPrior ?? NO_ANSWERS };
 }
 
 const sameAnswers = (x: QuestionAnswers, y: QuestionAnswers) => x.a === y.a && x.b === y.b;
@@ -145,6 +184,7 @@ export function rebaseValues(values: FormValues, previous: GoalWithAnswers, late
     sessionAmount: pick('sessionAmount', int(values.sessionAmount) !== previous.sessionAmount),
     initialProgress: pick('initialProgress', int(values.initialProgress) !== previous.initialProgress),
     timezone: pick('timezone', values.timezone !== before.timezone),
+    targetDate: pick('targetDate', values.targetDate !== before.targetDate),
     questionPrior: pick('questionPrior', !sameAnswers(values.questionPrior, before.questionPrior)),
   };
 }
@@ -175,6 +215,8 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
   if (values.unit !== goal.unit) patch.unit = values.unit;
   if (int(values.totalRequired) !== goal.totalRequired) patch.totalRequired = int(values.totalRequired);
   if (int(values.sessionAmount) !== goal.sessionAmount) patch.sessionAmount = int(values.sessionAmount);
+  // 到達予定日は記録があっても変えられる。空にしたら null で未設定に戻す
+  if ((values.targetDate || null) !== (goal.targetDate ?? null)) patch.targetDate = values.targetDate || null;
   if (!goal.hasLogs) {
     if (int(values.initialProgress) !== goal.initialProgress) patch.initialProgress = int(values.initialProgress);
     if (values.timezone !== goal.timezone) patch.timezone = values.timezone;
@@ -193,6 +235,7 @@ export function toPatchBody(values: FormValues, goal: GoalWithAnswers): GoalPatc
 const serverMessage: Record<FieldName, string> = {
   title: e.server,
   unit: e.server,
+  targetDate: e.targetDatePast,
   totalRequired: e.positiveInteger,
   sessionAmount: e.positiveInteger,
   initialProgress: e.nonNegativeInteger,

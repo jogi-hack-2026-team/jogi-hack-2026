@@ -51,6 +51,11 @@ export const goalsCopy = {
     title: 'タイトル',
     unit: '単位',
     units: { minutes: '分', sessions: '回' },
+    // 到達予定日（#157、P-19）
+    targetDate: '到達予定日',
+    targetDateOptional: '任意',
+    targetDateHelp: 'いつまでに終えたいかを決めると、Todayの完了の目安の横に、この日とのずれを表示します。あとから変更・削除できます',
+    targetDateEditHelp: '記録があっても変更・削除できます。変えると、Todayのずれの表示も変わります',
     totalRequired: '投資すると決めた総量',
     sessionAmount: '1回の量',
     initialProgress: '記録開始日の前日までに終えた量',
@@ -99,7 +104,7 @@ export const goalsCopy = {
       reload: '最新の内容を読み込む',
     },
     latestAnswers: (a: string, b: string) =>
-      `最新の回答は、取り組めた日の翌日：「${a}」、休んだ日の翌日：「${b}」です。入力中の回答で上書きする場合は、確かめてからもう一度保存してください。`,
+      `最新の設定・回答を読み込みました。編集した項目は保持し、変えていない項目は最新の内容に更新しています。保存する内容を確認してから、もう一度保存してください。最新の回答は、取り組めた日の翌日：「${a}」、休んだ日の翌日：「${b}」です。`,
     answerLabels: { LOW: '少なかった', MID: '半分くらい', HIGH: '多かった', UNKNOWN: '経験がない・思い出せない', none: '回答しない' },
     refreshFailed: {
       title: '最新のGoalを読み込めませんでした',
@@ -113,6 +118,7 @@ export const goalsCopy = {
     titleTooLong: '100文字以内で入力してください',
     positiveInteger: '1以上の整数を入力してください',
     nonNegativeInteger: '0以上の整数を入力してください',
+    targetDatePast: '到達予定日は、今日より後の日付を選んでください',
     tooLarge: '大きすぎる数です',
     timezone: '有効なタイムゾーンを選んでください',
     locked: '記録が1件以上あるため変更できません',

@@ -1,6 +1,7 @@
 import { longDate } from '../../copy/date.ts';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import type { Log } from '@contracts';
+import { amountFormat, type AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { ChoiceButton } from '../../ui/components/ChoiceButton.tsx';
@@ -21,7 +22,7 @@ import './logs.css';
 export function RecordChoiceBar({
   today,
   sessionAmount,
-  unit,
+  fmt,
   current,
   saver,
   onCancelChange,
@@ -32,7 +33,8 @@ export function RecordChoiceBar({
 }: {
   today: string;
   sessionAmount: number;
-  unit: string;
+  /** 量の書き方（1回の量は分か回。P-18）。 */
+  fmt: AmountFormat;
   current?: Log | null;
   saver: ReturnType<typeof useSaveLog>;
   onCancelChange?: () => void;
@@ -43,7 +45,7 @@ export function RecordChoiceBar({
   editingAmount: boolean;
   onEditingAmountChange: (editing: boolean) => void;
 }) {
-  const label = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
+  const label = fmt.record;
   const currentAmount = current?.status === 'DONE' && current.amount !== null ? current.amount : sessionAmount;
   // 昨日を訂正している間は、量の入力からも送らない
   const save = (choice: RecordChoice) => (locked ? undefined : saver.save({ localDate: today, choice }));
@@ -69,7 +71,7 @@ export function RecordChoiceBar({
         <SaveFailure
           settings={{ ready: saver.settingsReady, meaningChanged: saver.meaningChanged, loading: saver.reloadingSettings, failed: saver.settingsReloadFailed, reload: saver.reloadSettings }}
           kind={classifySaveError(saver.failure.error)}
-          body={todayCopy.saveFailed(describeChoice(failed, sessionAmount, saver.failure.vars.unit === 'minutes' ? '分' : '回', todayCopy.recordedRest))}
+          body={todayCopy.saveFailed(describeChoice(failed, sessionAmount, amountFormat({ unit: saver.failure.vars.unit }).record, todayCopy.recordedRest))}
           localDate={saver.failure.vars.localDate}
           // 昨日を訂正している間は、失敗後の再試行からも送らない（通常の保存と同じ排他）
           onRetry={unlessLocked(locked, saver.retry)}
@@ -92,7 +94,7 @@ export function RecordChoiceBar({
           label={todayCopy.amountTodayLabel}
           initial={currentAmount}
           sessionAmount={sessionAmount}
-          unit={unit}
+          fmt={fmt}
           busy={saver.isSaving || locked}
           onSubmit={(amount) => save({ status: 'DONE', amount })}
           onCancel={() => onEditingAmountChange(false)}

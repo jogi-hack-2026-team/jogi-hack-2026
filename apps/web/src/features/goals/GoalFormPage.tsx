@@ -11,7 +11,7 @@ import { privateDataReady, usePrivateEpoch, type PrivateEpoch } from '../../api/
 import { isDraftOwner, useMemoryDraft } from '../../api/session-draft.ts';
 import { goalsCopy } from '../../copy/goals.ts';
 import { longDate } from '../../copy/date.ts';
-import { todayCopy, unitLabel } from '../../copy/today.ts';
+import { todayCopy } from '../../copy/today.ts';
 import { AppBar } from '../../ui/components/AppBar.tsx';
 import { DeskHeader } from '../../ui/components/DeskHeader.tsx';
 import { PageTitle } from '../../ui/components/PageTitle.tsx';
@@ -37,8 +37,9 @@ import {
   titleLength,
   toCreateBody,
   toPatchBody,
-  validate,
+  validateGoalForm,
   valuesFromGoal,
+  valuesFromCreateBody,
   type FieldErrors,
   type FieldName,
   type GoalWithAnswers,
@@ -253,9 +254,7 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
   });
   const [prepareError, setPrepareError] = useState<unknown>(recovery.error);
   const [attempt, setAttempt] = useState<CreateAttempt | null>(recovery.attempt);
-  const recoveryValues = attempt ? { ...emptyValues(attempt.body.timezone), ...attempt.body,
-    totalRequired: String(attempt.body.totalRequired), sessionAmount: String(attempt.body.sessionAmount),
-    initialProgress: String(attempt.body.initialProgress ?? 0), questionPrior: attempt.body.questionPrior ?? NO_ANSWERS } : null;
+  const recoveryValues = attempt ? valuesFromCreateBody(attempt.body) : null;
   const restored = !attempt && !recovery.error && draft && (!goal || (draft.sourceGoal && sameEditableGoal(draft.sourceGoal, goal))) ? draft : undefined;
   const [discardedDraft] = useState(Boolean(goal && draft && !restored));
   const [values, setValues] = useState<FormValues>(() => restored?.values ?? (goal ? valuesFromGoal(goal) : recoveryValues ?? emptyValues(browserTimezone())));
@@ -289,7 +288,7 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
     };
   }, []);
 
-  const clientErrors = submitted ? validate(values, { locked, ...(mode === 'edit' ? { goal } : {}) }) : {};
+  const clientErrors = submitted ? validateGoalForm(values, { locked, baseline, goal, recoveryBody: attempt?.body }) : {};
   const errors: FieldErrors = { ...serverErrors, ...clientErrors };
   const count = errorCount(errors);
 
@@ -386,7 +385,8 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
       (save.isError && (isEditConflict(save.error) || ['conflict', 'deleted'].includes(createFailureKind(save.error) ?? '')))) return;
     setSubmitted(true);
     setServerErrors({});
-    const found = validate(values, { locked, ...(mode === 'edit' ? { goal } : {}) });
+    // 到達予定日は、選んでいるタイムゾーンの今日より後だけ（APIも同じ検査をする）。変えていない保存済みの日付は送らないので検査しない
+    const found = validateGoalForm(values, { locked, baseline, goal, recoveryBody: attempt?.body });
     if (errorCount(found) > 0) {
       focusFirstError(found);
       return;
@@ -419,7 +419,8 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
     focusFirstError(focusAfterSave);
     setFocusAfterSave(null);
   }, [focusAfterSave, busy]);
-  const unit = unitLabel(values.unit);
+  // 量は分か回の整数で入力する（P-18。時間＋分は表示だけ）
+  const unit = f.units[values.unit];
   const timezones = useTimezones(values.timezone);
   // 422 で項目に割り当てられたエラーは各項目に出す。それ以外（通信・サーバー・ログイン切れ）は保存ボタンの上に出す
   const apiFieldErrors = save.isError ? fieldErrorsFromApi(save.error) : null;
@@ -528,32 +529,52 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
             }
           />
 
-          <Field
-            id="goal-timezone"
-            label={f.timezone}
-            error={errors.timezone}
-            help={
-              <>
-                <p>{f.timezoneHelp}</p>
-                {locked ? <LockedNote>{f.lockedTimezone}</LockedNote> : null}
-              </>
-            }
-          >
-            <SelectInput
-              id="goal-timezone"
-              value={values.timezone}
-              onChange={(event) => update('timezone', event.target.value)}
-              disabled={inputDisabled || locked}
-              invalid={Boolean(errors.timezone)}
-              {...fieldAria('goal-timezone', { help: true, error: errors.timezone })}
+          <div className="fr-goalform__pair">
+            {/* 到達予定日（任意、#157、P-19）。記録があっても変えられる */}
+            <Field
+              id="goal-targetDate"
+              label={f.targetDate}
+              counter={f.targetDateOptional}
+              error={errors.targetDate}
+              help={<p>{mode === 'edit' ? f.targetDateEditHelp : f.targetDateHelp}</p>}
             >
-              {timezones.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz === browserTimezone() ? f.browserTimezone(tz) : tz}
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
+              <TextInput
+                id="goal-targetDate"
+                type="date"
+                value={values.targetDate}
+                onChange={(event) => update('targetDate', event.target.value)}
+                disabled={inputDisabled}
+                invalid={Boolean(errors.targetDate)}
+                {...fieldAria('goal-targetDate', { help: true, error: errors.targetDate })}
+              />
+            </Field>
+            <Field
+              id="goal-timezone"
+              label={f.timezone}
+              error={errors.timezone}
+              help={
+                <>
+                  <p>{f.timezoneHelp}</p>
+                  {locked ? <LockedNote>{f.lockedTimezone}</LockedNote> : null}
+                </>
+              }
+            >
+              <SelectInput
+                id="goal-timezone"
+                value={values.timezone}
+                onChange={(event) => update('timezone', event.target.value)}
+                disabled={inputDisabled || locked}
+                invalid={Boolean(errors.timezone)}
+                {...fieldAria('goal-timezone', { help: true, error: errors.timezone })}
+              >
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz === browserTimezone() ? f.browserTimezone(tz) : tz}
+                  </option>
+                ))}
+              </SelectInput>
+            </Field>
+          </div>
 
           {/* 初期質問は任意なので、開閉できる形で閉じて置く（デザイン C1・R1）。回答・エラー・お知らせがあるときは開いておく */}
           <details

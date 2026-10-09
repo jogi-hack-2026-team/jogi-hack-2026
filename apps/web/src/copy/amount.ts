@@ -1,0 +1,59 @@
+import type { GoalUnit } from '@contracts';
+
+/*
+ * 量の書き方（Product Spec P-18「整数分を保った時間＋分表示」、#121・#157）。
+ * 量はAPI・Engine・入力とも分（回のGoalは回）の整数のまま扱い、ここで画面に出す文字にするだけ。
+ * - 分のGoal：累計・総量・残量は正確な「時間＋分」（1240分 → 20時間40分）。小数へ丸めない（1分の差を隠さない）
+ *   1回の量と日々の記録は分のまま（20分）
+ * - 回のGoal：すべて回
+ * 表示の文字から量を逆算しない。FEで予測の数値は計算しない。
+ */
+
+export type AmountGoal = { unit: GoalUnit };
+
+const MINUTES_PER_HOUR = 60;
+
+const integer = (n: number) => n.toLocaleString('ja-JP');
+
+/** 整数分を正確な時間＋分にする（0 → 0時間0分、61 → 1時間1分、1240 → 20時間40分）。 */
+export function hoursMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
+  return `${integer(hours)}時間${minutes - hours * MINUTES_PER_HOUR}分`;
+}
+
+export type AmountFormat = {
+  /** 累計・総量・残量（例「20時間40分」「38回」）。 */
+  total: (amount: number) => string;
+  /** 1回の量・日々の記録（例「20分」「20回」）。 */
+  record: (amount: number) => string;
+  /** 1回の量・日々の記録の単位（入力欄の右端）。 */
+  recordUnit: string;
+  /** 積み上げの図の縦軸（総量で決まる）。 */
+  axis: (total: number) => AmountAxis;
+};
+
+export type AmountAxis = {
+  /** 縦軸の単位。 */
+  unit: string;
+  /** 目盛りの数字（単位なし）。 */
+  label: (amount: number) => string;
+  /** 目盛りの値をそろえる刻み。 */
+  gridUnit: number;
+};
+
+const plainAxis = (unit: string): AmountAxis => ({ unit, label: integer, gridUnit: 1 });
+
+export function amountFormat(goal: AmountGoal): AmountFormat {
+  if (goal.unit === 'sessions') {
+    const times = (n: number) => `${integer(n)}回`;
+    return { total: times, record: times, recordUnit: '回', axis: () => plainAxis('回') };
+  }
+  return {
+    total: hoursMinutes,
+    record: (n) => `${integer(n)}分`,
+    recordUnit: '分',
+    // 3時間以上なら1時間刻みの目盛りを時間の数で出す（目盛りは整数時間なので丸めは起きない）。短いGoalは分の目盛り
+    axis: (total) =>
+      total >= 3 * MINUTES_PER_HOUR ? { unit: '時間', label: (n) => integer(n / MINUTES_PER_HOUR), gridUnit: MINUTES_PER_HOUR } : plainAxis('分'),
+  };
+}

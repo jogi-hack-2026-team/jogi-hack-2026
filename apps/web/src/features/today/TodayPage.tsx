@@ -13,7 +13,8 @@ import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel, InsufficientNotice } from '../../ui/components/Notice.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
-import { todayCopy, unitLabel } from '../../copy/today.ts';
+import { amountFormat } from '../../copy/amount.ts';
+import { todayCopy } from '../../copy/today.ts';
 import { assertForecastPresentation } from '../prior/PriorForecast.tsx';
 import { RecordChoiceBar } from '../logs/RecordChoiceBar.tsx';
 import { YesterdayPrompt } from '../logs/YesterdayPrompt.tsx';
@@ -98,7 +99,6 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
   const goal = snapshot?.goal;
   const today = snapshot?.today;
-  const unit = goal ? unitLabel(goal.unit) : '';
   // 記録の2択を出すか：今日が未記録で、まだ達成していないとき（API の値だけで決める）。記録済みでも選び直し中なら出す
   const unrecorded = today ? today.prediction.todayStatus === 'UNRECORDED' && !today.prediction.progress.completed : false;
   // 予測（/today）の取得だけが失敗したときも、取得できた Goal の今日・今日の状態で、今日の記録を付けられるようにする
@@ -151,7 +151,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 
   let yesterdayArea = null;
   if (goal && today) {
-    const common = { sessionAmount: goal.sessionAmount, unit, saver: yesterdaySaver, onRefresh: refresh };
+    const common = { sessionAmount: goal.sessionAmount, fmt: amountFormat(goal), saver: yesterdaySaver, onRefresh: refresh };
     if (yesterdayEdit) {
       yesterdayArea = (
         <YesterdayCorrection
@@ -260,7 +260,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
           key={changing ? 'change' : 'new'}
           today={recordDate}
           sessionAmount={recordGoal.sessionAmount}
-          unit={unitLabel(recordGoal.unit)}
+          fmt={amountFormat(recordGoal)}
           current={changing && today ? today.todayLog : null}
           saver={todaySaver}
           locked={locks.todayLocked}
@@ -306,25 +306,25 @@ function TodayContent({
   // R-11 の出所（provenance）と、材料が足りないときの計画（plan）は API の値をそのまま渡す
   const view = toForecastView(today.prediction, goal.unit, { provenance: today.provenance, plan: today.plan, sessionAmount: today.context.sessionAmount });
   assertForecastPresentation(view);
-  const unit = unitLabel(goal.unit);
+  const fmt = amountFormat(goal);
   const progress =
     view.kind === 'completed' || view.kind === 'forecast' || view.kind === 'today-recorded' ? (
-      <ProgressSummary progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} />
+      <ProgressSummary progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} fmt={fmt} />
     ) : null;
-  const outlookTitle = todayCopy.outlookTitle(goal.totalRequired, unit);
+  const outlookTitle = todayCopy.outlookTitle(fmt.total(goal.totalRequired));
   const changeHeader =
     changing && today.todayLog ? (
-      <ChangeHeader log={today.todayLog} sessionAmount={goal.sessionAmount} unit={unit} cancelDisabled={cancelChangeDisabled} onCancel={onCancelChange} />
+      <ChangeHeader log={today.todayLog} sessionAmount={goal.sessionAmount} fmt={fmt} cancelDisabled={cancelChangeDisabled} onCancel={onCancelChange} />
     ) : null;
 
   switch (view.kind) {
     case 'completed':
       return (
         <>
-          {changeHeader ?? <AchievedPanel done={view.progress.done} total={view.progress.total} unit={unit} />}
+          {changeHeader ?? <AchievedPanel done={view.progress.done} total={view.progress.total} fmt={fmt} />}
           {/* 達成済みでも、今日の記録の誤りを直せるようにする（R-03の当日の変更と R-08 の達成表示の両立） */}
           {today.todayLog && !changeHeader ? (
-            <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} unit={unit} onChange={onChange} />
+            <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} fmt={fmt} onChange={onChange} />
           ) : null}
           {progress}
           <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
@@ -333,9 +333,9 @@ function TodayContent({
     case 'today-recorded':
       return (
         <>
-          {changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} unit={unit} onChange={onChange} /> : null)}
+          {changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} fmt={fmt} onChange={onChange} /> : null)}
           <div className="fr-today__right">
-            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
+            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} />
             {progress}
           </div>
         </>
@@ -356,7 +356,7 @@ function TodayContent({
             ) : null}
           </section>
           <div className="fr-today__right">
-            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} />
+            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} />
             {progress}
           </div>
         </>

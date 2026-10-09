@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import pg from 'pg';
@@ -245,7 +245,9 @@ test('M01 migration first/repeated preserves old quantities/dates/metadata and c
     assert.equal(dirname(resolve(dir)), base);
     rmSync(dir, { recursive: true, force: true });
   });
-  for (const name of ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql', '0004_demo_seed_goal.sql']) writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
+  const previous = ['0001_goal_action_log.sql', '0002_goal_record_start_date.sql', '0003_goal_question_prior.sql', '0004_demo_seed_goal.sql'];
+  for (const name of previous) writeFileSync(join(dir, name), readFileSync(new URL(`../migrations/${name}`, import.meta.url)));
+  const pending = readdirSync(new URL('../migrations/', import.meta.url)).filter(name => /^\d{4}_.+\.sql$/.test(name) && !previous.includes(name)).sort();
   await migrateApp(db.pool, pathToFileURL(dir + '/'));
   await db.pool.query(`insert into "user" (id,name,email,"emailVerified","createdAt","updatedAt") values ('legacy','legacy','legacy@example.test',false,now(),now())`);
   const ids = [];
@@ -256,7 +258,7 @@ test('M01 migration first/repeated preserves old quantities/dates/metadata and c
   }
   const before = (await db.pool.query('select id,unit,total_required,session_amount,initial_progress,record_start_date,created_at,updated_at from goal order by id')).rows;
   const logs = (await db.pool.query('select * from action_log order by goal_id')).rows;
-  assert.deepEqual(await migrateApp(db.pool), { applied: ['0005_goal_data_integrity.sql'] }); assert.deepEqual(await migrateApp(db.pool), { applied: [] });
+  assert.deepEqual(await migrateApp(db.pool), { applied: pending }); assert.deepEqual(await migrateApp(db.pool), { applied: [] });
   assert.deepEqual((await db.pool.query('select id,unit,total_required,session_amount,initial_progress,record_start_date,created_at,updated_at from goal order by id')).rows, before);
   assert.deepEqual((await db.pool.query('select * from action_log order by goal_id')).rows, logs);
   for (const id of ids) {

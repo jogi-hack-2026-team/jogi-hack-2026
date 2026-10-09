@@ -26,10 +26,16 @@ export const todayCopy = {
   p80Over3YearsNote: '10回あれば8回終わっている時期は、3年より先になる見込みです。',
   thisWeekNote: '今日やれば、この週に届く見込みです。',
   progressLabel: 'これまでの積み上げ',
-  progressHelp: (initial: number, unitLabel: string) =>
-    initial > 0 ? `記録した累計（記録開始日の前日までの${initial.toLocaleString('ja-JP')}${unitLabel}を含む）` : '記録した累計',
+  /** initial は記録開始日の前日までの量を単位付きで書いたもの（例「20時間40分」）。0 なら null。 */
+  progressHelp: (initial: string | null) => (initial ? `記録した累計（記録開始日の前日までの${initial}を含む）` : '記録した累計'),
   outlookLabel: 'これからの見通し',
-  outlookTitle: (total: number, unitLabel: string) => `${total.toLocaleString('ja-JP')}${unitLabel}に届くのは？`,
+  // 到達予定日（#157、B案）
+  targetDate: '到達予定日',
+  targetDateAxis: (date: string) => `到達予定日 ${date}`,
+  targetGapPrefix: '到達予定日より',
+  targetGapNote: '到達予定日とのずれは、その週の月曜日と到達予定日の差です。',
+  /** total は総量を単位付きで書いたもの（例「50時間」）。 */
+  outlookTitle: (total: string) => `${total}に届くのは？`,
   recordedTitle: '今日は記録済みです',
   recordedDone: 'やった',
   recordedRest: '休んだ',
@@ -182,5 +188,3 @@ export function completionNoteFor(sources: { a: NoteSource; b: NoteSource }): st
   if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定でシミュレーションした見込みです。まだ記録からは推定していません。';
   return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向でシミュレーションした見込みです。';
 }
-
-export const unitLabel = (unit: 'minutes' | 'sessions') => (unit === 'minutes' ? '分' : '回');

@@ -3,6 +3,7 @@ import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { Field, fieldAria, NumberInput } from '../../ui/components/FormField.tsx';
 import { IconButton } from '../../ui/components/Button.tsx';
+import type { AmountFormat } from '../../copy/amount.ts';
 import { parseInteger } from '../goals/goal-form.ts';
 import './logs.css';
 
@@ -16,7 +17,7 @@ export function AmountEditor({
   label,
   initial,
   sessionAmount,
-  unit,
+  fmt,
   busy,
   onSubmit,
   onCancel,
@@ -26,7 +27,8 @@ export function AmountEditor({
   label: string;
   initial: number;
   sessionAmount: number;
-  unit: string;
+  /** 量の書き方（記録は分か回の整数で入力する、P-18）。 */
+  fmt: AmountFormat;
   busy: boolean;
   onSubmit: (amount: number) => void;
   onCancel: () => void;
@@ -50,7 +52,7 @@ export function AmountEditor({
     }
     onSubmit(value);
   };
-  const help = <p>{todayCopy.amountHelp(`${sessionAmount.toLocaleString('ja-JP')}${unit}`)}</p>;
+  const help = <p>{todayCopy.amountHelp(fmt.record(sessionAmount))}</p>;
 
   return (
     <div className="fr-amount">
@@ -59,7 +61,7 @@ export function AmountEditor({
         <Field id={id} label={label} error={error} help={help}>
           <NumberInput
             id={id}
-            suffix={unit}
+            suffix={fmt.recordUnit}
             value={text}
             disabled={busy}
             invalid={Boolean(error)}

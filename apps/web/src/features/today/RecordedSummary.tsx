@@ -3,13 +3,14 @@ import type { Log } from '@contracts';
 import { StatusBadge } from '../../ui/components/StatusBadge.tsx';
 import { Button } from '../../ui/components/Button.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
+import type { AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { Link } from '@tanstack/react-router';
 import { fullDate, longDate, parseLocalDate, shortDate } from '../../copy/date.ts';
 import { choiceFromLog, describeChoice } from '../logs/record-log.ts';
 
 /** 今日は記録済み（R-07）。比較（中心指標）は出さず、記録内容を出す。「記録を変更」で下の2択を選び直せるようにする（#79）。 */
-export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; unit: string; onChange: () => void }) {
+export function RecordedSummary({ todayLog, fmt, onChange }: { todayLog: Log; fmt: AmountFormat; onChange: () => void }) {
   return (
     <section className="fr-today__top" aria-labelledby="fr-recorded-title">
       <h1 id="fr-recorded-title" className="fr-today__question" tabIndex={-1}>
@@ -20,8 +21,7 @@ export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; u
           <StatusBadge status={todayLog.status === 'DONE' ? 'done' : 'rest'} large />
           {todayLog.status === 'DONE' && todayLog.amount !== null ? (
             <span className="fr-recorded__amount">
-              {todayLog.amount.toLocaleString('ja-JP')}
-              {unit}
+              {fmt.record(todayLog.amount)}
             </span>
           ) : null}
         </div>
@@ -34,8 +34,9 @@ export function RecordedSummary({ todayLog, unit, onChange }: { todayLog: Log; u
 }
 
 /** 達成済み（R-08、デザイン D6）。予測は出さない。累計（総量を超えることがある）と総量を出す。 */
-export function AchievedPanel({ done, total, unit }: { done: number; total: number; unit: string }) {
-  const amount = (n: number) => `${n.toLocaleString('ja-JP')}${unit}`;
+export function AchievedPanel({ done, total, fmt }: { done: number; total: number; fmt: AmountFormat }) {
+  // 累計と総量（分のGoalは時間＋分、P-18）
+  const amount = fmt.total;
   return (
     <section className="fr-today__top fr-achieved" aria-labelledby="fr-achieved-title">
       <span className="fr-achieved__emblem" aria-hidden="true">
@@ -92,18 +93,18 @@ export function AchievedFacts({
 export function ChangeHeader({
   log,
   sessionAmount,
-  unit,
+  fmt,
   cancelDisabled,
   onCancel,
 }: {
   log: Log;
   sessionAmount: number;
-  unit: string;
+  fmt: AmountFormat;
   /** 今日の保存中は押せない（保存の結果・失敗を見失わないため）。 */
   cancelDisabled: boolean;
   onCancel: () => void;
 }) {
-  const record = describeChoice(choiceFromLog(log), sessionAmount, unit, todayCopy.recordedRest);
+  const record = describeChoice(choiceFromLog(log), sessionAmount, fmt.record, todayCopy.recordedRest);
   // 「記録を変更」を押すとそのボタンが消えるので、この見出しへフォーカスを移す
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => headingRef.current?.focus(), []);
@@ -124,8 +125,8 @@ export function ChangeHeader({
  * 達成済みの画面で、今日の記録を直す入口（R-03・R-08）。誤った量で達成済みになっても、正しい量や「休んだ」へ直せるようにする。
  * 押すと下の記録の2択が選び直しの状態になる。記録済みの昨日の要約行と同じ形にそろえる。
  */
-export function TodayRecordLine({ log, today, sessionAmount, unit, onChange }: { log: Log; today: string; sessionAmount: number; unit: string; onChange: () => void }) {
-  const record = describeChoice(choiceFromLog(log), sessionAmount, unit, todayCopy.recordedRest);
+export function TodayRecordLine({ log, today, sessionAmount, fmt, onChange }: { log: Log; today: string; sessionAmount: number; fmt: AmountFormat; onChange: () => void }) {
+  const record = describeChoice(choiceFromLog(log), sessionAmount, fmt.record, todayCopy.recordedRest);
   return (
     <section className="fr-yesterday fr-yesterday--summary" aria-label={todayCopy.recordedTitle}>
       <p className="fr-yesterday__summary">{todayCopy.todaySummary(shortDate(parseLocalDate(today)), record)}</p>

@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { isSaveFor, saveLogKey } from '../src/features/logs/useSaveLog.ts';
 import { ApiError } from '../src/api/client.ts';
+import { amountFormat } from '../src/copy/amount.ts';
 import { choiceFromLog, classifySaveError, describeChoice, editLocks, reachedDate, isCurrentToday, TodayDateChangedError, toLogPut, unlessLocked, yesterdayRecord } from '../src/features/logs/record-log.ts';
 
 test('DONEは表示量と設定版を明示し、SKIPPEDは設定版だけを送る', () => {
@@ -12,9 +13,10 @@ test('DONEは表示量と設定版を明示し、SKIPPEDは設定版だけを送
 });
 
 test('保存できなかった記録を「やった・20分」「休んだ」と書く（量を変えていなければ1回の量）', () => {
-  assert.equal(describeChoice({ status: 'DONE', amount: 20 }, 20, '分', '休んだ'), 'やった・20分');
-  assert.equal(describeChoice({ status: 'DONE', amount: 1500 }, 20, '分', '休んだ'), 'やった・1,500分');
-  assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, '回', '休んだ'), '休んだ');
+  assert.equal(describeChoice({ status: 'DONE', amount: 20 }, 20, amountFormat({unit:'minutes'}).record, '休んだ'), 'やった・20分');
+  assert.equal(describeChoice({ status: 'DONE', amount: 90 }, 60, amountFormat({unit:'minutes'}).record, '休んだ'), 'やった・90分');
+  assert.equal(describeChoice({ status: 'DONE', amount: 1500 }, 20, amountFormat({ unit: 'minutes' }).record, '休んだ'), 'やった・1,500分');
+  assert.equal(describeChoice({ status: 'SKIPPED', amount: null }, 20, amountFormat({unit:'sessions'}).record, '休んだ'), '休んだ');
 });
 
 test('保存の失敗を、ログイン切れ・記録できない日・それ以外（再試行できる）に分ける', () => {
@@ -43,7 +45,7 @@ test('訂正の初期値は保存済みの記録（DONEは保存済みの量の�
   assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), { status: 'DONE', amount: 20 });
   assert.deepEqual(choiceFromLog({ localDate: '2026-10-06', status: 'SKIPPED', amount: null }), { status: 'SKIPPED', amount: null });
   // 保存済みの量で要約する（1回の量が30分に変わっていても「20分」）
-  assert.equal(describeChoice(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), 30, '分', '休んだ'), 'やった・20分');
+  assert.equal(describeChoice(choiceFromLog({ localDate: '2026-10-06', status: 'DONE', amount: 20 }), 30, amountFormat({ unit: 'minutes' }).record, '休んだ'), 'やった・20分');
 });
 test('作り直す前の画面の保存が終わるまで、新しい画面から同じ日の保存は送らない（別の日は送れる）', async () => {
   const client = new QueryClient();

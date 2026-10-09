@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from 'pg';
 import { createHash, randomUUID } from 'node:crypto';
 import type { Goal, GoalCreate, GoalPatch, TodayStatus } from '../contracts/goal.ts';
+import { checkGoalFields, GoalFieldsInvalid } from './extras.ts';
 import { localDateIn } from './local-date.ts';
 import type { QuestionPriorAnswers } from '@futureroi/prediction';
 import { EMPTY_ANSWERS, makeQuestionSnapshot, sameAnswers, validateSavedQuestion, type QuestionRow } from '../questions/snapshot.ts';
@@ -20,13 +21,14 @@ type GoalRow = QuestionRow & {
   initial_progress: number;
   timezone: string;
   record_start_date: string;
+  target_date: string | null;
   has_logs: boolean;
   unit_history_locked: boolean;
   goal_settings_revision: number;
 };
 
 const BASE_GOAL_COLUMNS = `g.id, g.title, g.unit, g.total_required, g.session_amount, g.initial_progress, g.timezone,
-  g.unit_history_locked, g.goal_settings_revision, g.record_start_date::text as record_start_date, g.question_prior, g.answer_revision::text as answer_revision, g.question_prior_snapshot`;
+  g.unit_history_locked, g.goal_settings_revision, g.record_start_date::text as record_start_date, g.target_date::text as target_date, g.question_prior, g.answer_revision::text as answer_revision, g.question_prior_snapshot`;
 const GOAL_COLUMNS = `${BASE_GOAL_COLUMNS},
   exists (select 1 from action_log l where l.goal_id = g.id) as has_logs`;
 
@@ -89,6 +91,7 @@ async function toGoals(db: Queryable, rows: GoalRow[], now: Date): Promise<GoalR
     today: todays[i]!.today,
     todayStatus: statuses.get(r.id) ?? 'UNRECORDED',
     progressDone: r.initial_progress + (done.get(r.id) ?? 0),
+    targetDate: r.target_date,
     questionPrior: saved.answers, answerRevision: saved.revision,
     };
   });
@@ -120,11 +123,12 @@ export async function getGoal(pool: Pool, userId: string, goalId: string, now: (
 }
 
 // 検証済bodyだけを固定順でcanonical化する。作成後の編集値をhashへ逆流させない。
+// 期限日省略/nullは従来のcanonical形を保ち、#148の既存成功台帳も同じbodyでreplayできる。
 export function createRequestHash(input: GoalCreate): string {
   const answers = input.questionPrior ?? EMPTY_ANSWERS;
   return createHash('sha256').update(JSON.stringify({ title: input.title, unit: input.unit,
     totalRequired: input.totalRequired, sessionAmount: input.sessionAmount,
-    initialProgress: input.initialProgress ?? 0, timezone: input.timezone,
+    initialProgress: input.initialProgress ?? 0, timezone: input.timezone, ...(input.targetDate == null ? {} : { targetDate: input.targetDate }),
     questionPrior: { a: answers.a, b: answers.b } })).digest('hex');
 }
 export type CreateResult = { kind: 'created' | 'replayed'; goal: GoalRead } | { kind: 'conflict' | 'deleted' };
@@ -151,15 +155,19 @@ export async function createGoalOnce(pool: Pool, userId: string, input: GoalCrea
     }
     const now = clock();
     const recordStartDate = localDateIn(now, input.timezone);
+    // 到達予定日は作成時のtimezoneの今日（＝記録開始日）より後だけ
+    const invalid = checkGoalFields({ today: recordStartDate, targetDate: input.targetDate });
+    if (invalid.length) throw new GoalFieldsInvalid(invalid);
     const answers = input.questionPrior ?? EMPTY_ANSWERS;
     const snapshot = makeQuestionSnapshot(answers, { unit: input.unit, sessionAmount: input.sessionAmount, recordStartDate });
     const rows = await client.query<GoalRow>(
       `with inserted as (
-         insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date, created_at, updated_at, question_prior, question_prior_snapshot)
-         values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $9, $10::jsonb, $11::jsonb)
+         insert into goal (user_id, title, unit, total_required, session_amount, initial_progress, timezone, record_start_date, created_at, updated_at, question_prior, question_prior_snapshot, target_date)
+         values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $9, $10::jsonb, $11::jsonb, $12::date)
          returning *)
        select ${GOAL_COLUMNS} from inserted g`,
-      [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate, now, JSON.stringify(answers), snapshot === null ? null : JSON.stringify(snapshot)]);
+      [userId, input.title, input.unit, input.totalRequired, input.sessionAmount, input.initialProgress ?? 0, input.timezone, recordStartDate, now, JSON.stringify(answers), snapshot === null ? null : JSON.stringify(snapshot), input.targetDate ?? null],
+    );
     const goal = (await toGoals(client, rows.rows, now))[0]!;
     await client.query('update goal_create_operation set goal_id = $3 where user_id = $1 and idempotency_key = $2::uuid', [userId, key, goal.id]);
     await client.query('commit');
@@ -200,6 +208,10 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
     if ((current.unit_history_locked || current.initial_progress > 0) && patch.unit !== undefined && patch.unit !== current.unit) {
       await client.query('rollback'); return { kind: 'unit_locked' };
     }
+    // 到達予定日（#157）は、変更後のtimezoneの今日で検査する。違反は全体をrollbackして422
+    const invalid = checkGoalFields({ today: localDateIn(now(), patch.timezone ?? current.timezone), targetDate: patch.targetDate });
+    if (invalid.length) throw new GoalFieldsInvalid(invalid);
+    const nextTargetDate = patch.targetDate === undefined ? current.target_date : patch.targetDate;
     const saved = validateSavedQuestion(current, { unit: current.unit, sessionAmount: current.session_amount, recordStartDate: current.record_start_date });
     if (patch.questionPrior !== undefined && patch.expectedAnswerRevision === undefined) {
       await client.query('rollback');
@@ -247,7 +259,7 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
       (patch.totalRequired === undefined || patch.totalRequired === current.total_required) &&
       (patch.sessionAmount === undefined || patch.sessionAmount === current.session_amount) &&
       (patch.initialProgress === undefined || patch.initialProgress === current.initial_progress) &&
-      (patch.timezone === undefined || patch.timezone === current.timezone);
+      (patch.timezone === undefined || patch.timezone === current.timezone) && nextTargetDate === current.target_date;
     if (!sameGoal && current.goal_settings_revision === 2_147_483_647) {
       await client.query('rollback'); return { kind: 'revision_exhausted' };
     }
@@ -269,12 +281,13 @@ export async function updateGoal(pool: Pool, userId: string, goalId: string, pat
            question_prior = $9::jsonb,
            answer_revision = $10::bigint,
            question_prior_snapshot = $11::jsonb,
-           goal_settings_revision = $12
+           target_date = $12::date,
+           goal_settings_revision = $13
          where user_id = $1 and id = $2
          returning *)
        select ${GOAL_COLUMNS} from changed g`,
       [userId, goalId, patch.title ?? null, patch.unit ?? null, patch.totalRequired ?? null, patch.sessionAmount ?? null, patch.initialProgress ?? null, patch.timezone ?? null,
-        JSON.stringify(answers), String(revision), questionSnapshot === null ? null : JSON.stringify(questionSnapshot), current.goal_settings_revision + (sameGoal ? 0 : 1)],
+        JSON.stringify(answers), String(revision), questionSnapshot === null ? null : JSON.stringify(questionSnapshot), nextTargetDate, current.goal_settings_revision + (sameGoal ? 0 : 1)],
     );
     const goal = (await toGoals(client, [updated.rows[0]!], now()))[0]!;
     await client.query('commit');
