@@ -88,6 +88,10 @@ Supporting Doc。正式な状態と結論は[Architecture](../architecture.md#ar
 
 予測計算の実行方式の比較記録（2026-10-09）。正式な状態・採択手順は[Architecture](../architecture.md#d-28)を参照する。既存本文から理由・未検証・旧FAILを削除せず移動し、[移動manifest](../changes/issue-162-execution-mode.migration.json)で基準commitから全文とリンクの意味を確認する。
 
+### 採択前のContextと提案（2026-10-09）
+
+以下は当時の提案と条件の記録。現在の採択状態・方式はArchitectureを参照する。
+
 <!-- d28-context:start -->
 
 Context: Today APIは[engine.ts](../../apps/api/src/prediction/engine.ts)で純粋Engineを同期で呼び、計算中は同じprocessの記録PUT・Goal一覧・session確認が待つ。[#77記録](../architecture.md#2026-10-06の記録today-api77)は「workerへ移すかは#84の残判断」としたが、#84は2026-10-08にworker不採択のままCloseし、判断の持ち主がなかった（[#160](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/160)）。公開先は[D-25](../architecture.md#d-25)の第一候補のまま未採用で、Code Freezeは2026-10-12。
@@ -105,3 +109,17 @@ Reason: [現行APIの実測](../../experiments/api-mixed-load/REPORT-2026-10-09.
 Consequences / Reconsider When: 公開runtimeの単コア性能が遅いほど同期ブロックは比例して伸びる（未測定）。再検討条件（提案値であり、実測で確定した公開SLO・容量限界ではない）は次のいずれかで、満たせばworker poolを再提案する。(1) 公開先のAPI processで観測した同期ブロックの最長が500ms以上。T-14の単体判定値と同じ値で、1回の同期ブロックがT-14の上限に達する状態を指す。(2) 3人closed loop相当で記録・一覧・session確認のp95が1秒以上。1操作の体感として許容する目安で、UX上の判断基準。(3) APIのprocess（instance）1つあたりで、重い入力中心のToday到着率が4 req/s相当以上の利用を想定する場合。今回のopen loopで他操作p95が約90msに張り付いた条件に対応する。同期ブロックの観測には[計測preload](../../experiments/api-mixed-load/server-metrics-preload.mjs)の`monitorEventLoopDelay`のmax（タイマーで観測したevent-loop遅延）を近似として使い、predict 1回の所要時間そのものではない。Engine単体の掃引（この端末・60日の合成記録1種類・既定Engine設定・回答なしR-11）では`requiredFutureDone` 548は84.94ms、700は83.6ms、800は75.0msで、この追加条件の最大は約85msだった。T-14の1095はhorizon短絡で約4.3〜4.8msだったため、T-14既定3入力より重いケースがあることは確認できている。全入力・回答ありR-11の最悪条件は確定していない。T-14の判定値は変えず、[公開前の最小検証](../operations/release-demo.md#公開候補の採用前に行う最小検証)で公開先の計測経路が整った時点に、T-14既定入力と`MIXED_LOAD_SIZES=548,700,800`相当の追加条件を区別して記録する。候補spikeの[旧結果](../../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)（546.83ms FAIL、CRUD p95 5秒超）はWindows端末の値として保持し、解消済みとしない。Evidence: [計測ハーネス](../../experiments/api-mixed-load/README.md)と生結果JSON（LOCAL_POC。localhost専用で公開先URLを指定できない。1 vCPU・実Cloud・長時間・多人数は未検証）。
 
 <!-- d28-comparison:end -->
+
+### D-28の採択方法の変更（2026-10-09）
+
+依頼者がHuman Approveを必須とせず敵対的セルフレビューで対応を完了するよう明示したため、当初の条件を変更した。正式状態は[Architecture](../architecture.md#d-28)を参照する。親の独立精査も同期維持と再検討条件を技術的に推奨しており、性能証拠の適用範囲を拡大する変更ではない。公開性能・1 vCPU・全入力の最悪値は未検証。#175後の現APIとharnessの互換性も未完了で、測定値・保存JSONは変更していない。旧計測は記録された実行元SHAの証拠として読む。
+
+以下は変更前の手順の全文で、今回の採択・完了の必須条件ではない。[履歴保存のmanifest](../changes/issue-162-adoption-method.migration.json)で基準HEADからの全文を確認する。
+
+<!-- d28-adoption-history:start -->
+
+現在はPROPOSEDで、COMMENT reviewやAIの自己レビューを採択のApproveに数えない。Issue #162の担当者（引き継ぎを依頼者が承認した場合はその担当者）が、PR #172の最終変更を取り込んだPR #173の提案HEADへの別メンバー2人のHuman APPROVED reviewを確認した時点で、Issue #162へ採択対象SHA・2人の名前とreviewリンク・実際の採択日・根拠を記録する。提案内容の変更があれば、変更後の内容で採択の確認をやり直す。
+
+その担当者がMerge前に状態反映用commitを作り、本書のD-28索引と本文を実際の採択日を添えたDECIDEDへ更新する。同じcommitで#77の実行方式欄とKnown Limitationの「提案中」、change-mapの「チームApprove待ち」を採択済みへ揃え、Issue #162の判断コメントへリンクする。Supporting Docの正式状態はArchitectureを参照させる。検証値・T-14・#83の未検証条件は状態変更だけでは変えない。push後に最終HEADのCIとrequired reviewを再確認し、古いApproveがdismissされた場合は状態反映後HEADへのHuman Approveを取り直してから人間がMergeする。提案HEADと状態反映commitは別々に記録し、状態反映push以前のreviewを最終HEADの承認として報告しない。このPRでは上記条件を満たしておらず、PROPOSEDのまま保持する。
+
+<!-- d28-adoption-history:end -->

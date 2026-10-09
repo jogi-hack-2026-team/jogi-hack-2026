@@ -14,7 +14,7 @@ Future ROI（[Product P-11](product-spec.md#p-11-future-roiの採用とcoreの�
 | --- | --- | --- |
 | 構成・責務・採用版・起動 | [System構成](#system構成) → [Technology Stack](#technology-stack) → [起動手順](DEVELOPMENT_GUIDE.md#アプリを起動検証する) | D-23と[基本構成合意の記録](#2026-10-03の技術構成合意) |
 | Auth・Goal・記録の契約 | Technology Stack内の各API節 → [Data Model](#data-model)・[API契約](#api契約) → [対応表のコード・テスト](change-map.md#アプリの仕様と実装) | D-24・D-26・D-27と既存の検証記録。現行契約を履歴ファイルだけへ移さない |
-| 予測・計算の境界 | [Prediction Engine](#prediction-engine) → [Test Strategy](#test-strategy) → [Engineの理由・不変条件](../packages/prediction/README.md) | D-19〜D-22・D-26・[D-28](#d-28)（実行方式、提案中）。実測は既存のexperiment／operations資料を参照する |
+| 予測・計算の境界 | [Prediction Engine](#prediction-engine) → [Test Strategy](#test-strategy) → [Engineの理由・不変条件](../packages/prediction/README.md) | D-19〜D-22・D-26・[D-28](#d-28)（実行方式、依頼者方針と敵対的セルフレビューにより採択）。実測は既存のexperiment／operations資料を参照する |
 | 公開・デモ・運用 | [Deployment](#deployment) → [Demo Seed](#demo-seedの所有権とreset82) → [リリース手順](operations/release-demo.md) | D-25・D-27。候補・ローカル検証・未実施・公開受入を分ける |
 
 Decision LogのD番号は判断の索引として維持する。現行本文と詳細な実施記録の更新先は[共通の文書運用規則](../CONTRIBUTING.md#変更に伴う文書更新)で決め、履歴は[Issue単位のフォルダ](changes/)から探す。
@@ -228,7 +228,7 @@ PATCHはREAD COMMITTEDを明示し、Goal行だけをFOR UPDATEで取得して�
 | snapshotと時計 | pool取得・BEGIN・最初のGoal SELECTでsnapshotを確定した後に時計を1回読み、Goalと全記録を`repeatable read` / `read only`の1 transactionで取得し、接続を返してから`predict`を呼ぶ（[prediction/store.ts](../apps/api/src/prediction/store.ts)、[routes.ts](../apps/api/src/prediction/routes.ts)） | 日付境界で`today`と記録が食い違わず、途中で挟まる記録の更新と混ざらない。BEGINだけではsnapshotは確定しない。[通常操作の回帰](../apps/api/tests/record-concurrency.test.ts)でpool待ち・最初のSELECT待ち・PATCH／同日PUT待ちの日跨ぎと初回PUT／PATCHの両順序を検証する |
 | Engineの読み込み | `@futureroi/prediction`をAPIのworkspace依存にし、packageの`exports`からビルド済み`dist`（JSと`.d.ts`）を読む。root scriptsは`build:prediction`を`typecheck`・`test`・`dev:api`の前に実行し、`workspaces`の順序でpredictionを先にbuildする。コンテナはbuild stageの`dist`を実行stageへコピーする | packageのsourceは`.js`拡張子でimportしており、Node直接実行では`dist`が要る。Engine package内のコマンド・テスト・検証CIは変えない |
 | Engineのエラー | 保存済みデータから作った入力を`PredictionInputError`／`PredictionConfigError`が拒否した場合は500 `PREDICTION_FAILED`（reason・pathをログに残す） | 利用者の操作では直せない状態で、422にすると画面が入力エラーとして扱ってしまう |
-| 実行方式 | MVPは同期で`predict`を呼ぶ。呼び出しは[engine.ts](../apps/api/src/prediction/engine.ts)の`runPrediction`に閉じる | 2026-10-05の[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-05.md)ではT-14が各回34〜75ms。2026-10-09のM5計測では1095入力が約4.3〜4.8msであり、現在の一般的な処理時間とは扱わない。同一プロセス内のworkerへ移すかは#84の残判断だったが、#84 Close後は[D-28](#d-28)（#160〜#162）で扱う。現行APIの[混合負荷の実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)を根拠に同期維持を提案中で、移す場合もrouteを変えない |
+| 実行方式 | MVPは同期で`predict`を呼ぶ。呼び出しは[engine.ts](../apps/api/src/prediction/engine.ts)の`runPrediction`に閉じる | 2026-10-05の[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-05.md)ではT-14が各回34〜75ms。2026-10-09のM5計測では1095入力が約4.3〜4.8msであり、現在の一般的な処理時間とは扱わない。同一プロセス内のworkerへ移すかは#84の残判断だったが、#84 Close後は[D-28](#d-28)（#160〜#162）で扱う。当時のAPIの[混合負荷の実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)を限定条件の判断材料として同期維持を採択し、移す場合もrouteを変えない |
 
 この#77実装に含めないもの：R-11（[D-26の#133追加](#2026-10-07の保存予測接続133)へ分離）、記録の削除（UNKNOWNへ戻す操作は未採択）、Logの競合revision／409（未採択。同じ日のPUTは最後の保存が残る）、worker実行、staging。
 
@@ -506,7 +506,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 3. やらなかった日ほど未記録になる場合など、欠測が行動状態に依存する（MNAR）と、観測された遷移だけの予測には選択の偏りが残る。UNKNOWNのペアを除くことはその補正ではない。休んだ状態が欠けると楽観的になる可能性があるが、誤差の方向・大きさは欠測の仕組みによる。前日補完は欠測を減らす狙いで、実ユーザーでの効果と予測精度は未検証。
 4. Beta(2,2)により、記録が少ない間は値が中央（確率0.5）側に寄る。
 5. 毎日行うGoalのみ。1回の量は`sessionAmount`で固定して将来を計算する。
-6. 予測計算はAPIのprocessで同期実行する（[D-28](#d-28)、提案中）。同じprocessで先行する予測要求の計算時間の合計（Apple M5で1件約0.1秒、公開runtimeでは未測定）だけ、記録・一覧・session確認も待ち得る。到着の重なり・複数in-flight・複数instanceを扱わない概算で、同時利用可能人数の保証ではない。
+6. 予測計算はAPIのprocessで同期実行する（[D-28](#d-28)、2026-10-09採択）。同じprocessで先行する予測要求の計算時間の合計（Apple M5で1件約0.1秒、公開runtimeでは未測定）だけ、記録・一覧・session確認も待ち得る。到着の重なり・複数in-flight・複数instanceを扱わない概算で、同時利用可能人数の保証ではない。
 
 [Speekenbrink・Visser（2021）](https://arxiv.org/abs/2109.02770)は隠れMarkovモデルで、状態や時刻に依存する欠測の仕組みを無視すると推定に偏りが生じ得ることと、その仕組みを含むモデルの検証を示す。Future ROIの精度保証や、今日・昨日という編集期間の根拠ではない。
 
@@ -597,7 +597,7 @@ Dockerを廃止せず、開発・再現・配信の確認に使う。公開は�
 
 [`server.ts`](../apps/api/src/server.ts)が作る2つの`pg` pool（アプリ用5＋認証用2）について、[Vercelのpool lifecycleの説明](https://vercel.com/kb/guide/connection-pooling-with-functions)に従い休止前のidle接続解放・復帰・多instance時の総接続数を検証する。常駐サーバーのSIGTERM処理だけでは関数の休止を検証したことにならない。認証用の安全なbigint（`int8`）parser、アプリ用の文字列型、切断時の処理とtimeoutを保全し、単一poolやグローバルparserへ統合しない。[Neonのtransaction poolerはsession advisory lockを扱えない](https://neon.com/docs/connect/connection-pooling)ため、migrationはHTTP用poolと別の実行で**直結URL**を使い、transaction poolerへ流さない。現行runnerの認証→アプリ順・checksum・transaction・session lockを保つ。接続値や設定の変更は今回行わない。
 
-[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)の最大約216.01ms（`predict`）／227.02ms（`predictWithQuestionPrior`）はWindows・Node24でのwall time（経過時間）で、Vercel Active CPUの実測ではない。同資料の旧mixed-loadは25PASS/1FAIL、overallExitCode=1、inline4rpsの546.83msによるE4 FAILとinline10rpsのCRUD p95 5秒超を保持する。[10-08の追加記録](../experiments/architecture-verification/REAL-ENGINE-2026-10-08.md)もこれを解消済みにしていない。単体成功から公開性能・無料枠内・同時利用可能人数を保証しない。現行`apps/api`を同期のまま同一端末（Apple M5）で測った[2026-10-09の実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)（#161）は同期ブロック最長約0.13秒・3人closed loopでToday p95約0.2秒で、実行方式の提案は[D-28](#d-28)。この値も公開runtimeの性能ではなく、同ハーネスはlocalhost専用で公開先を測る経路を持たない。T-14の500ms未満を維持し、両経路のCPUと混合負荷を測る。具体的な最小検証と記録先は[公開手順](operations/release-demo.md#公開候補の採用前に行う最小検証)・[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)。
+[旧単体計測](../experiments/architecture-verification/REAL-ENGINE-2026-10-07.md)の最大約216.01ms（`predict`）／227.02ms（`predictWithQuestionPrior`）はWindows・Node24でのwall time（経過時間）で、Vercel Active CPUの実測ではない。同資料の旧mixed-loadは25PASS/1FAIL、overallExitCode=1、inline4rpsの546.83msによるE4 FAILとinline10rpsのCRUD p95 5秒超を保持する。[10-08の追加記録](../experiments/architecture-verification/REAL-ENGINE-2026-10-08.md)もこれを解消済みにしていない。単体成功から公開性能・無料枠内・同時利用可能人数を保証しない。当時の`apps/api`を同期のまま同一端末（Apple M5）で測った[2026-10-09の実測](../experiments/api-mixed-load/REPORT-2026-10-09.md)（#161）は同期ブロック最長約0.13秒・3人closed loopでToday p95約0.2秒で、実行方式の判断は[D-28](#d-28)。この値も公開runtimeの性能ではなく、同ハーネスはlocalhost専用で公開先を測る経路を持たない。T-14の500ms未満を維持し、両経路のCPUと混合負荷を測る。具体的な最小検証と記録先は[公開手順](operations/release-demo.md#公開候補の採用前に行う最小検証)・[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)。
 
 ## Demo Seedの所有権とreset（#82）
 
@@ -621,7 +621,7 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-25 | 2026-09-30 → 2026-10-03 → 2026-10-08 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [FE・BEともVercel Hobby＋Neon Free、ローカルDocker。厳密0円・非商用・検証条件付き](#d-25)。Cloud Runの旧候補記録を保持 |
 | D-26 | 2026-10-05 / 2026-10-07 | 保存・予測接続と明示query読取は依頼者承認・チームレビュー対象。FE結合・製品受入の残条件を分離 | [回答由来の初期分布・更新・保存・表示の共通契約](#d-26) |
 | D-27 | 2026-10-07 | 依頼者承認（CLI実装範囲、チームレビュー待ち） | [Demo Seed専用markerと新Goal IDによるtransaction reset](#d-27) |
-| D-28 | 2026-10-09 | PROPOSED（別メンバー2人のApproveで採択。採択前は#77記録の同期実行を維持） | [予測計算はMVPでは同期実行を維持し、worker化は再検討条件付きで見送る](#d-28) |
+| D-28 | 2026-10-09 | DECIDED（依頼者の方針変更・敵対的セルフレビューを根拠に同期維持と再検討条件を採択） | [予測計算はMVPでは同期実行を維持し、worker化は再検討条件付きで見送る](#d-28) |
 | D-29 | 2026-10-09 | 依頼者の実装指示・チームレビュー対象 | [量・設定版・作成操作の保全](#d-29-量と作成操作の保全148) |
 
 ### D-27
@@ -636,13 +636,15 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 ### D-28
 
-2026-10-09 / **PROPOSED** / MVPでは同期実行を維持する案。公開先の計測経路と受入は#83の残条件。採択条件・状態反映は下記手順に従う。[比較理由・代替案・再検討条件・Evidence](prediction/decision-log.md#d-28)を一度だけ記録する。
+2026-10-09 / **DECIDED（依頼者方針・敵対的セルフレビュー）** / MVPでは同期実行を維持し、worker化は再検討条件に該当した時に再提案する。同期ブロック最長500ms以上、3人closed loop相当で他操作p95 1秒以上、または重いToday到着率がprocessあたり4 req/s相当以上を再検討の目安とする。公開SLO・容量限界を実測で確定した値ではない。公開先の計測経路と受入は#83の残条件。採択理由と状態の記録は下記手順に従う。[比較理由・代替案・再検討条件・Evidence](prediction/decision-log.md#d-28)を一度だけ記録する。
 
 #### D-28の採択状態を反映する手順
 
-現在はPROPOSEDで、COMMENT reviewやAIの自己レビューを採択のApproveに数えない。Issue #162の担当者（引き継ぎを依頼者が承認した場合はその担当者）が、PR #172の最終変更を取り込んだPR #173の提案HEADへの別メンバー2人のHuman APPROVED reviewを確認した時点で、Issue #162へ採択対象SHA・2人の名前とreviewリンク・実際の採択日・根拠を記録する。提案内容の変更があれば、変更後の内容で採択の確認をやり直す。
+依頼者は2026-10-09に「もうやってくれんからその対応も全部巻き取って その代わり自分で批判的徹底的敵対レビュー行って」と指示し、続けて「approveいらずに敵対的セルフレビューでって話じゃん」と明示した。D28では当初の別メンバー2人のHuman Approveを採択の必須条件から外し、依頼者が承認した敵対的セルフレビューと独立読取の精査を根拠に採択を記録する。架空のHuman APPROVEDを記録せず、GitHubのreview状態やbranch protectionは変更しない。[変更前の条件・手順](prediction/decision-log.md#d-28の採択方法の変更2026-10-09)は履歴として保全する。
 
-その担当者がMerge前に状態反映用commitを作り、本書のD-28索引と本文を実際の採択日を添えたDECIDEDへ更新する。同じcommitで#77の実行方式欄とKnown Limitationの「提案中」、change-mapの「チームApprove待ち」を採択済みへ揃え、Issue #162の判断コメントへリンクする。Supporting Docの正式状態はArchitectureを参照させる。検証値・T-14・#83の未検証条件は状態変更だけでは変えない。push後に最終HEADのCIとrequired reviewを再確認し、古いApproveがdismissされた場合は状態反映後HEADへのHuman Approveを取り直してから人間がMergeする。提案HEADと状態反映commitは別々に記録し、状態反映push以前のreviewを最終HEADの承認として報告しない。このPRでは上記条件を満たしておらず、PROPOSEDのまま保持する。
+担当者は最新の検証対象HEAD・採択日・依頼者の方針・レビュー根拠・未確認をIssue #162とPR #173へ記録する。今回の静的確認の基準HEADは`58c21ccc90f1dc332abdf547ffd3f9173284e1eb`（#175統合後のmainを取り込み済み）。前回`cf45ed3bf50af1e331fa8642e95bcbe7783e9693`の型検査・cleanup12回帰・build・Foundationと同SHAのCI、保存JSONの収支・集計・値の保全、#172に対する親の独立精査を判断根拠とする。今回の文書最終HEADでリンク・履歴の全文保存・採択状態の整合を敵対的に再確認し、最終SHA・CI結果は同Issue/PRに追記する。同期CPUが他操作を待たせる制約、測定条件、旧FAIL、T-14の閾値を保持する。
+
+**#175後の再測定は未実施。** 現mainのGoal POSTは`Idempotency-Key`、Log PUTは`expectedGoalSettingsRevision`が必須だが、既存harnessは未対応で現APIへそのまま再実行できない。過去のM5測定（生JSONのrepositoryHeadは`bb8aa2a6b1199d6b6944a4793089a71129ccfe88`）は当時の実行元SHAの証拠として保持し、現main／公開runtimeの性能を再検証したとは扱わない。互換修正・公開向け送信/metricsは後続の別作業で、公開受入は#83に残す。本記録の採択とmainへのMerge・deployは別で、これらの操作は行わない。
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](../archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
