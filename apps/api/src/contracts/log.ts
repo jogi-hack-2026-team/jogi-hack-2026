@@ -1,5 +1,5 @@
 import { Type, type Static } from '@sinclair/typebox';
-import { LocalDate } from './goal.ts';
+import { GoalSettingsRevision, LocalDate } from './goal.ts';
 
 // 記録（ActionLog）とTodayの契約（#77）。Architecture「API契約」「記録の上書きと予測の再計算」、Product R-03〜R-08に対応する。
 
@@ -22,13 +22,14 @@ export type Log = Static<typeof Log>;
 
 export const LogList = Type.Array(Log);
 
-// 記録の作成・上書き。DONEでamountを省略するとAPIがsessionAmountで補う。SKIPPEDにamountがあれば422（route側で判定）。
+// #148: DONEは表示量を必ず送り、設定版で古い画面からの保存を拒否する。SKIPPEDに量を送らない。
 export const LogPut = Type.Object(
   {
     status: LogStatus,
+    expectedGoalSettingsRevision: GoalSettingsRevision,
     amount: Type.Optional(Type.Integer({ minimum: 1, maximum: INT4_MAX })),
   },
-  strict,
+  { ...strict, allOf: [{ if: { properties: { status: { const: 'DONE' } }, required: ['status'] }, then: { required: ['amount'] } }] },
 );
 export type LogPut = Static<typeof LogPut>;
 

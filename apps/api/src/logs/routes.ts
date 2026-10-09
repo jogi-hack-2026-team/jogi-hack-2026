@@ -21,10 +21,11 @@ export async function registerLogRoutes(app: FastifyInstance, deps: LogRouteDeps
 
     api.put(
       '/api/goals/:goalId/logs/:localDate',
-      { schema: { params: LogParams, body: LogPut, response: { 200: Log, 404: ErrorBody, 422: ErrorBody } } },
+      { schema: { params: LogParams, body: LogPut, response: { 200: Log, 404: ErrorBody, 409: ErrorBody, 422: ErrorBody } } },
       async (request, reply) => {
         const { goalId, localDate } = request.params;
         if (!isCalendarDate(localDate)) return reply.code(422).send(invalidDate('params/localDate'));
+        if (request.body.status === 'DONE' && request.body.amount === undefined) return reply.code(422).send(errorBody('VALIDATION_ERROR', 'DONE amount is required.', [{ path: 'body/amount', message: 'must explicitly include the displayed amount' }]));
         if (request.body.status === 'SKIPPED' && request.body.amount !== undefined) {
           return reply.code(422).send(
             errorBody('VALIDATION_ERROR', 'Request does not match the contract.', [{ path: 'body/amount', message: 'must be omitted when status is SKIPPED' }]),
@@ -34,6 +35,8 @@ export async function registerLogRoutes(app: FastifyInstance, deps: LogRouteDeps
         switch (result.kind) {
           case 'saved':
             return result.log;
+          case 'settings_conflict':
+            return reply.code(409).send(errorBody('GOAL_SETTINGS_CONFLICT', 'Settings changed. Reload before explicitly saving again.'));
           case 'not_found':
             return reply.code(404).send(GOAL_NOT_FOUND);
           case 'out_of_window':

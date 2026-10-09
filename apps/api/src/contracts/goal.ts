@@ -7,6 +7,9 @@ import { QuestionAnswers, AnswerRevision } from './question.ts';
 const strict = { additionalProperties: false } as const;
 const INT4_MAX = 2_147_483_647;
 
+// #148: 設定版は回答版と独立し、int4範囲でCASに使う。
+export const GoalSettingsRevision = Type.Integer({ minimum: 0, maximum: INT4_MAX });
+
 export const GoalUnit = Type.Union([Type.Literal('minutes'), Type.Literal('sessions')]);
 export type GoalUnit = Static<typeof GoalUnit>;
 
@@ -30,6 +33,9 @@ export const Goal = Type.Object(
     recordStartDate: LocalDate,
     /** 記録が1件でもあるか。trueならtimezoneとinitialProgressを変更できない（R-02）。 */
     hasLogs: Type.Boolean(),
+    /** 過去DONEの永続marker、または現在の初期量がある場合は単位を変更できない。 */
+    unitLocked: Type.Boolean(),
+    goalSettingsRevision: GoalSettingsRevision,
     /** 応答時点の、このGoalのtimezoneでの今日。 */
     today: LocalDate,
     /** 今日の記録状態。行がなければUNRECORDED（SKIPPEDとみなさない）。 */
@@ -72,6 +78,7 @@ export type GoalCreate = Static<typeof GoalCreate>;
 // 省略した項目は維持する。nullは受け付けない。空objectは422。
 export const GoalPatch = Type.Object(
   {
+    expectedGoalSettingsRevision: GoalSettingsRevision,
     title: Type.Optional(title),
     unit: Type.Optional(GoalUnit),
     totalRequired: Type.Optional(amount),
