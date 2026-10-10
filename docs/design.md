@@ -57,12 +57,20 @@ flowchart TD
   Private["保護ルート入口"] -->|未ログイン・元URLを保持| Login
   Private -->|session通信失敗| Error["接続エラー・再読込"]
   Error -->|再試行| Private
-  Account["アカウントシート"] -->|ログアウト成功・replace| Login
+  Goals -->|mobileの一覧AppBar| Account["アカウントシート"]
+  Goals -->|desktop共通バー| Account
+  New -->|desktop共通バー| Account
+  Today -->|desktop共通バー| Account
+  Edit -->|desktop共通バー| Account
+  History -->|desktop共通バー| Account
+  Account -->|ログアウト成功・replace| Login
   Unknown["未定義URL"] --> NotFound["404"]
   NotFound --> Goals
 ```
 
 戻り先はGoal一覧/Todayに限らず、許可されたアプリ内pathを保持する。図のReturnからの矢印は代表例。[認証route](../apps/web/src/router.tsx)はログイン済みの認証ページ訪問も履歴を置き換える。画面表示後の401は再ログイン導線を出す場合があり、すべての通信失敗を自動ログアウト扱いにしない。
+
+アカウントの入口はmobileでは[Goal一覧のAppBar](../apps/web/src/features/goals/GoalListPage.tsx)、desktopでは[AppShellの共通バー](../apps/web/src/routes/AppShell.tsx)にある。desktopの入口は一覧・作成・Today・編集・履歴の全5保護routeで共有し、mobileのToday等にアカウント入口があるとは図示しない。
 
 ## レイアウトと共通状態
 
