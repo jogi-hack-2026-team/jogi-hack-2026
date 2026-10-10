@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -90,58 +91,19 @@ async function runBrowser(t, entry, mockAuth, realRouter = false) {
   return result;
 }
 
-test('session ownership: real React hooks/Goal screens reject old cache and drafts in every DOM commit', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './session-cache.browser.tsx', true);
-  assert.equal(result.results.length, 12);
-  assert.equal(result.writes, 0);
-  t.diagnostic(JSON.stringify(result));
+test('Issue185: failed Goal saves retain context across a healthy same-owner confirmation', {timeout:180000}, async t => {
+  const fingerprint = async () => {
+    const files = ['../src/features/goals/GoalFormPage.tsx', '../src/features/goals/navigation/useConfirmedGoalSave.ts',
+      '../src/features/goals/navigation/useGoalFormFailure.ts', '../src/copy/goals.ts', './issue185-failure.browser.tsx'];
+    const hash = createHash('sha256');
+    for (const path of files) hash.update(path).update(await readFile(new URL(path, import.meta.url)));
+    return hash.digest('hex');
+  };
+  const sourceBefore = await fingerprint();
+  const result = await runBrowser(t, './issue185-failure.browser.tsx', false, true);
+  const sourceAfter = await fingerprint();
+  t.diagnostic(JSON.stringify({ ...result, sourceBefore, sourceAfter }));
+  assert.equal(sourceBefore, sourceAfter, 'source changed during acceptance run');
+  assert.equal(result.results.length,56);
+  assert.deepEqual(result.failures,[], 'failure state lost after healthy same-owner confirmation');
 });
-
-test('Better Auth 1.7.7: visibility refetch failure masks draft and successful recovery starts a fresh form', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './session-focus.browser.tsx', false);
-  assert.equal(result.results.length, 4);
-  assert.equal(result.writes, 0);
-  t.diagnostic(JSON.stringify(result));
-});
-
-test('#190 Today: same-owner visibility check keeps input, holds saves until confirmed, and discards on B/failure', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './session-today.browser.tsx', false);
-  assert.equal(result.results.length, 4);
-  assert.equal(result.puts, 1);
-  assert.equal(result.writes, 0);
-  t.diagnostic(JSON.stringify(result));
-});
-
-test('same-owner draft: actual router/hooks preserve idle input only across successful continuous checks', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './session-draft.browser.tsx', false, true);
-  assert.equal(result.operations.length, 15);
-  assert.equal(result.safety.length, 27);
-  assert.equal(result.writes, 29);
-  t.diagnostic(JSON.stringify(result));
-});
-
-test('#191 Today boundaries: response ordering, cancelled retry, and batched draft invalidation', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './session-today-boundary.browser.tsx', false, true);
-  assert.equal(result.results.length, 13);
-  assert.equal(result.writes, 0);
-  t.diagnostic(JSON.stringify(result));
-});
-
-test('YesterdayPrompt: same-day refetch keeps draft and next-day refetch requires a new amount', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './yesterday-rollover.browser.tsx', true);
-  assert.equal(result.results.length, 3);
-  assert.equal(result.writes.length, 2);
-  t.diagnostic(JSON.stringify(result));
-});
-
-test('AmountEditor: contract boundaries, dock entry, keyboard, batched steps and unsaved cancel', { timeout: 180000 }, async (t) => {
-  const result = await runBrowser(t, './amount-editor.browser.tsx', true);
-  assert.equal(result.results.length, 13);
-  assert.deepEqual(result.writes[0].choice, {status: 'SKIPPED', amount: null});
-  t.diagnostic(JSON.stringify(result));
-});
-
-// Todayの開閉と幅境界をnative入力の実ブラウザで検査する（新依存なし）。
-import './responsive-details.browser-check.mjs';
-// 同owner確認の失敗表示保全と、owner・訪問・作成操作の破棄境界。
-import './issue185-browser-check.mjs';
