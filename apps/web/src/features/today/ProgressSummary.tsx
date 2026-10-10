@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Log } from '@contracts';
 import { ResponsiveDetails } from './ResponsiveDetails.tsx';
 import { Section, SectionLabel } from '../../ui/components/Section.tsx';
@@ -18,17 +19,21 @@ interface Props {
   /** 量の書き方（分のGoalは累計・総量を時間＋分で出す、P-18）。 */
   fmt: AmountFormat;
   showDetails?: boolean;
+  brief?: ReactNode;
 }
 
 /** これまでの積み上げ。％は進捗だけに使い、累計は記録開始日〜今日の範囲で描く（今日より先の線は引かない）。 */
-export function ProgressSummary({ progress, initialProgress, logs, recordStartDate, today, fmt, showDetails = true }: Props) {
+export function ProgressSummary({ progress, initialProgress, logs, recordStartDate, today, fmt, showDetails = true, brief }: Props) {
   // 100% は達成したときだけ出す（未達で切り上げて 100% と見せない）
   const percent = Math.min(100, Math.floor((progress.done / progress.total) * 100));
   return (
     <Section labelledBy="fr-progress-title">
-      <SectionLabel as="h2" id="fr-progress-title">
-        {todayCopy.progressLabel}
-      </SectionLabel>
+      <div className="fr-progress__header">
+        <SectionLabel as="h2" id="fr-progress-title">
+          {todayCopy.progressLabel}
+        </SectionLabel>
+        {brief}
+      </div>
       <div className="fr-progress">
         <p className="fr-progress__percent">
           {percent}

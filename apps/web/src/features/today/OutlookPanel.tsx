@@ -11,6 +11,13 @@ import { daysUntil, targetGap, targetGapText } from './target-gap.ts';
 import { sourceLabel } from '../prior/PriorForecast.tsx';
 import type { CompletionPresentation, Plan } from '../prior/presentation-types.ts';
 
+/** スマホの進捗近くへ置く同じ予測の要約。未保存量で再計算せず、日付の欠如も保持する。 */
+export function CompletionBrief({ completion }: { completion: CompletionPresentation }) {
+  return <p className="fr-completion-brief">{completion.kind === 'estimate'
+    ? completion.p50Label ? todayCopy.completionBrief(completion.p50Label) : todayCopy.completionBriefOutside
+    : todayCopy.completionBriefUnavailable}</p>;
+}
+
 /** これからの見通し（補助指標2）。目安と「10回中8回」の日付を、実際の日付に比例した軸に置く。 */
 export function OutlookPanel({
   completion,

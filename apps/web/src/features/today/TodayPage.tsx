@@ -25,7 +25,7 @@ import { CoreMetric } from './CoreMetric.tsx';
 import { GoalMenu } from './GoalMenu.tsx';
 import { RecentDays } from '../history/RecentDays.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
-import { CompletionDetails, OutlookPanel } from './OutlookPanel.tsx';
+import { CompletionBrief, CompletionDetails, OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressDetails, ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedFacts, AchievedPanel, ChangeHeader, RecordedSummary, TodayRecordLine } from './RecordedSummary.tsx';
 import { useTodayData } from './useTodayData.ts';
@@ -353,7 +353,7 @@ function TodayContent({
   const fmt = amountFormat(goal);
   const progress =
     view.kind === 'completed' || view.kind === 'forecast' || view.kind === 'today-recorded' ? (
-      <ProgressSummary showDetails={false} progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} fmt={fmt} />
+      <ProgressSummary showDetails={false} brief={view.kind === 'forecast' || view.kind === 'today-recorded' ? <CompletionBrief completion={view.completion} /> : null} progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} fmt={fmt} />
     ) : null;
   const progressDetails =
     view.kind === 'completed' || view.kind === 'forecast' || view.kind === 'today-recorded' ? (

@@ -169,3 +169,8 @@ body:has(.fr-page--today) { background: #eef3f5; }
   .fr-page--today .fr-actionbar__pair { gap: 12px; }
   body:has(.fr-page--today) .fr-deskbar { background: #fff; color: #23303a; --fr-ink-2: #4f5f6a; --fr-dot: #2f6e8f; --fr-dot-soft: #e0edf4; --fr-on-dot: #fff; --fr-surface: #fff; --fr-line: #d8e2e5; }
 }
+
+/* 初期スマホで積み上げと未来の要約を同時に読める。詳細は既存Outlookで保持。 */
+.fr-page--today .fr-progress__header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
+.fr-page--today .fr-completion-brief { margin: 0; color: var(--fr-ink-2); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+@media (min-width: 960px) { .fr-page--today .fr-completion-brief { display: none; } }

@@ -24,6 +24,9 @@ export const todayCopy = {
   progressActual: (amount: string) => `累計 ${amount}`,
   completionLabelCurrent: (session: string) => `設定量（${session}）で続ける場合`,
   completionP50: (week: string) => `${week}ごろ`,
+  completionBrief: (week: string) => `完了目安（設定量）：${week}ごろ`,
+  completionBriefUnavailable: '完了目安：まだ算出できません',
+  completionBriefOutside: '完了目安：約3年以内の目安なし',
   completionP80: (week: string) => `10回中8回は${week}まで`,
   completionP80Over3Years: '10回中8回の完了時期の目安は、計算範囲の約3年以内には収まりません。',
   /** 補助指標2の注釈（Product Spec の固定文言）。 */

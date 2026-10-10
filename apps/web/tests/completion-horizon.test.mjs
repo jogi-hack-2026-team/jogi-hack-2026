@@ -22,7 +22,7 @@ registerHooks({
   },
 });
 
-const { OutlookPanel } = await import('../src/features/today/OutlookPanel.tsx');
+const { CompletionBrief, OutlookPanel } = await import('../src/features/today/OutlookPanel.tsx');
 const { toForecastView } = await import('../src/features/today/forecast-view.ts');
 const { assertForecastPresentation, PriorForecast } = await import('../src/features/prior/PriorForecast.tsx');
 const { todayCopy, completionNoteFor } = await import('../src/copy/today.ts');
@@ -211,4 +211,19 @@ test('設定量の仮実行と保存済み実績を表示で区別し、予測�
   assert.match(recorded, /設定量（20分）で続ける場合/);
   assert.match(recorded, /今後も設定量（20分）ずつ行う想定/);
   assert.doesNotMatch(recorded, /今日は設定量/);
+});
+
+test('スマホ完了要約は同じAPI週と欠如理由を保ち、設定量の前提を明示する', () => {
+  const renderBrief = completion => renderToStaticMarkup(createElement(CompletionBrief, { completion }));
+  for (const recorded of [false, true]) {
+    const completion = present({ p50Days: 1, p80Days: 3 }, undefined, recorded).completion;
+    assert.ok(renderBrief(completion).includes(todayCopy.completionBrief(completion.p50Label)));
+    assert.match(renderBrief(completion), /設定量/);
+  }
+  const outside = present({ p50Days: null, p80Days: null }).completion;
+  assert.ok(renderBrief(outside).includes(todayCopy.completionBriefOutside));
+  for (const completion of [{ kind: 'insufficient', message: '材料不足' }, { kind: 'conditional', plan: { sessions: 2 }, reason: '材料不足' }]) {
+    assert.ok(renderBrief(completion).includes(todayCopy.completionBriefUnavailable));
+    assert.doesNotMatch(renderBrief(completion), /週ごろ/);
+  }
 });
