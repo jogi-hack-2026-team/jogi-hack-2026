@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { tmpdir } from 'node:os';
+import { availableParallelism, freemem, loadavg, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
@@ -79,11 +79,18 @@ test('Today responsive details: real viewport, native keyboard and preserved use
   server = createServer((_, res) => { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(html); });
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
   const url = 'http://127.0.0.1:' + server.address().port + '/';
-  child = spawn(browser, ['--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
-    '--remote-debugging-port=0', '--user-data-dir=' + join(dir, 'profile'), 'about:blank'],
+  // loopback fixtureに不要なChrome自身の背景通信を抑える（Puppeteer標準起動と同じflag）。
+  // sandbox/権限/描画/実入力/assert、起動待ち10秒は保持する。
+  const launchStarted = performance.now();
+  const launchArgs = ['--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--disable-background-networking',
+    '--remote-debugging-port=0', '--user-data-dir=' + join(dir, 'profile'), 'about:blank'];
+  child = spawn(browser, launchArgs,
     { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
   let stderr = '', stderrEndpoint = null, endpointSource = null, activePortError = null, launchError = null;
-  const diagnostics = () => JSON.stringify({ browser, profile: join(dir, 'profile'),
+  const diagnostics = () => JSON.stringify({ browser, args: launchArgs, profile: join(dir, 'profile'),
+    elapsedMs: Math.round(performance.now() - launchStarted), pid: child.pid,
+    host: { parallelism: availableParallelism(), load: loadavg(), freeMemoryBytes: freemem() },
     exitCode: child.exitCode, signalCode: child.signalCode, launchError,
     activePortReadError: activePortError, stderr });
   child.stderr.on('data', chunk => {
@@ -115,6 +122,10 @@ test('Today responsive details: real viewport, native keyboard and preserved use
   const target = await until(async () => (await (await fetch(new URL('/json/list', debugOrigin))).json())
     .find(page => page.type === 'page'), value => !!value?.webSocketDebuggerUrl, 'Chrome page unavailable');
   cdp = await connect(target.webSocketDebuggerUrl);
+  const browserVersion = await cdp.send('Browser.getVersion');
+  t.diagnostic(JSON.stringify({ browserLaunch: { endpointSource, elapsedMs: Math.round(performance.now() - launchStarted),
+    product: browserVersion.product, protocolVersion: browserVersion.protocolVersion,
+    host: { parallelism: availableParallelism(), load: loadavg(), freeMemoryBytes: freemem() } } }));
   const evaluate = async expression => {
     const result = await cdp.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
     if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));

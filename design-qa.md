@@ -14,6 +14,12 @@ Goalフォームにnative Tabで入力が底の保存欄へ隠れるP2を確認�
 
 最終ローカル型、本番Vite build、Web111 pass/1 skip、実Chrome14 pass/fail0/skip0を実施。実AmountEditor13ケースは設定量と異なる量での注記、同量への復帰、非保存、既存整数/連打/keyboard/IME/busy/focus境界を含む。既存hookのowner/確認/保存日/昨日跨日のassertを保全した。500kBチャンク警告は既存のまま。新exact HEAD CIはDraft PR202の検証欄へrun/HEADを記録する。main041f24cとの差分でAPI/Engine変更0、依存/lock/CI workflow変更0、通常checkoutの未保存Engineと.vscodeを保全。
 
+追加の実操作レビューは公開入口→既存ログイン→Goal一覧→設定→Today→設定量20分の保存→訂正取消→履歴→再訪の8点を通過した。保存は追加QA Goalの同日同量再保存PUT200を1回だけ実施し、設定DTO・全記録の値と件数は前後一致。4状態fixtureの書込は0。記録変更の取消focusは見出し、量変更の取消focusは元の増量操作に復帰した。保存失敗・日付変更・超過は既存テスト証拠と区別する。
+
+山の背景上にある「記録を変更」の境界は実画素2.789:1でShouldとなり、Today限定のボタン枠色1変数を濃くして390pxで4.063、1440pxで4.072へ改善した。採取したsolid文字の最小4.773、必要操作境界3.370、focus5.603。初期「+」の淡い装飾枠は1.318だが識別glyph自体は6.609であり、全枠3:1や全画像画素網羅の適合とは主張しない。最終再採取の5画像とhashを保持し、追加保存0、未解消Must/Should0。旧実画像・計測はbefore-border-fix-*とjourney-before-border-fix.jsonへ保全した。
+
+5e1952cのPR Application run38026000696はResponsiveDetailsのChrome DevTools起動待ち15秒で失敗した。該当ブラウザassert開始前であり、アプリassert失敗と読み替えない。同じrunnerイメージで前回はstderr接続先と6subtestが成功しており、再発はserver開始前の停止/遅延に整合するが、CPU/背景処理/dbusの根因は未確定。専用Chrome childにPuppeteer標準のdisable-background-networkingだけを加え、起動elapsed・Browser.getVersion・hostload/メモリ・pid/exit診断を記録する最小の隔離安定化仮説とした。起動10秒/実入力/assert/保護設定は保持し、無変更retryはしない。テストやゲートは弱めず、最終push後のPR検証に加え、既存workflow_dispatchでブランチ実HEADを直接checkoutしたApplication/FoundationのrunとSHAをPRに記録する。PRの既定checkoutは合成mergeであり、PR headSha表示だけを直接HEAD検査とは呼ばない。
+
 代表実画像：[トップ390](docs/ui/dawn-app/home-390.png)、[トップ1440](docs/ui/dawn-app/home-1440.png)、[ログイン](docs/ui/dawn-app/login-390.png)、[Goal一覧](docs/ui/dawn-app/goals-390.png)、[フォーム全体](docs/ui/dawn-app/goal-form-390.png)、[履歴](docs/ui/dawn-app/history-390.png)、[アカウント](docs/ui/dawn-app/account-390.png)、[Today390](docs/ui/today-dawn/preview-mobile-390.png)、[Today1440](docs/ui/today-dawn/preview-desktop-1440.png)、[Today詳細までscroll](docs/ui/today-dawn/preview-mobile-scroll-end-390.png)。私的メール部分はマスク済み。情報階層と次操作を優先する判断は[Apple一次資料](https://developer.apple.com/videos/play/wwdc2022/10037/)の今回のUIへの適用であり、一般論だけを実機検証の代わりにしない。
 
 タスクのdawn-ui-evidence/whole-app-uxにafter-inventory.json、goal-fixed-inventory.json、after-focus-native.json、after-interaction.json、after-route-states.json、today-final.json、today-final-closure.json、最終reviewと各画像、final-typecheck.log、final-web-tests.log、final-browser.log、final-build.logを保持。旧P2証拠はbefore-g50-hierarchy-*、after-interaction-before-focus-fix.jsonへ保全。資格情報・runtimeはPRへ含めない。
