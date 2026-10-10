@@ -1,8 +1,26 @@
-# Today 朝焼け・山並み案の実装QA（#199）
+# Future ROI 朝焼け・山並み案と全画面UXの実装QA（#199）
 
 **Final result: passed** — 修正後の独立視覚比較と操作回帰が成功。人間のUX受入・製品完成とは区別する。
 
-## 最新本人フィードバックによる改善（2026-10-10）
+## 最新：全画面統一と3点の情報整理（2026-10-10）
+
+本人の追加指示と「いいね」「やろう」の承認に沿い、既存画面の用途・次操作が伝わる表示へ統一した。公開トップ、ログイン、登録、Goal一覧、作成/編集、履歴、アカウントの明るい空/森色、書体、角丸、余白、フォームをそろえる。OS暗色指定も同じ配色。トップは用途と登録/ログインを先に置き、同じ提供背景を装飾として使う。認証や戻り先の判定を変更せず、予測サンプル、認証不要Today、アカウント追加、API機能追加は行わない。Goalの3区分、今日の記録への導線、履歴の実Goal名、アカウントの短高スクロールを確認した。
+
+Todayは累計・目標・残りと進捗バー、設定量で続けた場合の完了見込みを連続して置き、その後へ完了予測/実績の詳細をまとめる。desktop初期展開と利用者の明示開閉保持は維持する。g50の意味・問い・朝焼け風景・明朝を保ち、数字だけを最終32px/単位16pxとして補助へ下げた。最初の64px案は独立画素レビューで主従未達P2となり、該当CSSだけ修正して6断面を再確認した。予測ラベルは「設定量（1回の量）で続ける場合」、dock/editorは「今日記録する量」。設定量と異なる有効入力のときだけ予測の前提注記を表示し、同量へ戻すと説明とARIA参照を外す。TODAY_DONEの今日の仮実行、CURRENT_STATEの保存済み実績の説明差を実部品SSRでも検査する。未保存量での予測や休む完了日は作らない。
+
+独立Chromeレビューは320/390/960/1440pxの全体37断面、Goal修正後9断面、Today4状態16断面、最終数字とdock文言6断面を確認。各採取の前後ソースhash一致、横溢れ・予期しないHTTP400+・pageerror・Goal/Log書込はいずれも0。native Enter/Space/Tab、resize保持、本文末尾、量注記の表示/消去/ARIA、390×300、文字200%、アカウントEsc/focus復帰、フォーム空送信無POSTを確認した。合成GET401/503のマスクと復帰、ログイン戻り先、NotFoundは故障注入として実API障害の受入とは分ける。通常の状態画面は専用アカウント・実API・既存専用一時DBを使用し、4fixtureを変更していない。
+
+Goalフォームにnative Tabで入力が底の保存欄へ隠れるP2を確認（320×568の総量、390×300のタイトル）。Goal scoped CSSだけで保存欄を通常flowへ戻し、全可用fieldの可視focus・中心hit-test INPUT・末尾保存への自然scrollを再確認して解消した。共有ActionBar/Today dock/保存/validation/dirty guardは変更していない。最終独立判定は新P0/P1/P2なし。技術判定は本人UX受入の代用ではない。
+
+最終ローカル型、本番Vite build、Web111 pass/1 skip、実Chrome14 pass/fail0/skip0を実施。実AmountEditor13ケースは設定量と異なる量での注記、同量への復帰、非保存、既存整数/連打/keyboard/IME/busy/focus境界を含む。既存hookのowner/確認/保存日/昨日跨日のassertを保全した。500kBチャンク警告は既存のまま。新exact HEAD CIはDraft PR202の検証欄へrun/HEADを記録する。main041f24cとの差分でAPI/Engine変更0、依存/lock/CI workflow変更0、通常checkoutの未保存Engineと.vscodeを保全。
+
+代表実画像：[トップ390](docs/ui/dawn-app/home-390.png)、[トップ1440](docs/ui/dawn-app/home-1440.png)、[ログイン](docs/ui/dawn-app/login-390.png)、[Goal一覧](docs/ui/dawn-app/goals-390.png)、[フォーム全体](docs/ui/dawn-app/goal-form-390.png)、[履歴](docs/ui/dawn-app/history-390.png)、[アカウント](docs/ui/dawn-app/account-390.png)、[Today390](docs/ui/today-dawn/preview-mobile-390.png)、[Today1440](docs/ui/today-dawn/preview-desktop-1440.png)、[Today詳細までscroll](docs/ui/today-dawn/preview-mobile-scroll-end-390.png)。私的メール部分はマスク済み。情報階層と次操作を優先する判断は[Apple一次資料](https://developer.apple.com/videos/play/wwdc2022/10037/)の今回のUIへの適用であり、一般論だけを実機検証の代わりにしない。
+
+タスクのdawn-ui-evidence/whole-app-uxにafter-inventory.json、goal-fixed-inventory.json、after-focus-native.json、after-interaction.json、after-route-states.json、today-final.json、today-final-closure.json、最終reviewと各画像、final-typecheck.log、final-web-tests.log、final-browser.log、final-build.logを保持。旧P2証拠はbefore-g50-hierarchy-*、after-interaction-before-focus-fix.jsonへ保全。資格情報・runtimeはPRへ含めない。
+
+残る未確認は本人の最終UX受入、利用者Braveでログイン後のToday、iOS/Safari、実端末keyboard/safe-area、自然日跨ぎ、本番、実API超過fixture、記録済み昨日訂正のlive相互lock。動くlocalhost:61813を保持し、公開トップはログイン不要、Todayは専用既存アカウントでのログインが必要。下記の100px/Today限定/Library version2などは前段の履歴であり、今回の最終表示とは分ける。
+
+## 前段のToday操作改善（2026-10-10、d83a9d6まで）
 
 参照への完全一致を完成条件にせず、「今日の行動判断と未来の変化が分かる」「記録しやすい」を評価基準とした。旧HEAD eff8e5bの[修正前後の実画像](docs/ui/today-dawn/ux-before-after-390.png)を保存し、以前の参照比較画像は前段の証拠として保持する。新しい期限・今日目標・入力中の量によるシミュレーション契約は追加しない。
 

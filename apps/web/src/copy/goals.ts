@@ -4,6 +4,11 @@
 export const goalsCopy = {
   appTitle: 'Future ROI',
   listTitle: 'あなたのGoal',
+  listIntro: 'Goalを選ぶと、今日の記録と見通しを確認できます。',
+  openToday: '今日の記録へ',
+  formGroups: { basic: 'Goalの基本', record: '記録する量', schedule: '日付と区切り' },
+  formGuideCreate: 'まずはGoalと1回の量を決めましょう。',
+  formGuideEdit: '保存する内容を確認して、設定を整えましょう。',
   /** デスクトップ幅の戻り先（デザイン Desk-create）。 */
   crumbList: 'Goal一覧',
   loading: 'Goalを読み込んでいます',
@@ -18,7 +23,7 @@ export const goalsCopy = {
   progressLabel: (title: string) => `${title}の累計`,
   empty: {
     title: '最初のGoalをつくりましょう',
-    body: '毎日1回、量で表せる行動を1つ登録します。記録がたまると、今日やらなかった場合にゴールが何日遠ざかるかの目安を表示します。',
+    body: '量で表せる行動を1つ登録します。やった量と休んだ日を記録すると、再開するまでの日数とゴールまでの見通しを確認できます。記録が少ない間は、まだ目安を出せないこともあります。',
     examples: '例：英単語アプリ（1回20分）、筋トレ（1回20回）、読書（1回30分）',
     action: '最初のGoalをつくる',
   },

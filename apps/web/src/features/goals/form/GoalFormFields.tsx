@@ -46,104 +46,128 @@ export function GoalFormFields({ mode, goal, values, errors, count, unit, timezo
         </div>
       ) : null}
 
-      <Field id="goal-title" label={f.title} counter={`${titleLength(values.title)} / ${TITLE_MAX}`} error={errors.title}>
-        <TextInput
-          id="goal-title"
-          value={values.title}
-          onChange={(event) => update('title', event.target.value)}
-          disabled={inputDisabled}
-          invalid={Boolean(errors.title)}
-          autoComplete="off"
-          {...fieldAria('goal-title', { error: errors.title })}
-        />
-      </Field>
+      <section className="fr-goalform__group fr-goalform__group--basic" aria-labelledby="fr-goalform-basic-title">
+        <header className="fr-goalform__group-head">
+          <span className="fr-goalform__group-index" aria-hidden="true">01</span>
+          <h2 id="fr-goalform-basic-title">{goalsCopy.formGroups.basic}</h2>
+        </header>
+        <div className="fr-goalform__group-fields">
+          <Field id="goal-title" label={f.title} counter={`${titleLength(values.title)} / ${TITLE_MAX}`} error={errors.title}>
+            <TextInput
+              id="goal-title"
+              value={values.title}
+              onChange={(event) => update('title', event.target.value)}
+              disabled={inputDisabled}
+              invalid={Boolean(errors.title)}
+              autoComplete="off"
+              {...fieldAria('goal-title', { error: errors.title })}
+            />
+          </Field>
 
-      <Field id="goal-unit" label={f.unit} group error={errors.unit} help={mode === 'edit' && goal.unitLocked ? (
-        <>
-          <LockedNote>{goalsCopy.errors.unitLocked}</LockedNote>
-          {values.unit !== goal.unit ? <Button variant="secondary" disabled={inputDisabled} onClick={() => update('unit', goal.unit)}>{f.restoreSavedUnit}</Button> : null}
-          <Link to="/goals/new">{f.createNewGoal}</Link>
-        </>
-      ) : undefined}>
-        <SegmentedControl
-          labelledBy="goal-unit-label"
-          options={[
-            { value: 'minutes', label: f.units.minutes },
-            { value: 'sessions', label: f.units.sessions },
-          ]}
-          value={values.unit}
-          onChange={(value) => update('unit', value)}
-          disabled={inputDisabled || (mode === 'edit' && goal.unitLocked)}
-        />
-      </Field>
-
-      {/* デスクトップ幅では2列に並べる（デザイン Desk-create）。スマートフォン幅では1列のまま */}
-      <div className="fr-goalform__pair">
-        <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={inputDisabled} onChange={(v) => update('totalRequired', v)} />
-        <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={inputDisabled} onChange={(v) => update('sessionAmount', v)} />
-      </div>
-      <AmountField
-        id="goal-initialProgress"
-        label={f.initialProgress}
-        unit={unit}
-        value={values.initialProgress}
-        error={errors.initialProgress}
-        disabled={inputDisabled || locked}
-        onChange={(v) => update('initialProgress', v)}
-        help={
-          <>
-            <p>{goal ? f.initialProgressHelp(longDate(goal.recordStartDate)) : f.initialProgressHelpNew}</p>
-            {locked ? <LockedNote>{f.lockedInitialProgress}</LockedNote> : null}
-          </>
-        }
-      />
-
-      <div className="fr-goalform__pair">
-        {/* 到達予定日（任意、#157、P-19）。記録があっても変えられる */}
-        <Field
-          id="goal-targetDate"
-          label={f.targetDate}
-          counter={f.targetDateOptional}
-          error={errors.targetDate}
-          help={<p>{mode === 'edit' ? f.targetDateEditHelp : f.targetDateHelp}</p>}
-        >
-          <TextInput
-            id="goal-targetDate"
-            type="date"
-            value={values.targetDate}
-            onChange={(event) => update('targetDate', event.target.value)}
-            disabled={inputDisabled}
-            invalid={Boolean(errors.targetDate)}
-            {...fieldAria('goal-targetDate', { help: true, error: errors.targetDate })}
-          />
-        </Field>
-        <Field
-          id="goal-timezone"
-          label={f.timezone}
-          error={errors.timezone}
-          help={
+          <Field id="goal-unit" label={f.unit} group error={errors.unit} help={mode === 'edit' && goal.unitLocked ? (
             <>
-              <p>{f.timezoneHelp}</p>
-              {locked ? <LockedNote>{f.lockedTimezone}</LockedNote> : null}
+              <LockedNote>{goalsCopy.errors.unitLocked}</LockedNote>
+              {values.unit !== goal.unit ? <Button variant="secondary" disabled={inputDisabled} onClick={() => update('unit', goal.unit)}>{f.restoreSavedUnit}</Button> : null}
+              <Link to="/goals/new" className="fr-goalform__new-goal">{f.createNewGoal}</Link>
             </>
-          }
-        >
-          <SelectInput
-            id="goal-timezone"
-            value={values.timezone}
-            onChange={(event) => update('timezone', event.target.value)}
+          ) : undefined}>
+            <SegmentedControl
+              labelledBy="goal-unit-label"
+              options={[
+                { value: 'minutes', label: f.units.minutes },
+                { value: 'sessions', label: f.units.sessions },
+              ]}
+              value={values.unit}
+              onChange={(value) => update('unit', value)}
+              disabled={inputDisabled || (mode === 'edit' && goal.unitLocked)}
+            />
+          </Field>
+        </div>
+      </section>
+
+      <section className="fr-goalform__group fr-goalform__group--record" aria-labelledby="fr-goalform-record-title">
+        <header className="fr-goalform__group-head">
+          <span className="fr-goalform__group-index" aria-hidden="true">02</span>
+          <h2 id="fr-goalform-record-title">{goalsCopy.formGroups.record}</h2>
+        </header>
+        <div className="fr-goalform__group-fields">
+          {/* デスクトップ幅では2列に並べる（デザイン Desk-create）。スマートフォン幅では1列のまま */}
+          <div className="fr-goalform__pair">
+            <AmountField id="goal-totalRequired" label={f.totalRequired} unit={unit} value={values.totalRequired} error={errors.totalRequired} disabled={inputDisabled} onChange={(v) => update('totalRequired', v)} />
+            <AmountField id="goal-sessionAmount" label={f.sessionAmount} unit={unit} value={values.sessionAmount} error={errors.sessionAmount} disabled={inputDisabled} onChange={(v) => update('sessionAmount', v)} />
+          </div>
+          <AmountField
+            id="goal-initialProgress"
+            label={f.initialProgress}
+            unit={unit}
+            value={values.initialProgress}
+            error={errors.initialProgress}
             disabled={inputDisabled || locked}
-            invalid={Boolean(errors.timezone)}
-            {...fieldAria('goal-timezone', { help: true, error: errors.timezone })}
-          >
-            {timezones.map((tz) => (
-              <option key={tz} value={tz}>
-                {tz === browserTimezone() ? f.browserTimezone(tz) : tz}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-      </div>
+            onChange={(v) => update('initialProgress', v)}
+            help={
+              <>
+                <p>{goal ? f.initialProgressHelp(longDate(goal.recordStartDate)) : f.initialProgressHelpNew}</p>
+                {locked ? <LockedNote>{f.lockedInitialProgress}</LockedNote> : null}
+              </>
+            }
+          />
+        </div>
+      </section>
+
+      <section className="fr-goalform__group fr-goalform__group--schedule" aria-labelledby="fr-goalform-schedule-title">
+        <header className="fr-goalform__group-head">
+          <span className="fr-goalform__group-index" aria-hidden="true">03</span>
+          <h2 id="fr-goalform-schedule-title">{goalsCopy.formGroups.schedule}</h2>
+        </header>
+        <div className="fr-goalform__group-fields">
+          <div className="fr-goalform__pair">
+            {/* 到達予定日（任意、#157、P-19）。記録があっても変えられる */}
+            <Field
+              id="goal-targetDate"
+              label={f.targetDate}
+              counter={f.targetDateOptional}
+              error={errors.targetDate}
+              help={<p>{mode === 'edit' ? f.targetDateEditHelp : f.targetDateHelp}</p>}
+            >
+              <TextInput
+                id="goal-targetDate"
+                type="date"
+                value={values.targetDate}
+                onChange={(event) => update('targetDate', event.target.value)}
+                disabled={inputDisabled}
+                invalid={Boolean(errors.targetDate)}
+                {...fieldAria('goal-targetDate', { help: true, error: errors.targetDate })}
+              />
+            </Field>
+            <Field
+              id="goal-timezone"
+              label={f.timezone}
+              error={errors.timezone}
+              help={
+                <>
+                  <p>{f.timezoneHelp}</p>
+                  {locked ? <LockedNote>{f.lockedTimezone}</LockedNote> : null}
+                </>
+              }
+            >
+              <SelectInput
+                id="goal-timezone"
+                value={values.timezone}
+                onChange={(event) => update('timezone', event.target.value)}
+                disabled={inputDisabled || locked}
+                invalid={Boolean(errors.timezone)}
+                {...fieldAria('goal-timezone', { help: true, error: errors.timezone })}
+              >
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz === browserTimezone() ? f.browserTimezone(tz) : tz}
+                  </option>
+                ))}
+              </SelectInput>
+            </Field>
+          </div>
+        </div>
+      </section>
 
       {/* 初期質問は任意なので、開閉できる形で閉じて置く（デザイン C1・R1）。回答・エラー・お知らせがあるときは開いておく */}
       <details

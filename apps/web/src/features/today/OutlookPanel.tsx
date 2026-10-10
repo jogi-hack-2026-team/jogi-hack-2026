@@ -19,6 +19,7 @@ export function OutlookPanel({
   fmt,
   targetDate = null,
   sessionAmount,
+  showDetails = true,
 }: {
   completion: CompletionPresentation;
   today: string;
@@ -27,6 +28,7 @@ export function OutlookPanel({
   /** 到達予定日（#157、B案）。設定がなければ null で、A案と同じ表示。 */
   targetDate?: string | null;
   sessionAmount: number;
+  showDetails?: boolean;
 }) {
   return (
     <Band labelledBy="fr-outlook-title">
@@ -36,7 +38,7 @@ export function OutlookPanel({
       {/* 材料が足りないときも、到達予定日だけは出す（ずれは出さない） */}
       {targetDate ? <TargetDateRow targetDate={targetDate} /> : null}
       {completion.kind === 'estimate' ? (
-        <Estimate completion={completion} today={today} targetDate={targetDate} session={fmt.record(sessionAmount)} />
+        <Estimate completion={completion} today={today} targetDate={targetDate} session={fmt.record(sessionAmount)} showDetails={showDetails} />
       ) : completion.kind === 'insufficient' ? (
         <InsufficientNotice>{completion.message}</InsufficientNotice>
       ) : (
@@ -47,8 +49,8 @@ export function OutlookPanel({
   );
 }
 
-function Estimate({ completion, today, targetDate, session }: { completion: Extract<CompletionPresentation, { kind: 'estimate' }>; today: string; targetDate: string | null; session: string }) {
-  const label = completion.scenario === 'TODAY_DONE' ? todayCopy.completionLabelTodayDone(session) : todayCopy.completionLabelCurrent;
+function Estimate({ completion, today, targetDate, session, showDetails }: { completion: Extract<CompletionPresentation, { kind: 'estimate' }>; today: string; targetDate: string | null; session: string; showDetails: boolean }) {
+  const label = completion.scenario === 'TODAY_DONE' ? todayCopy.completionLabelTodayDone(session) : todayCopy.completionLabelCurrent(session);
   return (
     <>
       <div className="fr-outlook__estimate">
@@ -58,20 +60,28 @@ function Estimate({ completion, today, targetDate, session }: { completion: Extr
         <p className="fr-outlook__p80">{completion.p80Label ? todayCopy.completionP80(completion.p80Label) : todayCopy.completionP80Over3Years}</p>
         {targetDate ? <GapLine today={today} days={completion.p80Days} targetDate={targetDate} /> : null}
       </div>
-      <p className="fr-note fr-outlook__assumption">{todayCopy.completionAssumption(session)}</p>
+      <p className="fr-note fr-outlook__assumption">{completion.scenario === 'TODAY_DONE' ? todayCopy.completionTodayAssumption(session) : todayCopy.completionAssumption(session)}</p>
       <EstimateNote completion={completion} />
       <SourceRows sources={completion.sources} />
-      <ResponsiveDetails summary={todayCopy.completionWhyTitle} ariaLabel={todayCopy.outlookLabel}>
-        {completion.p50Days !== null ? (
-          <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} targetDate={targetDate} />
-        ) : null}
-        <p className="fr-note">
-          {completionNoteFor(completion.sources)}
-          {todayCopy.axisNote}
-          {targetDate ? todayCopy.targetGapNote : null}
-        </p>
-      </ResponsiveDetails>
+      {showDetails ? <CompletionDetails completion={completion} today={today} targetDate={targetDate} /> : null}
     </>
+  );
+}
+
+/** 予測の要約の後に配置する、既存データの詳細。 */
+export function CompletionDetails({ completion, today, targetDate = null }: { completion: CompletionPresentation; today: string; targetDate?: string | null }) {
+  if (completion.kind !== 'estimate') return null;
+  return (
+    <ResponsiveDetails summary={todayCopy.completionWhyTitle} ariaLabel={todayCopy.outlookLabel}>
+      {completion.p50Days !== null ? (
+        <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} targetDate={targetDate} />
+      ) : null}
+      <p className="fr-note">
+        {completionNoteFor(completion.sources)}
+        {todayCopy.axisNote}
+        {targetDate ? todayCopy.targetGapNote : null}
+      </p>
+    </ResponsiveDetails>
   );
 }
 

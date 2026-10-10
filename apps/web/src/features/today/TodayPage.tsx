@@ -25,8 +25,8 @@ import { CoreMetric } from './CoreMetric.tsx';
 import { GoalMenu } from './GoalMenu.tsx';
 import { RecentDays } from '../history/RecentDays.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
-import { OutlookPanel } from './OutlookPanel.tsx';
-import { ProgressSummary } from './ProgressSummary.tsx';
+import { CompletionDetails, OutlookPanel } from './OutlookPanel.tsx';
+import { ProgressDetails, ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedFacts, AchievedPanel, ChangeHeader, RecordedSummary, TodayRecordLine } from './RecordedSummary.tsx';
 import { useTodayData } from './useTodayData.ts';
 import { toForecastView } from './forecast-view.ts';
@@ -353,7 +353,11 @@ function TodayContent({
   const fmt = amountFormat(goal);
   const progress =
     view.kind === 'completed' || view.kind === 'forecast' || view.kind === 'today-recorded' ? (
-      <ProgressSummary progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} fmt={fmt} />
+      <ProgressSummary showDetails={false} progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} fmt={fmt} />
+    ) : null;
+  const progressDetails =
+    view.kind === 'completed' || view.kind === 'forecast' || view.kind === 'today-recorded' ? (
+      <ProgressDetails progress={view.progress} initialProgress={goal.initialProgress} logs={logs} recordStartDate={goal.recordStartDate} today={today.today} fmt={fmt} />
     ) : null;
   const outlookTitle = todayCopy.outlookTitle(fmt.total(goal.totalRequired));
   const changeHeader =
@@ -373,6 +377,7 @@ function TodayContent({
           <div className="fr-today__right">
             {progress}
             <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
+            <div className="fr-today__details">{progressDetails}</div>
           </div>
         </>
       );
@@ -381,8 +386,12 @@ function TodayContent({
         <>
           {changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} fmt={fmt} onChange={onChange} /> : null)}
           <div className="fr-today__right">
-            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
             {progress}
+            <OutlookPanel showDetails={false} completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
+            <div className="fr-today__details">
+              <CompletionDetails completion={view.completion} today={today.today} targetDate={goal.targetDate} />
+              {progressDetails}
+            </div>
           </div>
         </>
       );
@@ -403,8 +412,12 @@ function TodayContent({
             </CoreMetric>
           </section>
           <div className="fr-today__right">
-            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
             {progress}
+            <OutlookPanel showDetails={false} completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
+            <div className="fr-today__details">
+              <CompletionDetails completion={view.completion} today={today.today} targetDate={goal.targetDate} />
+              {progressDetails}
+            </div>
           </div>
         </>
       );

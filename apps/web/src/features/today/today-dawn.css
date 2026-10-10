@@ -1,4 +1,4 @@
-/* #199: 選択済み朝焼け案をTodayだけへ適用する。他の画面のB案tokensは維持。 */
+/* #199: 選択済み朝焼け案。Todayの風景と既存予測の意味を保ち、全体の明るいテーマにつなぐ。 */
 .fr-page--today {
   box-sizing: border-box;
   height: 100dvh;
@@ -26,8 +26,8 @@
   --fr-gutter-band: 18px;
   --fr-radius-button: 20px;
   --fr-h-bar: 56px;
-  --fr-fs-metric: 100px;
-  --fr-fs-metric-unit: 24px;
+  --fr-fs-metric: 32px;
+  --fr-fs-metric-unit: 16px;
   --fr-shadow-sticky: 0 -8px 24px rgba(35, 48, 58, .12);
   --dawn-forest: #3b5e4f;
   --dawn-on-forest: #eef3f5;
@@ -61,7 +61,7 @@ body:has(.fr-page--today) { background: #eef3f5; }
 .fr-page--today .fr-core__value,
 .fr-page--today .fr-outlook__p50,
 .fr-page--today .fr-progress__percent { font-family: 'Zen Old Mincho', serif; font-weight: 900; }
-.fr-page--today .fr-core__value { font-size: clamp(76px, 25.6vw, 100px); }
+.fr-page--today .fr-core__value { font-size: 32px; }
 .fr-page--today .fr-today__basis { margin-top: -6px; position: relative; padding: 2px 22px 18px; background: var(--dawn-forest); color: var(--dawn-on-forest); display: flex; flex-direction: column; gap: 8px; }
 .fr-page--today .fr-today__basis .fr-today__summary,
 .fr-page--today .fr-today__basis .fr-why__body { color: var(--dawn-forest-muted); font-size: 14px; line-height: 1.8; }
@@ -86,6 +86,7 @@ body:has(.fr-page--today) { background: #eef3f5; }
 .fr-page--today .fr-yesterday__head { flex-wrap: wrap; }
 .fr-page--today .fr-yesterday--summary { flex-wrap: wrap; }
 .fr-page--today .fr-first-day { padding: 0; }
+.fr-page--today .fr-today__details { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 24px; background: var(--fr-surface); }
 .fr-page--today .fr-today__right { order: 2; display: flex; flex-direction: column; gap: 14px; margin: 0 16px; border: 0; border-radius: 0; overflow: visible; }
 .fr-page--today .fr-band,
 .fr-page--today .fr-section,
@@ -95,10 +96,10 @@ body:has(.fr-page--today) { background: #eef3f5; }
 .fr-page--today .fr-outlook__p50 { font-size: 28px; color: var(--fr-dot); overflow-wrap: anywhere; }
 .fr-page--today .fr-outlook__label,
 .fr-page--today .fr-outlook__p80 { font-size: 13px; }
-.fr-page--today .fr-progress__percent { font-size: 56px; }
+.fr-page--today .fr-progress__percent { font-size: 40px; }
 .fr-page--today .fr-progress__percent small { font-size: 1em; margin-left: 0; }
 .fr-page--today .fr-progress__amount { font-size: 14px; }
-.fr-page--today .fr-progress__balance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; padding: 8px 0; }
+.fr-page--today .fr-progress__balance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; padding: 0; }
 .fr-page--today .fr-progress__balance dt { font-size: 12px; color: var(--fr-ink-2); }
 .fr-page--today .fr-progress__balance dd { margin: 2px 0 0; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
 .fr-page--today .fr-record__amount-controls { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
@@ -151,6 +152,7 @@ body:has(.fr-page--today) { background: #eef3f5; }
   .fr-page--today .fr-today__records { grid-row: 2; margin: 0; }
   /* 右は一つの落ち着いた面。予測と実績を区切り、同じ白カードの反復を避ける。 */
   .fr-page--today .fr-today__scroll > .fr-today__right { grid-column: 2; grid-row: 1 / -1; margin: 0; background: var(--fr-surface); padding: 24px 28px; border-radius: 24px; gap: 24px; }
+  .fr-page--today .fr-today__right > .fr-today__details { padding: 0; border-radius: 0; background: transparent; border-top: 1px solid var(--fr-line); padding-top: 24px; }
   .fr-page--today .fr-today__right > .fr-band,
   .fr-page--today .fr-today__right > .fr-section,
   .fr-page--today .fr-today__right > .fr-achieved-facts { padding: 0; border-radius: 0; background: transparent; gap: 12px; }
@@ -162,7 +164,7 @@ body:has(.fr-page--today) { background: #eef3f5; }
   .fr-page--today .fr-today-layout > .fr-today__dock { max-height: none; grid-row: 3; position: sticky; top: 18px; margin: 0; border-radius: 24px; box-shadow: none; }
   .fr-page--today .fr-today__record-day { padding: 12px 18px 0; }
   .fr-page--today .fr-actionbar { overflow: visible; padding: 4px 18px 18px; border-radius: 0 0 24px 24px; }
-  .fr-page--today .fr-core__value { font-size: 100px; }
+  .fr-page--today .fr-core__value { font-size: 32px; }
   .fr-page--today .fr-today-layout:not(:has(.fr-today__right)) { grid-template-columns: minmax(0, 1fr); }
   .fr-page--today .fr-actionbar__pair { gap: 12px; }
   body:has(.fr-page--today) .fr-deskbar { background: #fff; color: #23303a; --fr-ink-2: #4f5f6a; --fr-dot: #2f6e8f; --fr-dot-soft: #e0edf4; --fr-on-dot: #fff; --fr-surface: #fff; --fr-line: #d8e2e5; }

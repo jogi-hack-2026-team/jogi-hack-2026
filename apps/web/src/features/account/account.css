@@ -1,11 +1,15 @@
-/* 下から出るシート（デザイン B-account）。色・大きさは tokens.css の値だけを使う。 */
+/* 朝焼けtoneのアカウントシート。既存dialogの開閉・認証処理は変えない。 */
 .fr-sheet {
-  width: min(100vw, 480px);
-  max-width: 100vw;
-  margin: auto auto 0;
-  border: 0;
-  border-radius: var(--fr-radius-sheet) var(--fr-radius-sheet) 0 0;
-  padding: var(--fr-space-3) var(--fr-space-6) var(--fr-space-7);
+  box-sizing: border-box;
+  width: min(calc(100vw - 24px), 480px);
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px - env(safe-area-inset-bottom, 0px));
+  margin: auto auto max(12px, env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--fr-line);
+  border-radius: var(--fr-radius-dialog);
+  padding: var(--fr-space-4);
   background: var(--fr-surface);
   color: var(--fr-ink);
   font-family: var(--fr-font);
@@ -18,6 +22,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--fr-space-4);
+}
+.fr-sheet > * {
+  flex-shrink: 0;
+}
+.fr-sheet__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-3);
+  padding: var(--fr-space-3) var(--fr-space-4);
+  border-radius: var(--fr-radius-input);
+  background: var(--fr-dawn-soft);
+  color: var(--fr-rec);
 }
 .fr-sheet__grab {
   width: 40px;
@@ -34,12 +50,14 @@
 }
 .fr-account__info {
   margin: 0;
+  padding: var(--fr-space-3) var(--fr-space-4);
+  border-radius: var(--fr-radius-input);
+  background: var(--fr-surface-2);
 }
 .fr-account__kv {
   display: flex;
-  justify-content: space-between;
-  gap: var(--fr-space-3);
-  padding: var(--fr-space-2) 0;
+  flex-direction: column;
+  gap: var(--fr-space-1);
   font-size: var(--fr-fs-body);
 }
 .fr-account__kv dt {
@@ -49,7 +67,7 @@
   margin: 0;
   font-weight: 700;
   overflow-wrap: anywhere;
-  text-align: right;
+  text-align: left;
 }
 .fr-account__error {
   margin: 0;
@@ -62,4 +80,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.fr-sheet .fr-btn {
+  min-height: var(--fr-tap);
+}
+.fr-sheet :focus-visible {
+  outline: var(--fr-focus);
+  outline-offset: 3px;
+}
+@media (min-width: 960px) {
+  .fr-sheet {
+    margin: auto;
+    padding: var(--fr-space-5);
+  }
 }

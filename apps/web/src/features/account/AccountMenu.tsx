@@ -107,10 +107,12 @@ export function AccountMenu({ variant = 'icon' }: { variant?: 'icon' | 'email' }
           if (!inside) setOpen(false);
         }}
       >
-        <span className="fr-sheet__grab" aria-hidden="true" />
-        <h2 className="fr-sheet__title" id={titleId}>
-          {c.title}
-        </h2>
+        <div className="fr-sheet__heading">
+          <span className="fr-sheet__grab" aria-hidden="true" />
+          <h2 className="fr-sheet__title" id={titleId}>
+            {c.title}
+          </h2>
+        </div>
         <dl className="fr-account__info">
           <div className="fr-account__kv">
             <dt>{c.signedInAs}</dt>

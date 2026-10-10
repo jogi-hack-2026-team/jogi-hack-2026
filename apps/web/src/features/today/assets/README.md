@@ -1,4 +1,4 @@
-# Today の朝焼け・山並み資産
+# 朝焼け・山並み資産
 
 `dawn-landscape.webp` は承認済みデザイン「かけ合わせ3：朝焼けの山並み（青空×森）」の提供 HTML (`future-roi-dawn-reference.html`) に含まれる背景を再利用したものです。
 
@@ -8,9 +8,11 @@
 - 3倍の描画解像度: 1170 × 990 px。原画の `.sky` 実測高さは 329.4375 CSS px。
 - WebP は lossless。元の PNG とデコード後の RGB 全画素が一致することを確認済み。
 
+2026-10-10の本人追加指示により、同じ背景を公開トップの装飾にも利用する。新しい外部画像・サンプル予測を追加せず、文字は既存の実UIで描く。
+
 ## Zen Old Mincho
 
-`zen-old-mincho.css` を利用する Today のスタイルから import し、`font-family: 'Zen Old Mincho', serif` と `font-weight: 900` を指定します。フォントは同一オリジンから配信でき、外部 CDN 接続を必要としません。
+`zen-old-mincho.css` を利用する Today・公開トップのスタイルから import し、`font-family: 'Zen Old Mincho', serif` と `font-weight: 900` を指定します。フォントは同一オリジンから配信でき、外部 CDN 接続を必要としません。
 
 - 出典: https://fontsource.org/fonts/zen-old-mincho
 - 取得元: `@fontsource/zen-old-mincho` 5.3.0 の公式 npm tarball

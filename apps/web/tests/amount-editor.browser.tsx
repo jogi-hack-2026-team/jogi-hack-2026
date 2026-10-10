@@ -39,9 +39,17 @@ function Dock({initial = 20, amount = null, busy = false, locked = false}: {init
 
 async function run() {
   await render(editor());
-  ensure(host.textContent?.includes(todayCopy.amountPredictionNote), 'unsaved prediction explanation absent');
-  ensure(input().getAttribute('aria-describedby')?.split(' ').some(id => document.getElementById(id)?.textContent === todayCopy.amountPredictionNote), 'prediction note is not connected to input');
-  results.push('draft explains that entered amount does not recompute predictions');
+  ensure(!host.querySelector('.fr-amount__prediction-note'), 'configured amount shows unnecessary draft note');
+  ensure(input().getAttribute('aria-describedby')?.split(' ').every(id => document.getElementById(id)), 'configured amount has dangling description');
+  await click(plus());
+  const note = todayCopy.amountPredictionNote('20分');
+  ensure(host.textContent?.includes(note), 'different amount does not explain configured forecast basis');
+  ensure(input().getAttribute('aria-describedby')?.split(' ').some(id => document.getElementById(id)?.textContent === note), 'prediction note is not connected to input');
+  ensure(writes.length === 0, 'draft note caused a save');
+  await click(minus());
+  ensure(!host.querySelector('.fr-amount__prediction-note'), 'returning to configured amount retains draft note');
+  ensure(input().getAttribute('aria-describedby')?.split(' ').every(id => document.getElementById(id)), 'returning to configured amount has dangling description');
+  results.push('different draft amount explains configured forecast basis and removes note on return without saving');
   await act(async () => { plus().click(); plus().click(); plus().click(); await tick(); });
   ensure(input().value === '80', 'batched increases lost a step');
   ensure(writes.length === 0, 'step changed persisted data');

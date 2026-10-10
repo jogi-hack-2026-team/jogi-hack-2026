@@ -80,7 +80,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--fr-space-1);
   padding: var(--fr-space-1);
-  border-radius: 6px;
+  border-radius: 18px;
   border: 1px solid var(--fr-line);
   background: var(--fr-surface-2);
 }

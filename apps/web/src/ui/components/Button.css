@@ -1,6 +1,9 @@
 .fr-btn {
   min-height: var(--fr-h-button);
-  padding: 0 var(--fr-space-6);
+  padding: 10px var(--fr-space-6);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
   border-radius: var(--fr-radius-button);
   border: 1.5px solid transparent;
   font-size: var(--fr-fs-button);

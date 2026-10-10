@@ -4,28 +4,32 @@
  * 見た目の調整は、まずこのファイルの値を変えて行う。
  */
 .fr {
-  /* 色：記録（実績）は青緑、見込み（予測）と操作は藍。赤系は削除だけに使う。 */
-  --fr-bg: #ffffff;
+  /* 全画面を朝焼けの空・森の色へ統一。Todayの予測/実績の固有色は専用CSSで保つ。赤系は削除だけに使う。 */
+  --fr-bg: #eef8fb;
   --fr-surface: #ffffff;
-  --fr-surface-2: #ffffff;
-  --fr-ink: #1d2630;
-  --fr-ink-2: #4c5764;
-  --fr-line: #d3dae0;
-  --fr-grid: #c9d2d9;
-  --fr-btn-line: #93a0ac;
-  --fr-rec: #1e6b66;
-  --fr-rec-soft: #d7ece9;
-  --fr-dot: #3e4a9e;
-  --fr-dot-soft: #e4e6f4;
+  --fr-surface-2: #f4f8f3;
+  --fr-ink: #243b30;
+  --fr-ink-2: #50675c;
+  --fr-line: #d7e4de;
+  --fr-grid: #ccdcd3;
+  --fr-btn-line: #6f8a7b;
+  --fr-rec: #315641;
+  --fr-rec-soft: #e4eee2;
+  --fr-dot: #315641;
+  --fr-dot-soft: #e4eee2;
   --fr-on-dot: #ffffff;
-  --fr-rest: #6152a0;
-  --fr-rest-soft: #e8e4f4;
+  --fr-rest: #496c7a;
+  --fr-rest-soft: #edf5f7;
   --fr-warn: #7a4413;
   --fr-warn-soft: #f6e8d6;
   --fr-warn-line: #d6b088;
   --fr-danger: #d93025;
   --fr-on-danger: #ffffff;
   --fr-scrim: rgba(16, 24, 32, 0.45);
+
+  --fr-dawn: #efd5c6;
+  --fr-dawn-soft: #fbf1e9;
+  color-scheme: light;
 
   /* 文字 */
   --fr-font: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
@@ -58,8 +62,8 @@
   --fr-gutter-band: 20px;
 
   /* 角丸 */
-  --fr-radius-button: 4px;
-  --fr-radius-input: 14px;
+  --fr-radius-button: 16px;
+  --fr-radius-input: 16px;
   --fr-radius-notice: 18px;
   --fr-radius-dialog: 24px;
   --fr-radius-sheet: 28px;
@@ -77,33 +81,9 @@
   --fr-focus: 3px solid var(--fr-dot);
 }
 
-@media (prefers-color-scheme: dark) {
-  .fr {
-    --fr-bg: #141a1f;
-    --fr-surface: #1b232a;
-    --fr-surface-2: #232d35;
-    --fr-ink: #e7ecef;
-    --fr-ink-2: #a9b4be;
-    --fr-line: #2e3a43;
-    --fr-grid: #34414b;
-    --fr-btn-line: #5b6772;
-    --fr-rec: #6cc9bf;
-    --fr-rec-soft: #1d3735;
-    --fr-dot: #a4aef0;
-    --fr-dot-soft: #262c4a;
-    --fr-on-dot: #141a3a;
-    --fr-rest: #bbaeeb;
-    --fr-rest-soft: #2b2742;
-    --fr-warn: #f0bc84;
-    --fr-warn-soft: #33271b;
-    --fr-warn-line: #6b5034;
-    --fr-scrim: rgba(0, 0, 0, 0.6);
-    --fr-shadow-sticky: 0 -1px 0 var(--fr-line), 0 -10px 24px rgba(0, 0, 0, 0.3);
-  }
-}
-
 /* .fr の中の基本。既存の styles.css（Layout 用）より後に読み込まれるため、ここで上書きする。 */
 .fr {
+  box-sizing: border-box;
   font-family: var(--fr-font);
   color: var(--fr-ink);
   background: var(--fr-bg);

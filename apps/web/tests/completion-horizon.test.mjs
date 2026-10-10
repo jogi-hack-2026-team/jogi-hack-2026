@@ -202,12 +202,13 @@ for (const { kind, days, expected } of [
 test('設定量の仮実行と保存済み実績を表示で区別し、予測の単位を明示する', () => {
   const forecast = present({ p50Days: 1, p80Days: 3 }).completion;
   const minutes = render(forecast, { sessionAmount: 30 });
-  assert.match(minutes, /今日30分行う場合の完了の目安/);
-  assert.match(minutes, /今後も設定量（30分）ずつ行う想定/);
+  assert.match(minutes, /設定量（30分）で続ける場合/);
+  assert.match(minutes, /今日は設定量（30分）を行い、今後も同じ量ずつ行う想定/);
   const sessions = renderToStaticMarkup(createElement(OutlookPanel, { completion: forecast, today, title: '完了の目安', sessionAmount: 2, fmt: amountFormat({ unit: 'sessions' }) }));
-  assert.match(sessions, /今日2回行う場合の完了の目安/);
-  assert.match(sessions, /今後も設定量（2回）ずつ行う想定/);
+  assert.match(sessions, /設定量（2回）で続ける場合/);
+  assert.match(sessions, /今日は設定量（2回）を行い、今後も同じ量ずつ行う想定/);
   const recorded = render(present({ p50Days: 1, p80Days: 3 }, undefined, true).completion);
-  assert.match(recorded, /現在の状態からの完了の目安/);
-  assert.doesNotMatch(recorded, /今日20分行う場合/);
+  assert.match(recorded, /設定量（20分）で続ける場合/);
+  assert.match(recorded, /今後も設定量（20分）ずつ行う想定/);
+  assert.doesNotMatch(recorded, /今日は設定量/);
 });

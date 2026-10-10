@@ -39,6 +39,7 @@ export function AmountEditor({
   const [error, setError] = useState<string | undefined>();
   const value = parseInteger(text);
   const valid = isRecordAmount(value);
+  const hasDifferentAmount = valid && value !== sessionAmount;
   const step = (direction: -1 | 1) => {
     if (busy || !valid) return;
     // 同じevent batchの連打でも、前の更新後の入力値を基準にする。
@@ -91,12 +92,12 @@ export function AmountEditor({
               }
             }}
             {...aria}
-            aria-describedby={`${aria['aria-describedby']} ${id}-prediction-note`}
+            aria-describedby={hasDifferentAmount ? `${aria['aria-describedby']} ${id}-prediction-note` : aria['aria-describedby']}
           />
         </Field>
         <IconButton icon="plus" label={`${todayCopy.amountIncrease}（${fmt.record(sessionAmount)}ずつ）`} disabled={busy || !valid || value >= RECORD_AMOUNT_MAX} onClick={() => step(1)} />
       </div>
-      <p id={`${id}-prediction-note`} className="fr-amount__prediction-note">{todayCopy.amountPredictionNote}</p>
+      {hasDifferentAmount ? <p id={`${id}-prediction-note`} className="fr-amount__prediction-note">{todayCopy.amountPredictionNote(fmt.record(sessionAmount))}</p> : null}
       <div className="fr-amount__actions">
         <Button variant="primary" busy={busy} onClick={submit}>
           {busy ? todayCopy.saving : submitLabel}
