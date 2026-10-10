@@ -14,5 +14,9 @@ export default defineConfig({
     // 開発時は同一originに見せるため /api をAPIへ転送する。本番はAPIが静的ファイルを配信する。
     proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:3000' },
   },
-  build: { outDir: 'dist', emptyOutDir: true },
+  build: {
+    outDir: 'dist', emptyOutDir: true,
+    // Unicode-rangeの未使用subsetまでCSSへ埋め込まず、必要な文字のフォントだけ取得する。
+    assetsInlineLimit: (filePath) => /\.woff2?(?:$|\?)/i.test(filePath) ? false : undefined,
+  },
 });

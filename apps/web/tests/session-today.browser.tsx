@@ -75,6 +75,7 @@ async function run() {
   await act(async () => { root.render(<QueryClientProvider client={client}><PrivateCacheGuard /><Screen /></QueryClientProvider>); await tick(); });
   await settle();
   ensure(text().includes('A-PRIVATE-GOAL') && button('量を変更'), 'initial A Today did not mount');
+  ensure([...host.querySelector('.fr-today__scroll')!.children].map(node => node.className).join(',') === 'fr-today__top,fr-today__records,fr-today__right', 'Today reading order differs from top/records/details');
 
   // 1. 量の入力中に同じ人の確認：入力欄と値を保ち、確認中に届いたデータは表示しない
   await click('量を変更'); await typeAmount('45');

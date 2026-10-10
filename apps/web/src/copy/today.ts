@@ -6,17 +6,31 @@ export const todayCopy = {
   coreLabel: 'ゴールが遠ざかる日数（目安）',
   /** 中心指標の注釈（Product Spec の固定文言）。 */
   coreNote:
-    'あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。',
-  /** 中心の数字のすぐ下に出す要約1行（デザイン案B）。全文は「計算の根拠」に置く。 */
+    'あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。今日休んだ場合、次に再開するまでの日数の中央値です。同じ継続傾向と設定量で続け、再開後に同じ道をたどるモデルでは、完了が遅れる日数の中央値とも解釈できます。完了日の中央値どうしの差や、実際の因果効果を表すものではなく、将来を保証するものではありません。',
+  /** 中心の数字のすぐ下に出す要約1行（デザイン案B）。全文は「遅れの目安の根拠」に置く。 */
   coreSummary: 'あなたの記録から推定した目安です。将来を保証するものではありません。',
-  whyTitle: '計算の根拠',
-  completionLabelTodayDone: '今日やった場合の完了の目安',
-  completionLabelCurrent: '現在の状態からの完了の目安',
+  whyTitle: '遅れの目安の根拠',
+  completionWhyTitle: '完了予測の根拠',
+  progressDetailsTitle: '記録の推移を見る',
+  todayRecordTitle: '今日の記録',
+  recordTarget: '記録する日',
+  completionLabelTodayDone: (session: string) => `設定量（${session}）で続ける場合`,
+  completionTodayAssumption: (session: string) => `今日は設定量（${session}）を行い、今後も同じ量ずつ行う想定です。`,
+  completionAssumption: (session: string) => `今後も設定量（${session}）ずつ行う想定です。`,
+  amountPredictionNote: (session: string) => `予測は設定量${session}をもとに表示しています。`,
+  progressGoal: '目標量',
+  progressRemaining: '残り',
+  progressExcess: '目標を超えた量',
+  progressActual: (amount: string) => `累計 ${amount}`,
+  completionLabelCurrent: (session: string) => `設定量（${session}）で続ける場合`,
   completionP50: (week: string) => `${week}ごろ`,
+  completionBrief: (week: string) => `完了目安（設定量）：${week}ごろ`,
+  completionBriefUnavailable: '完了目安：まだ算出できません',
+  completionBriefOutside: '完了目安：約3年以内の目安なし',
   completionP80: (week: string) => `10回中8回は${week}まで`,
   completionP80Over3Years: '10回中8回の完了時期の目安は、計算範囲の約3年以内には収まりません。',
   /** 補助指標2の注釈（Product Spec の固定文言）。 */
-  completionNote: '完了の目安は、同じ記録から推定した継続傾向でシミュレーションした見込みです。',
+  completionNote: '完了の目安は、同じ記録から推定した継続傾向をもとに計算した見込みです。',
   axisNote: '日付は、その週の月曜日で表しています。',
   insufficientCore: 'まだ「休んだ翌日」の記録がありません。記録がたまると、あなたの再開傾向から推定します。',
   insufficientCompletion: '「やった翌日」と「休んだ翌日」の記録がそれぞれたまると、完了の目安を表示します。',
@@ -114,9 +128,10 @@ export const todayCopy = {
   signedOutSave: '保存されていません。ログインし直してから、もう一度選んでください。',
   changeNote: '選び直すと、今日の記録を上書きします',
   cancelChange: '変更をやめる',
+  todayRecordAmount: (amount: string) => `今日記録する量：${amount}`,
   doneAmount: (amount: string) => `やった量：${amount}`,
   changeAmount: '量を変更',
-  amountTodayLabel: '今日やった量',
+  amountTodayLabel: '今日記録する量',
   amountYesterdayLabel: '昨日やった量',
   amountHelp: (session: string) => `1回の量（${session}）が初期値です。実際の量に変えられます。`,
   amountInvalid: '1以上の整数を入力してください',
@@ -170,7 +185,7 @@ export const todayCopy = {
 /** 材料の出所（R-11）。記録だけ・回答だけ・両方。 */
 type NoteSource = 'RECORDS' | 'QUESTION' | 'QUESTION_AND_RECORDS';
 
-const coreNoteTail = '今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。';
+const coreNoteTail = '今日休んだ場合、次に再開するまでの日数の中央値です。同じ継続傾向と設定量で続け、再開後に同じ道をたどるモデルでは、完了が遅れる日数の中央値とも解釈できます。完了日の中央値どうしの差や、実際の因果効果を表すものではなく、将来を保証するものではありません。';
 
 /**
  * 中心指標の注釈を出所に合わせる。記録だけのときは Product Spec の固定文言（coreNote）のまま。
@@ -185,6 +200,6 @@ export function coreNoteFor(source: NoteSource): string {
 /** 補助指標2の注釈を a／b の出所に合わせる。どちらも記録だけのときは Product Spec の固定文言（completionNote）のまま。 */
 export function completionNoteFor(sources: { a: NoteSource; b: NoteSource }): string {
   if (sources.a === 'RECORDS' && sources.b === 'RECORDS') return todayCopy.completionNote;
-  if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定でシミュレーションした見込みです。まだ記録からは推定していません。';
-  return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向でシミュレーションした見込みです。';
+  if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定をもとに計算した見込みです。まだ記録からは推定していません。';
+  return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向をもとに計算した見込みです。';
 }

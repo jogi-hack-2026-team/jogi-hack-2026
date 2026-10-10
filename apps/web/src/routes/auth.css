@@ -2,9 +2,10 @@
 .fr-auth {
   min-height: 100vh;
   min-height: 100dvh;
-  max-width: 28rem;
+  width: 100%;
+  max-width: 32rem;
   margin: 0 auto;
-  padding: 56px var(--fr-gutter) var(--fr-space-8);
+  padding: 32px var(--fr-gutter) max(32px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--fr-space-6);
@@ -31,7 +32,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--fr-space-1);
   padding: var(--fr-space-1);
-  border-radius: 6px;
+  border-radius: 18px;
   background: var(--fr-surface-2);
   box-shadow: inset 0 0 0 1px var(--fr-line);
 }
@@ -127,3 +128,41 @@
   font-size: var(--fr-fs-help);
   color: var(--fr-ink-2);
 }
+
+/* 公開入口と認証は同じ空の背景、森の操作、短い説明でつなぐ。 */
+.fr-auth__brand-link { color: var(--fr-ink); text-decoration: none; width: fit-content; min-height: 44px; display: inline-flex; align-items: center; }
+.fr-auth__card { background: var(--fr-surface); border: 1px solid var(--fr-line); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.fr-auth__intro { display: flex; flex-direction: column; gap: 8px; }
+.fr-auth__intro h1 { font-size: 26px; line-height: 1.4; }
+.fr-auth__intro p { font-size: 14px; line-height: 1.8; color: var(--fr-ink-2); }
+.fr-auth__form { gap: 20px; }
+.fr-auth--home { max-width: 1120px; gap: 28px; }
+.fr-auth--home .fr-auth__name { font-size: 24px; }
+.fr-welcome { display: grid; gap: 24px; }
+.fr-welcome__body { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.fr-welcome__eyebrow { font-size: 14px; font-weight: 700; color: var(--fr-ink-2); }
+.fr-welcome__title { font-family: 'Zen Old Mincho', serif; font-weight: 900; font-size: clamp(38px, 8vw, 56px); line-height: 1.5; letter-spacing: .04em; }
+.fr-welcome__body .fr-auth__lead { font-size: 16px; max-width: 31em; }
+.fr-auth__returning { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; color: var(--fr-ink-2); font-size: 13px; }
+.fr-auth__returning .fr-btn { font-size: 14px; min-height: 44px; padding: 8px 20px; }
+.fr-welcome__art { min-height: 160px; border-radius: 24px; background: url('../features/today/assets/dawn-landscape.webp') center bottom / 100% 100% no-repeat; }
+.fr-welcome__steps { list-style: none; margin: 0; padding: 24px 0 0; border-top: 1px solid var(--fr-line); display: grid; gap: 16px; }
+.fr-welcome__steps li { display: flex; align-items: baseline; gap: 12px; font-size: 14px; }
+.fr-welcome__steps span { color: var(--fr-ink-2); font-size: 12px; font-weight: 700; }
+.fr-welcome__note { font-size: 13px; color: var(--fr-ink-2); line-height: 1.8; }
+@media (max-width: 359px) {
+  .fr-auth { padding-inline: 16px; }
+  .fr-auth__card { padding: 20px 16px; }
+  .fr-welcome__title { font-size: 36px; }
+}
+@media (min-width: 960px) {
+  .fr-auth { padding-top: 56px; }
+  .fr-auth--home { gap: 40px; }
+  .fr-welcome { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+  .fr-welcome__art { align-self: stretch; min-height: 400px; }
+  .fr-welcome__body { padding-block: 16px; }
+  .fr-welcome__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+}
+
+/* 旧Heroを保ち、狭い幅でも「何日遠ざかる？」の語を途中で分断しない。 */
+.fr-welcome__phrase { display: inline-block; }

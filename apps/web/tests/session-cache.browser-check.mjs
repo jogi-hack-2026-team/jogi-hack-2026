@@ -133,3 +133,13 @@ test('YesterdayPrompt: same-day refetch keeps draft and next-day refetch require
   assert.equal(result.writes.length, 2);
   t.diagnostic(JSON.stringify(result));
 });
+
+test('AmountEditor: contract boundaries, dock entry, keyboard, batched steps and unsaved cancel', { timeout: 180000 }, async (t) => {
+  const result = await runBrowser(t, './amount-editor.browser.tsx', true);
+  assert.equal(result.results.length, 13);
+  assert.deepEqual(result.writes[0].choice, {status: 'SKIPPED', amount: null});
+  t.diagnostic(JSON.stringify(result));
+});
+
+// Todayの開閉と幅境界をnative入力の実ブラウザで検査する（新依存なし）。
+import './responsive-details.browser-check.mjs';
