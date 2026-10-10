@@ -97,7 +97,7 @@ API・Engine・owner/answerRevision/settingsRevision/保存判定はUI差分で�
 
 [レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202#pullrequestreview-5478074339)に対し、問い→直近記録／昨日→詳細のDOM順を視覚順と一致させ、CSS orderによる入替を除去した。desktopは左列の問い・記録を読んでから右詳細へ、mobileは縦の表示順でnative Tabを進む。未記録の2択は同じ強さとし、既存の選択済み状態を区別する。
 
-実Chromeの未記録／記録済み390・1440でDOMとnative Tab、初期mobileの完了要約／実績／バー／dock、今日・昨日の量編集focusと取消復帰を確認。実API GETの値と予測は不変、API書込み0。保存保留・503失敗はPUTを合成してAPIへ送らず、閉じた昨日詳細が失敗時に開いてエラー全文を示すこと、同日rerender・詳細再マウント、保存中の全量入力／ボタン無効とnative Tab退避を確認した。細部側だけのrender例外も従来の通知を保持する。scope内の未解消Must／Shouldは0。
+実Chromeの未記録／記録済み390・1440でDOMとnative Tab、初期mobileの完了要約／実績／バー／dock、今日と昨日補完の量編集focusと取消復帰を確認。昨日訂正はGETを合成したfixtureでgroupへの入口focusと今日の操作lockを確認し、取消後のfocus復帰は未確認。実API GETの値と予測は不変、API書込み0。保存保留・503失敗はPUTを合成してAPIへ送らず、閉じた昨日詳細が失敗時に開いてエラー全文を示すこと、同日rerender・詳細再マウント、保存中の全量入力／ボタン無効とnative Tab退避を確認した。細部側だけのrender例外も従来の通知を保持する。scope内の未解消Must／Shouldは0。
 
 画面全体をSPA離脱・再マウントした後に旧PUTが失敗する場合、そのfailureは旧useSaveLog hookに所属し新hookへ共有されない。昨日のdetails単体の開閉／再マウントとは別の既存保存境界で、今回hook/session/draftの共有仕様を広げていない。iOS／Safari・実端末software keyboard・読み上げソフトでの聴取・人の最終UX受入は未確認。DOM/ARIAとnative Tab確認を実読み上げ確認とは扱わない。
 
