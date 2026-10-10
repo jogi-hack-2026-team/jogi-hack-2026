@@ -12,10 +12,11 @@ C担当の専用Chrome・新規embedded PostgreSQL 18.4・UTC・合成アカウ�
 
 ## 部分受入として読める範囲
 
-Cの最終集約は25成功記録（重複1を除く24種類）、実API変更10回と非転送の失敗注入3回。認証、Goal作成/編集、今日DONE/SKIPPED、昨日補完/保存済み訂正と取消、履歴、達成/使い捨てGoal削除、404、下記503復帰を観測した。操作の画面幅は個別記録に従い、全状態が両幅で成功したと一般化しない。
+Cの最終集約は25成功記録（重複1を除く24種類）・実API変更10回という報告値。認証、Goal作成/編集、今日DONE/SKIPPED、昨日補完/保存済み訂正と取消、履歴、達成/使い捨てGoal削除、404、下記503復帰を観測した。操作の画面幅は個別記録に従い、全状態が両幅で成功したと一般化しない。
 
 - 昨日は実UI作成Goalの開始日を専用DBで2日前へ調整したfixture。DONE11補完→未送信訂正cancel（PUT0、入口focus）→DONE12訂正を実PUT200で確認し、今日SKIPPEDを保持。製品UIから開始日を遡る操作や、保存済み記録をUNKNOWNへ削除する操作の確認ではない。
-- 503はブラウザの`route.fulfill`による1回の注入、復帰は実API。Today保存は同じ17分の明示PUT200、Goal編集は明示PATCH200だけで回復。自動再送0は1.5秒の観測窓。本物の障害・commit後応答喪失・同owner再確認後の全失敗条件まで確認した意味ではない。
+- 503は一覧GET・session GET・Today GET・Today PUT・Goal PATCHの5種類の確認で、ブラウザの`route.fulfill`により各確認で1回ずつ注入したとCが報告している。復帰は実API。Today保存は同じ17分の明示PUT200、Goal編集は明示PATCH200だけで回復。自動再送0は1.5秒の観測窓。本物の障害・commit後応答喪失・同owner再確認後の全失敗条件まで確認した意味ではない。
+- 元[screen-map.json](screen-map.json)の`observedChecks.interceptedNotForwarded`は`3`だが、ZIPに集計receiptや計算規則はなく、対象操作・再実行分の扱いを特定できない。これを503注入全体の回数やmutationだけの件数と解釈しない。元mapの値は改変せず保持し、上記5種類の確認とは集計範囲を対応付けない。
 - C報告の合成HEAD検証はtypecheck/build、Web通常136 pass / browser-wrapper skip1（別実行18 browser成功）、Engine77、API198（失敗/skip0）、Foundation103 text / 1580 links / 7 ignore、生成後Vercel9件成功。本PRのFoundation/CI、各PR単体CIとは別の実行で、合成HEADのGitHub CI・公開deployは未実施。
 
 ## 画像と観測状態
