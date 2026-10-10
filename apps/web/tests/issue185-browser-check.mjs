@@ -104,6 +104,6 @@ test('Issue185: failed Goal saves retain context across a healthy same-owner con
   const sourceAfter = await fingerprint();
   t.diagnostic(JSON.stringify({ ...result, sourceBefore, sourceAfter }));
   assert.equal(sourceBefore, sourceAfter, 'source changed during acceptance run');
-  assert.equal(result.results.length,49);
+  assert.equal(result.results.length,56);
   assert.deepEqual(result.failures,[], 'failure state lost after healthy same-owner confirmation');
 });

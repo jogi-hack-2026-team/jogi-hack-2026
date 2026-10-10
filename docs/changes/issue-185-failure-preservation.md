@@ -57,3 +57,11 @@ prepareErrorをmutationエラーと別に同訪問snapshotへ保持し、案内�
 途中の48ケースは全scenario成功でも、410修正を実行中に加えたためfingerprint不一致でwrapperが失敗した。ログを保全し最終成功には数えず、ソースを固定した49ケースで再検証した。型／全workspace build、Web通常112 pass（0 fail、1 skipは別実行済みbrowser wrapper）、全browser18/18（0 fail、0 skip、83.164秒）が成功した。独立レビューで422終了失敗時の項目エラー併存assertを明示追加することとし、追加後の49件および新exactHEAD CIの最終結果はPRへ記録する。Foundation・独立レビューの最終確認もPRに記録する。実API/DB・公開環境・人のUX受入は未実施。
 
 422終了失敗のbefore／after項目エラーとstorage回復禁止の併存assertを追加し、最終49件を再実行した。49/49成功、wrapper 1 pass／0 fail／0 skip、53.133秒。fingerprintは実行前後とも`dc1848c24ffe7620f6bf873efe7a13692e3ef586de15843a3ee3258f0eb64782`。追加assert以外は上記固定版と同じで、auth write0・自動再送0・実API/DB書込0。全18の先行ローカル成功はassert追加前であり、新exactHEAD CIでこのassertを含む全体実行を確認する。
+
+## 追加レビュー：既知422のNUL入力と操作終了失敗
+
+先行HEAD `1f085c034cdb0c72f8c20f8014059c426c6d2204`で、DOMに実際のNULを含むtitleを入力し、合成APIが422で拒否した後のremoveItemを失敗させた。正常な同owner確認後、厳密な初回loaderがそのrawを拒否するため入力・項目エラーが空になり、storage回復後も訂正入口がなかった。rawは保全され、保存禁止・自動送信0は維持された。架空の壊れたrawを信用する問題や本番での漏洩の証拠ではない。
+
+厳密な初回loaderを維持し、同owner・同訪問のメモリにある確定422操作と保存rawが完全一致する場合だけ、その操作の入力と項目エラーを表示する。storage終了失敗中は入力・保存を止める。「入力の訂正を再開」の明示操作で、現在のready／owner／訪問とrawを再確認し、該当操作だけを終了する。成功時は入力・422項目エラーを保ち、親receiptも同期してstorage禁止の再発を防ぐ。送信は行わず、全項目訂正後の次の明示保存で新しいkeyを作る。別owner／別訪問・同keyの変更raw・別K2・一般の壊れた初回rawはこの例外へ採用しない。
+
+恒久回帰は既存49件を保ち56件へ拡張した。56/56成功（wrapper 1 pass／0 fail／0 skip、47.022秒）、fingerprintは実行前後とも`772b150ff82fa668ef1150ed2db59464bc67360999d51c5b27fcc95485f1dc15`。NUL＋終了失敗＋正常確認、確認中の遅延422、明示再開失敗と復旧後の同batch確認、訂正後の新key保存、owner／訪問／raw／K2対照、壊れた初回rawを検査する。確認中private DOMは1050観測で不検出、auth write0・自動再送0・実API/DB書込0、Goal送信65回は合成HTTPの明示操作だった。独立静的レビューで追加Blocking／Should Fixは未発見。全体テストと新exactHEAD CIの最終結果はPRへ記録する。

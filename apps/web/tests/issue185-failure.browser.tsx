@@ -438,6 +438,136 @@ async function run() {
     ensure(sessionStorage.getItem('future-roi:create-attempt:A') === null && !view().disabled && !view().submitDisabled
       && writes.length === count + 1, label + ': available-storage restart did not end matching raw or posted a new operation');
   }
+  const resumeCorrection = () => [...host.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === '入力の訂正を再開');
+  const nulTitle = 'A-PRIVATE-NUL\u0000TITLE';
+  const clickResume = async () => {
+    ensure(resumeCorrection(), 'explicit correction cleanup action absent');
+    await act(async () => { resumeCorrection()!.click(); await tick(); }); await settle();
+  };
+  {
+    const label = 'create/NUL422-cleanup-explicit-correction';
+    await reset('create'); await set('#goal-title', nulTitle); ensure(input()?.value === nulTitle, label + ': actual DOM NUL absent');
+    const count = writes.length, originalRemove = Storage.prototype.removeItem; let removeThrows = 0;
+    Storage.prototype.removeItem = function(key: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') { removeThrows++; throw new Error('synthetic NUL cleanup unavailable'); }
+      return originalRemove.call(this, key);
+    };
+    let raw: string, oldKey: string, before: ReturnType<typeof view>, after: ReturnType<typeof view>;
+    try {
+      await failed(api(422, 'VALIDATION_ERROR')); raw = sessionStorage.getItem('future-roi:create-attempt:A')!; oldKey = writes.at(-1)!.key!; before = view();
+      ensure((writes.at(-1)!.body as any).title === nulTitle && before.title === nulTitle && before.invalid === 'true'
+        && before.disabled && before.submitDisabled && before.recoveryBlockedNotice, label + ': initial NUL rejection/gate absent');
+      transport.hold = true; await visible(); await settle(); hidden(label); await release(); after = view();
+      ensure(after.title === nulTitle && after.total === '123' && after.amount === '17' && after.invalid === 'true'
+        && after.disabled && after.submitDisabled && after.recoveryBlockedNotice && resumeCorrection(), label + ': NUL failure lost after confirmation');
+      const throwsBefore = removeThrows; await clickResume();
+      ensure(removeThrows === throwsBefore + 1 && writes.length === count + 1 && sessionStorage.getItem('future-roi:create-attempt:A') === raw
+        && view().title === nulTitle && view().invalid === 'true' && view().recoveryBlockedNotice && view().submitDisabled,
+      label + ': failed explicit cleanup changed raw, errors or posted');
+    } finally { Storage.prototype.removeItem = originalRemove; }
+    transport.hold = true;
+    await act(async () => { resumeCorrection()!.click(); startVisibility(); await tick(); }); await settle(); hidden(label + '/cleanup-confirmation');
+    ensure(sessionStorage.getItem('future-roi:create-attempt:A') === null && writes.length === count + 1, label + ': successful cleanup batch did not end raw or posted');
+    await release();
+    ensure(sessionStorage.getItem('future-roi:create-attempt:A') === null && view().title === nulTitle && view().invalid === 'true'
+      && !view().disabled && !view().submitDisabled && !view().recoveryBlockedNotice && writes.length === count + 1,
+    label + ': available-storage cleanup lost field error or resent');
+    await check(); ensure(view().title === nulTitle && view().invalid === 'true' && !view().disabled, label + ': editable field error not retained');
+    await set('#goal-title', 'A-PRIVATE-NUL-CORRECTED'); saveError = null; await clickSave();
+    ensure(writes.length === count + 2 && writes.at(-1)!.key !== oldKey! && (writes.at(-1)!.body as any).title === 'A-PRIVATE-NUL-CORRECTED'
+      && (writes.at(-1)!.body as any).totalRequired === 123 && (writes.at(-1)!.body as any).sessionAmount === 17
+      && sessionStorage.getItem('future-roi:create-attempt:A') === null && location.pathname === '/goals', label + ': corrected explicit POST changed fields or reused rejected key');
+    record(label, { before: before!, afterConfirmation: after!, actualNUL: true, originalRawRetainedUntilExplicitCleanup: true,
+      postsBeforeExplicitCorrectedSave: 1, correctedExplicitPosts: 1, removeThrows, newKey: true });
+  }
+  {
+    const label = 'create/NUL422-late-checking-cleanup-failure';
+    await reset('create'); await set('#goal-title', nulTitle); const count = writes.length;
+    holdSave = true; await clickSave(); ensure(rejectSave, label + ': held save absent');
+    const raw = sessionStorage.getItem('future-roi:create-attempt:A')!, oldKey = writes.at(-1)!.key!;
+    const originalRemove = Storage.prototype.removeItem;
+    Storage.prototype.removeItem = function(key: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') throw new Error('synthetic late NUL cleanup unavailable');
+      return originalRemove.call(this, key);
+    };
+    let after: ReturnType<typeof view>;
+    try {
+      transport.hold = true; await visible(); await settle(); hidden(label);
+      await act(async () => { rejectSave!(api(422, 'VALIDATION_ERROR')); await tick(); }); await settle(); hidden(label + '/late-rejection');
+      await release(); after = view();
+      ensure(after.title === nulTitle && after.total === '123' && after.amount === '17' && after.invalid === 'true'
+        && after.recoveryBlockedNotice && after.disabled && after.submitDisabled && resumeCorrection()
+        && sessionStorage.getItem('future-roi:create-attempt:A') === raw && writes.length === count + 1,
+      label + ': deferred cleanup gate hid known NUL field context');
+    } finally { Storage.prototype.removeItem = originalRemove; }
+    await clickResume(); ensure(view().invalid === 'true' && !view().disabled && sessionStorage.getItem('future-roi:create-attempt:A') === null && writes.length === count + 1,
+      label + ': late rejection explicit cleanup lost fields or posted');
+    await set('#goal-title', 'A-PRIVATE-LATE-NUL-CORRECTED'); holdSave = false; saveError = null; await clickSave();
+    ensure(writes.length === count + 2 && writes.at(-1)!.key !== oldKey && (writes.at(-1)!.body as any).title === 'A-PRIVATE-LATE-NUL-CORRECTED'
+      && location.pathname === '/goals' && sessionStorage.getItem('future-roi:create-attempt:A') === null, label + ': corrected late failure reused key or did not finish');
+    record(label, { afterConfirmation: after!, rawUnchangedUntilExplicitCleanup: true, automaticPosts: 0, newKey: true });
+  }
+  for (const boundary of ['owner', 'visit', 'same-key-body', 'K2']) {
+    const label = 'create/NUL422-boundary/' + boundary;
+    await reset('create'); await set('#goal-title', nulTitle);
+    const count = writes.length, originalRemove = Storage.prototype.removeItem; let raw: string, replacement: string | undefined;
+    Storage.prototype.removeItem = function(key: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') throw new Error('synthetic boundary cleanup unavailable');
+      return originalRemove.call(this, key);
+    };
+    try { await failed(api(422, 'VALIDATION_ERROR')); raw = sessionStorage.getItem('future-roi:create-attempt:A')!; }
+    finally { Storage.prototype.removeItem = originalRemove; }
+    if (boundary === 'owner') {
+      const oldAction = resumeCorrection(); ensure(oldAction, label + ': live cleanup action absent');
+      await act(async () => { atomOwner('B'); oldAction!.click(); atomOwner('A'); await tick(); }); await settle();
+      ensure(sessionStorage.getItem('future-roi:create-attempt:A') === raw!, label + ': stale owner click cleared raw');
+      transport.owner = 'B'; await check(); transport.owner = 'A'; await check();
+    }
+    else if (boundary === 'visit') {
+      const oldAction = resumeCorrection(); ensure(oldAction, label + ': live cleanup action absent');
+      await act(async () => { void router.navigate({ to: '/' }); oldAction!.click(); await tick(); }); await settle();
+      ensure(sessionStorage.getItem('future-roi:create-attempt:A') === raw!, label + ': stale visit click cleared raw');
+      await navigate('/goals/new');
+    }
+    else {
+      const previous = JSON.parse(raw!);
+      replacement = JSON.stringify({ ...previous, ...(boundary === 'K2' ? { key: '66666666-6666-4666-8666-666666666666' } : {}),
+        body: { ...previous.body, title: 'A-PRIVATE-REPLACEMENT-' + boundary } });
+      sessionStorage.setItem('future-roi:create-attempt:A', replacement); await check();
+    }
+    const after = view();
+    ensure(writes.length === count + 1 && after.title !== nulTitle && after.invalid !== 'true' && !resumeCorrection(), label + ': old memory adopted/cleanup offered/automatic POST');
+    ensure(sessionStorage.getItem('future-roi:create-attempt:A') === (replacement ?? raw!), label + ': boundary altered stored raw');
+    if (!replacement) ensure(after.recoveryBlockedNotice && after.disabled && after.submitDisabled && after.title === '', label + ': strict initial-load gate missing');
+    else ensure(after.title === JSON.parse(replacement).body.title && after.disabled && !after.recoveryBlockedNotice, label + ': replacement operation not loaded independently');
+    record(label, { after, oldNULMemoryRejected: true, rawUnchanged: true, automaticPosts: 0,
+      staleCleanupClickRejected: boundary === 'owner' || boundary === 'visit' ? true : null });
+    if (replacement) {
+      saveError = null; await clickSave(); const replay = writes.at(-1)!;
+      ensure(writes.length === count + 2 && replay.key === JSON.parse(replacement).key && JSON.stringify(replay.body) === JSON.stringify(JSON.parse(replacement).body)
+        && sessionStorage.getItem('future-roi:create-attempt:A') === null, label + ': explicit replacement confirmation altered operation');
+    } else {
+      // Test-only seed disposal follows the no-clear/no-trust assertions; these
+      // invalid operations intentionally have no product cleanup authority.
+      originalRemove.call(sessionStorage, 'future-roi:create-attempt:A');
+    }
+  }
+  {
+    const label = 'create/corrupt-raw-initial-load-no-trust';
+    const variations = [];
+    for (const raw of ['{synthetic invalid JSON', JSON.stringify({ owner: 'A', key: '77777777-7777-4777-8777-777777777777',
+      body: { title: nulTitle, unit: 'minutes', totalRequired: 123, sessionAmount: 17, initialProgress: 0, timezone: 'UTC', questionPrior: { a: null, b: null } } })]) {
+      await reset('create'); await navigate('/'); const count = writes.length;
+      sessionStorage.setItem('future-roi:create-attempt:A', raw); await navigate('/goals/new'); await check();
+      const after = view();
+      ensure(after.title === '' && after.invalid !== 'true' && after.recoveryBlockedNotice && after.disabled && after.submitDisabled && !resumeCorrection(), label + ': untrusted raw accepted/correction offered');
+      await formSubmit(); ensure(writes.length === count && sessionStorage.getItem('future-roi:create-attempt:A') === raw, label + ': untrusted raw cleared or posted');
+      variations.push({ schema: raw.startsWith('{synthetic') ? 'invalid-json' : 'NUL-invalid-schema', after, rawUnchanged: true, posts: 0 });
+      // Remove only this artificial fixture seed after proving product refusal.
+      sessionStorage.removeItem('future-roi:create-attempt:A');
+    }
+    record(label, { variations });
+  }
   ensure(!captures.some(c => c.checking && c.privateDom), 'private DOM was observed during session check');
   ensure(transport.writes === 0, 'unexpected auth/private transport writes');
   await act(async () => root.unmount()); client.clear(); Date.now = realNow;
