@@ -31,6 +31,8 @@
 
 独立操作確認は320/390/960/1440のEnter開閉・実SVG幅、今日の量49取消、昨日37の開閉保持、320×568/390×568/390×430の入力・無効Enter非保存・キーボード取消・resize draft保持が成功。横溢れ/可視面の非重複、HTTP400+/pageerror/GoalLog書込はいずれも0。作業環境のindependent-visual-review-r3.md、independent-review-state-r3.jsonは検証時のコードhashを保持し、rootのテストやCI結果と区別する。
 
+追加の敵対的確認で320px・文字200%の「この量で記録」がnowrapの2列内で切れるP2を再現した。Today内の量保存/再試行ボタンだけnormal/anywhereで折り返し、32px文字の全文が2行で読めること、dock内部スクロールでボタンに届くこと、通常/拡大のkeyboard取消を再確認して解消した。最小高さ、保存・取消の判定は変えない。専用contextでeditor表示後のcomputed font-sizeを一度だけ2倍にする再現で、実ブラウザのtoolbar zoomやOS設定変更は行っていない。independent-review-state-final.jsonが確認時のコードhashを保持する。[修正前](docs/ui/today-dawn/text-enlargement-before-320.png)と[修正後](docs/ui/today-dawn/text-enlargement-after-320.png)は実画素確認済み。追加確認も書込/error/HTTP400+0。
+
 ## 代表画像と証跡
 
 [390px初期表示](docs/ui/today-dawn/preview-mobile-390.png)、[390px本文末尾](docs/ui/today-dawn/preview-mobile-scroll-end-390.png)、[1440pxデスクトップ](docs/ui/today-dawn/preview-desktop-1440.png)、[390px参照比較](docs/ui/today-dawn/reference-comparison-390.png)。未記録・予測availableの実API画像。内部スクロール採用後のfullPage画像はviewportと同高になるため、末尾はスクロール後の別画像を用意した。

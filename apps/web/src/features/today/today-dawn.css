@@ -99,6 +99,9 @@ body:has(.fr-page--today) { background: #eef3f5; }
 .fr-page--today .fr-progress-track > span { display: block; height: 100%; background: var(--fr-rec); border-radius: inherit; }
 .fr-page--today .fr-actionbar { order: 3; flex-shrink: 0; max-height: 70dvh; overflow-y: auto; position: static; bottom: auto; z-index: 2; margin-top: 0; margin-inline: 0; border-radius: 28px 28px 0 0; box-shadow: var(--fr-shadow-sticky); padding: 14px 16px max(20px, env(safe-area-inset-bottom)); gap: 6px; }
 .fr-page--today .fr-actionbar__pair { gap: 12px; }
+/* 量の保存・失敗後の再試行は、文字拡大時にもラベル全体を読めるようにする。 */
+.fr-page--today .fr-amount__actions .fr-btn,
+.fr-page--today .fr-savefail__actions .fr-btn { white-space: normal; overflow-wrap: anywhere; }
 .fr-page--today .fr-choice { border-width: 2px; border-radius: 20px; font-size: 18px; }
 .fr-page--today .fr-actionbar__pair:not(:has(> .fr-choice:nth-child(2)[aria-pressed='true'])) > .fr-choice:first-child { background: var(--fr-dot); border-color: var(--fr-dot); color: var(--fr-on-dot); }
 .fr-page--today .fr-actionbar__pair:not(:has(> .fr-choice:nth-child(2)[aria-pressed='true'])) > .fr-choice:first-child .fr-choice__sub { color: var(--fr-on-dot); }
