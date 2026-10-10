@@ -152,6 +152,8 @@ P-18の0／1／59／60／61／1240分と達成まで残り1分（2999／3000分�
 
 ## 確認記録と残課題
 
+Vercel候補の配備物準備（[#208](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/208)）は[Deployment](architecture.md#deployment) → [root・entry・build・手動ステップ](operations/vercel-bundle.md) → [Vercel専用entry](../apps/api/src/vercel.ts)・[bundle生成](../scripts/build-vercel.mjs)・[起動境界回帰](../apps/api/tests/vercel.test.ts)・[自己完結／assets回帰](../scripts/tests/vercel-bundle.test.mjs)で追跡する。ローカルの成功と#83の実公開・認証・DB休止・proxy・性能受入を分ける。
+
 DB migrationのCI一覧（[#174](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/174)）は[Application workflow](../.github/workflows/application.yml) → [check-migrations.mjs](../scripts/check-migrations.mjs)で、runnerと同じ番号付きSQL抽出規則・全文名の名前順によるfilesystem一覧と実行結果を比較する。初回の未適用・順序差・空一覧と、反復のauth/app差分を拒否し、source／compiledともno-opを確認する。[checker回帰](../scripts/tests/check-migrations.test.mjs)と[migrate回帰](../apps/api/tests/migrate.test.ts)が追加fixture・同番号の異名・未適用SQL・path差を検証する。SQL本体・migration runner・製品契約は変更しない。
 
 業務API・昨日補完・Engine集計／エラー・表示の判断事項は[契約の判断事項](contract-review-proposal.md)へまとめる。Supporting Docであり、上表の上書きやPoCの動作から成功DTOを決めない。#101の記録境界・昨日補完／訂正方針、#103のmetadata・公開エラー契約と純粋Engineはmain統合済み。未決の具体保存・DTO・再送／競合方式や表示案とは分ける。正式仕様の記載済み範囲は[ArchitectureのAPI契約](architecture.md#api契約)から確認する。

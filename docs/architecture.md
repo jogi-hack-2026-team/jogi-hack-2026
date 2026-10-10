@@ -588,6 +588,8 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 
 ### 第一候補の評価理由と代替案
 
+候補の最小起動点・repository root build・Web資産の収容は[#208の配備物手順](operations/vercel-bundle.md)へ分離する。明示的なBuild Output API v3を使う実装候補であり、D-25の最終採択・公開受入や既存Docker構成の変更ではない。
+
 R-10の主要Flowを公開URLから使えるようにし、3人で機能QAを行うための候補。[VercelのネイティブFastify対応](https://vercel.com/docs/frameworks/backend/fastify)は`listen()`を使う既存APIを単一Vercel Functionとして扱い、Fluid Computeを使う。これを利用するため、Fastifyの全面的なフレームワーク置換は不要と考える。ただし本リポジトリのworkspace・静的配信・DB接続まで動くという推論は未検証で、設定・entrypoint等の最小適合は必要になり得る。公開運用をまとめ、NeonにDBサーバー管理を任せる利点と、無料枠・休止・関数のlifecycleへの適合コストを比較する。
 
 | 候補 | 評価と残る弱点 |
