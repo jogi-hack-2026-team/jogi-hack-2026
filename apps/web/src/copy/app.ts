@@ -3,6 +3,20 @@
 export const appCopy = {
   name: 'Future ROI',
   tagline: '今日サボると、ゴールは何日遠ざかる？',
+  home: {
+    eyebrow: '続ける道のりを、記録から。',
+    titleFirst: '今日サボると、',
+    titleSecond: ['ゴールは', '何日遠ざかる？'],
+    lead: 'やった量や休んだ日を記録して、今日休むことでゴールが遠ざかる日数の目安と、設定量で続けた完了の見通しを確かめる。',
+    register: '登録してはじめる',
+    login: 'ログイン',
+    returning: '登録済みの方はこちら',
+    openGoals: 'Goal一覧を開く',
+    checking: '確認中',
+    stepsLabel: 'はじめ方',
+    steps: ['Goalと1回の量を決める', 'やった量・休んだ日を記録', '記録から見通しを確かめる'],
+    note: '見通しは目安です。記録が少ない間は、まだ目安を出せないこともあります。',
+  },
   /** タブ（ブラウザ）のタイトル。画面の名前の後にアプリ名を付ける。 */
   pageTitle: (page?: string) => (page ? `${page} | Future ROI` : 'Future ROI'),
   loading: '読み込んでいます',
@@ -31,6 +45,7 @@ export const appCopy = {
 
 export const authCopy = {
   tabs: 'ログインまたは新規登録',
+  intro: { login: '登録済みのメールアドレスで、記録の続きを開きます。', register: 'Goalを作る準備をしましょう。登録後に設定できます。' },
   login: 'ログイン',
   register: '新規登録',
   email: 'メールアドレス',

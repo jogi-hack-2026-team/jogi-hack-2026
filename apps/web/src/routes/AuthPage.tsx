@@ -94,77 +94,83 @@ export function AuthPage({ mode, redirectTo, reason }: { mode: AuthMode; redirec
     <main className="fr fr-auth">
       <PageTitle title={action} />
       <div className="fr-auth__head">
-        <h1 className="fr-auth__name">{appCopy.name}</h1>
+        <Link to="/" className="fr-auth__name fr-auth__brand-link">{appCopy.name}</Link>
         <p className="fr-auth__tagline">{appCopy.tagline}</p>
       </div>
 
-      {reason === 'expired' ? <InsufficientNotice role="status">{c.expired}</InsufficientNotice> : null}
-
-      <nav className="fr-auth__seg" aria-label={c.tabs}>
-        <Link to="/login" search={switchSearch} replace aria-current={mode === 'login' ? 'page' : undefined}>
-          {c.login}
-        </Link>
-        <Link to="/register" search={switchSearch} replace aria-current={mode === 'register' ? 'page' : undefined}>
-          {c.register}
-        </Link>
-      </nav>
-
-      {wait ? (
-        <section className="fr-auth__wait" role="status">
-          <p className="fr-auth__wait-title">
-            <Icon name="clock" size={20} />
-            {c.waitTitle}
-          </p>
-          <p>{c.waitBody(action, wait.minutes, wait.clock)}</p>
-        </section>
-      ) : errorCount > 0 || serverError ? (
-        <div className="fr-error fr-auth__summary" role="alert" tabIndex={-1} ref={summaryRef}>
-          <p className="fr-error__title">
-            <Icon name="info" size={20} />
-            {errorCount > 0 ? c.summary(errorCount) : serverError}
-          </p>
+      <section className="fr-auth__card" aria-labelledby="auth-title">
+        <div className="fr-auth__intro">
+          <h1 id="auth-title">{action}</h1>
+          <p>{c.intro[mode]}</p>
         </div>
-      ) : null}
+        {reason === 'expired' ? <InsufficientNotice role="status">{c.expired}</InsufficientNotice> : null}
 
-      <form className="fr-auth__form" onSubmit={submit} noValidate aria-busy={busy || undefined}>
-        <Field id="auth-email" label={c.email} error={fieldErrors.email}>
-          <TextInput
-            id="auth-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            disabled={busy}
-            invalid={Boolean(fieldErrors.email)}
-            {...fieldAria('auth-email', { error: fieldErrors.email })}
-          />
-        </Field>
-        <Field id="auth-password" label={c.password} error={fieldErrors.password} help={mode === 'register' ? c.passwordHelp : undefined}>
-          <div className="fr-inwrap">
-            <TextInput
-              id="auth-password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-              disabled={busy}
-              invalid={Boolean(fieldErrors.password)}
-              {...fieldAria('auth-password', { error: fieldErrors.password, help: mode === 'register' ? c.passwordHelp : undefined })}
-            />
-            <button
-              type="button"
-              className="fr-icon-btn fr-auth__eye"
-              aria-label={showPassword ? c.hidePassword : c.showPassword}
-              aria-pressed={showPassword}
-              disabled={busy}
-              onClick={() => setShowPassword((v) => !v)}
-            >
-              <Icon name={showPassword ? 'eyeOff' : 'eye'} size={20} />
-            </button>
+        <nav className="fr-auth__seg" aria-label={c.tabs}>
+          <Link to="/login" search={switchSearch} replace aria-current={mode === 'login' ? 'page' : undefined}>
+            {c.login}
+          </Link>
+          <Link to="/register" search={switchSearch} replace aria-current={mode === 'register' ? 'page' : undefined}>
+            {c.register}
+          </Link>
+        </nav>
+
+        {wait ? (
+          <section className="fr-auth__wait" role="status">
+            <p className="fr-auth__wait-title">
+              <Icon name="clock" size={20} />
+              {c.waitTitle}
+            </p>
+            <p>{c.waitBody(action, wait.minutes, wait.clock)}</p>
+          </section>
+        ) : errorCount > 0 || serverError ? (
+          <div className="fr-error fr-auth__summary" role="alert" tabIndex={-1} ref={summaryRef}>
+            <p className="fr-error__title">
+              <Icon name="info" size={20} />
+              {errorCount > 0 ? c.summary(errorCount) : serverError}
+            </p>
           </div>
-        </Field>
-        <Button type="submit" variant="primary" block busy={busy} disabled={wait !== null} {...(wait ? { icon: 'clock' as const } : {})}>
-          {busy ? c.sending[mode] : wait ? c.waitButton(wait.clock, action) : c.submit[mode]}
-        </Button>
-      </form>
+        ) : null}
+
+        <form className="fr-auth__form" onSubmit={submit} noValidate aria-busy={busy || undefined}>
+          <Field id="auth-email" label={c.email} error={fieldErrors.email}>
+            <TextInput
+              id="auth-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              disabled={busy}
+              invalid={Boolean(fieldErrors.email)}
+              {...fieldAria('auth-email', { error: fieldErrors.email })}
+            />
+          </Field>
+          <Field id="auth-password" label={c.password} error={fieldErrors.password} help={mode === 'register' ? c.passwordHelp : undefined}>
+            <div className="fr-inwrap">
+              <TextInput
+                id="auth-password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                disabled={busy}
+                invalid={Boolean(fieldErrors.password)}
+                {...fieldAria('auth-password', { error: fieldErrors.password, help: mode === 'register' ? c.passwordHelp : undefined })}
+              />
+              <button
+                type="button"
+                className="fr-icon-btn fr-auth__eye"
+                aria-label={showPassword ? c.hidePassword : c.showPassword}
+                aria-pressed={showPassword}
+                disabled={busy}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                <Icon name={showPassword ? 'eyeOff' : 'eye'} size={20} />
+              </button>
+            </div>
+          </Field>
+          <Button type="submit" variant="primary" block busy={busy} disabled={wait !== null} {...(wait ? { icon: 'clock' as const } : {})}>
+            {busy ? c.sending[mode] : wait ? c.waitButton(wait.clock, action) : c.submit[mode]}
+          </Button>
+        </form>
+      </section>
     </main>
   );
 }

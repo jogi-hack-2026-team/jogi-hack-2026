@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import type { Log } from '@contracts';
-import { Section, SectionLabel, Help } from '../../ui/components/Section.tsx';
+import { ResponsiveDetails } from './ResponsiveDetails.tsx';
+import { Section, SectionLabel } from '../../ui/components/Section.tsx';
 import type { AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { useElementWidth } from '../../ui/useElementWidth.ts';
@@ -16,29 +18,50 @@ interface Props {
   today: string;
   /** 量の書き方（分のGoalは累計・総量を時間＋分で出す、P-18）。 */
   fmt: AmountFormat;
+  showDetails?: boolean;
+  brief?: ReactNode;
 }
 
 /** これまでの積み上げ。％は進捗だけに使い、累計は記録開始日〜今日の範囲で描く（今日より先の線は引かない）。 */
-export function ProgressSummary({ progress, initialProgress, logs, recordStartDate, today, fmt }: Props) {
+export function ProgressSummary({ progress, initialProgress, logs, recordStartDate, today, fmt, showDetails = true, brief }: Props) {
   // 100% は達成したときだけ出す（未達で切り上げて 100% と見せない）
   const percent = Math.min(100, Math.floor((progress.done / progress.total) * 100));
   return (
     <Section labelledBy="fr-progress-title">
-      <SectionLabel as="h2" id="fr-progress-title">
-        {todayCopy.progressLabel}
-      </SectionLabel>
+      <div className="fr-progress__header">
+        <SectionLabel as="h2" id="fr-progress-title">
+          {todayCopy.progressLabel}
+        </SectionLabel>
+        {brief}
+      </div>
       <div className="fr-progress">
         <p className="fr-progress__percent">
           {percent}
           <small>%</small>
         </p>
         <p className="fr-progress__amount">
-          {fmt.total(progress.done)} / {fmt.total(progress.total)}
+          {todayCopy.progressActual(fmt.total(progress.done))}
         </p>
       </div>
-      <Help>{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}</Help>
-      <CumulativeChartView logs={logs} initialProgress={initialProgress} total={progress.total} recordStartDate={recordStartDate} today={today} fmt={fmt} done={progress.done} />
+      <dl className="fr-progress__balance">
+        <div><dt>{todayCopy.progressGoal}</dt><dd>{fmt.total(progress.total)}</dd></div>
+        <div><dt>{todayCopy.progressRemaining}</dt><dd>{fmt.total(Math.max(0, progress.total - progress.done))}</dd></div>
+        {progress.done > progress.total ? <div><dt>{todayCopy.progressExcess}</dt><dd>{fmt.total(progress.done - progress.total)}</dd></div> : null}
+      </dl>
+      <div className="fr-progress-track" role="progressbar" aria-labelledby="fr-progress-title" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+        <span style={{ width: String(percent) + '%' }} />
+      </div>
+      {showDetails ? <ProgressDetails progress={progress} initialProgress={initialProgress} logs={logs} recordStartDate={recordStartDate} today={today} fmt={fmt} /> : null}
     </Section>
+  );
+}
+
+export function ProgressDetails({ progress, initialProgress, logs, recordStartDate, today, fmt }: Props) {
+  return (
+    <ResponsiveDetails summary={todayCopy.progressDetailsTitle}>
+      <p className="fr-note">{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}</p>
+      <CumulativeChartView logs={logs} initialProgress={initialProgress} total={progress.total} recordStartDate={recordStartDate} today={today} fmt={fmt} done={progress.done} />
+    </ResponsiveDetails>
   );
 }
 

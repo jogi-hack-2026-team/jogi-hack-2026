@@ -1,12 +1,3 @@
-/*
- * 全体の基本。画面の見た目は .fr（ui/tokens.css）の中で決め、ここでは余白の初期化と背景だけを決める。
- * 以前の開発用の枠（Layout の見出し・ナビ）用の指定は #146 で外した。
- */
-:root {
-  color-scheme: light dark;
-}
-
-body {
-  margin: 0;
-  background: Canvas;
-}
+/* 全画面の入口・背景を朝焼けの明るい空へ揃える。部品の色はui/tokens.css。 */
+:root { color-scheme: light; }
+body { margin: 0; background: #eef8fb; }
