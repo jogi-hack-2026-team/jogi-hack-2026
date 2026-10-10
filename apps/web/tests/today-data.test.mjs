@@ -7,7 +7,7 @@ import { isSameSnapshot } from '../src/features/today/snapshot.ts';
 
 const goal = {
   id: 'g', title: '英単語', unit: 'minutes', totalRequired: 3000, sessionAmount: 20, initialProgress: 600, timezone: 'Asia/Tokyo',
-  recordStartDate: '2026-10-04', hasLogs: true, unitLocked: true, goalSettingsRevision: 0, today: '2026-10-07', todayStatus: 'DONE',
+  recordStartDate: '2026-10-04', hasLogs: true, unitLocked: true, goalSettingsRevision: 0, answerRevision: 0, today: '2026-10-07', todayStatus: 'DONE',
 };
 const logs = [
   { localDate: '2026-10-06', status: 'DONE', amount: 15 },
@@ -16,11 +16,26 @@ const logs = [
 const today = {
   today: '2026-10-07', yesterday: '2026-10-06', todayLog: logs[1], yesterdayMissing: false,
   prediction: { today: '2026-10-07', todayStatus: 'DONE', progress: { done: 635, total: 3000, completed: false } },
-  context: { goalSettingsRevision: 0, unitLocked: true, recordStartDate: '2026-10-04', unit: 'minutes', sessionAmount: 20 },
+  context: { goalSettingsRevision: 0, answerRevision: 0, unitLocked: true, recordStartDate: '2026-10-04', unit: 'minutes', sessionAmount: 20 },
 };
 
 test('Goal・Today・記録が同じ時点の材料ならそろっていると判断する', () => {
   assert.equal(isSameSnapshot(goal, today, logs), true);
+});
+
+test('回答だけの変更・撤回・同値への再更新も、版の違うGoalとTodayを組み合わせない', () => {
+  const nextGoal = { ...goal, answerRevision: 1, questionPrior: { a: 'HIGH', b: 'LOW' } };
+  const nextToday = { ...today, context: { ...today.context, answerRevision: 1 } };
+  // 設定・日付・実績・記録は同じでも、回答変更後のGoalと遅れて届いた旧Todayを拒否する。
+  assert.equal(isSameSnapshot(nextGoal, today, logs), false);
+  assert.equal(isSameSnapshot(nextGoal, nextToday, logs), true);
+  assert.equal(isSameSnapshot(goal, nextToday, logs), false, '逆順の遅着も拒否');
+  const withdrawn = { ...nextGoal, answerRevision: 2, questionPrior: { a: null, b: null } };
+  assert.equal(isSameSnapshot(withdrawn, nextToday, logs), false);
+  const answeredAgain = { ...nextGoal, answerRevision: 3 };
+  assert.equal(isSameSnapshot(answeredAgain, nextToday, logs), false, '回答値が同じでも版が戻らない');
+  const { answerRevision: _removed, ...oldContext } = today.context;
+  assert.equal(isSameSnapshot(goal, { ...today, context: oldContext }, logs), false, '欠落した版を0へ補完しない');
 });
 
 test('取得した時点がずれた組み合わせを見分ける', () => {
@@ -60,7 +75,7 @@ test('画面の1回の量と違う量で計算した予測は、取得の順番�
     ...today,
     todayLog: null,
     yesterdayMissing: false,
-    context: { goalSettingsRevision: 0, unitLocked: true, recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount },
+    context: { goalSettingsRevision: 0, answerRevision: 0, unitLocked: true, recordStartDate: '2026-10-07', unit: 'minutes', sessionAmount },
     prediction: { ...today.prediction, todayStatus: 'UNRECORDED', progress: { done: 80, total: 100, completed: false } },
   });
   const today10 = resp(10);

@@ -37,7 +37,7 @@ const today = { today: '2026-10-10', yesterday: '2026-10-09', todayLog: null, ye
     observations: { nDD: 0, nDS: 13, nSD: 14, nSS: 0, effectiveTransitions: 27, observedDays: 28, recordedDays: 28 },
     posterior: { a: { alpha: 2, beta: 15 }, b: { alpha: 16, beta: 2 } }, coreMetric: { status: 'available', g50: 1, g80: 1 },
     completion: { status: 'available', scenario: 'TODAY_DONE', p50Days: 1070, p80Days: null }, config: { samples: 200, horizonDays: 1095, seed: 20261012 } },
-  context: { recordStartDate: '2026-09-10', unit: 'minutes', sessionAmount: 30, goalSettingsRevision: 0, unitLocked: false },
+  context: { recordStartDate: '2026-09-10', unit: 'minutes', sessionAmount: 30, goalSettingsRevision: 0, answerRevision: 0, unitLocked: false },
   provenance: { a: 'RECORDS', b: 'RECORDS' }, plan: null };
 goalsHttp.getGoal = async () => { if (holdGoal) await new Promise<void>(resolve => goalWaiters.push(resolve)); return goal(transport.owner) as never; };
 todayHttp.getToday = async () => { if (holdToday) await new Promise<void>(resolve => todayWaiters.push(resolve)); if (failToday) throw new ApiError(503, { error: { code: 'SYNTHETIC_UNAVAILABLE', message: 'synthetic Today503' } }); return { ...today, today: apiDate, prediction: { ...today.prediction, today: apiDate } } as never; };

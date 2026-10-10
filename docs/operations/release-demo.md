@@ -12,7 +12,7 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 | 無料条件・本人運用 | [無料運用の条件](../architecture.md#無料運用の条件)と実プラン・利用量・追加機能を照合し、非商用適合、公開Organization接続、commit作者と自動配備条件、管理共有の制限、上限時の停止／再開方法を記録する。非商用は無収益だけで判定しない。費用が生じる条件なら採用せず再検討 |
 | monorepo root・起動点 | rootの`package.json`／`package-lock.json`で3 workspaceの依存を解決する。BEのProject rootを`apps/api`とする候補ではroot側依存・buildの参照範囲を確認し、設定値と自動検出結果を記録する。[`app.ts`](../../apps/api/src/app.ts)は`buildApp` factory、[`server.ts`](../../apps/api/src/server.ts)が設定・poolを作り`listen()`する起動点。factoryが起動点として誤検出されず、正しいserverがFunctionに含まれ`GET /api/health`がDB到達時200／到達不可時503を返すことを確認 |
 | Prediction build・exports・Node | `packages/prediction`→API／Webの順でbuildし、[`exports`](../../packages/prediction/package.json)の`dist/src/index.js`等とworkspace依存が公開bundleで解決することを確認。`predict`／`predictWithQuestionPrior`の両入口を実行する。公開Node 24.xの実minor／patchを記録し、ローカル24.21.0との互換性を確認 |
-| SPA assets・`/api` | Webのbuild済みassetsが配信bundleへ入り、`/`・`/goals`・GoalのTodayへ直アクセス／再読込できる。hash付きassetsのcacheとindexの再検証を確認。存在しないassets・保護hook通過後の未知API／対象外methodはJSON 404になり、`/api`をSPA HTMLへfallbackしない。同一originでWebとAPIへ到達する |
+| SPA assets・`/api` | Webのbuild済みassetsが配信bundleへ入り、`/`・`/goals`・GoalのTodayへ直アクセス／再読込できる。hash付きassetsのcacheとindexの再検証を確認。存在しないassets・保護hook通過後の未知API／対象外methodはJSON 404になり、`/api`をSPA HTMLへfallbackしない。同一originでWebとAPIへ到達する。既に開いた旧SPAがある更新では、[SPA/API更新の互換境界](#spaapi更新の互換境界192)も確認する |
 | HTTPS・認証・全Set-Cookie | 公開HTTPSの`BETTER_AUTH_URL`と実URLを一致させ、登録→ログイン→再読込→ログアウト→再ログインを3人の端末で確認。全Set-Cookieが欠落・結合されず転送され、Secure・`__Secure-`・HttpOnly・SameSite=Lax、Origin拒否と他userのGoal／記録の分離が保たれる |
 | IP・認証レート制限 | proxyの転送ヘッダーの実形式とhop数を記録し、`TRUST_PROXY_HOPS`とクライアントIPの一致を確認。偽装ヘッダーで回数制限を回避できず、複数Function instance／再起動でもDB上の制限・Retry-Afterが整合すること、共有回線で3人が正当に使えることを確認 |
 | DB接続・migration・休止復帰 | アプリ用5＋認証用2のpoolをinstance数込みでNeonの上限と比較し、idle接続解放・取得待ち・接続切断・既存5秒timeoutを確認。認証用bigint parserとapp側の文字列型を保全。migrationは別実行で直結URLを使い、session advisory lockをtransaction poolerへ流さない。認証→アプリの順、反復・失敗時rollbackを確認。Neonが休止した後のhealth・再ログイン・読込／保存を確認し、初回応答・DB／Functionのメモリ・region間遅延とエラー回復を記録。常時pingで休止を避けない |
@@ -48,6 +48,14 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 | 同期予測と業務API | 隔離localで3合成userが保存＋Today＋session確認を同時に行う条件を定め、両予測入口のCPU／wall time、業務API別p95、待ち行列／event-loop待ち、DB接続数、失敗率を測る。予測回数・同時数・間隔と月間予算を検討する | 認証の既存rate limitを予測×業務APIの予算として流用しない。同期処理が業務要求を詰まらせるかを確認。T-14の500ms未満と旧546.83ms FAIL／CRUD p95 5秒超を保全し、未合意のp95や予算を合格基準にしない。予算未決・既存性能未達なら公開受入を止める | 測定環境／入力／seed／config／件数と各実測、観測できないqueueは未取得、localと公開の差。Node wall timeをVercel Active CPUへ換算しない。公開負荷はProviderの許可と別承認後。新rate limit・worker等はこの文書で採択しない |
 | 復元と再開 | 下の[復旧tabletop](#復旧tabletop削除認証正常更新の巻戻し)を行い、隔離復元・削除再適用・認証無効化・データ損失の扱いを決める | session失効だけで復旧完了にしない。削除A・旧password復活、正常更新Bの巻戻し、schema／業務／認証の不一致が残れば再開停止 | 復元時点・対象範囲・RPO／RTO・再開条件・承認者の未定を解消する。机上合意と将来の実試験を別記録 |
 | デモ・引継ぎ・公開資料 | [Demo Seedの当日受入](demo-seed.md#当日受入と代替デモの引継ぎ83)から相対日と新Goal IDを確認し、主要Flowの代替録画／資料と同一SHAを揃える。担当交代と通信障害を机上で試す | 代替デモの入口・日付・担当が不明なら「準備済み」にしない。実公開URLの機能QAと録画を区別する。Freezeの締切時刻／timezone／提出先は#19で確認し、10/12という日付だけで提出可としない | 説明／操作／代替担当・リハーサル記録は未定。license選択、依存Notice・配布物のSBOM（依存部品一覧）確認も未完で、責任者が対象版／配布形態／必要表示を確認する。未確認から法違反を断定しない |
+
+### SPA/API更新の互換境界（#192）
+
+R-11 Today contextの必須`answerRevision`追加は、旧SPA／新APIでは追加項目、新SPA／旧APIでは必須項目欠落としてstrict schemaに拒否される。SPA/APIを同じbuildで配備しても、既に開いている旧SPAのコードは更新されない。画面内の「再読み込み」（queryの再取得）では回復せず、**新APIと新assetsがそろった後のブラウザ全体reload**が必要。API schemaを緩めたり版を0に補完して混在を受け入れない。
+
+公開先の次の確認は**未実行**。初回公開で旧clientが存在しない場合はその根拠を記録して更新試験を適用外とし、初回の主要Flow確認は残す。旧clientがある運用では、承認された合成Goalだけで旧SPAのタブを保持→新SPA/APIのSHAを確認→旧タブのToday再取得が契約不一致を拒否し画面内再取得だけでは直らないことを確認→ブラウザ全体reload→新assetsと新APIでGoal/Todayの回答版が一致し主要Flowへ戻ることを確認する。新SPA／旧APIも拒否したままで、API更新が確認できるまで成功扱いにしない。
+
+期待SHAと実際のAPI／assetが違う、全体reload後も旧assetまたは契約不一致が残る、混在版の予測を表示する場合は公開更新の受入を停止する。証拠には旧／新SHA、日時、asset URL、両版の組合せ・schema拒否、全体reload後の合成Goal/Today整合、適用外の理由を残す。担当・公開操作は未定で、この手順からデプロイを実行しない。
 
 ### 復旧tabletop：削除・認証・正常更新の巻戻し
 
