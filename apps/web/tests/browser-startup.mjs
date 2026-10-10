@@ -34,6 +34,8 @@ export function launchBrowser({ browser, args, profile, signal, diagnostic = () 
   const elapsed = () => Math.round(performance.now() - started);
   const mark = name => { stage = name; timings[name] ??= elapsed(); };
   const noteIO = (operation, result) => { lastIO = { operation, result, atMs: elapsed() }; };
+  // testのafterが先に済んだ非同期継続から、新しいprocessを所有してはならない。
+  signal?.throwIfAborted();
   const child = io.spawn(browser, args, { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
   const exited = new Promise(resolve => {
     child.once('exit', (code, exitSignal) => {

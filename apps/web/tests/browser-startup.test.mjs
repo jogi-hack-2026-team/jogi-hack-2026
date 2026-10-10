@@ -5,6 +5,7 @@ import { mkdtemp, rm, access } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { PassThrough } from 'node:stream';
 import { test } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -14,6 +15,73 @@ const endpoint = 'ws://127.0.0.1:9222/devtools/browser/synthetic';
 const page = 'ws://127.0.0.1:9222/devtools/page/synthetic';
 const absent = () => Promise.reject(Object.assign(new Error('synthetic missing file'), { code: 'ENOENT' }));
 const stalled = () => new Promise(() => {});
+
+test('startup: a pre-aborted test cannot spawn a new process', () => {
+  const controller = new AbortController();
+  controller.abort(new Error('synthetic already-aborted test'));
+  let spawns = 0;
+  assert.throws(() => launchBrowser({ browser: 'synthetic', args: [], profile: '/synthetic/profile',
+    signal: controller.signal, adapters: { spawn: () => { spawns++; throw new Error('spawn must not be reached'); } },
+  }), /synthetic already-aborted test/);
+  assert.equal(spawns, 0);
+});
+
+test('startup: late responsive build after cleanup cannot create a server or spawn', { timeout: 5000 }, async t => {
+  // 実際のharness本文を別Nodeで実行。buildだけをゲートで遅らせ、timeout後にafterが先行する順序を再現する。
+  // HTTP/Chromeは合成adapterに置換し、副作用の呼出し数を検査する（DB・実Chromeなし）。
+  const harness = new URL('./responsive-details.browser-check.mjs', import.meta.url).href;
+  const script = `
+    import { registerHooks } from 'node:module';
+    const state = { after: [], servers: 0, spawns: 0, events: [] };
+    globalThis.__abortFixture = state;
+    const enteredBuild = new Promise(resolve => state.entered = resolve);
+    state.build = new Promise(resolve => state.release = resolve);
+    const sources = {
+      test: 'export function test(_name, options, fn) { if(options.timeout !== 180000) throw new Error("test timeout changed"); globalThis.__abortFixture.fn = fn; }',
+      vite: 'export function build() { const s = globalThis.__abortFixture; s.events.push("build-start"); s.entered(); return s.build; }',
+      react: 'export default function react() { return {}; }',
+      http: 'export function createServer() { const s = globalThis.__abortFixture; s.servers++; return { once() {}, listen(_p, _h, done) { done(); }, address() { return { port: 12345 }; } }; }',
+      browser: 'export function launchBrowser() { const s = globalThis.__abortFixture; s.spawns++; return { ready: async () => { throw new Error("late spawn reached"); } }; }',
+    };
+    registerHooks({
+      resolve(specifier, context, next) {
+        const name = specifier === 'node:test' ? 'test' : specifier === 'vite' ? 'vite'
+          : specifier === '@vitejs/plugin-react' ? 'react' : specifier === 'node:http' ? 'http'
+          : specifier === './browser-startup.mjs' && context.parentURL === ${JSON.stringify(harness)} ? 'browser' : null;
+        return name ? { url: 'synthetic:' + name, shortCircuit: true } : next(specifier, context);
+      },
+      load(url, context, next) {
+        return url.startsWith('synthetic:') ? { format: 'module', source: sources[url.slice(10)], shortCircuit: true } : next(url, context);
+      },
+    });
+    await import(${JSON.stringify(harness)});
+    const controller = new AbortController();
+    const running = state.fn({ signal: controller.signal, after: fn => state.after.push(fn), diagnostic() {} });
+    await enteredBuild;
+    controller.abort(new Error('synthetic timeout during build'));
+    for (const after of state.after) await after();
+    state.events.push('after-complete');
+    state.release({ output: [{ type: 'chunk', code: '' }] });
+    let error;
+    try { await running; } catch (failure) { error = failure.message; }
+    console.log(JSON.stringify({ servers: state.servers, spawns: state.spawns, events: state.events, error }));
+  `;
+  const child = spawn(process.execPath, ['--input-type=module', '--eval', script], {
+    windowsHide: true, env: { ...process.env, TEST_BROWSER: process.execPath }, stdio: ['ignore', 'pipe', 'pipe'],
+    cwd: fileURLToPath(new URL('../../..', import.meta.url)),
+  });
+  t.after(() => { if (child.exitCode === null && child.signalCode === null) child.kill(); });
+  let stdout = '', stderr = '';
+  child.stdout.on('data', chunk => { stdout += chunk; }); child.stderr.on('data', chunk => { stderr += chunk; });
+  const code = await new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', resolve); });
+  assert.equal(code, 0, stderr);
+  const result = JSON.parse(stdout.trim());
+  t.diagnostic(JSON.stringify({ lateBuildRegression: result }));
+  assert.deepEqual(result.events, ['build-start', 'after-complete']);
+  assert.equal(result.error, 'synthetic timeout during build');
+  assert.equal(result.servers, 0, 'HTTP server was created after cleanup had already run');
+  assert.equal(result.spawns, 0, 'Chrome was spawned after cleanup had already run');
+});
 
 function fixture(t, options = {}) {
   const child = new EventEmitter();

@@ -40,3 +40,13 @@ endpoint/profile不在、read停止、HTTP本体/body停止、page不在、WS停
 コード変更はbrowser harnessだけ。既存9scenarioのUI/native入力/assertは維持し、Engine/API/認証/UIソース・依存版・workflow/test総timeout・required check・設定権限は変更しない。正式Product仕様への影響がないためProduct Specの更新と新P/D採択は不要。AIセルフレビューはHuman Reviewの代替ではない。
 
 Linux CIの新HEAD結果、PR source HEADと合成merge SHA、初回attemptはIssue/PRへ記録する。根因確定・長期flake消失・実認証/DB E2E・公開環境・未知の子孫全停止・速度改善は未検証。merge/deployは今回行わない。
+
+## 追加レビュー：中断後の新規起動を防ぐ
+
+初期HEAD `6fdccba6232d43c95b617279a734a2ae01cf8e4d`の[Application初回CI](https://github.com/jogi-hack-2026-team/jogi-hack-2026/actions/runs/38061780566)はEngine77/API198/Web151件・fail/cancel/skip各0で成功。同じChrome PIDが10013msの途中診断後12261msでready、UI9シナリオ成功・exit0を観測した。ただしendpointは9419msで検出され、元の10秒endpoint不在失敗は再現していない。上記ローカル検証時点の未確認事項のうち、10秒診断後の実Chrome readyはこの初回CIで確認できた。
+
+その後の独立レビューでShould Fixが1件確定した。build中にtestがtimeoutし、session未作成のafterが完了した後、buildの遅延完了からChromeを新規spawnできた。これは元のCI起動遅延とは別のabort/cleanup保証の穴であり、初回CI成功でも検出できなかった。
+
+spawn直前にsignalの中断を確認し、実responsive harnessのbuild完了直後・server生成前にも確認を加えた。事前中断と遅延buildの2回帰は修正前に2/2失敗し、修正後に成功。後者は別Nodeで実際のharness本文を実行し、buildだけをゲートで止め、abort→after完了→build解放を再現する。HTTP/Chromeを合成adapterへ置換し、server生成0・spawn0と中断理由を確認する。test timeout180秒・UI/assert本体は保持した。
+
+追加後の合成起動/endpoint回帰は30/30成功（startup24＋既存endpoint6）、通常Webは137件中136成功/fail0/cancel0/既存browser入口skip1。全実Chrome17/17・responsive9シナリオ成功、startup2292ms・exit0・Browser.closeのみ。Foundation102文書/1573リンク/7ignoreも成功。最終HEADのCIはIssue/PRへ記録し、初期HEADの成功をその代替にしない。

@@ -52,6 +52,8 @@ test('Today responsive details: real viewport, native keyboard and preserved use
       entry: fileURLToPath(new URL('./responsive-details.browser.tsx', import.meta.url)), formats: ['iife'], name: 'ResponsiveDetailsTests',
     } },
   });
+  // build中のtimeoutではafterが先行する。終了済みtestの継続からHTTP/Chromeを起動しない。
+  t.signal.throwIfAborted();
   const code = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(b => b.output)
     .filter(out => out.type === 'chunk').map(out => out.code).join('\n');
   const html = '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><div id="app"></div><script>'
