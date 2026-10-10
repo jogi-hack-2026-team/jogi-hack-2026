@@ -517,7 +517,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 
 ### Known Limitations
 
-1. 影響は再開までの待ち日数に集約される。連続日数による継続しやすさは表さず、強い継続傾向がある人では約1日小さく出る（控えめ側）。
+1. 影響は再開までの待ち日数に集約され、連続日数による継続しやすさは表さない。[合成Bの連続中](prediction/evidence.md#合成ユーザー)では完了日の期待値差4.44日と再開待ちの期待値3.33日に約1.1日差があった。この期待値比較は表示する中央値g50の誤差ではなく、実ユーザーの誤差方向・大きさは未検証。
 2. 因果効果ではない。記録から推定した傾向が今後も続くと仮定している。
 3. やらなかった日ほど未記録になる場合など、欠測が行動状態に依存する（MNAR）と、観測された遷移だけの予測には選択の偏りが残る。UNKNOWNのペアを除くことはその補正ではない。休んだ状態が欠けると楽観的になる可能性があるが、誤差の方向・大きさは欠測の仕組みによる。前日補完は欠測を減らす狙いで、実ユーザーでの効果と予測精度は未検証。
 4. Beta(2,2)により、記録が少ない間は値が中央（確率0.5）側に寄る。
@@ -553,7 +553,7 @@ T_skip = T_done + G,   G ~ Geometric(b),   G ⫫ T_done | θ
 | T-11 | データ不足（前提：未達成）。中心指標は、今日が未記録かつ`nSD+nSS = 0`のときだけ`insufficient`。完了の目安は、`nDD+nDS = 0`または`nSD+nSS = 0`なら今日の記録状態によらず`insufficient`。達成済みが優先されること（`logs = []`かつ`initialProgress = totalRequired`で、中心指標`not_applicable / COMPLETED`、完了の目安`completed`）も確かめる |
 | T-12 | 今日が記録済み（前提：未達成）。中心指標は遷移数によらず`not_applicable / TODAY_RECORDED`。完了の目安は、両起点の遷移が各1件以上なら`CURRENT_STATE`から計算し、不足なら`insufficient`（例：今日のSKIPPEDだけの記録では`not_applicable / TODAY_RECORDED`と`insufficient`） |
 | T-13 | 今日より後の日付の記録・同じ日付の重複は入力エラー |
-| T-14 | 性能：`requiredFutureDone = 120, 400, 1095`、`K = 200`でそれぞれ500ms未満（開発機で計測して記録）。試作（微小確率の打ち切りなし）ではNode 24.21.0で最大約260ms（[Evidence](prediction/evidence.md#dpとmonte-carloの比較)）。超える場合は完了の目安だけを後から計算する形に落とし、中心指標は止めない |
+| T-14 | 性能：`requiredFutureDone = 120, 400, 1095`、`K = 200`でそれぞれ500ms未満（開発機で計測して記録）。当時の試作（微小確率の打ち切りなし）はNode 24.21.0で6必要回数条件中の最大約260msで、全入力の上限ではない（[条件とEvidence](prediction/evidence.md#dpとmonte-carloの比較)）。超える場合は完了の目安だけを後から計算する形に落とし、中心指標は止めない |
 | T-15 | 数値部品を個別に検証：Beta-Geometricの整数比較が極端なパラメータ（`α, β`が2と数千）でも正しく終わる、Gamma・Betaサンプラーの平均と分散が理論値と許容誤差内、`seedFor`・`splitmix32`・Beta抽選のテストベクトル |
 
 timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテストで扱う（Engineは`today`を受け取るだけ）。
@@ -661,7 +661,11 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 担当者は最新の検証対象HEAD・採択日・依頼者の方針・レビュー根拠・未確認をIssue #162とPR #173へ記録する。今回の静的確認の基準HEADは`58c21ccc90f1dc332abdf547ffd3f9173284e1eb`（#175統合後のmainを取り込み済み）。前回`cf45ed3bf50af1e331fa8642e95bcbe7783e9693`の型検査・cleanup12回帰・build・Foundationと同SHAのCI、保存JSONの収支・集計・値の保全、#172に対する親の独立精査を判断根拠とする。今回の文書最終HEADでリンク・履歴の全文保存・採択状態の整合を敵対的に再確認し、最終SHA・CI結果は同Issue/PRに追記する。同期CPUが他操作を待たせる制約、測定条件、旧FAIL、T-14の閾値を保持する。
 
-**#175後の再測定は未実施。** 現mainのGoal POSTは`Idempotency-Key`、Log PUTは`expectedGoalSettingsRevision`が必須だが、既存harnessは未対応で現APIへそのまま再実行できない。過去のM5測定（生JSONのrepositoryHeadは`bb8aa2a6b1199d6b6944a4793089a71129ccfe88`）は当時の実行元SHAの証拠として保持し、現main／公開runtimeの性能を再検証したとは扱わない。互換修正・公開向け送信/metricsは後続の別作業で、公開受入は#83に残す。本記録の採択とmainへのMerge・deployは別で、これらの操作は行わない。
+**#175後の契約追従は[PR #184](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/184)でmainへ実装済み。** [harness](../experiments/api-mixed-load/run.ts)はGoal POSTごとにUUIDの`Idempotency-Key`を送り、closed/open両Log PUTへ作成応答の`goalSettingsRevision`を`expectedGoalSettingsRevision`として渡す。作者はHEAD `5c4a05a0a21b1ca52bd53b1842107bf4338a2774`、Apple M5／Node 24.21.0で原本を再実行しexit 0・失敗0・oracle不一致0を報告した。新しい結果JSONはcommitされていないため、保存済みJSONをその再実行の生証拠と扱わない。
+
+[同HEADの独立レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/184#pullrequestreview-5471734261)はWindows／Node 24.21.0、合成3人・`MIXED_LOAD_SIZES=1,2,3`での機能smoke。起動引数をfile URLにするローカルadapterとfetch観測を使い、既定T-14サイズや公開性能の再測定ではない。Windows原本のchild `--import C:\...`は`ERR_UNSUPPORTED_ESM_URL_SCHEME`になる残件があり、契約追従済みと原本のWindows完走を区別する。
+
+過去のM5測定（保存JSONのrepositoryHeadは`bb8aa2a6b1199d6b6944a4793089a71129ccfe88`）と旧FAILは当時の証拠として保持する。main `36430e04`自体の混合負荷再測定・公開runtime・公開向け送信/metricsは未確認で、公開受入は#83に残す。D-28の採択・mainへのMerge・公開deployは別の確認である。
 
 旧D-01〜D-14・D-16と比較・代替案は[旧Architecture Decision Log](https://github.com/jogi-hack-2026-team/jogi-hack-2026/blob/77c71a5f248a4dce4ce9fb8af6619b41541be9d8/archive/music-exploration/docs/architecture.md#architecture-decision-log)に保管する。
 
@@ -679,7 +683,7 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 
 ### D-19
 
-2026-09-30 / **DECIDED（依頼者判断）** / ADR-001。予測モデルにM1（2状態・1次・時間一様のBayesian Markov連鎖）を採用し、M0（iid Bernoulli）とM2（3状態：SKIPPED / DONE_1 / DONE_2+）は不採用とする。M2に固有の追加効果は最大約1.1日で、30日分の記録の1日を反転しただけで推定が最大約2.1日（P95）動く。状態依存がない場合に誤って効果を大きく出す割合もM2の方が多い。14〜60日分の記録ではどのモデルも選べない（判定保留95〜100%）。M0は再開しにくさを表せず、継続傾向がある人を一貫して小さく見積もる。[詳細](prediction/decision-log.md#adr-001-m1を採用しm0m2を不採用)。
+2026-09-30 / **DECIDED（依頼者判断）** / ADR-001。予測モデルにM1（2状態・1次・時間一様のBayesian Markov連鎖）を採用し、M0（iid Bernoulli）とM2（3状態：SKIPPED / DONE_1 / DONE_2+）は不採用とする。採択根拠は必要回数120・記録なし10%・各14/30/60日の合成A〜Dの比較。合成Bの連続中では完了日の期待値差Δ4.44日と再開待ちの期待値3.33日の差が約1.1日で、表示g50の誤差や追加効果の一般的な上限ではない。この合成比較では、30日分の記録の1日を反転した時のM2の推定変化は最大約2.1日（P95、Beta(2,2)）で、状態依存がない合成Aで誤って効果を大きく出す割合もM2の方が多い。合成A〜Dの14〜60日でのモデル選択は判定保留95〜100%だった。M0は直前状態による確率差を表せず、合成B・Dの連続中（Beta(1,1)、各150人）のΔの80%区間が真値を含む割合は3〜59%だった。表示g50や実ユーザー一般の誤差方向・精度は未検証であり、継続傾向がある人を一貫して過小評価するとはいえない。[比較条件と全結果](prediction/evidence.md#m0--m1--m2の比較)・[詳細](prediction/decision-log.md#adr-001-m1を採用しm0m2を不採用)。
 
 ### D-20
 
