@@ -5,7 +5,7 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 
 ## 統合版のデプロイ準備（#205）
 
-[Task #205](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/205)は#83の配備前準備を扱う文書Task。2026-10-10時点のmain `041f24c`と、UI [#202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202) `f3c4a3a`・新Engine [#204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204) `5b479e6`のローカル併用を確認対象とする。両PRはこの確認時点では未merge。実際のmerge後は最新mainのSHAとtree（ファイル内容の識別）を記録し、差分があれば影響する確認をやり直す。Cloud Runの履歴を現在の配備手順として使わない。
+[Task #205](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/205)は#83の配備前準備を扱う文書Task。初回はmain `041f24c`と、UI [#202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202) `f3c4a3a`・新Engine [#204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204) `5b479e6`の未merge時点のローカル併用を確認した。2026-10-10の追確認では#202・#204とVercel候補の[#209](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/209)がmerge済みで、統合後mainは`22aa0dab79135b0913d4056129ab28624bed38a4`。配備対象はその時点のcleanなSHAとtree（ファイル内容の識別）で改めて固定し、差分があれば影響する確認をやり直す。Cloud Runの履歴を現在の配備手順として使わない。
 
 ### Secret不要のローカル確認
 
@@ -66,18 +66,18 @@ PowerShell 7でブロック全体を一度に実行する（保存した`.ps1`�
 | `BETTER_AUTH_ALLOW_HTTP`／`AUTH_TRUSTED_ORIGINS` | HTTP例外はlocal container確認用。追加originは認証と状態変更業務APIの許可先になる | 公開でHTTP例外を有効にしない。CORS設定の代用ではなく、originを増やす必要があるなら同一origin設計を再確認 |
 | `TRUST_PROXY_HOPS` | 既定0。実際の転送経路・header形式・client IPを確認して決める | Vercelという名前だけでhop数を推測しない。設定変更・公開検証は別の作業 |
 | `AUTH_SIGN_IN_MAX`／`AUTH_SIGN_UP_MAX` | 1接続元60秒の試行上限、各既定5 | 共有会場回線のQAと認証防御を照合。業務API・予測のCPU予算とは別。今回上限を変更しない |
-| `WEB_DIST` | FastifyからSPA配信する方式ではbuild済みWeb directoryを指定 | 未指定ならSPAを配信しない。bundle内の実pathとassets収容、同一origin経路が未決 |
+| `WEB_DIST` | Docker／常駐serverでFastifyからSPA配信する場合にbuild済みWeb directoryを指定 | 常駐serverは未指定ならSPAを配信しない。Vercel専用entryはこの外部値を使わずbundle内のWeb directoryを解決する（[候補手順](vercel-bundle.md)）。公開先でのassetsと同一origin経路は未確認 |
 | `HOST`／`PORT`／`LOG_LEVEL`／`SHUTDOWN_TIMEOUT_MS` | 常駐Nodeのbind・port・log・終了待ち。host既定127.0.0.1、port既定3000、終了待ち既定10秒 | Functionの起動・休止と同じと仮定せずadapterで確認。既存SIGTERM処理だけでidle解放成功にしない |
 | `SCHEMA_CHECK_TIMEOUT_MS`／`SCHEMA_CHECK_QUERY_TIMEOUT_MS` | `db:check`専用の有限上限。既定30秒／5秒、各1000〜600000 ms | [I/O限界を含む手順](../DEVELOPMENT_GUIDE.md#起動)に従う。timeout・不完全JSONを成功とせず、今回DBへ接続しない |
 | `LOCAL_DB_PASSWORD`／`LOCAL_APP_PORT`／`LOCAL_DB_PORT` | local Compose専用 | 公開Functionの必須設定としてコピーしない |
 
 ### 設定変更が必要になり得る箇所と順序
 
-公式[Fastify起動点](https://vercel.com/docs/frameworks/backend/fastify)はProject rootからの`src/server.*`等を検出する。repo rootにある本APIは`apps/api/src/server.ts`で、`apps/api`をrootにする候補もworkspace依存・Webのbundle収容が未確認。`src/app.ts`はfactoryで`listen()`しない。現checkoutにはVercelのProject設定／配備設定がなく、自動検出成功を断定しない。**Root Directory・Install/Build Command・起動点・assets収容・同一origin routingを一組で決める**。FE/BEを別originに分けるだけでは現HTTP clientの認証条件を満たさない。必要なら設定／起動点の最小変更を別Issueでレビューし、今回`vercel.json`やAPIコードを追加しない。
+公式[Fastify起動点](https://vercel.com/docs/frameworks/backend/fastify)にはnative検出もあるが、merge済み#209の候補はrepository rootの[`vercel.json`](../../vercel.json)と[`apps/api/src/vercel.ts`](../../apps/api/src/vercel.ts)からBuild Outputを明示する。[候補手順](vercel-bundle.md)のroot・Install/Build Command・起動点・assets・同一Function routingは実装とローカル検証済み。`app.ts`はfactoryで、常駐用`server.ts`とVercel専用entryを区別する。**Provider Project設定・実Secret・公開経路・実DB休止復帰は未確認**で、ローカル成功を公開配備成功へ読み替えない。FE/BEを別originに分けるだけでは現HTTP clientの認証条件を満たさない。公開側の受入は#83で行い、この文書Taskから設定／APIコードを変更しない。
 
 1. 配置・用途・本人運用の条件と¥0停止方針を確認する。実アカウントのplan・追加機能・commit作者／Login Connections・public Organization接続／fork承認・regionと運用担当を記録する。ハッカソン賞金の非商用適否は資料だけでは断定せず未決として残す。他2人の公開URL QAをVercelの3人管理共有にしない。
 2. 上記のローカル確認とbundleの検査を行う。公式ではFastifyは単一Fluid Function、標準Node bundle上限250 MB。[Node 24.x](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)の実minor／patchは固定できないため公開側の版・bundleサイズ・Prediction両入口を再確認する。既存local buildをVercel buildとしない。
-3. 認証・DB・資源の公開適合を下の[採用前検証](#公開候補の採用前に行う最小検証)へ渡す。[HTTP client](../../apps/web/src/api/http.ts)と[guard](../../apps/api/src/http/guards.ts)は同一origin Cookie・変更要求のOrigin確認を使い、API側に別origin用CORS配信設定はない。CSRF／Origin拒否を弱めず、全Set-Cookie・HTTPS・proxy IPを実経路で確認する。[2 pool](../../apps/api/src/server.ts)のidle解放／復帰は[公式pool lifecycle](https://vercel.com/kb/guide/connection-pooling-with-functions)との適合が未確認で、必要なhook変更は別レビュー。既定app 5＋auth 2に多instance数を掛け、migration等の別接続も加えてDB上限と比較する。
+3. 認証・DB・資源の公開適合を下の[採用前検証](#公開候補の採用前に行う最小検証)へ渡す。[HTTP client](../../apps/web/src/api/http.ts)と[guard](../../apps/api/src/http/guards.ts)は同一origin Cookie・変更要求のOrigin確認を使い、API側に別origin用CORS配信設定はない。CSRF／Origin拒否を弱めず、全Set-Cookie・HTTPS・proxy IPを実経路で確認する。Vercel専用entryはapp／authの2 poolへ[公式pool lifecycle](https://vercel.com/kb/guide/connection-pooling-with-functions)のhookを登録し、ローカルで登録境界を確認済みだが、公開Functionの実idle解放／復帰は未確認。既定app 5＋auth 2に多instance数を掛け、migration等の別接続も加えてDB上限と比較する。
 4. 新Engine #204は通常の完了分布を数値積分し、条件外ではsamplingへ戻る。標準入力だけの低CPU結果から最大入力・fallback・同時要求の上限を保証しない。両入口、T-14既定入力、fallback／資源上限拒否、予測＋保存／session混合を条件別に確認し、500ms条件・CPU／wall time・p95・失敗・メモリ・月間仮定を残す。旧mixed FAILを保持し、Node wall timeをVercel Active CPUへ換算しない。
 5. migrationは公開server起動と別の承認された実行にし、`db:check`と合成業務往復の結果を確認してから公開受入を判断する。health 200だけで先へ進まない。backup・復元方式／費用・削除再適用・旧認証失効・RPO/RTO・証拠退避・代替デモ担当は下の[運用gate](#公開前のgateと証拠)で決める。担当や中止条件が未定なら配備開始しない。
 
@@ -92,7 +92,7 @@ root・entry・配備物のローカル準備は[#208のVercel候補手順](verc
 | 確認対象 | 最小の確認と合格の根拠 |
 | --- | --- |
 | 無料条件・本人運用 | [無料運用の条件](../architecture.md#無料運用の条件)と実プラン・利用量・追加機能を照合し、非商用適合、公開Organization接続、commit作者と自動配備条件、管理共有の制限、上限時の停止／再開方法を記録する。非商用は無収益だけで判定しない。費用が生じる条件なら採用せず再検討 |
-| monorepo root・起動点 | rootの`package.json`／`package-lock.json`で3 workspaceの依存を解決する。BEのProject rootを`apps/api`とする候補ではroot側依存・buildの参照範囲を確認し、設定値と自動検出結果を記録する。[`app.ts`](../../apps/api/src/app.ts)は`buildApp` factory、[`server.ts`](../../apps/api/src/server.ts)が設定・poolを作り`listen()`する起動点。factoryが起動点として誤検出されず、正しいserverがFunctionに含まれ`GET /api/health`がDB到達時200／到達不可時503を返すことを確認 |
+| monorepo root・起動点 | [候補手順](vercel-bundle.md)どおりrepository rootの`package.json`／`package-lock.json`で3 workspaceの依存を解決し、実Projectのroot・build設定と生成物を照合する。[`app.ts`](../../apps/api/src/app.ts)は`buildApp` factory、[`server.ts`](../../apps/api/src/server.ts)は常駐用、[`vercel.ts`](../../apps/api/src/vercel.ts)は専用Function entry。指定したentryが実Functionに含まれ、`GET /api/health`がDB到達時200／到達不可時503を返すことを確認 |
 | Prediction build・exports・Node | `packages/prediction`→API／Webの順でbuildし、[`exports`](../../packages/prediction/package.json)の`dist/src/index.js`等とworkspace依存が公開bundleで解決することを確認。`predict`／`predictWithQuestionPrior`の両入口を実行する。公開Node 24.xの実minor／patchを記録し、ローカル24.21.0との互換性を確認 |
 | SPA assets・`/api` | Webのbuild済みassetsが配信bundleへ入り、`/`・`/goals`・GoalのTodayへ直アクセス／再読込できる。hash付きassetsのcacheとindexの再検証を確認。存在しないassets・保護hook通過後の未知API／対象外methodはJSON 404になり、`/api`をSPA HTMLへfallbackしない。同一originでWebとAPIへ到達する。既に開いた旧SPAがある更新では、[SPA/API更新の互換境界](#spaapi更新の互換境界192)も確認する |
 | HTTPS・認証・全Set-Cookie | 公開HTTPSの`BETTER_AUTH_URL`と実URLを一致させ、登録→ログイン→再読込→ログアウト→再ログインを3人の端末で確認。全Set-Cookieが欠落・結合されず転送され、Secure・`__Secure-`・HttpOnly・SameSite=Lax、Origin拒否と他userのGoal／記録の分離が保たれる |
