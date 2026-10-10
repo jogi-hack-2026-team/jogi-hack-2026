@@ -6,12 +6,12 @@
 
 | 境界 | 実装 |
 | --- | --- |
-| Project root | repository root。3 workspaceのroot lockを使う。[vercel.json](../../vercel.json)のInstall Commandは`npm ci --ignore-scripts --no-audit --no-fund`、Build Commandは`npm run build:vercel` |
+| Project root | repository root。3 workspaceのroot lockを使う。[vercel.json](../../vercel.json)のInstall Commandは`npm ci --include=dev --ignore-scripts --no-audit --no-fund`、Build Commandは`npm run build:vercel` |
 | build順序 | 既存`npm run build`（Prediction→API→Web）後、[build-vercel.mjs](../../scripts/build-vercel.mjs)が公式Build Output API v3の`.vercel/output`を生成 |
 | Function | `.vercel/output/functions/server.func/apps/api/dist/vercel.js`。[専用entry](../../apps/api/src/vercel.ts)が既存`buildApp`を遅延起動。Node runtime指定は`nodejs24.x`、raw request/responseを保持するため`shouldAddHelpers:false` |
 | routing | 全pathを同じFunctionへ渡し、既存FastifyのAPI・SPA fallback・assets・Cache-Controlを使用。別のSPA fallbackを追加しない |
 | assets | 最新Web dist全体をFunction内の`apps/web/dist`へコピー。HTML/CSSのローカル参照、全ファイルhash、分離されたWOFF/WOFF2も検査。Vercel entryのWeb rootは生成物内から求め、`WEB_DIST`の外部値やcwdに依存しない |
-| 依存 | root lockからAPIのproduction依存とPredictionのcompiled exportsを同梱。開発依存・`.env*`・`.npmrc`・`.local`の混入、境界外／循環リンク、250 MiB超過を拒否 |
+| 依存 | root buildにはdev依存もinstallし、Functionには別installでAPIのproduction依存とPredictionのcompiled exportsだけを同梱。コピー前の各distとコピー後のFunctionで`.env*`・`.npmrc`・`.local`、境界外／循環リンクを検査し、開発依存と250 MiB超過も拒否 |
 | DB lifecycle | Vercel entryだけで固定`@vercel/functions@3.9.11`の`attachDatabasePool`をapp/auth双方へ登録。既存pgの上限5/2・型・timeoutを維持。hookはrelease後のidle猶予を`waitUntil`へ登録し、poolを強制終了する処理ではない |
 
 Docker・常駐`server.ts`の起動と終了、migration、認証設定、FEソース、Engine数式はこのTaskの変更対象外。ネイティブFastify検出も公式に存在するが、この候補ではmonorepoの資産・依存を明示するBuild Outputを使う。汎用serverless adapterが必須という判断ではない。
@@ -21,7 +21,7 @@ Docker・常駐`server.ts`の起動と終了、migration、認証設定、FEソ�
 定義済みNode **24.21.0**をPATHの先頭に置き、repository rootで実行する。実`.env`を読み込まず、Vercel CLIのlogin/link/deployを呼ばない。
 
 ```powershell
-npm ci --ignore-scripts --no-audit --no-fund
+npm ci --include=dev --ignore-scripts --no-audit --no-fund
 npm run typecheck
 npm run build:vercel
 npm run verify:vercel
@@ -31,6 +31,10 @@ pwsh -NoProfile -File scripts/check-foundation.ps1
 `verify:vercel`はbuild完了後に実行する。専用loopback port 0と接続しないpool fixtureだけを使う。Functionだけをworktree外のTempへコピーしたfresh Node processでPrediction/entryのimport、SPA deep link、API／missing asset境界、配備した全assetのHTTP hashを照合する。起動失敗、再試行、同時cold request、切断、Secret非生成、リンク境界も検査する。生成したTemp fixtureは終了時に削除する。
 
 `bundle-manifest.json`にNode版、総bytes、ファイル別hash、HTML/CSS参照数、フォント数を記録する。Function設定ファイルはmanifest作成後に追加されるため、manifestのファイル一覧には含めず別途照合する。公開先の実runtime、URL書換え、全Set-Cookie、proxy、実DB接続・休止、CPU／混合負荷をこのローカル試験から成功扱いにしない。
+
+Projectの`NODE_ENV=production`はinstallにも作用し、npmは既定でdev依存を省く。rootはTypeScript/Viteでbuildするため`--include=dev`を明示する。Function内の別installは`--workspace=@futureroi/api --omit=dev`を維持し、build専用の依存を配備物へ入れない。
+
+Application CIの専用jobは秘密値・DBなしで`NODE_ENV=production`と実`vercel.json`のInstall Commandを使い、`build:vercel`と配備構造・コピー前／asset境界の軽量回帰を実行する。外部Tempで全assetをHTTP取得する試験は上記`verify:vercel`の明示実行に残す。
 
 ## 統合と公開前の手動ステップ
 
@@ -47,6 +51,7 @@ pwsh -NoProfile -File scripts/check-foundation.ps1
 
 ## 一次根拠
 
+- [Vercelのproduction install](https://vercel.com/kb/guide/dependencies-from-package-json-missing-after-install)、[npm ciのinclude/omit](https://docs.npmjs.com/cli/v11/commands/npm-ci/)：Projectの環境値がinstallへ渡ることと、dev依存の明示収容。
 - [Build Output API configuration](https://vercel.com/docs/build-output-api/configuration)：version 3とroutes。
 - [Build Output API primitives](https://vercel.com/docs/build-output-api/primitives)：Functionディレクトリ、handler/runtime、Nodejs launcherとraw HTTP。
 - [Fastify on Vercel](https://vercel.com/docs/frameworks/backend/fastify)：ネイティブ対応とFunctionへの収容。

@@ -32,6 +32,13 @@ export async function inventory(directory) {
   return files;
 }
 
+export async function copyBuildDirectory(source, destination) {
+  if (await realpath(source) !== resolve(source)) throw new Error('Refuse a linked build directory');
+  // dereference後は元のリンク境界が失われるため、コピー元を先に検査する。
+  await inventory(source);
+  await cp(source, destination, { recursive: true, dereference: true });
+}
+
 export async function verifyWebAssets(webDirectory) {
   const boundary = await realpath(webDirectory);
   let references = 0;
@@ -69,7 +76,7 @@ export async function buildBundle() {
     await cp(join(workspace, name), join(fn, name));
   }
   for (const name of ['apps/api/dist', 'apps/web/dist', 'packages/prediction/dist']) {
-    await cp(join(workspace, name), join(fn, name), { recursive: true, dereference: true });
+    await copyBuildDirectory(join(workspace, name), join(fn, name));
   }
   // lock固定のAPI runtimeだけを取得。scriptsは実行せず、既存cacheを優先する。CLI login/deployを呼ばない。
   if (!process.env.npm_execpath) throw new Error('Use npm run build:vercel');

@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { cp, lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { inventory, verifyWebAssets } from '../build-vercel.mjs';
+import { copyBuildDirectory, inventory, verifyWebAssets } from '../build-vercel.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = join(root, '.vercel/output');
@@ -23,7 +23,7 @@ async function temporary(t) {
   return directory;
 }
 
-test('生成物のhandler/route・全Web assetのhashを照合し、開発設定を同梱しない', async () => {
+test('配備構造: handler/route・全Web assetのhashを照合し、開発設定を同梱しない', async () => {
   const config = JSON.parse(await readFile(join(output, 'config.json'), 'utf8'));
   assert.deepEqual(config, { version: 3, routes: [{ src: '/(.*)', dest: '/server' }] });
   assert.deepEqual(JSON.parse(await readFile(join(bundle, '.vc-config.json'), 'utf8')),
@@ -32,12 +32,41 @@ test('生成物のhandler/route・全Web assetのhashを照合し、開発設定
   const copied = await inventory(join(bundle, 'apps/web/dist'));
   assert.deepEqual(copied, original);
   const files = await inventory(bundle);
-  assert.ok(!files.some(file => /node_modules\/(?:typescript|embedded-postgres)\//.test(file.path)));
+  assert.ok(!files.some(file => /node_modules\/(?:typescript|vite|embedded-postgres)\//.test(file.path)));
   const manifest = JSON.parse(await readFile(join(output, 'bundle-manifest.json'), 'utf8'));
   assert.ok(manifest.bytes < 250 * 1024 * 1024);
   assert.equal(manifest.assetReferences, await verifyWebAssets(join(bundle, 'apps/web/dist')));
   // config自体は最後に追加される。manifestはその前の配備ファイルを記録する。
   assert.deepEqual(files.filter(file => file.path !== '.vc-config.json'), manifest.files);
+});
+
+test('コピー前に境界外・循環junctionとローカル設定を拒否し、内部linkは同じhashで収容する', async t => {
+  const directory = await temporary(t);
+  const source = join(directory, 'source');
+  const destination = join(directory, 'destination');
+  const outside = join(directory, 'outside');
+  await mkdir(source);
+  await mkdir(outside);
+  await writeFile(join(outside, 'sentinel.css'), '/* harmless synthetic sentinel */');
+  await symlink(outside, join(source, 'escape'), 'junction');
+  await assert.rejects(copyBuildDirectory(source, destination), /escapes/);
+  await assert.rejects(lstat(destination), { code: 'ENOENT' });
+  await rm(join(source, 'escape'));
+  await symlink(source, join(source, 'cycle'), 'junction');
+  await assert.rejects(copyBuildDirectory(source, destination), /cycle/);
+  await rm(join(source, 'cycle'));
+  await writeFile(join(source, '.env.fixture'), 'synthetic=fixture');
+  await assert.rejects(copyBuildDirectory(source, destination), /Local configuration/);
+  await rm(join(source, '.env.fixture'));
+  const linkedRoot = join(directory, 'linked-root');
+  await symlink(outside, linkedRoot, 'junction');
+  await assert.rejects(copyBuildDirectory(linkedRoot, destination), /linked build directory/);
+  await assert.rejects(lstat(destination), { code: 'ENOENT' });
+  await mkdir(join(source, 'internal'));
+  await writeFile(join(source, 'internal/sentinel.css'), '/* owned internal fixture */');
+  await symlink(join(source, 'internal'), join(source, 'internal-link'), 'junction');
+  await copyBuildDirectory(source, destination);
+  assert.deepEqual(await inventory(destination), await inventory(source));
 });
 
 // Windowsの1万ファイル前後のcopy/cleanupを含む期限。childの実行上限50秒・各asset応答5秒は別に維持する。
