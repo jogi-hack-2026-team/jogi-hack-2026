@@ -13,13 +13,15 @@
 
 更新画面の実API/新規Chrome context撮影16ケースは横溢れ・HTTP400+・pageerror0。320/390/640/960/1440のmobile初期折畳み/desktop初期展開、Enter、実SVG幅、末尾scroll、390×568非重複のroot QAも書込0で成功。独立担当は4状態の実API累計/目標/残り、stepper上下限・無効入力非保存、昨日入力保持、短高/文字200%、resize開閉保持、GET503故障注入から実API再取得への復帰を確認した。故障注入503は期待した1件で、実API障害の受入とは分ける。独立Goal/Log書込0、pageerror0。実画素レビューは主従改善・新P0/P1/P2なし。runtime/stepper-smoke.jsonは実APIのnative keyboard・focus・境界5観測を保持する。
 
-Web全体105 pass / 1 skip（Chromeは別入口）、量pure4件、AmountEditor実React Chrome13ケース、ResponsiveDetails native入力とProgressSummary量境界の独立専用回帰を追加した。既存owner/確認/保存日/昨日跨日の回帰assertは保全する。rootは既存の追加QA Goalだけ再保存PUT200を1回確認し、DONE20分・2026-10-10・可視の記録済み見出しfocusを保持。4つのプレビューfixture・アカウントは作り直していない。最終Chrome統合は14/14 pass・fail/skip0（外側8組＝既存hook6＋量1＋responsive1、内側native開閉/量比較subtest6）。実績量境界は7ケース。最終型・本番build・Foundation（98 text files／1475 local links）も成功。既存の500kBチャンク警告は残る。
+Web全体111 pass / 1 skip（Chromeは別入口）、量pure4件、AmountEditor実React Chrome13ケース、ResponsiveDetails native入力とProgressSummary量境界の独立専用回帰を追加した。既存owner/確認/保存日/昨日跨日の回帰assertは保全する。rootは既存の追加QA Goalだけ再保存PUT200を1回確認し、DONE20分・2026-10-10・可視の記録済み見出しfocusを保持。4つのプレビューfixture・アカウントは作り直していない。最終Chrome統合は14/14 pass・fail/skip0（外側8組＝既存hook6＋量1＋responsive1、内側native開閉/量比較subtest6）。実績量境界は7ケース。最終型・本番build・Foundation（98 text files／1475 local links）も成功。既存の500kBチャンク警告は残る。
 
 実APIfixtureの達成済みは100/100等号で、超過の実APIケースは未検証。超過125/100・等号・未達999/1000・minutesの正確な量は実ProgressSummaryを合成propsで描いた部品回帰として分ける。記録済み昨日Correctionのlive相互lockは専用fixtureがなく未検証、コードと既存境界回帰の確認に限定する。iOS/Safari・実端末keyboard/safe-area・自然日跨ぎ・本番・本人の最終UX受入は未確認。
 
 Library代表2枚は同じIDのversion2へ置換し、元ファイルへ全xattrsを適用した。Brave専用Today URLはログイン画面への遷移を実観測し待機タブを保持する。利用者ブラウザでログイン後のTodayは未確認。専用runtimeのlocalhost:61813を継続稼働させ、通常checkout/Docker/既存DB/userdataを保全する。
 
 証跡：dawn-ui-evidenceのvisual-qa.json、details-scroll-qa.json、independent-integrated-ux.json、runtime/stepper-smoke.json、web-tests-core-ux-final.log、typecheck-core-ux-final.log、build-core-ux-final.log、real-resave-postfix-qa.json、ux-responsive-details/full-browser-regression.log。コードhashを伴う独立判定と同HEAD CIを、本人受入の代用にしない。
+
+旧HEAD b95a09cのCIは新ResponsiveDetails harnessのChrome起動先取得で失敗し、UI assertionには未到達だった。owned Chrome childがstderrへ出すloopback endpointを優先し、DevToolsActivePortをfallbackにした。10秒期限・安全設定・既存assertは維持。修正後の実Chrome 7/7と解析6/6、Web全体111 pass / 1 skipを確認。旧Ubuntu失敗の具体的原因は未確定で、新exact HEAD CIの結果はPRに記録する。Product/API/Engine契約と画面ソースの変更はない。
 
 ## 前段の参照調整と比較
 

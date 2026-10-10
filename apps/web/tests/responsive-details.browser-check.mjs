@@ -9,6 +9,7 @@ import { test } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
 import { build } from 'vite';
 import react from '@vitejs/plugin-react';
+import { parseDevToolsEndpoint, parseDevToolsActivePort } from './browser-debug-endpoint.mjs';
 
 // 既存Vite/React + Node24標準WebSocketのみ。実viewport/native入力を使い、matchMediaやclickをmockしない。
 async function browserPath() {
@@ -81,14 +82,37 @@ test('Today responsive details: real viewport, native keyboard and preserved use
   child = spawn(browser, ['--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     '--remote-debugging-port=0', '--user-data-dir=' + join(dir, 'profile'), 'about:blank'],
     { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
-  let stderr = '';
-  child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-4000); });
-  exited = new Promise(resolve => child.once('exit', resolve));
-  const port = await until(async () => {
-    if (child.exitCode !== null || child.signalCode !== null) throw new Error('Chrome exited: ' + stderr);
-    try { return Number((await readFile(join(dir, 'profile', 'DevToolsActivePort'), 'utf8')).split('\n')[0]); } catch { return null; }
-  }, value => Number.isInteger(value) && value > 0, 'Chrome debug port unavailable');
-  const target = await until(async () => (await (await fetch('http://127.0.0.1:' + port + '/json/list')).json())
+  let stderr = '', stderrEndpoint = null, endpointSource = null, activePortError = null, launchError = null;
+  const diagnostics = () => JSON.stringify({ browser, profile: join(dir, 'profile'),
+    exitCode: child.exitCode, signalCode: child.signalCode, launchError,
+    activePortReadError: activePortError, stderr });
+  child.stderr.on('data', chunk => {
+    const combined = stderr + chunk;
+    stderrEndpoint ??= parseDevToolsEndpoint(combined);
+    stderr = combined.slice(-4000);
+  });
+  exited = new Promise(resolve => {
+    child.once('exit', resolve);
+    child.once('error', error => { launchError = { code: error.code, message: error.message.slice(0, 400) }; resolve(); });
+  });
+  let endpoint;
+  try {
+    endpoint = await until(async () => {
+      if (launchError || child.exitCode !== null || child.signalCode !== null) throw new Error('Chrome exited: ' + diagnostics());
+      // Chrome自身がstderrへ報告するendpointは、launcherのprofile namespaceに依存しない。
+      if (stderrEndpoint) { endpointSource = 'stderr'; return stderrEndpoint; }
+      try {
+        const contents = await readFile(join(dir, 'profile', 'DevToolsActivePort'), 'utf8');
+        const fromProfile = parseDevToolsActivePort(contents);
+        if (fromProfile) { endpointSource = 'profile'; return fromProfile; }
+        activePortError = { code: 'INVALID_CONTENT', message: contents.slice(0, 256) };
+      } catch (error) { activePortError = { code: error.code, message: error.message.slice(0, 400) }; }
+      return null;
+    }, value => !!value, 'Chrome debug endpoint unavailable');
+  } catch (error) { throw new Error('Chrome debug endpoint unavailable: ' + diagnostics(), { cause: error }); }
+  const debugOrigin = new URL(endpoint);
+  debugOrigin.protocol = 'http:';
+  const target = await until(async () => (await (await fetch(new URL('/json/list', debugOrigin))).json())
     .find(page => page.type === 'page'), value => !!value?.webSocketDebuggerUrl, 'Chrome page unavailable');
   cdp = await connect(target.webSocketDebuggerUrl);
   const evaluate = async expression => {
@@ -180,5 +204,5 @@ test('Today responsive details: real viewport, native keyboard and preserved use
       evidence.push({ scenario: 'actual quantity', unit: expected.unit, done: expected.done, total: expected.total, amount: value.amount, percent: value.percent, balances: value.balances });
     }
   });
-  t.diagnostic(JSON.stringify({ results: evidence }));
+  t.diagnostic(JSON.stringify({ browserEndpointSource: endpointSource, results: evidence }));
 });
