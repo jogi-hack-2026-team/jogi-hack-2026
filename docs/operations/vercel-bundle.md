@@ -38,7 +38,7 @@ Application CIの専用jobは秘密値・DBなしで`NODE_ENV=production`と実`
 
 ## 統合と公開前の手動ステップ
 
-このTaskはmain `041f24c557dd90034d64d630fb912e0a01696da9`から独立する。未mergeの[#204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204)（Engine、HEAD `542ea3c272d857a97149c95274d7afa5ff0f5fca`）と[#202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202)（Web、HEAD `cb39176ba5b9c43ee64d8fb5cf93ef1c45ca2f0c`）を別のローカル統合snapshotで照合する。各PRのHuman Review・Mergeを代行せず、配備対象は統合後のSHAで再固定する。[#205](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/205)/[#206](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/206)の文書Taskとは分離する。
+このTaskはmain `041f24c557dd90034d64d630fb912e0a01696da9`から独立する。2026-10-10の再確認では[#204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204)（Engine、HEAD `542ea3c272d857a97149c95274d7afa5ff0f5fca`）はmerge済み、[#202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202)（Web、HEAD `e9d34444060a80fbb1189fc03501fe2f380bffe7`）はOpen。#209の合成merge treeと最新Webを別のローカルsnapshotで照合し、通常checkoutを変更しない。各PRのHuman Review・Mergeを代行せず、配備対象は統合後のSHAで再固定する。[#205](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/205)/[#206](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/206)の文書Taskとは分離する。
 
 公開操作が承認された段階で担当者が行うこと：
 
