@@ -85,6 +85,13 @@ test('explicit sampled and domain fallbacks expose actual draws; threshold ties 
   const symmetric = completionQuantiles({ a: { alpha: 1, beta: 1 }, b: { alpha: 1, beta: 1 } }, 'DONE', 548,
     { ...config, samples: 1, horizonDays: 1095 });
   assert.deepEqual([symmetric.p50Days, symmetric.p80Days, symmetric.computation.method], [1095,null,'BETA_BINOMIAL']);
+  // 動機fixture: horizonの1日差でP80だけが範囲内になる。sampled fallbackで隠さない。
+  const motivating = { a: { alpha: 16, beta: 3 }, b: { alpha: 2, beta: 16 } };
+  for (const [horizonDays, p80Days] of [[192,null], [193,193]]) {
+    const result = completionQuantiles(motivating, 'DONE', 44, { ...config, horizonDays });
+    assert.deepEqual(result, { p50Days: 105, p80Days,
+      computation: { method: 'BETA_BINOMIAL', samples: null, seed: null, fallbackReason: null } });
+  }
   assert.throws(() => exactIntegratedReached({ a: { alpha: .5, beta: 1 }, b: { alpha: 1, beta: 1 } }, 'DONE', 1, 0, .5), RangeError);
   const horizon = completionQuantiles(posterior, 'DONE', 1, { ...config, horizonDays: 1096 });
   assert.equal(horizon.computation.fallbackReason, 'HORIZON_OUT_OF_RANGE');
@@ -99,6 +106,10 @@ test('work budgets reject before huge sampled allocations; trivial completion re
     error => error instanceof PredictionConfigError && error.reason === 'RESOURCE_LIMIT' && error.path[0] === 'completion');
   limited({ horizonDays: Number.MAX_SAFE_INTEGER });
   limited({ samples: Number.MAX_SAFE_INTEGER, completionMethod: 'sampled' });
+  // H/Kの単体上限内でもK*N*H=1.001e9を拒否し、積guard単独の欠落を検出する。
+  assert.throws(() => completionQuantiles(posterior, 'DONE', 100,
+    { ...config, horizonDays: 10_000, samples: 1001, completionMethod: 'sampled' }),
+    error => error instanceof PredictionConfigError && error.reason === 'RESOURCE_LIMIT' && error.path[0] === 'completion');
   for (const N of [0,Number.MAX_SAFE_INTEGER]) {
     const result = completionQuantiles(posterior, 'DONE', N, { ...config, samples: Number.MAX_SAFE_INTEGER });
     assert.deepEqual(result.computation, { method: 'BOUNDARY', samples: null, seed: null, fallbackReason: null });
