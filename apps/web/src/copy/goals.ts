@@ -4,6 +4,11 @@
 export const goalsCopy = {
   appTitle: 'Future ROI',
   listTitle: 'あなたのGoal',
+  listIntro: 'Goalを選ぶと、今日の記録と見通しを確認できます。',
+  openToday: '今日の記録へ',
+  formGroups: { basic: 'Goalの基本', record: '記録する量', schedule: '日付と区切り' },
+  formGuideCreate: 'まずはGoalと1回の量を決めましょう。',
+  formGuideEdit: '保存する内容を確認して、設定を整えましょう。',
   /** デスクトップ幅の戻り先（デザイン Desk-create）。 */
   crumbList: 'Goal一覧',
   loading: 'Goalを読み込んでいます',

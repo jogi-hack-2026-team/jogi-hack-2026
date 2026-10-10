@@ -22,7 +22,7 @@ registerHooks({
   },
 });
 
-const { OutlookPanel } = await import('../src/features/today/OutlookPanel.tsx');
+const { CompletionBrief, OutlookPanel } = await import('../src/features/today/OutlookPanel.tsx');
 const { toForecastView } = await import('../src/features/today/forecast-view.ts');
 const { assertForecastPresentation, PriorForecast } = await import('../src/features/prior/PriorForecast.tsx');
 const { todayCopy, completionNoteFor } = await import('../src/copy/today.ts');
@@ -51,7 +51,7 @@ function present(q, provenance, recorded = false, date = today) {
 }
 
 function render(completion, options = {}) {
-  return renderToStaticMarkup(createElement(OutlookPanel, { completion, today, ...options, title: '完了の目安', fmt: amountFormat({ unit: 'minutes' }) }));
+  return renderToStaticMarkup(createElement(OutlookPanel, { completion, today, sessionAmount: 20, ...options, title: '完了の目安', fmt: amountFormat({ unit: 'minutes' }) }));
 }
 
 test('F(H)=0.79では有限P50を保持し、P80の範囲外を期間外80%と説明しない', () => {
@@ -199,6 +199,35 @@ for (const { kind, days, expected } of [
     assert.match(html, new RegExp('fr-gap--' + kind));
   });
 }
+
+test('設定量の仮実行と保存済み実績を表示で区別し、予測の単位を明示する', () => {
+  const forecast = present({ p50Days: 1, p80Days: 3 }).completion;
+  const minutes = render(forecast, { sessionAmount: 30 });
+  assert.match(minutes, /設定量（30分）で続ける場合/);
+  assert.match(minutes, /今日は設定量（30分）を行い、今後も同じ量ずつ行う想定/);
+  const sessions = renderToStaticMarkup(createElement(OutlookPanel, { completion: forecast, today, title: '完了の目安', sessionAmount: 2, fmt: amountFormat({ unit: 'sessions' }) }));
+  assert.match(sessions, /設定量（2回）で続ける場合/);
+  assert.match(sessions, /今日は設定量（2回）を行い、今後も同じ量ずつ行う想定/);
+  const recorded = render(present({ p50Days: 1, p80Days: 3 }, undefined, true).completion);
+  assert.match(recorded, /設定量（20分）で続ける場合/);
+  assert.match(recorded, /今後も設定量（20分）ずつ行う想定/);
+  assert.doesNotMatch(recorded, /今日は設定量/);
+});
+
+test('スマホ完了要約は同じAPI週と欠如理由を保ち、設定量の前提を明示する', () => {
+  const renderBrief = completion => renderToStaticMarkup(createElement(CompletionBrief, { completion }));
+  for (const recorded of [false, true]) {
+    const completion = present({ p50Days: 1, p80Days: 3 }, undefined, recorded).completion;
+    assert.ok(renderBrief(completion).includes(todayCopy.completionBrief(completion.p50Label)));
+    assert.match(renderBrief(completion), /設定量/);
+  }
+  const outside = present({ p50Days: null, p80Days: null }).completion;
+  assert.ok(renderBrief(outside).includes(todayCopy.completionBriefOutside));
+  for (const completion of [{ kind: 'insufficient', message: '材料不足' }, { kind: 'conditional', plan: { sessions: 2 }, reason: '材料不足' }]) {
+    assert.ok(renderBrief(completion).includes(todayCopy.completionBriefUnavailable));
+    assert.doesNotMatch(renderBrief(completion), /週ごろ/);
+  }
+});
 
 test('到達予定日が見通しの3倍より先なら、軸を省いたことを読み上げでも伝える（#187）', () => {
   const date = '2026-10-05';
