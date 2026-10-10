@@ -70,3 +70,47 @@ test('3倍ちょうどまでは省かず、到達予定日まで日付に比例�
   assert.equal(outlookAxis(today, 30, 45, false, 350).cut, null);
   assert.equal(outlookAxis(today, 30, 45, false, 350, 0).cut, null);
 });
+
+// 月ラベルと年ラベルから実際の日付を読む。xだけの検査では、右端の過去targetへの逆戻りを見逃す。
+function assertAxisOrder(date, p50, p80, sameWeek, width, targetDays) {
+  const axis = outlookAxis(date, p50, p80, sameWeek, width, targetDays);
+  const start = Date.parse(`${date}T00:00:00Z`);
+  let year = Number(date.slice(0, 4));
+  const dated = [{ x: axis.axisLeft, day: 0 }];
+  for (const tick of axis.ticks) {
+    if (tick.yearLabel) year = Number(tick.yearLabel.slice(0, -1));
+    const day = (Date.UTC(year, Number(tick.label.slice(0, -1)) - 1, 1) - start) / 86_400_000;
+    dated.push({ x: tick.x, day });
+    if (axis.cut) {
+      assert.ok(day < targetDays, `${date}/${width}: 月目盛り${year}/${tick.label}はtargetより前`);
+      assert.ok(tick.x < axis.cut.x);
+    }
+  }
+  for (const marker of axis.markers) dated.push({ x: marker.x, day: marker.kind === 'p50' ? p50 : p80 });
+  if (axis.target) dated.push({ x: axis.target.x, day: targetDays });
+  for (const point of dated) assert.ok(Number.isFinite(point.x) && point.x >= axis.axisLeft && point.x <= axis.axisRight);
+  dated.sort((a, b) => a.x - b.x);
+  for (let i = 1; i < dated.length; i++) {
+    assert.ok(dated[i].day >= dated[i - 1].day, `${date}/${width}: 左→右の日付が逆戻りしない ${JSON.stringify(dated)}`);
+  }
+  return axis;
+}
+
+test('cut軸の4反例: spanがtargetを越えても未来月をtargetの左に置かない（PR212）', () => {
+  for (const [p50, p80, width, targetDays] of [[3, 3, 322, 10], [3, 3, 581, 10], [0, 0, 322, 1], [30, 30, 252, 91]]) {
+    const axis = assertAxisOrder('2026-10-20', p50, p80, true, width, targetDays);
+    assert.ok(axis.cut);
+  }
+});
+
+test('有限/範囲外P80・短期/長期・狭幅/PC幅で軸の日付順とboundsを保つ（PR212）', () => {
+  for (const date of ['2026-10-20', '2026-12-31', '2028-02-28']) {
+    for (const width of [252, 322, 350, 581, 600]) {
+      for (const [p50, p80, targetDays] of [
+        [0, 0, 1], [3, 3, 10], [3, 3, 12], [30, 30, 91], [5, 8, 365],
+        [200, 400, 1500], [200, null, 1500], [1, null, 100_000],
+        [30, 45, 135], [30, null, 90], [30, 45, 0], [30, 45, null],
+      ]) assertAxisOrder(date, p50, p80, p50 === p80, width, targetDays);
+    }
+  }
+});

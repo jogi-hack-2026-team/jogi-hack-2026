@@ -182,3 +182,5 @@ R-02〜R-04の現行追加契約は[Product P-20](product-spec.md#p-20-量の意
 TodayのP80計算範囲の文言（[#154](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/154)）は[補助指標2の表示仕様](product-spec.md#today-decision画面の表示仕様) → [todayCopy](../apps/web/src/copy/today.ts)・[OutlookPanel](../apps/web/src/features/today/OutlookPanel.tsx) → [completion-horizon.test.mjs](../apps/web/tests/completion-horizon.test.mjs)で追跡する。回帰は人工CDF境界0.79／0.20／0.80・既存ε・H日目・0日から実部品のHTMLと読み上げをSSR検査し、P50有限／両方null、出所、達成済み・不足・条件付き計画を区別する。実ブラウザ確認とは別に扱う。
 
 材料不足と計算範囲外の補足訂正（[#198](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/198)）も同じ表示仕様・copy・回帰で追跡する。P50範囲外ラベルと50%／80%未到達の説明を出所によらずそろえ、実APIの純粋[buildR11Today](../apps/api/src/prediction/r11.ts)から未回答・不明・片方回答の材料不足と、両方回答・必要回数が計算上限を超える範囲外を実Engine→FE→部品SSRで区別する。DB/HTTP・実ユーザーの予測精度はこの合成回帰の検証範囲外。画面配置とAPI契約は変更しない。
+
+#187のcut軸で月目盛りが右端の到達予定日より未来になる回帰（PR212）は、[target-gap.test.mjs](../apps/web/tests/target-gap.test.mjs)で4反例・有限/範囲外P80・短期/長期・年越し/うるう年・幅別の日付順とboundsを検査する。[outlook-axis.native.tsx](../apps/web/tests/outlook-axis.native.tsx)を[既存native Chrome入口](../apps/web/tests/responsive-details.browser-check.mjs)で描き、製品の11px書体の実SVG・文字bounds・重なりを検査する。予測数値・API・非cut軸の変更を含めない。

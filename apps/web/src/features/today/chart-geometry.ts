@@ -89,7 +89,8 @@ export function outlookAxis(today: string, p50Days: number, p80Days: number | nu
   for (let i = 1; ; i += 1) {
     const first = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1));
     const days = Math.round((first.getTime() - start.getTime()) / 86_400_000);
-    if (days > span) break;
+    // cutのラベル余白でspanがtargetを越えても、右端より未来の月をその左に置かない。
+    if (days > span || (cut && target !== null && days >= target)) break;
     if (first.getUTCMonth() % step !== 0) continue;
     const tickX = x(days);
     if (tickX - AXIS_LEFT < TICK_GAP) continue;
