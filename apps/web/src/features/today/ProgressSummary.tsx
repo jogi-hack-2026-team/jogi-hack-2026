@@ -36,6 +36,9 @@ export function ProgressSummary({ progress, initialProgress, logs, recordStartDa
           {fmt.total(progress.done)} / {fmt.total(progress.total)}
         </p>
       </div>
+      <div className="fr-progress-track" role="progressbar" aria-labelledby="fr-progress-title" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+        <span style={{ width: String(percent) + '%' }} />
+      </div>
       <Help>{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}</Help>
       <CumulativeChartView logs={logs} initialProgress={initialProgress} total={progress.total} recordStartDate={recordStartDate} today={today} fmt={fmt} done={progress.done} />
     </Section>

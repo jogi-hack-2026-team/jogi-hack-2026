@@ -17,6 +17,7 @@ import { Icon } from '../../ui/components/Icon.tsx';
 import { Spinner } from '../../ui/components/Spinner.tsx';
 import { amountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
+import { longDate } from '../../copy/date.ts';
 import { assertForecastPresentation } from '../prior/forecast-validation.ts';
 import { RecordChoiceBar } from '../logs/RecordChoiceBar.tsx';
 import { YesterdayPrompt } from '../logs/YesterdayPrompt.tsx';
@@ -36,6 +37,9 @@ import { editLocks, isCurrentToday, reachedDate, yesterdayRecord } from '../logs
 import '../../ui/tokens.css';
 import '../../ui/page.css';
 import './today.css';
+import './today-dawn.css';
+import './assets/zen-old-mincho.css';
+import '@fontsource/zen-maru-gothic/900.css';
 
 /**
  * Today Decision 画面（R-05〜R-08）。/goals/$goalId
@@ -189,7 +193,15 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
         />
       );
     } else if (showYesterdayPrompt(today, yesterdayLaterFor)) {
-      yesterdayArea = <YesterdayPrompt {...common} yesterday={today.yesterday} onLater={() => setYesterdayLaterFor(today.yesterday)} />;
+      yesterdayArea = (
+        <details className="fr-today__yesterday" key={today.yesterday}>
+          <summary>
+            <span>{todayCopy.yesterdayQuestion}</span>
+            <span className="fr-today__yesterday-date">{longDate(today.yesterday)}<Icon name="chevronDown" size={16} /></span>
+          </summary>
+          <YesterdayPrompt {...common} yesterday={today.yesterday} onLater={() => setYesterdayLaterFor(today.yesterday)} />
+        </details>
+      );
     } else if (yesterday?.kind === 'recorded') {
       const log = yesterday.log;
       yesterdayArea = (
@@ -237,21 +249,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
         </Link>
         {goal ? <GoalMenu goalId={goalId} onCorrectYesterday={startYesterdayCorrection} /> : null}
       </nav>
-      {/* スマートフォン幅では中身をそのまま縦に並べ、デスクトップ幅では左右2列にする（today.css） */}
+      {/* 予測の表示境界・記録の操作を保ったまま、画面幅に合わせてカードを配置する。 */}
       <div className="fr-today-layout">
-      {/* 直近7日の帯（デザイン P1）。押せるのは記録を変えられる今日と昨日だけ */}
-      {goal && today && snapshot ? (
-        <RecentDays
-          today={today.today}
-          yesterday={today.yesterday}
-          recordStartDate={goal.recordStartDate}
-          logs={snapshot.logs}
-          onYesterday={startYesterdayCorrection}
-          onToday={today.todayLog && !changing && !yesterdayEdit ? startTodayChange : undefined}
-        />
-      ) : null}
-      {yesterdayArea}
-
       {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
         savedButStale ? (
           <SavedButStale onRetry={refresh} />
@@ -275,6 +274,20 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       ) : (
         <Loading />
       )}
+
+      {goal && today && snapshot ? (
+        <section className="fr-today__records" aria-label={todayCopy.recentDays}>
+          <RecentDays
+            today={today.today}
+            yesterday={today.yesterday}
+            recordStartDate={goal.recordStartDate}
+            logs={snapshot.logs}
+            onYesterday={startYesterdayCorrection}
+            onToday={today.todayLog && !changing && !yesterdayEdit ? startTodayChange : undefined}
+          />
+          {yesterdayArea}
+        </section>
+      ) : null}
 
       {showChoices && recordGoal && recordDate ? (
         <RecordChoiceBar
@@ -348,8 +361,10 @@ function TodayContent({
           {today.todayLog && !changeHeader ? (
             <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} fmt={fmt} onChange={onChange} />
           ) : null}
-          {progress}
-          <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
+          <div className="fr-today__right">
+            {progress}
+            <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
+          </div>
         </>
       );
     case 'today-recorded':
@@ -366,16 +381,13 @@ function TodayContent({
       return (
         <>
           <section className="fr-today__top" aria-labelledby="fr-question">
-            <h1 id="fr-question" className="fr-today__question">
-              {todayCopy.question}
-            </h1>
-            <CoreMetric core={view.core} />
-            {view.core.kind === 'insufficient' && !hasAnswers(goal) ? (
-              // まだ質問に答えていなければ、答えて最初の見通しを出せることを伝える（R-11、デザインキャンバス R4）
+            <CoreMetric core={view.core} guidance={view.core.kind === 'insufficient' && !hasAnswers(goal) ? (
               <Link to="/goals/$goalId/edit" params={{ goalId: goal.id }} className="fr-link">
                 {todayCopy.answerQuestions}
               </Link>
-            ) : null}
+            ) : null}>
+              <h1 id="fr-question" className="fr-today__question">{todayCopy.question}</h1>
+            </CoreMetric>
           </section>
           <div className="fr-today__right">
             <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} />
