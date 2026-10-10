@@ -585,7 +585,7 @@ timezoneの日付境界（23:59 / 0:00）はEngineではなくAPI層のテスト
 | 形 | D-23の単一SPA／APIコンテナ＋PostgreSQLはローカルDockerで維持。公開候補はSPAの静的assets＋Fastifyの単一Fluid Function＋Neonで、同一originの`/api`と既存の業務・認証境界を保つ。コンテナを公開する方式との差は未検証 |
 | 公開先 | [D-25](#d-25)：**FE・BEともVercel Hobby、DBはNeon Free、ローカル開発はDocker**が第一候補。本人アカウント・費用0円が前提で、採用確定・配備済みではない。作成・権限・公開操作は別途承認後 |
 | 早期のstaging確認 | 本番でしか見えない問題（Cookie・`BETTER_AUTH_URL`・proxy・migration・環境変数・DB接続・cold start・SPA fallback・HTTPS）を早く見つけるため、最終公開を待たずに2段階で確認する。①I-01：healthだけのコンテナ（当時の候補）をstagingへ出し、DBへ接続できる ②I-06：stagingで登録・ログイン・セッション維持ができる。I-14は最終確認・E2E・Demo Seed・仕上げを担う。現在の第一候補ではFunctionで同等のhealth／DB・SPA確認を行う。公開先の承認が遅れた場合の既存移管例外（[#70](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/70)のstaging項目を[#75](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/75)へ、#75のstaging確認を[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)へ）に従い、移管先で未確認項目を追跡する。移管を公開確認済みと扱わない |
-| 環境変数 | `DATABASE_URL`（必須）、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`。任意の`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`・`SHUTDOWN_TIMEOUT_MS`は[.env.example](../.env.example)を参照。実値はProviderのSecret設定に置き、Gitへ入れない |
+| 環境変数 | `DATABASE_URL`（必須）、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`。任意の`HOST`・`PORT`・`WEB_DIST`・`LOG_LEVEL`・`SHUTDOWN_TIMEOUT_MS`は[.env.example](../.env.example)を参照。実値はProviderのSecret設定に置き、Gitへ入れない。production／公開候補の名前・必要条件と未決設定は[配備前の照合表](operations/release-demo.md#配備前に照合する環境変数) |
 | デモ | Demo Seed（合成記録）を開発データと分けて投入。手順は[リリースとデモ](operations/release-demo.md) |
 
 ### 第一候補の評価理由と代替案
