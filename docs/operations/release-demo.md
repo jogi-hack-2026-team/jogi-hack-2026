@@ -12,14 +12,43 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 新しい専用checkoutのrepository rootで、Node 24.21.0・npm 11.19.0を使う。`.env`を持ち込まず、既存DB・container・previewを使わない。以下は既存コマンドで、依存取得とbuild生成物の書込みを行うが、アプリserver・DB CLI・公開先を起動しない。
 
 ```powershell
-git rev-parse HEAD
-npm ci --ignore-scripts --no-audit --no-fund
-npm run typecheck
-npm run test --workspace=@futureroi/prediction
-npm run test --workspace=@futureroi/web
-npm run build
-pwsh -NoProfile -File ./scripts/check-foundation.ps1
+& {
+  $ErrorActionPreference = 'Stop'
+  $PSNativeCommandUseErrorActionPreference = $false
+  function Invoke-Checked {
+    param([string]$Command, [string[]]$Arguments)
+    & $Command @Arguments
+    if ($LASTEXITCODE -ne 0) { throw "$Command failed (exit $LASTEXITCODE)" }
+  }
+  function Get-CleanRevision {
+    $changes = @(Invoke-Checked git @('status', '--porcelain=v1', '--untracked-files=all'))
+    if ($changes.Count -ne 0) { throw 'Tracked/untracked changes exist; preserve them and stop.' }
+    [pscustomobject]@{
+      Head = (Invoke-Checked git @('rev-parse', '--verify', 'HEAD')).Trim()
+      Tree = (Invoke-Checked git @('rev-parse', '--verify', 'HEAD^{tree}')).Trim()
+    }
+  }
+  $before = Get-CleanRevision
+  try {
+    Invoke-Checked npm @('ci', '--include=dev', '--ignore-scripts', '--no-audit', '--no-fund')
+    Invoke-Checked npm @('run', 'typecheck')
+    Invoke-Checked npm @('run', 'test', '--workspace=@futureroi/prediction')
+    Invoke-Checked npm @('run', 'test', '--workspace=@futureroi/web')
+    Invoke-Checked npm @('run', 'build')
+    Invoke-Checked pwsh @('-NoProfile', '-File', './scripts/check-foundation.ps1')
+    foreach ($path in @('packages/prediction/dist/src/index.js', 'apps/api/dist/server.js', 'apps/web/dist/index.html')) {
+      if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing build output: $path" }
+    }
+    Invoke-Checked node @('--input-type=module', '-e', "await import('@futureroi/prediction');")
+  } finally {
+    $after = Get-CleanRevision
+    if ($before.Head -ne $after.Head -or $before.Tree -ne $after.Tree) { throw 'HEAD/tree changed during verification; stop.' }
+  }
+  Write-Output "Verified HEAD=$($before.Head) TREE=$($before.Tree)"
+}
 ```
+
+PowerShell 7でブロック全体を一度に実行する（保存した`.ps1`を`pwsh -NoProfile -File`で実行してもよい）。各native commandは[`$LASTEXITCODE`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables#lastexitcode)を直後に確認し、非0なら後続の検証へ進まない。検証開始前と終了時（コマンド失敗時も）にindex／未stageのtracked変更とuntrackedを検出し、HEAD／treeの不変性も照合する。すべて成功して初めて`Verified`を出力する。`.gitignore`対象の`node_modules`／`dist`等はclean判定から除く。dirtyな差分を自動削除・resetせず保全し、修正をcommitした新SHAか別のclean checkoutでやり直す。
 
 順に対象SHAの固定、lockfileどおりの依存取得、型、Engine回帰、Web回帰、Prediction→API→Webのbuild、文書・リンクを確認する。全exit 0に加え、`packages/prediction/dist/src/index.js`・`apps/api/dist/server.js`・`apps/web/dist/index.html`が生成され、Predictionのworkspace exportsを解決できることを確かめる。失敗時は依存固定・exports/build順・該当型／文書参照を修正する対象として記録し、公開準備を止める。環境だけを直した場合は同じSHA、ソースを直した場合は修正後の新SHA／treeを固定し、未commit差分を混ぜず再確認する。`npm test`全体はDBを使うためこのSecret不要の列へ混ぜない。Webの既定回帰だけで実ブラウザ・認証HTTP E2E完了にしない。必要なブラウザ／隔離DB確認は[開発ガイド](../DEVELOPMENT_GUIDE.md)の前提と対象を確認して別に行う。
 
