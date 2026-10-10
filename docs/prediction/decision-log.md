@@ -56,6 +56,8 @@ Supporting Doc。正式な状態と結論は[Architecture](../architecture.md#ar
 
 ## ADR-004 将来のMonte CarloをやめてDPで計算
 
+2026-10-10の[D-31](../architecture.md#d-31-同一モデルの完了cdf統合候補203)により、完了の既定計算だけをBeta事後積分へ置換した。以下は旧判断の理由・当時の測定であり、将来の日々のMonte Carlo／CRNを使わない判断は維持する。事後サンプル＋DPは範囲外・数値gate・明示`sampled`で残る。週表示は維持するが、標準整数域の既定経路では有限Kの抽選を使わず、有限記録・将来行動・モデルの不確実性は残る。
+
 - **Context**：初期案は、事後サンプルごとに将来の毎日のDONE / SKIPPEDを乱数で生成し、2つのシナリオを共通乱数法（CRN）で比べていた。
 - **Candidates**：A）事後サンプル＋将来の日々もMonte Carlo、B）事後サンプル＋到達日分布をDPで厳密計算。
 - **Why B**
