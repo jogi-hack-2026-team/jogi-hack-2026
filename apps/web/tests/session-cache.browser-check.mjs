@@ -126,3 +126,10 @@ test('#191 Today boundaries: response ordering, cancelled retry, and batched dra
   assert.equal(result.writes, 0);
   t.diagnostic(JSON.stringify(result));
 });
+
+test('YesterdayPrompt: same-day refetch keeps draft and next-day refetch requires a new amount', { timeout: 180000 }, async (t) => {
+  const result = await runBrowser(t, './yesterday-rollover.browser.tsx', true);
+  assert.equal(result.results.length, 3);
+  assert.equal(result.writes.length, 2);
+  t.diagnostic(JSON.stringify(result));
+});

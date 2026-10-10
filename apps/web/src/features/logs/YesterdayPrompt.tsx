@@ -10,27 +10,34 @@ import { SaveFailure } from './SaveFailure.tsx';
 import type { useSaveLog } from './useSaveLog.ts';
 import './logs.css';
 
-/**
- * 「昨日はどうでしたか？」（R-04、#80）。出す条件は /today の yesterdayMissing だけを見る（開始日の条件は API 側で含める）。
- * 1回押すだけで昨日を記録する（やった量は1回の量。「量を変更」で変えられる）。
- * 保存に成功すると /today を取り直し、yesterdayMissing が false になって消える（成功したときだけ消える）。
- * 失敗したら「まだ入っていない」と出し、もう一度選べる。「後で答える」はデータを作らない。
- */
-export function YesterdayPrompt({
-  yesterday,
-  sessionAmount,
-  fmt,
-  saver,
-  onLater,
-  onRefresh,
-}: {
+type YesterdayPromptProps = {
   yesterday: string;
   sessionAmount: number;
   fmt: AmountFormat;
   saver: ReturnType<typeof useSaveLog>;
   onLater: () => void;
   onRefresh: () => void;
-}) {
+};
+
+/**
+ * 「昨日はどうでしたか？」（R-04、#80）。出す条件は /today の yesterdayMissing だけを見る（開始日の条件は API 側で含める）。
+ * 1回押すだけで昨日を記録する（やった量は1回の量。「量を変更」で変えられる）。
+ * 保存に成功すると /today を取り直し、yesterdayMissing が false になって消える（成功したときだけ消える）。
+ * 失敗したら「まだ入っていない」と出し、もう一度選べる。「後で答える」はデータを作らない。
+ */
+export function YesterdayPrompt(props: YesterdayPromptProps) {
+  // 同日再取得では入力を保ち、昨日が変わったら旧日の未保存量を新しい日へ持ち越さない。
+  return <YesterdayPromptForDate key={props.yesterday} {...props} />;
+}
+
+function YesterdayPromptForDate({
+  yesterday,
+  sessionAmount,
+  fmt,
+  saver,
+  onLater,
+  onRefresh,
+}: YesterdayPromptProps) {
   const [editingAmount, setEditingAmount] = useState(false);
   const save = (choice: RecordChoice) => saver.save({ localDate: yesterday, choice });
   const saving = saver.saving?.choice;
