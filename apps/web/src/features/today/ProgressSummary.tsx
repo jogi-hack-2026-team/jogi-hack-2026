@@ -1,5 +1,6 @@
 import type { Log } from '@contracts';
-import { Section, SectionLabel, Help } from '../../ui/components/Section.tsx';
+import { Icon } from '../../ui/components/Icon.tsx';
+import { Section, SectionLabel } from '../../ui/components/Section.tsx';
 import type { AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
 import { useElementWidth } from '../../ui/useElementWidth.ts';
@@ -39,8 +40,10 @@ export function ProgressSummary({ progress, initialProgress, logs, recordStartDa
       <div className="fr-progress-track" role="progressbar" aria-labelledby="fr-progress-title" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
         <span style={{ width: String(percent) + '%' }} />
       </div>
-      <Help>{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}</Help>
-      <CumulativeChartView logs={logs} initialProgress={initialProgress} total={progress.total} recordStartDate={recordStartDate} today={today} fmt={fmt} done={progress.done} />
+      <details className="fr-today__detail">
+        <summary>{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}<Icon name="chevronDown" size={16} /></summary>
+        <CumulativeChartView logs={logs} initialProgress={initialProgress} total={progress.total} recordStartDate={recordStartDate} today={today} fmt={fmt} done={progress.done} />
+      </details>
     </Section>
   );
 }

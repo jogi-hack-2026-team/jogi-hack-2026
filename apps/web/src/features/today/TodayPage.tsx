@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { goalKeys } from '../../api/goals-http.ts';
 import { todayKeys } from '../../api/today-http.ts';
 import { Link, useLocation } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { GoalR11 as Goal, Log, TodayR11 as Today } from '@contracts';
 import { ApiError } from '../../api/client.ts';
 import { isNotFound, isUnauthenticated } from '../../api/http.ts';
@@ -251,6 +251,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       </nav>
       {/* 予測の表示境界・記録の操作を保ったまま、画面幅に合わせてカードを配置する。 */}
       <div className="fr-today-layout">
+      <div className="fr-today__scroll">
       {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
         savedButStale ? (
           <SavedButStale onRetry={refresh} />
@@ -288,6 +289,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
           {yesterdayArea}
         </section>
       ) : null}
+
+      </div>
 
       {showChoices && recordGoal && recordDate ? (
         <RecordChoiceBar
@@ -386,7 +389,11 @@ function TodayContent({
                 {todayCopy.answerQuestions}
               </Link>
             ) : null}>
-              <h1 id="fr-question" className="fr-today__question">{todayCopy.question}</h1>
+              <h1 id="fr-question" className="fr-today__question">
+                {todayCopy.question.split(/(?<=、|は|何日)/).map((phrase, index) => (
+                  <Fragment key={index}>{phrase}<wbr /></Fragment>
+                ))}
+              </h1>
             </CoreMetric>
           </section>
           <div className="fr-today__right">

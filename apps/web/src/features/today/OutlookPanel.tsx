@@ -26,7 +26,7 @@ export function OutlookPanel({
   targetDate?: string | null;
 }) {
   return (
-    <Band label={todayCopy.outlookLabel} labelledBy="fr-outlook-title">
+    <Band labelledBy="fr-outlook-title">
       <h2 id="fr-outlook-title" className="fr-outlook__title">
         {title}
       </h2>
@@ -57,14 +57,17 @@ function Estimate({ completion, today, targetDate }: { completion: Extract<Compl
       </div>
       <EstimateNote completion={completion} />
       <SourceRows sources={completion.sources} />
-      {completion.p50Days !== null ? (
-        <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} targetDate={targetDate} />
-      ) : null}
-      <p className="fr-note">
-        {completionNoteFor(completion.sources)}
-        {todayCopy.axisNote}
-        {targetDate ? todayCopy.targetGapNote : null}
-      </p>
+      <details className="fr-today__detail" aria-label={todayCopy.outlookLabel}>
+        <summary>{todayCopy.whyTitle}<Icon name="chevronDown" size={16} /></summary>
+        {completion.p50Days !== null ? (
+          <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} targetDate={targetDate} />
+        ) : null}
+        <p className="fr-note">
+          {completionNoteFor(completion.sources)}
+          {todayCopy.axisNote}
+          {targetDate ? todayCopy.targetGapNote : null}
+        </p>
+      </details>
     </>
   );
 }
