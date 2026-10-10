@@ -34,7 +34,7 @@ pwsh -NoProfile -File scripts/check-foundation.ps1
 
 ## 統合と公開前の手動ステップ
 
-このTaskはmain `041f24c557dd90034d64d630fb912e0a01696da9`から独立する。未mergeの[#204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204)（Engine、HEAD `542ea3c272d857a97149c95274d7afa5ff0f5fca`）と[#202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202)（Web、HEAD `d2fd57443b6ac8a857c6deaa403e56d92abf120e`）を別のローカル統合snapshotで照合する。各PRのHuman Review・Mergeを代行せず、配備対象は統合後のSHAで再固定する。[#205](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/205)/[#206](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/206)の文書Taskとは分離する。
+このTaskはmain `041f24c557dd90034d64d630fb912e0a01696da9`から独立する。未mergeの[#204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204)（Engine、HEAD `542ea3c272d857a97149c95274d7afa5ff0f5fca`）と[#202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202)（Web、HEAD `cb39176ba5b9c43ee64d8fb5cf93ef1c45ca2f0c`）を別のローカル統合snapshotで照合する。各PRのHuman Review・Mergeを代行せず、配備対象は統合後のSHAで再固定する。[#205](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/205)/[#206](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/206)の文書Taskとは分離する。
 
 公開操作が承認された段階で担当者が行うこと：
 
