@@ -21,3 +21,18 @@
 - 900 の Unicode-range 分割 WOFF2 のみをそのまま収録。CSS では相対パスを `./fonts/` へ変更し、重複する WOFF fallback を省略している。
 - 122 ファイル、2,705,020 bytes。ブラウザは使用する文字を含む Unicode-range のファイルを取得する。
 - SIL Open Font License 1.1。全文は `zen-old-mincho-LICENSE.txt`。字体・フォントファイル内容は変更していない。
+
+
+### 同梱を選んだ理由と制約
+
+参照の明朝数字を再現し、P-17と同じく外部CDNへ通信せず同一originから配信するため、公式パッケージの固定版から900のWOFF2だけを静的資産として同梱した。既存Zen Maru Gothicは本文・UIの丸ゴシックであり、この明朝数字の代替にはならない。npm依存へ追加する案はlockによる管理が簡単だが、今回は既存取得物とライセンスを保持し、依存グラフを変えない。これは第三者フォント資産の追加であり「新しい依存が一切ない」という意味ではない。122ファイル約2.7MBの保守・差分管理コストを負う。上流はFontsource公式の固定版で追跡し、更新は上記の別Issue・照合・レビューで行い、自動更新しない。標準の@font-faceなので新しいruntime APIの学習は不要だが、Unicode-range・Networkの取得確認と原本hash照合のDebug/保守コストがある。安全性や実端末での読取効果を保証した意味ではない。
+
+Viteの既定4KiB以下埋込みでは、未使用のUnicode-range subsetもCSSに入り、必要な文字だけ取得する利点が失われるため、[Vite設定](../../../../vite.config.ts)のassetsInlineLimitでWOFF/WOFF2だけを別ファイルにする。他の資産は既定動作を保持する（[公式仕様](https://vite.dev/config/build-options.html#build-assetsinlinelimit)）。見た目・字体・unicode-rangeは変更しない。ネットワーク取得は使用文字とcache状態に依存し、全122ファイルの一括取得を前提にしない。
+
+### 更新手順
+
+1. 別Issueで更新の必要性・版・配布元・ライセンス差・サイズと代替案を確認する。通常のUI修正で自動的に最新版へ変えない。
+2. 公式npm metadataの対象版のdist.tarballとdist.integrityを記録し、一時ディレクトリへ取得する。現在の5.3.0は `sha512-pNvegTkx6rOQRaBMcUoxxeNoIRJajdY0TeX4ngf/26KrtsVoqY11ho6WlwPWDYHi7PY65vf88TV2xjIO+YxQ8Q==`。tarball全体のSHA-512をbase64にして一致を照合し、違えば使用しない。
+3. 展開した900.cssが参照する900-normalのWOFF2だけをfontsへコピーする。CSSの相対パスを `./fonts/` に変え、WOFF fallbackだけを省く。unicode-rangeと字体ファイルは加工しない。不要になった旧subsetは対象一覧を照合して削除し、license全文とこの版・integrity・件数／合計bytesを同じcommitで更新する。
+4. 各同梱ファイルをtarballの原本とhash照合し、CSS参照ファイルの欠落・余分・rangeの変更を確認する。rootのtypecheck／test、Web build、Foundationを実行し、dist CSSにfont data URIがなく、参照するfont URLが全て存在することを確認する。
+5. 実Chromeで日本語・数字の表示、font loading、320/390/1440と文字拡大時の折返し・focusを確認する。実施範囲と未実施のiOS／Safari等をPRへ記録し、人のレビューを受ける。

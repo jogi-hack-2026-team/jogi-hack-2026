@@ -1,4 +1,7 @@
-import { StrictMode } from 'react';
+import { StrictMode, useState } from 'react';
+import { YesterdayDetails } from '../src/features/today/YesterdayDetails.tsx';
+import { RecordChoiceBar } from '../src/features/logs/RecordChoiceBar.tsx';
+import { todayCopy } from '../src/copy/today.ts';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import { ResponsiveDetails } from '../src/features/today/ResponsiveDetails.tsx';
@@ -33,10 +36,23 @@ function mountProgress(unit: 'minutes' | 'sessions', done: number, total: number
       fmt={amountFormat({ unit })} /></StrictMode>,
   ));
 }
+function DockFixture() {
+  const [editing, setEditing] = useState(false);
+  const saver = { isSaving: false, failure: null, isStaleDate: () => false, save: () => { throw Error('native focus test must not save'); } } as any;
+  return <RecordChoiceBar today="2026-10-10" sessionAmount={20} fmt={amountFormat({ unit: 'minutes' })} saver={saver} editingAmount={editing} onEditingAmountChange={setEditing} onRefresh={() => {}} />;
+}
+function mountDock() { flushSync(() => root.render(<DockFixture key={++generation} />)); }
+function mountYesterday(reveal: unknown = false, remount = false) {
+  if (remount) generation++;
+  flushSync(() => root.render(<YesterdayDetails key={generation} reveal={reveal}>
+    <summary>昨日の記録</summary><p data-testid="details-content">{reveal === 'failed' ? '保存できませんでした' : '昨日を記録する'}</p>
+  </YesterdayDetails>));
+}
 function view() {
   const details = host.querySelector('details');
   const content = host.querySelector('[data-testid="details-content"]');
   return {
+    focused: { tag: document.activeElement?.tagName, role: document.activeElement?.getAttribute('role'), name: document.activeElement?.getAttribute('aria-label'), text: document.activeElement?.textContent?.trim() },
     width: window.innerWidth, desktop: window.matchMedia('(min-width: 960px)').matches,
     // closed detailsは矩形が残り得るため、UAのcontent-visibilityを含む実際の可視性を読む。
     open: details?.open, contentVisible: !!content && content.checkVisibility(),
@@ -49,5 +65,5 @@ function view() {
     ])),
   };
 }
-(globalThis as any).__responsiveFixture = { mountDetails, mountProgress, view };
+(globalThis as any).__responsiveFixture = { mountDetails, mountProgress, mountDock, mountYesterday, view };
 mountDetails();

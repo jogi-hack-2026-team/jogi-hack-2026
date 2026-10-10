@@ -215,5 +215,29 @@ test('Today responsive details: real viewport, native keyboard and preserved use
       evidence.push({ scenario: 'actual quantity', unit: expected.unit, done: expected.done, total: expected.total, amount: value.amount, percent: value.percent, balances: value.balances });
     }
   });
+  await t.test('native Tab enters named amount group, reaches input without autoFocus and cancel restores entry', async () => {
+    await resize(390); await evaluate('window.__responsiveFixture.mountDock()');
+    const plus = 'document.querySelector(".fr-record__amount-controls button[aria-label^=量を増やす]")';
+    await evaluate(plus + '.focus()'); await press('Enter', 'Enter', 13);
+    const group = await until(view, value => value?.focused?.role === 'group', 'amount group did not receive focus');
+    assert.equal(group.focused.name, '今日記録する量');
+    assert.notEqual(group.focused.tag, 'INPUT', 'mount must not focus the numeric field');
+    await press('Tab', 'Tab', 9); assert.ok((await view()).focused.name?.startsWith('量を減らす'));
+    await press('Tab', 'Tab', 9); assert.equal((await view()).focused.tag, 'INPUT');
+    await evaluate('[...document.querySelectorAll("button")].find(b => b.textContent.trim() === "戻る").focus()');
+    await press('Enter', 'Enter', 13);
+    assert.ok((await view()).focused.name?.startsWith('量を増やす'), 'cancel must restore the original plus trigger');
+    evidence.push({ scenario: 'native amount group / Tab / cancel', ...(await view()) });
+  });
+  await t.test('yesterday stays closed initially and preserves open state on same-day render; saving/failure reveal', async () => {
+    await evaluate('window.__responsiveFixture.mountYesterday(false, true)'); await state(false, 'initial yesterday must close');
+    await evaluate('document.querySelector("summary").focus()'); await press('Enter', 'Enter', 13); await state(true, 'yesterday Enter opens');
+    await evaluate('window.__responsiveFixture.mountYesterday(false)'); await state(true, 'same-day render must preserve open');
+    await evaluate('window.__responsiveFixture.mountYesterday("saving")'); await state(true, 'saving reveals');
+    await press('Enter', 'Enter', 13); await state(false, 'user can collapse while saving');
+    await evaluate('window.__responsiveFixture.mountYesterday("failed")'); await state(true, 'failure must reveal after a collapsed save');
+    await evaluate('window.__responsiveFixture.mountYesterday("failed", true)'); await state(true, 'failure remount must reveal');
+    evidence.push({ scenario: 'native yesterday save/failure visibility', ...(await view()) });
+  });
   t.diagnostic(JSON.stringify({ browserEndpointSource: endpointSource, results: evidence }));
 });

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { todayCopy } from '../../copy/today.ts';
 import { Button } from '../../ui/components/Button.tsx';
 import { Field, fieldAria, NumberInput } from '../../ui/components/FormField.tsx';
@@ -35,6 +35,9 @@ export function AmountEditor({
   cancelLabel?: string;
 }) {
   const id = useId();
+  const editor = useRef<HTMLDivElement>(null);
+  // 編集へ入った場所を知らせる。数値入力へ直ちに移してモバイルのキーボードを開かせない。
+  useEffect(() => { editor.current?.focus(); }, []);
   const [text, setText] = useState(String(initial));
   const [error, setError] = useState<string | undefined>();
   const value = parseInteger(text);
@@ -61,7 +64,7 @@ export function AmountEditor({
   const aria = fieldAria(id, { help, error });
 
   return (
-    <div className="fr-amount">
+    <div className="fr-amount" ref={editor} role="group" aria-label={label} tabIndex={-1}>
       <div className="fr-amount__stepper">
         <IconButton icon="minus" label={`${todayCopy.amountDecrease}（${fmt.record(sessionAmount)}ずつ）`} disabled={busy || !valid || value <= RECORD_AMOUNT_MIN} onClick={() => step(-1)} />
         <Field id={id} label={label} error={error} help={help}>
@@ -69,7 +72,6 @@ export function AmountEditor({
             id={id}
             suffix={fmt.recordUnit}
             value={text}
-            autoFocus
             disabled={busy}
             invalid={Boolean(error)}
             role="spinbutton"

@@ -137,9 +137,9 @@ export function RecordChoiceBar({
       {current ? <span>{todayCopy.changeNote}</span> : null}
       <span ref={amountControls} className="fr-record__amount-controls">
         {todayCopy.todayRecordAmount(label(current ? currentAmount : sessionAmount))}
-        <IconButton icon="minus" label={`${todayCopy.amountDecrease}（${label(sessionAmount)}ずつ）`} disabled={currentAmount <= RECORD_AMOUNT_MIN} onClick={() => openAmount(-1)} />
-        <IconButton icon="plus" label={`${todayCopy.amountIncrease}（${label(sessionAmount)}ずつ）`} disabled={currentAmount >= RECORD_AMOUNT_MAX} onClick={() => openAmount(1)} />
-        <Button ref={amountLink} variant="text" onClick={() => openAmount()}>
+        <IconButton icon="minus" label={`${todayCopy.amountDecrease}（${label(sessionAmount)}ずつ）`} disabled={saver.isSaving || locked || currentAmount <= RECORD_AMOUNT_MIN} onClick={() => openAmount(-1)} />
+        <IconButton icon="plus" label={`${todayCopy.amountIncrease}（${label(sessionAmount)}ずつ）`} disabled={saver.isSaving || locked || currentAmount >= RECORD_AMOUNT_MAX} onClick={() => openAmount(1)} />
+        <Button ref={amountLink} variant="text" disabled={saver.isSaving || locked} onClick={() => openAmount()}>
           {todayCopy.changeAmount}
         </Button>
         {current && onCancelChange ? (

@@ -1,5 +1,7 @@
 # 予測モデルの判断記録
 
+2026-09-30のCore／「遠ざかる」表現は当時の採択理由の履歴。現行g50の意味と表示改訂は[Architecture D-21](../architecture.md#d-21)と[Product P-21](../product-spec.md#p-21-todayの朝焼け山並み案)を参照する。再開待ちを完了日差へ読み替えない。
+
 Supporting Doc。正式な状態と結論は[Architecture](../architecture.md#architecture-decision-log)のD-19〜D-22・[D-28](../architecture.md#d-28)を正本とし、本書はその比較理由・代替案・影響を1回だけ記録する。数値の出典は[Evidence](evidence.md)。ADR番号はProduct議論で使った呼び名で、正式IDはD-19〜D-22。実行方式のD-28も比較理由を本書にまとめ、採択状態はArchitectureを参照する。
 
 ## ADR-001 M1を採用しM0/M2を不採用

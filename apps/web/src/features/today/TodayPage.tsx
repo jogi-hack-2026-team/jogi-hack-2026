@@ -25,6 +25,7 @@ import { CoreMetric } from './CoreMetric.tsx';
 import { GoalMenu } from './GoalMenu.tsx';
 import { RecentDays } from '../history/RecentDays.tsx';
 import { ForecastBoundary } from './ForecastBoundary.tsx';
+import { YesterdayDetails } from './YesterdayDetails.tsx';
 import { CompletionBrief, CompletionDetails, OutlookPanel } from './OutlookPanel.tsx';
 import { ProgressDetails, ProgressSummary } from './ProgressSummary.tsx';
 import { AchievedFacts, AchievedPanel, ChangeHeader, RecordedSummary, TodayRecordLine } from './RecordedSummary.tsx';
@@ -194,13 +195,13 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       );
     } else if (showYesterdayPrompt(today, yesterdayLaterFor)) {
       yesterdayArea = (
-        <details className="fr-today__yesterday" key={today.yesterday}>
+        <YesterdayDetails key={today.yesterday} reveal={yesterdaySaver.isSaving ? 'saving' : yesterdaySaver.failure}>
           <summary>
             <span>{todayCopy.yesterdayQuestion}</span>
             <span className="fr-today__yesterday-date">{longDate(today.yesterday)}<Icon name="chevronDown" size={16} /></span>
           </summary>
           <YesterdayPrompt {...common} yesterday={today.yesterday} onLater={() => setYesterdayLaterFor(today.yesterday)} />
-        </details>
+        </YesterdayDetails>
       );
     } else if (yesterday?.kind === 'recorded') {
       const log = yesterday.log;
@@ -262,7 +263,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
         <Inconsistent onRetry={retryResync} />
       ) : snapshot ? (
         <ForecastBoundary resetKey={todayQuery.dataUpdatedAt}>
-          <TodayContent
+          <TodayContent area="primary"
             goal={snapshot.goal}
             today={snapshot.today}
             logs={snapshot.logs}
@@ -275,6 +276,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       ) : (
         <Loading />
       )}
+
 
       {goal && today && snapshot ? (
         <section className="fr-today__records" aria-label={todayCopy.recentDays}>
@@ -289,6 +291,21 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
           {yesterdayArea}
         </section>
       ) : null}
+
+      {snapshot && !todayQuery.isError && !goalQuery.isError && !logsQuery.isError && !resyncFailed ? (
+        <ForecastBoundary resetKey={todayQuery.dataUpdatedAt}>
+          <TodayContent area="details"
+            goal={snapshot.goal}
+            today={snapshot.today}
+            logs={snapshot.logs}
+            changing={changing}
+            cancelChangeDisabled={locks.cancelChangeLocked}
+            onCancelChange={cancelChange}
+            onChange={startTodayChange}
+          />
+        </ForecastBoundary>
+      ) : null}
+
 
       </div>
 
@@ -328,6 +345,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
 }
 
 function TodayContent({
+  area,
   goal,
   today,
   logs,
@@ -336,6 +354,7 @@ function TodayContent({
   onChange,
   onCancelChange,
 }: {
+  area: 'primary' | 'details';
   goal: Goal;
   today: Today;
   logs: Log[];
@@ -367,62 +386,38 @@ function TodayContent({
 
   switch (view.kind) {
     case 'completed':
-      return (
-        <>
-          {changeHeader ?? <AchievedPanel done={view.progress.done} total={view.progress.total} fmt={fmt} />}
-          {/* 達成済みでも、今日の記録の誤りを直せるようにする（R-03の当日の変更と R-08 の達成表示の両立） */}
-          {today.todayLog && !changeHeader ? (
-            <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} fmt={fmt} onChange={onChange} />
-          ) : null}
-          <div className="fr-today__right">
-            {progress}
-            <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
-            <div className="fr-today__details">{progressDetails}</div>
-          </div>
-        </>
-      );
+      return area === 'primary' ? <>
+        {changeHeader ?? <AchievedPanel done={view.progress.done} total={view.progress.total} fmt={fmt} />}
+        {/* 達成後も今日の誤記録を訂正できる（R-03 / R-08）。 */}
+        {today.todayLog && !changeHeader ? <TodayRecordLine log={today.todayLog} today={today.today} sessionAmount={goal.sessionAmount} fmt={fmt} onChange={onChange} /> : null}
+      </> : <div className="fr-today__right">
+        {progress}
+        <AchievedFacts goalId={goal.id} recordStartDate={goal.recordStartDate} reached={reachedDate(goal.initialProgress, goal.totalRequired, logs)} />
+        <div className="fr-today__details">{progressDetails}</div>
+      </div>;
     case 'today-recorded':
-      return (
-        <>
-          {changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} fmt={fmt} onChange={onChange} /> : null)}
-          <div className="fr-today__right">
-            {progress}
-            <OutlookPanel showDetails={false} completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
-            <div className="fr-today__details">
-              <CompletionDetails completion={view.completion} today={today.today} targetDate={goal.targetDate} />
-              {progressDetails}
-            </div>
-          </div>
-        </>
-      );
     case 'forecast':
-      return (
-        <>
-          <section className="fr-today__top" aria-labelledby="fr-question">
-            <CoreMetric core={view.core} guidance={view.core.kind === 'insufficient' && !hasAnswers(goal) ? (
-              <Link to="/goals/$goalId/edit" params={{ goalId: goal.id }} className="fr-link">
-                {todayCopy.answerQuestions}
-              </Link>
-            ) : null}>
-              <h1 id="fr-question" className="fr-today__question">
-                {todayCopy.question.split(/(?<=、|は|何日)/).map((phrase, index) => (
-                  <Fragment key={index}>{phrase}<wbr /></Fragment>
-                ))}
-              </h1>
-            </CoreMetric>
-          </section>
-          <div className="fr-today__right">
-            {progress}
-            <OutlookPanel showDetails={false} completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
-            <div className="fr-today__details">
-              <CompletionDetails completion={view.completion} today={today.today} targetDate={goal.targetDate} />
-              {progressDetails}
-            </div>
-          </div>
-        </>
-      );
+      if (area === 'primary') {
+        if (view.kind === 'today-recorded') return changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} fmt={fmt} onChange={onChange} /> : null);
+        return <section className="fr-today__top" aria-labelledby="fr-question">
+          <CoreMetric core={view.core} guidance={view.core.kind === 'insufficient' && !hasAnswers(goal) ? (
+            <Link to="/goals/$goalId/edit" params={{ goalId: goal.id }} className="fr-link">{todayCopy.answerQuestions}</Link>
+          ) : null}>
+            <h1 id="fr-question" className="fr-today__question">
+              {todayCopy.question.split(/(?<=、|は)/).map((phrase, index) => <Fragment key={index}>{phrase}<wbr /></Fragment>)}
+            </h1>
+          </CoreMetric>
+        </section>;
+      }
+      return <div className="fr-today__right">
+        {progress}
+        <OutlookPanel showDetails={false} completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
+        <div className="fr-today__details">
+          <CompletionDetails completion={view.completion} today={today.today} targetDate={goal.targetDate} />
+          {progressDetails}
+        </div>
+      </div>;
     default:
-      // loading・error など取得側の状態は、この部品に渡さない（親で扱う）
       throw new TypeError(`Today の表示データとして想定していない状態です: ${view.kind}`);
   }
 }

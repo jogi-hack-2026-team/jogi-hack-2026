@@ -88,7 +88,8 @@ async function run() {
 
   writes.length = 0;
   await render(<Dock />); await click(plus()); ensure(input().value === '40' && writes.length === 0, 'dock increase did not open unsaved draft');
-  ensure(document.activeElement === input(), 'opened amount editor did not receive focus');
+  ensure(document.activeElement === host.querySelector('.fr-amount'), 'opened amount editor did not receive group focus');
+  ensure(document.activeElement?.getAttribute('role') === 'group' && document.activeElement?.getAttribute('aria-label') === todayCopy.amountTodayLabel, 'editor group is unnamed');
   await click(button(todayCopy.back)); ensure(!input() && writes.length === 0, 'cancel persisted or did not close');
   ensure(document.activeElement === plus(), 'cancel did not return focus to original plus entry');
   await click(button(todayCopy.changeAmount)); ensure(input().value === '20', 'cancelled draft returned');

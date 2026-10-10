@@ -91,3 +91,14 @@ Library代表2枚は同じIDのversion2へ置換し、元ファイルへ全xattr
 本人による修正後の見た目・操作感の受入、自然の日跨ぎ、本番、iOS/Safari/実端末は未確認。実hook/Chromeの日付回帰は実施済み。BraveのCUA接続は復帰し、専用Today URLの新規タブがログイン画面へ遷移したことを観測した。ログイン待ちタブを保持し、利用者ブラウザでログイン後のToday表示は未確認。新規アカウント作成・資格情報/権限設定変更は行っていない。
 
 API・Engine・owner/answerRevision/settingsRevision/保存判定はUI差分で変更していない。PR197、PR195（bd9288de）、PR201（cefecf62）を指定ベースへ通常mergeした。最終事前確認でmain041f24cへの3PRのmergeを確認し、同mainとのtree比較でAPI/Engine/Testsの差分0を確認した。UI固有の初回差分はf20da95→970e5b5、373bb4bは旧画像/QA。PR201の履歴競合3件は指定PR197の境界回帰を保全し、統合固有差分がcopy・回帰・仕様・対応表の4ファイルだけであることを確認した。今回の参照一致修正はこの上のToday4ファイルと必要文書/画像に限定する。merge/deployは行わない。
+
+
+## PR #202 公開レビュー対応（2026-10-10）
+
+[レビュー](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202#pullrequestreview-5478074339)に対し、問い→直近記録／昨日→詳細のDOM順を視覚順と一致させ、CSS orderによる入替を除去した。desktopは左列の問い・記録を読んでから右詳細へ、mobileは縦の表示順でnative Tabを進む。未記録の2択は同じ強さとし、既存の選択済み状態を区別する。
+
+実Chromeの未記録／記録済み390・1440でDOMとnative Tab、初期mobileの完了要約／実績／バー／dock、今日・昨日の量編集focusと取消復帰を確認。実API GETの値と予測は不変、API書込み0。保存保留・503失敗はPUTを合成してAPIへ送らず、閉じた昨日詳細が失敗時に開いてエラー全文を示すこと、同日rerender・詳細再マウント、保存中の全量入力／ボタン無効とnative Tab退避を確認した。細部側だけのrender例外も従来の通知を保持する。scope内の未解消Must／Shouldは0。
+
+画面全体をSPA離脱・再マウントした後に旧PUTが失敗する場合、そのfailureは旧useSaveLog hookに所属し新hookへ共有されない。昨日のdetails単体の開閉／再マウントとは別の既存保存境界で、今回hook/session/draftの共有仕様を広げていない。iOS／Safari・実端末software keyboard・読み上げソフトでの聴取・人の最終UX受入は未確認。DOM/ARIAとnative Tab確認を実読み上げ確認とは扱わない。
+
+122の明朝WOFF2は公式5.3.0 tarballのintegrityと各原本hashが一致。Viteのfont-only別ファイル出力で、現branchのdist CSSは727,023→545,414 bytes、font data URI 62→0、参照font URL欠落0（main比較ではない）。フォント原本・unicode-range・字体は変更せず、資産READMEへ理由・保守・更新手順を同期した。検証・最終commit/CIの公開結果は[PR #202](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/202)へ追跡する。
