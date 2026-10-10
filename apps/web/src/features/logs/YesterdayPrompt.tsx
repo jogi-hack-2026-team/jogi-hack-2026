@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../ui/components/Button.tsx';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import { longDate } from '../../copy/date.ts';
@@ -39,6 +39,14 @@ function YesterdayPromptForDate({
   onRefresh,
 }: YesterdayPromptProps) {
   const [editingAmount, setEditingAmount] = useState(false);
+  const amountEntry = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef(false);
+  useEffect(() => {
+    if (!editingAmount && returnFocus.current) {
+      returnFocus.current = false;
+      amountEntry.current?.focus();
+    }
+  }, [editingAmount]);
   const save = (choice: RecordChoice) => saver.save({ localDate: yesterday, choice });
   const saving = saver.saving?.choice;
   const failureKind = saver.failure ? classifySaveError(saver.failure.error) : null;
@@ -69,7 +77,10 @@ function YesterdayPromptForDate({
         fmt={fmt}
         busy={saver.isSaving}
         onSubmit={(amount) => save({ status: 'DONE', amount })}
-        onCancel={() => setEditingAmount(false)}
+        onCancel={() => {
+          returnFocus.current = true;
+          setEditingAmount(false);
+        }}
       />
     );
   } else {
@@ -85,7 +96,7 @@ function YesterdayPromptForDate({
         </div>
         <p className="fr-yesterday__amount">
           {todayCopy.doneAmount(fmt.record(sessionAmount))}
-          <Button variant="text" disabled={saver.isSaving} onClick={() => setEditingAmount(true)}>
+          <Button ref={amountEntry} variant="text" disabled={saver.isSaving} onClick={() => setEditingAmount(true)}>
             {todayCopy.changeAmount}
           </Button>
         </p>

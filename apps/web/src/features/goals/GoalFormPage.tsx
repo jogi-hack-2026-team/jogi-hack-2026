@@ -134,12 +134,23 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
 
 function FormShell({ title, body }: { title: string; body: ReactNode }) {
   return (
-    <div className="fr fr-page fr-page--desk">
+    <div className="fr fr-page fr-page--desk fr-page--goalform">
       <PageTitle title={title} />
       <AppBar title={title} leading={<CloseLink />} />
-      <DeskHeader back={<ListCrumb />} title={title} />
+      <DeskHeader back={<ListCrumb />} title={title} titleAs="p" />
+      <FormIntro title={title} />
       <div className="fr-goals__pad">{body}</div>
     </div>
+  );
+}
+
+function FormIntro({ title, guide, goalTitle }: { title: string; guide?: string; goalTitle?: string }) {
+  return (
+    <header className="fr-goalform__intro">
+      {goalTitle ? <p className="fr-goalform__goal-name">{goalTitle}</p> : null}
+      <h1>{title}</h1>
+      {guide ? <p className="fr-goalform__guide">{guide}</p> : null}
+    </header>
   );
 }
 
@@ -442,10 +453,11 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
   };
 
   return (
-    <div className="fr fr-page fr-page--desk">
+    <div className="fr fr-page fr-page--desk fr-page--goalform">
       <PageTitle title={mode === 'create' ? f.createTitle : f.editTitle} />
       <AppBar title={mode === 'create' ? f.createTitle : f.editTitle} leading={<CloseLink />} />
-      <DeskHeader back={goal ? <GoalCrumb goal={goal} /> : <ListCrumb />} title={mode === 'create' ? f.createTitle : f.editTitle} />
+      <DeskHeader back={goal ? <GoalCrumb goal={goal} /> : <ListCrumb />} title={mode === 'create' ? f.createTitle : f.editTitle} titleAs="p" />
+      <FormIntro title={mode === 'create' ? f.createTitle : f.editTitle} guide={mode === 'create' ? c.formGuideCreate : c.formGuideEdit} {...(goal ? { goalTitle: goal.title } : {})} />
       <form ref={formRef} className={`fr-goalform fr-goalform--${mode}`} noValidate onSubmit={onSubmit} aria-busy={busy || undefined}>
         <GoalFormFields
           {...(mode === 'create' ? { mode } : { mode, goal })}

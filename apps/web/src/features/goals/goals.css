@@ -1,104 +1,163 @@
-/* Goal の一覧・作成・編集の画面。色・大きさは tokens.css の値だけを使う。 */
-.fr-goals__top {
-  padding: var(--fr-space-2) var(--fr-gutter) var(--fr-space-4);
+/* Goal 一覧・作成・編集。配色と文字は共有 tokens を使う。 */
+.fr-goals__head {
+  padding: var(--fr-space-6) var(--fr-gutter) var(--fr-space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--fr-space-1);
+  gap: var(--fr-space-4);
+  align-items: flex-start;
 }
-.fr-goals__date,
-.fr-goals__help {
+
+.fr-goals__top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-2);
+}
+
+.fr-goals__date, .fr-goals__help, .fr-goals__intro {
   font-size: var(--fr-fs-help);
   line-height: 1.75;
   color: var(--fr-ink-2);
 }
+
 .fr-goals__heading {
-  font-size: var(--fr-fs-question);
+  font-size: var(--fr-fs-date-pair);
   font-weight: 700;
-  line-height: 1.55;
+  line-height: 1.5;
 }
+
+.fr-goals__intro {
+  max-width: 32em;
+}
+
 .fr-goals__pad {
   padding: var(--fr-space-5) var(--fr-gutter);
 }
+
 .fr-goals__band-title {
-  font-size: var(--fr-fs-section);
+  font-size: var(--fr-fs-question);
   font-weight: 700;
 }
+
 .fr-goals__body {
   font-size: var(--fr-fs-body);
   line-height: var(--fr-lh-body);
   color: var(--fr-ink-2);
 }
+
 .fr-goals__loading {
   display: flex;
   align-items: center;
   gap: var(--fr-space-2);
 }
 
-/* 一覧の行。行全体で Today を開き、右端の鉛筆で編集を開く */
+.fr-goals__add-top {
+  display: inline-flex;
+}
+
+.fr-page--list > .fr-band {
+  margin: 0 var(--fr-space-4) var(--fr-space-8);
+  border: 1px solid var(--fr-line);
+  border-radius: var(--fr-radius-dialog);
+  padding: var(--fr-space-7) var(--fr-space-6);
+}
+
+/* 一つの白い面に Goal を並べ、行全体から今日の記録を開く。 */
 .fr-goals__list {
-  margin: 0;
+  margin: 0 var(--fr-space-4) var(--fr-space-8);
   padding: 0;
   list-style: none;
   background: var(--fr-surface);
-  border-top: 1px solid var(--fr-line);
+  border: 1px solid var(--fr-line);
+  border-radius: var(--fr-radius-dialog);
+  overflow: hidden;
 }
+
 .fr-goals__row {
   display: flex;
-  align-items: center;
-  gap: var(--fr-space-1);
   border-bottom: 1px solid var(--fr-line);
 }
+
+.fr-goals__row:last-child {
+  border-bottom: 0;
+}
+
 .fr-goals__open {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 18px var(--fr-gutter-band);
+  gap: var(--fr-space-3);
+  padding: var(--fr-space-6) var(--fr-space-5);
   color: inherit;
   text-decoration: none;
   min-height: var(--fr-tap);
 }
+
+.fr-goals__open:focus-visible {
+  outline-offset: -4px;
+}
+
 .fr-goals__row-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--fr-space-3);
 }
+
 .fr-goals__title {
+  min-width: 0;
   font-size: var(--fr-fs-section);
   font-weight: 700;
   overflow-wrap: anywhere;
 }
+
 .fr-goals__row-sub {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--fr-space-1) var(--fr-space-2);
   font-size: var(--fr-fs-help);
   color: var(--fr-ink-2);
 }
+
 .fr-goals__amount {
-  font-size: var(--fr-fs-body);
+  font-size: var(--fr-fs-button);
   font-weight: 700;
   color: var(--fr-ink);
   font-variant-numeric: tabular-nums;
 }
+
 .fr-goals__amount-total {
   font-weight: 500;
   color: var(--fr-ink-2);
 }
+
 .fr-goals__row-end {
   display: inline-flex;
   align-items: center;
-  gap: var(--fr-space-1);
   flex-shrink: 0;
 }
-.fr-goals__chevron {
-  display: inline-flex;
+
+.fr-goals__row-foot {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fr-space-2);
+  font-size: var(--fr-fs-help);
   color: var(--fr-ink-2);
 }
-/* 累計の進捗バー（デザイン B-home） */
+
+.fr-goals__next {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fr-space-1);
+  color: var(--fr-rec);
+  font-weight: 700;
+}
+
+.fr-goals__next > svg {
+  flex-shrink: 0;
+}
+
 .fr-goals__track {
   display: block;
   height: 6px;
@@ -107,50 +166,154 @@
   box-shadow: inset 0 0 0 1px var(--fr-line);
   overflow: hidden;
 }
+
 .fr-goals__fill {
   display: block;
   height: 100%;
   border-radius: 3px;
   background: var(--fr-rec);
 }
+
 .fr-goals__row--skeleton {
   flex-direction: column;
   align-items: stretch;
   gap: var(--fr-space-3);
-  padding: 22px var(--fr-gutter-band);
+  padding: var(--fr-space-6) var(--fr-space-5);
 }
+
 .fr-skel {
   display: block;
-  border-radius: 8px;
+  border-radius: var(--fr-space-2);
   background: var(--fr-line);
   opacity: 0.6;
 }
+
 .fr-skel--title {
   width: 45%;
   height: 20px;
 }
+
 .fr-skel--line {
   width: 75%;
   height: 14px;
 }
 
-/* 作成・編集フォーム */
+@media (hover: hover) {
+  .fr-goals__open:hover {
+    background: var(--fr-surface-2);
+  }
+}
+
+/* 入力の順番・ID・挙動を保ち、基本 → 記録量 → 日付のまとまりを見せる。 */
+.fr-goalform__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-2);
+  padding: var(--fr-space-6) var(--fr-gutter);
+}
+
+.fr-goalform__intro h1 {
+  font-size: var(--fr-fs-date-pair);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.fr-goalform__guide {
+  font-size: var(--fr-fs-help);
+  line-height: var(--fr-lh-body);
+  color: var(--fr-ink-2);
+}
+
+.fr-goalform__goal-name {
+  font-size: var(--fr-fs-body);
+  font-weight: 700;
+  color: var(--fr-rec);
+  overflow-wrap: anywhere;
+}
+
+.fr-page--goalform .fr-deskhead__title {
+  display: none;
+}
+
 .fr-goalform {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+
 .fr-goalform__fields {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--fr-space-5);
-  padding: var(--fr-space-2) var(--fr-gutter) var(--fr-gutter);
+  background: var(--fr-surface);
+  margin: 0 var(--fr-space-4) var(--fr-space-6);
+  border: 1px solid var(--fr-line);
+  border-radius: var(--fr-radius-dialog);
 }
+
+.fr-goalform__fields > [role='status'], .fr-goalform__fields > .fr-goalform__summary, .fr-goalform__fields > .fr-error {
+  margin: var(--fr-space-4);
+}
+
+.fr-goalform__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-5);
+  padding: var(--fr-space-6) var(--fr-space-5);
+}
+
+.fr-goalform__group + .fr-goalform__group {
+  border-top: 1px solid var(--fr-line);
+}
+
+.fr-goalform__group-head {
+  display: flex;
+  gap: var(--fr-space-3);
+  align-items: baseline;
+}
+
+.fr-goalform__group-head h2 {
+  font-size: var(--fr-fs-section);
+  font-weight: 700;
+}
+
+.fr-goalform__group-index {
+  color: var(--fr-rec);
+  font-size: var(--fr-fs-help);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fr-goalform__group-fields {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fr-space-5);
+}
+
+.fr-goalform__group--schedule {
+  background: var(--fr-dawn-soft);
+}
+
+.fr-goalform__pair {
+  display: contents;
+}
+
+.fr-goalform__new-goal {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--fr-tap);
+  padding: var(--fr-space-2) var(--fr-space-3);
+  border-radius: var(--fr-radius-button);
+  color: var(--fr-rec);
+  text-underline-offset: 4px;
+}
+
 .fr-goalform__summary {
   display: flex;
   gap: var(--fr-space-2);
-  align-items: center;
+  align-items: flex-start;
   padding: var(--fr-space-3) var(--fr-space-4);
   border-radius: var(--fr-radius-notice);
   background: var(--fr-warn-soft);
@@ -159,65 +322,78 @@
   font-size: var(--fr-fs-button);
   font-weight: 700;
 }
+
 .fr-goalform__summary > svg {
   flex-shrink: 0;
+  margin-top: var(--fr-space-1);
 }
+
 .fr-goalform__locked {
   display: flex;
   gap: 6px;
   align-items: flex-start;
 }
+
 .fr-goalform__locked > svg {
   flex-shrink: 0;
   margin-top: 5px;
 }
+
 .fr-goalform__actions {
   display: flex;
   flex-direction: column;
   gap: var(--fr-space-3);
 }
+
 .fr-goalform__dialog-error {
   color: var(--fr-warn);
   font-weight: 700;
 }
+
 .fr-goalform__prior {
-  border-top: 1px solid var(--fr-grid);
-  border-bottom: 1px solid var(--fr-grid);
+  margin: var(--fr-space-5);
+  padding: 0 var(--fr-space-4);
+  border: 1px solid var(--fr-line);
+  border-radius: var(--fr-radius-notice);
+  background: var(--fr-surface-2);
 }
+
 .fr-goalform__prior[open] {
   display: flex;
   flex-direction: column;
-  gap: var(--fr-space-2);
-  padding-bottom: var(--fr-space-4);
+  gap: var(--fr-space-3);
+  padding-bottom: var(--fr-space-5);
 }
+
 .fr-goalform__prior-summary {
-  min-height: 48px;
+  min-height: var(--fr-h-button);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--fr-space-2);
   cursor: pointer;
   list-style: none;
+  padding: var(--fr-space-2) 0;
 }
+
 .fr-goalform__prior-summary::-webkit-details-marker {
   display: none;
 }
+
 .fr-goalform__prior-title {
   font-size: var(--fr-fs-section);
   font-weight: 700;
 }
+
 .fr-goalform__prior-summary > svg {
   flex-shrink: 0;
   transition: transform 0.2s;
 }
+
 .fr-goalform__prior[open] > .fr-goalform__prior-summary > svg {
   transform: rotate(180deg);
 }
-@media (prefers-reduced-motion: reduce) {
-  .fr-goalform__prior-summary > svg {
-    transition: none;
-  }
-}
+
 .fr-goalform__latest {
   padding: var(--fr-space-3) var(--fr-space-4);
   border: 1.5px dashed var(--fr-btn-line);
@@ -226,85 +402,110 @@
   line-height: 1.75;
 }
 
-/* デスクトップ幅（デザイン Desk-home）：上のバーは画面全体のもの（AppShell）を使い、見出しの右に「Goalを追加」、一覧は角丸の箱 */
-.fr-goals__add-top {
-  display: none;
-}
-@media (min-width: 960px) {
-  .fr-page--list {
-    max-width: 840px;
-    padding: var(--fr-space-4) var(--fr-space-4) var(--fr-space-8);
-  }
-  .fr-page--list > .fr-appbar {
-    display: none;
-  }
-  .fr-goals__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: var(--fr-space-4);
-    flex-wrap: wrap;
-  }
-  .fr-goals__head .fr-goals__top {
-    padding: var(--fr-space-4) 0;
-  }
-  .fr-goals__add-top {
-    display: inline-flex;
-    margin-bottom: var(--fr-space-4);
-  }
-  .fr-goals__add-bottom {
-    display: none;
-  }
-  .fr-page--list .fr-goals__list {
-    border: 1px solid var(--fr-line);
-    border-radius: var(--fr-radius-dialog);
-    overflow: hidden;
-  }
-  .fr-page--list .fr-goals__row:last-child {
-    border-bottom: 0;
-  }
+.fr-goalform__delete-mobile {
+  padding: 0 var(--fr-space-5) var(--fr-space-5);
 }
 
-/*
- * 作成・編集のデスクトップ幅（デザイン Desk-create・Desk-edit）。スマートフォン幅では2列の箱を作らず（display: contents）、
- * 削除は項目の下、取りやめは上のバーの「×」のまま、保存ボタンは下に固定する。
- */
-.fr-goalform__pair {
-  display: contents;
+.fr-goalform__delete-mobile .fr-btn--text {
+  color: var(--fr-danger);
 }
-.fr-goalform__delete-desk,
-.fr-goalform__cancel {
+
+.fr-goalform__delete-desk, .fr-goalform__cancel {
   display: none;
 }
+
 .fr-goalform__buttons {
   display: flex;
   flex-direction: column;
   gap: var(--fr-space-3);
 }
-@media (min-width: 960px) {
-  .fr-page--desk .fr-goalform {
-    border: 1px solid var(--fr-line);
-    border-radius: var(--fr-radius-dialog);
-    padding: var(--fr-space-8);
-    gap: var(--fr-space-6);
+
+.fr-page--goalform .fr-actionbar {
+  /* 入力へ Tab 移動したとき、画面端までスクロールされた項目を保存ボタンで覆わない。 */
+  position: static;
+  border-radius: var(--fr-radius-dialog) var(--fr-radius-dialog) 0 0;
+  padding-bottom: max(var(--fr-space-5), env(safe-area-inset-bottom));
+}
+
+.fr-page--goalform .fr-goals__pad > .fr-error, .fr-page--list .fr-goals__pad > .fr-error {
+  border-radius: var(--fr-radius-dialog);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fr-goalform__prior-summary > svg {
+    transition: none;
   }
-  .fr-page--desk .fr-goalform__fields {
-    padding: 0;
-    gap: var(--fr-space-6);
+}
+
+@media (min-width: 960px) {
+  .fr-page--list, .fr-page--goalform {
+    max-width: 960px;
+    padding: var(--fr-space-4) var(--fr-space-8) var(--fr-space-8);
+  }
+  .fr-page--list > .fr-appbar {
+    display: none;
+  }
+  .fr-goals__head {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: var(--fr-space-6) 0 var(--fr-space-6);
+  }
+  .fr-goals__heading, .fr-goalform__intro h1 {
+    font-size: calc(var(--fr-fs-date-pair) + var(--fr-space-2));
+  }
+  .fr-goals__add-top {
+    flex-shrink: 0;
+  }
+  .fr-goals__list, .fr-page--list > .fr-band {
+    margin: 0 0 var(--fr-space-8);
+  }
+  .fr-goals__open {
+    padding: var(--fr-space-6) var(--fr-space-8);
+  }
+  .fr-goals__title {
+    font-size: var(--fr-fs-dialog-title);
+  }
+  .fr-page--goalform .fr-deskhead {
+    padding-bottom: 0;
+  }
+  .fr-goalform__intro {
+    padding: var(--fr-space-4) 0 var(--fr-space-6);
+  }
+  .fr-goalform__fields {
+    margin: 0;
+  }
+  .fr-goalform__group {
+    display: grid;
+    grid-template-columns: 152px minmax(0, 1fr);
+    gap: var(--fr-space-8);
+    padding: var(--fr-space-8);
+  }
+  .fr-goalform__group-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--fr-space-2);
   }
   .fr-goalform__pair {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--fr-space-6) 20px;
+    gap: var(--fr-space-5);
     align-items: start;
+  }
+  .fr-goalform__prior {
+    margin: var(--fr-space-6) var(--fr-space-8);
+    padding: 0 var(--fr-space-6);
+  }
+  .fr-goalform__prior[open] {
+    padding-bottom: var(--fr-space-6);
   }
   .fr-goalform__delete-mobile {
     display: none;
   }
-  .fr-page--desk .fr-actionbar {
+  .fr-page--goalform .fr-actionbar {
     position: static;
     box-shadow: none;
-    padding: 0;
+    padding: var(--fr-space-6) 0 0;
     background: none;
   }
   .fr-goalform__buttons {
@@ -313,17 +514,12 @@
     align-items: center;
     justify-content: flex-end;
   }
-  .fr-goalform--edit .fr-goalform__buttons {
-    border-top: 1px solid var(--fr-line);
-    padding-top: var(--fr-space-6);
-  }
   .fr-goalform__delete-desk {
     display: block;
     margin-right: auto;
   }
   .fr-goalform__delete-desk .fr-btn--text {
     color: var(--fr-danger);
-    padding: 0 var(--fr-space-1);
   }
   .fr-goalform__cancel {
     display: inline-flex;

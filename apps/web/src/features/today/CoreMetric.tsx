@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { InsufficientNotice } from '../../ui/components/Notice.tsx';
 import { Icon } from '../../ui/components/Icon.tsx';
 import { coreNoteFor, todayCopy } from '../../copy/today.ts';
@@ -10,27 +11,40 @@ import type { CorePresentation, SufficientSource } from '../prior/presentation-t
  * 記録だけのときは、Product Spec P-12 の固定文言のまま。
  * 補助指標1「休んだ翌日にやれたのは ○回中○回」は出さない（2026-10-08、依頼者判断による P-12 の改訂。#146）。
  */
-export function CoreMetric({ core }: { core: CorePresentation }) {
+export function CoreMetric({ core, children, guidance }: { core: CorePresentation; children?: ReactNode; guidance?: ReactNode }) {
   if (core.kind === 'insufficient') {
-    return <InsufficientNotice>{core.message ?? todayCopy.insufficientCore}</InsufficientNotice>;
+    return (
+      <>
+        <div className="fr-today__hero">
+          {children}
+          <InsufficientNotice>{core.message ?? todayCopy.insufficientCore}</InsufficientNotice>
+        </div>
+        {guidance ? <div className="fr-today__basis">{guidance}</div> : null}
+      </>
+    );
   }
   return (
     <>
-      <div className="fr-core">
-        <p className="fr-core__label">{todayCopy.coreLabel}</p>
-        <p className="fr-core__value">
-          <small>約</small>
-          {core.days}
-          <small>日</small>
-        </p>
+      <div className="fr-today__hero">
+        {children}
+        <div className="fr-core">
+          <p className="fr-core__label">{todayCopy.coreLabel}</p>
+          <p className="fr-core__value">
+            <small>約</small>
+            {core.days}
+            <small>日</small>
+          </p>
+        </div>
       </div>
-      {core.source === 'RECORDS' ? null : (
-        <p className="fr-source-row">
-          <span className="fr-source">{sourceLabel(core.source)}</span>
-        </p>
-      )}
-      <p className="fr-today__summary">{core.source === 'RECORDS' ? todayCopy.coreSummary : sourceNote(core.source)}</p>
-      <WhyDetails source={core.source} />
+      <div className="fr-today__basis">
+        {core.source === 'RECORDS' ? null : (
+          <p className="fr-source-row">
+            <span className="fr-source">{sourceLabel(core.source)}</span>
+          </p>
+        )}
+        <p className="fr-today__summary">{core.source === 'RECORDS' ? todayCopy.coreSummary : sourceNote(core.source)}</p>
+        <WhyDetails source={core.source} />
+      </div>
     </>
   );
 }

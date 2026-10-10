@@ -45,8 +45,9 @@ export function GoalListPage() {
         <section className="fr-goals__top">
           <p className="fr-goals__date">{longDate(browserToday())}</p>
           <h1 className="fr-goals__heading">{c.listTitle}</h1>
+          <p className="fr-goals__intro">{c.listIntro}</p>
         </section>
-        {/* デスクトップ幅では「Goalを追加」を見出しの右に置く（デザイン Desk-home）。Goal があるときだけ */}
+        {/* Goal があるときは見出しのそばに作成への導線を置く。 */}
         {fresh && query.data && query.data.length > 0 ? (
           <Link to="/goals/new" className="fr-btn fr-btn--secondary fr-goals__add-top">
             <Icon name="plus" size={18} />
@@ -66,19 +67,11 @@ export function GoalListPage() {
       ) : query.data.length === 0 ? (
         <EmptyGoals />
       ) : (
-        <>
-          <ul className="fr-goals__list">
-            {query.data.map((goal) => (
-              <GoalRow key={goal.id} goal={goal} />
-            ))}
-          </ul>
-          <div className="fr-goals__pad fr-goals__add-bottom">
-            <Link to="/goals/new" className="fr-btn fr-btn--secondary fr-btn--block">
-              <Icon name="plus" size={18} />
-              {c.add}
-            </Link>
-          </div>
-        </>
+        <ul className="fr-goals__list">
+          {query.data.map((goal) => (
+            <GoalRow key={goal.id} goal={goal} />
+          ))}
+        </ul>
       )}
     </div>
   );
@@ -100,13 +93,9 @@ function GoalRow({ goal }: { goal: Goal }) {
           <span className="fr-goals__title">{goal.title}</span>
           <span className="fr-goals__row-end">
             <StatusBadge status={badge[goal.todayStatus]} />
-            <span className="fr-goals__chevron" aria-hidden="true">
-              <Icon name="chevronRight" size={18} />
-            </span>
           </span>
         </span>
         <span className="fr-goals__row-sub">
-          <span>{c.todayStatus[goal.todayStatus]}</span>
           <span className="fr-goals__amount">
             {fmt.total(goal.progressDone)}{' '}
             <span className="fr-goals__amount-total">
@@ -123,6 +112,13 @@ function GoalRow({ goal }: { goal: Goal }) {
           aria-valuenow={percent}
         >
           <span className="fr-goals__fill" style={{ width: `${percent}%` }} />
+        </span>
+        <span className="fr-goals__row-foot">
+          <span>{c.todayStatus[goal.todayStatus]}</span>
+          <span className="fr-goals__next">
+            {c.openToday}
+            <Icon name="chevronRight" size={18} />
+          </span>
         </span>
       </Link>
     </li>

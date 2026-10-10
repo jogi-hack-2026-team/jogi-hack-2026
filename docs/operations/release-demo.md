@@ -5,6 +5,8 @@ migrationは`npm run db:migrate`（認証→アプリの順。コンテナ内は
 
 ## 公開候補の採用前に行う最小検証
 
+root・entry・配備物のローカル準備は[#208のVercel候補手順](vercel-bundle.md)を参照する。下表の公開受入とは別に記録する。
+
 全項目は未実施で、[#83](https://github.com/jogi-hack-2026-team/jogi-hack-2026/issues/83)の既存公開受入へ紐付ける。#70→#75→#83のhealth／SPA・DB・Cookie／proxy・休止後応答・メモリ／遅延の移管を保全する。実行コード・CI・環境設定・アカウント・請求・権限・Secretはこの候補記録では変更しない。検証先の作成と試験範囲は別途承認後。負荷試験は[Vercel Fair Use](https://vercel.com/docs/limits/fair-use-guidelines)で許可された範囲・事前許可を確認する。
 
 | 確認対象 | 最小の確認と合格の根拠 |

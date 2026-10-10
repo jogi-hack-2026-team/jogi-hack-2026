@@ -40,7 +40,7 @@ export function HistoryPage({ goalId }: { goalId: string }) {
 
 function HistoryWaiting({ goalId, signedOut }: { goalId: string; signedOut: boolean }) {
   const back = <Link to="/goals/$goalId" params={{ goalId }} className="fr-icon-btn" aria-label={c.backToGoal}><Icon name="back" /></Link>;
-  return <div className="fr fr-page fr-page--desk">
+  return <div className="fr fr-page fr-page--desk fr-page--history">
     <PageTitle title={c.historyTitle} />
     <AppBar title={c.historyTitle} leading={back} />
     <DeskHeader back={back} title={c.historyTitle} />
@@ -72,7 +72,7 @@ function PrivateHistory({ goalId, clearedAt, initialMonth, onMonthChange }: { go
 
   if (!goal || !logs) {
     return (
-      <div className="fr fr-page fr-page--desk">
+      <div className="fr fr-page fr-page--desk fr-page--history">
         <PageTitle title={c.historyTitle} />
         <AppBar title={c.historyTitle} leading={back} />
         <DeskHeader back={crumb} title={c.historyTitle} />
@@ -97,12 +97,13 @@ function PrivateHistory({ goalId, clearedAt, initialMonth, onMonthChange }: { go
   const shown = month === null ? last : month < first ? first : month > last ? last : month;
   const chooseMonth = (next: string) => { setMonth(next); onMonthChange(next); };
   return (
-    <div className="fr fr-page fr-page--desk">
+    <div className="fr fr-page fr-page--desk fr-page--history">
       <PageTitle title={`${c.historyTitle}（${goal.title}）`} />
       <AppBar title={c.historyTitle} leading={back} />
       {/* 見出し（h1）は月の名前なので、デスクトップ幅の「記録の履歴」は見出しにしない */}
       <DeskHeader back={crumb} title={c.historyTitle} titleAs="p" />
       <div className="fr-history__box">
+        <p className="fr-history__goal">{goal.title}</p>
         <section className="fr-history__top">
           <div className="fr-history__month">
             <button type="button" className="fr-icon-btn" aria-label={c.prevMonth} disabled={shown <= first} onClick={() => chooseMonth(shiftMonth(shown, -1))}>
