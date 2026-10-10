@@ -123,6 +123,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
   });
 
   // edit/viewのkey切替で元の変更ボタンが消える。取消commit後に同じ日の入口へ戻す。
+  // refへのintentだけでは再renderしないため、依存配列を置かずcommit後に一度だけ消費する。
+  // owner/Goal/draft世代のremountでintentを破棄し、日付や無効な入口へfocusを持ち越さない。
   useEffect(() => {
     const date = yesterdayFocusAfterCancel.current;
     if (!date) return;
@@ -273,7 +275,8 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
         </Link>
         {goal ? <GoalMenu goalId={goalId} onCorrectYesterday={startYesterdayCorrection} /> : null}
       </nav>
-      {/* 予測の表示境界・記録の操作を保ったまま、画面幅に合わせてカードを配置する。 */}
+      {/* 同じsnapshotをareaで排他的に描画し、DOMをprimary→記録→detailsの順にする。
+          TodayContentは表示のみで取得/保存をせず、分割しても予測計算や操作部品を二重に実行しない。 */}
       <div className="fr-today-layout">
       <div className="fr-today__scroll">
       {todayQuery.isError || goalQuery.isError || logsQuery.isError ? (
