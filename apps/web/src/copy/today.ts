@@ -30,7 +30,7 @@ export const todayCopy = {
   completionP80: (week: string) => `10回中8回は${week}まで`,
   completionP80Over3Years: '10回中8回の完了時期の目安は、計算範囲の約3年以内には収まりません。',
   /** 補助指標2の注釈（Product Spec の固定文言）。 */
-  completionNote: '完了の目安は、同じ記録から推定した継続傾向でシミュレーションした見込みです。',
+  completionNote: '完了の目安は、同じ記録から推定した継続傾向をもとに計算した見込みです。',
   axisNote: '日付は、その週の月曜日で表しています。',
   insufficientCore: 'まだ「休んだ翌日」の記録がありません。記録がたまると、あなたの再開傾向から推定します。',
   insufficientCompletion: '「やった翌日」と「休んだ翌日」の記録がそれぞれたまると、完了の目安を表示します。',
@@ -200,6 +200,6 @@ export function coreNoteFor(source: NoteSource): string {
 /** 補助指標2の注釈を a／b の出所に合わせる。どちらも記録だけのときは Product Spec の固定文言（completionNote）のまま。 */
 export function completionNoteFor(sources: { a: NoteSource; b: NoteSource }): string {
   if (sources.a === 'RECORDS' && sources.b === 'RECORDS') return todayCopy.completionNote;
-  if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定でシミュレーションした見込みです。まだ記録からは推定していません。';
-  return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向でシミュレーションした見込みです。';
+  if (sources.a === 'QUESTION' && sources.b === 'QUESTION') return '完了の目安は、最初の質問の回答から置いた継続傾向の仮定をもとに計算した見込みです。まだ記録からは推定していません。';
+  return '完了の目安は、最初の質問の回答と、あなたの記録から推定した継続傾向をもとに計算した見込みです。';
 }

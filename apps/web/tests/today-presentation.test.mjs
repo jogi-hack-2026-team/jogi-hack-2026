@@ -90,4 +90,13 @@ test('回答だけ・回答と記録の見通しでは、注釈で「あなた�
   assert.match(coreNoteFor('QUESTION_AND_RECORDS'), /回答と、あなたの記録/);
   assert.match(completionNoteFor({ a: 'QUESTION', b: 'RECORDS' }), /回答と、あなたの記録/);
   assert.match(completionNoteFor({ a: 'QUESTION_AND_RECORDS', b: 'RECORDS' }), /回答と、あなたの記録/);
+  // sampling/積分のどちらでも正しい計算説明にし、出所別の説明は保持する（#204統合）。
+  for (const a of ['RECORDS', 'QUESTION', 'QUESTION_AND_RECORDS']) {
+    for (const b of ['RECORDS', 'QUESTION', 'QUESTION_AND_RECORDS']) {
+      const note = completionNoteFor({ a, b });
+      assert.match(note, /をもとに計算した見込みです/);
+      assert.doesNotMatch(note, /シミュレーション/);
+    }
+  }
+
 });
