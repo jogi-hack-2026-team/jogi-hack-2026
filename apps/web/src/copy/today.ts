@@ -2,15 +2,25 @@
 // 文言を変えるときは、このファイルだけを直す（仕様の文言を変える場合は P-12 の改訂として記録する）。
 
 export const todayCopy = {
-  question: '今日サボると、ゴールは何日遠ざかる？',
-  coreLabel: 'ゴールが遠ざかる日数（目安）',
+  question: '今日休んだら、次に再開する目安は？',
+  coreLabel: '再開までの日数（中央値）',
   /** 中心指標の注釈（Product Spec の固定文言）。 */
   coreNote:
-    'あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。',
-  /** 中心の数字のすぐ下に出す要約1行（デザイン案B）。全文は「計算の根拠」に置く。 */
+    'あなたの記録から推定した「休んだ後の再開傾向」をもとに計算しています。今日休んだ場合、最初に再開するまでの待ち日数の中央値です。やる場合と休む場合の完了日の差ではなく、将来を保証するものではありません。',
+  /** 中心の数字のすぐ下に出す要約1行（デザイン案B）。全文は「再開の目安の根拠」に置く。 */
   coreSummary: 'あなたの記録から推定した目安です。将来を保証するものではありません。',
-  whyTitle: '計算の根拠',
-  completionLabelTodayDone: '今日やった場合の完了の目安',
+  whyTitle: '再開の目安の根拠',
+  completionWhyTitle: '完了予測の根拠',
+  progressDetailsTitle: '記録の推移を見る',
+  todayRecordTitle: '今日の記録',
+  recordTarget: '記録する日',
+  completionLabelTodayDone: (session: string) => `今日${session}行う場合の完了の目安`,
+  completionAssumption: (session: string) => `今後も設定量（${session}）ずつ行う想定です。`,
+  amountPredictionNote: '入力中の量では予測を再計算しません。保存後に実績へ反映します。',
+  progressGoal: '目標量',
+  progressRemaining: '残り',
+  progressExcess: '目標を超えた量',
+  progressActual: (amount: string) => `累計 ${amount}`,
   completionLabelCurrent: '現在の状態からの完了の目安',
   completionP50: (week: string) => `${week}ごろ`,
   completionP80: (week: string) => `10回中8回は${week}まで`,
@@ -170,7 +180,7 @@ export const todayCopy = {
 /** 材料の出所（R-11）。記録だけ・回答だけ・両方。 */
 type NoteSource = 'RECORDS' | 'QUESTION' | 'QUESTION_AND_RECORDS';
 
-const coreNoteTail = '今日やらなかった場合、次に再開するまでの日数だけ完了が後ろにずれる、という見込みで、将来を保証するものではありません。';
+const coreNoteTail = '今日休んだ場合、最初に再開するまでの待ち日数の中央値です。やる場合と休む場合の完了日の差ではなく、将来を保証するものではありません。';
 
 /**
  * 中心指標の注釈を出所に合わせる。記録だけのときは Product Spec の固定文言（coreNote）のまま。

@@ -50,7 +50,7 @@ function present(q, provenance, recorded = false, date = today) {
 }
 
 function render(completion, options = {}) {
-  return renderToStaticMarkup(createElement(OutlookPanel, { completion, today, ...options, title: '完了の目安', fmt: amountFormat({ unit: 'minutes' }) }));
+  return renderToStaticMarkup(createElement(OutlookPanel, { completion, today, sessionAmount: 20, ...options, title: '完了の目安', fmt: amountFormat({ unit: 'minutes' }) }));
 }
 
 test('F(H)=0.79では有限P50を保持し、P80の範囲外を期間外80%と説明しない', () => {
@@ -198,3 +198,16 @@ for (const { kind, days, expected } of [
     assert.match(html, new RegExp('fr-gap--' + kind));
   });
 }
+
+test('設定量の仮実行と保存済み実績を表示で区別し、予測の単位を明示する', () => {
+  const forecast = present({ p50Days: 1, p80Days: 3 }).completion;
+  const minutes = render(forecast, { sessionAmount: 30 });
+  assert.match(minutes, /今日30分行う場合の完了の目安/);
+  assert.match(minutes, /今後も設定量（30分）ずつ行う想定/);
+  const sessions = renderToStaticMarkup(createElement(OutlookPanel, { completion: forecast, today, title: '完了の目安', sessionAmount: 2, fmt: amountFormat({ unit: 'sessions' }) }));
+  assert.match(sessions, /今日2回行う場合の完了の目安/);
+  assert.match(sessions, /今後も設定量（2回）ずつ行う想定/);
+  const recorded = render(present({ p50Days: 1, p80Days: 3 }, undefined, true).completion);
+  assert.match(recorded, /現在の状態からの完了の目安/);
+  assert.doesNotMatch(recorded, /今日20分行う場合/);
+});

@@ -40,18 +40,21 @@ body:has(.fr-page--today) { background: #eef3f5; }
 .fr-page--today > .fr-appbar { background: var(--dawn-sky-top); padding: 0 12px; }
 .fr-page--today .fr-appbar__title { font-size: 17px; }
 .fr-page--today .fr-today-layout { display: flex; flex-direction: column; gap: 0; padding-bottom: 0; min-width: 0; flex: 1; min-height: 0; }
-.fr-page--today .fr-today__scroll { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; gap: 14px; padding-bottom: 14px; }
+.fr-page--today .fr-today__scroll { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scroll-padding-block: 12px; overscroll-behavior: contain; gap: 14px; padding-bottom: 14px; }
 .fr-page--today .fr-today__scroll > * { flex-shrink: 0; min-width: 0; }
 .fr-page--today .fr-today-layout > * { min-width: 0; }
 .fr-page--today .fr-today__top { order: 0; padding: 0; gap: 0; }
 .fr-page--today .fr-today__hero {
-  padding: 4px 22px 70px;
+  padding: 4px 22px 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   /* 提供されたsky/ridge原画。上56pxのAppBar分を除いた位置から使う。 */
-  background: url('./assets/dawn-landscape.webp') center bottom / 100% calc(100% + 56px) no-repeat;
+  position: relative;
+  isolation: isolate;
+  background: url('./assets/dawn-landscape.webp') center top / 100% auto no-repeat;
 }
+.fr-page--today .fr-today__hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 24px; z-index: -1; pointer-events: none; background: url('./assets/dawn-landscape.webp') center bottom / 100% 100px no-repeat; }
 .fr-page--today .fr-today__question { font-size: 22px; font-weight: 900; line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; }
 .fr-page--today .fr-core { gap: 6px; }
 .fr-page--today .fr-core__label { font-size: 13px; }
@@ -94,10 +97,20 @@ body:has(.fr-page--today) { background: #eef3f5; }
 .fr-page--today .fr-outlook__p80 { font-size: 13px; }
 .fr-page--today .fr-progress__percent { font-size: 56px; }
 .fr-page--today .fr-progress__percent small { font-size: 1em; margin-left: 0; }
-.fr-page--today .fr-progress__amount { font-size: 13px; }
+.fr-page--today .fr-progress__amount { font-size: 14px; }
+.fr-page--today .fr-progress__balance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; padding: 8px 0; }
+.fr-page--today .fr-progress__balance dt { font-size: 12px; color: var(--fr-ink-2); }
+.fr-page--today .fr-progress__balance dd { margin: 2px 0 0; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.fr-page--today .fr-record__amount-controls { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; }
+.fr-page--today .fr-record__amount-controls .fr-icon-btn { border: 1px solid var(--fr-line); border-radius: 12px; }
+.fr-page--today .fr-amount__prediction-note { font-size: 12px; line-height: 1.6; color: var(--fr-ink-2); }
+.fr-page--today .fr-outlook__assumption { font-size: 12px; }
 .fr-page--today .fr-progress-track { height: 12px; border-radius: 999px; overflow: hidden; background: var(--fr-bg); }
 .fr-page--today .fr-progress-track > span { display: block; height: 100%; background: var(--fr-rec); border-radius: inherit; }
-.fr-page--today .fr-actionbar { order: 3; flex-shrink: 0; max-height: 70dvh; overflow-y: auto; position: static; bottom: auto; z-index: 2; margin-top: 0; margin-inline: 0; border-radius: 28px 28px 0 0; box-shadow: var(--fr-shadow-sticky); padding: 14px 16px max(20px, env(safe-area-inset-bottom)); gap: 6px; }
+.fr-page--today .fr-today__dock { order: 3; display: flex; flex-direction: column; flex-shrink: 0; max-height: 70dvh; min-height: 0; background: var(--fr-surface); border-radius: 28px 28px 0 0; box-shadow: var(--fr-shadow-sticky); z-index: 2; }
+.fr-page--today .fr-today__record-day { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; flex-shrink: 0; gap: 2px 8px; padding: 14px 16px 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.fr-page--today .fr-today__record-day time { font-size: 12px; font-weight: 500; color: var(--fr-ink-2); }
+.fr-page--today .fr-actionbar { min-height: 0; flex-shrink: 1; overflow-y: auto; position: static; bottom: auto; margin: 0; border-radius: 0; box-shadow: none; padding: 4px 16px max(20px, env(safe-area-inset-bottom)); gap: 6px; }
 .fr-page--today .fr-actionbar__pair { gap: 12px; }
 /* 量の保存・失敗後の再試行は、文字拡大時にもラベル全体を読めるようにする。 */
 .fr-page--today .fr-amount__actions .fr-btn,
@@ -122,7 +135,7 @@ body:has(.fr-page--today) { background: #eef3f5; }
   .fr-page--today .fr-choice__label { gap: 4px; }
   .fr-page--today .fr-today__records { padding-inline: 12px; }
   .fr-page--today .fr-today__hero { padding-inline: 20px; }
-  .fr-page--today .fr-today__yesterday-date { font-size: 10px; }
+  .fr-page--today .fr-today__yesterday-date { font-size: 12px; }
 }
 @media (min-width: 960px) {
   .fr-page--today { max-width: 1200px; height: auto; overflow: visible; min-height: 0; padding: 24px 32px 40px; }
@@ -132,11 +145,23 @@ body:has(.fr-page--today) { background: #eef3f5; }
   .fr-page--today .fr-today__scroll { display: contents; }
   .fr-page--today .fr-today__scroll > * { grid-column: 1; }
   .fr-page--today .fr-today__scroll > .fr-today__top { grid-row: 1; border-radius: 24px; overflow: hidden; }
-  .fr-page--today .fr-today__hero { padding: 24px 28px 80px; background-size: 100% 100%; }
+  .fr-page--today .fr-today__hero { padding: 24px 28px 80px; background-size: 100% 100%; background-position: center bottom; }
+  .fr-page--today .fr-today__hero::after { display: none; }
   .fr-page--today .fr-today__basis { padding: 12px 28px 20px; }
   .fr-page--today .fr-today__records { grid-row: 2; margin: 0; }
-  .fr-page--today .fr-today__scroll > .fr-today__right { grid-column: 2; grid-row: 1 / -1; margin: 0; }
-  .fr-page--today .fr-today-layout > .fr-actionbar { max-height: none; overflow: visible; grid-row: 3; position: sticky; top: 18px; bottom: auto; margin: 0; padding: 12px 18px 18px; background: var(--fr-surface); border-radius: 24px; box-shadow: none; }
+  /* 右は一つの落ち着いた面。予測と実績を区切り、同じ白カードの反復を避ける。 */
+  .fr-page--today .fr-today__scroll > .fr-today__right { grid-column: 2; grid-row: 1 / -1; margin: 0; background: var(--fr-surface); padding: 24px 28px; border-radius: 24px; gap: 24px; }
+  .fr-page--today .fr-today__right > .fr-band,
+  .fr-page--today .fr-today__right > .fr-section,
+  .fr-page--today .fr-today__right > .fr-achieved-facts { padding: 0; border-radius: 0; background: transparent; gap: 12px; }
+  .fr-page--today .fr-today__right > .fr-section:not(:first-child),
+  .fr-page--today .fr-today__right > .fr-achieved-facts { border-top: 1px solid var(--fr-line); padding-top: 24px; }
+  .fr-page--today .fr-today__right .fr-progress__percent { font-size: 40px; }
+  .fr-page--today .fr-today__right .fr-section-label { font-size: 18px; font-weight: 900; color: var(--fr-ink); }
+  .fr-page--today .fr-today__detail > summary { font-size: 14px; padding-block: 6px; border-bottom: 1px solid var(--fr-line); }
+  .fr-page--today .fr-today-layout > .fr-today__dock { max-height: none; grid-row: 3; position: sticky; top: 18px; margin: 0; border-radius: 24px; box-shadow: none; }
+  .fr-page--today .fr-today__record-day { padding: 12px 18px 0; }
+  .fr-page--today .fr-actionbar { overflow: visible; padding: 4px 18px 18px; border-radius: 0 0 24px 24px; }
   .fr-page--today .fr-core__value { font-size: 100px; }
   .fr-page--today .fr-today-layout:not(:has(.fr-today__right)) { grid-template-columns: minmax(0, 1fr); }
   .fr-page--today .fr-actionbar__pair { gap: 12px; }

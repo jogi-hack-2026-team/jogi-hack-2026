@@ -1,5 +1,5 @@
 import type { Log } from '@contracts';
-import { Icon } from '../../ui/components/Icon.tsx';
+import { ResponsiveDetails } from './ResponsiveDetails.tsx';
 import { Section, SectionLabel } from '../../ui/components/Section.tsx';
 import type { AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
@@ -34,16 +34,21 @@ export function ProgressSummary({ progress, initialProgress, logs, recordStartDa
           <small>%</small>
         </p>
         <p className="fr-progress__amount">
-          {fmt.total(progress.done)} / {fmt.total(progress.total)}
+          {todayCopy.progressActual(fmt.total(progress.done))}
         </p>
       </div>
       <div className="fr-progress-track" role="progressbar" aria-labelledby="fr-progress-title" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
         <span style={{ width: String(percent) + '%' }} />
       </div>
-      <details className="fr-today__detail">
-        <summary>{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}<Icon name="chevronDown" size={16} /></summary>
+      <dl className="fr-progress__balance">
+        <div><dt>{todayCopy.progressGoal}</dt><dd>{fmt.total(progress.total)}</dd></div>
+        <div><dt>{todayCopy.progressRemaining}</dt><dd>{fmt.total(Math.max(0, progress.total - progress.done))}</dd></div>
+        {progress.done > progress.total ? <div><dt>{todayCopy.progressExcess}</dt><dd>{fmt.total(progress.done - progress.total)}</dd></div> : null}
+      </dl>
+      <ResponsiveDetails summary={todayCopy.progressDetailsTitle}>
+        <p className="fr-note">{todayCopy.progressHelp(initialProgress > 0 ? fmt.total(initialProgress) : null)}</p>
         <CumulativeChartView logs={logs} initialProgress={initialProgress} total={progress.total} recordStartDate={recordStartDate} today={today} fmt={fmt} done={progress.done} />
-      </details>
+      </ResponsiveDetails>
     </Section>
   );
 }

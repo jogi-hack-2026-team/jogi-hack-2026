@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { amountFormat, hoursMinutes } from '../src/copy/amount.ts';
+import { amountFormat, hoursMinutes, isRecordAmount, RECORD_AMOUNT_MAX, stepRecordAmount } from '../src/copy/amount.ts';
 
 test('分のGoalの累計・総量・残量は、整数分を正確な時間＋分で書く（P-18の固定例）', () => {
   const cases = [
@@ -17,6 +17,16 @@ test('分のGoalの累計・総量・残量は、整数分を正確な時間＋�
   assert.deepEqual([fmt.total(2999), fmt.total(3000), fmt.total(3000 - 2999)], ['49時間59分', '50時間0分', '0時間1分']);
   // 大きい時間は桁区切りを付ける
   assert.equal(hoursMinutes(60_000 * 6 + 5), '6,000時間5分');
+});
+
+test('記録の量はDONE契約の整数範囲で、±はGoalの1回の量を使い境界で止まる', () => {
+  for (const value of [null, 0, -1, 1.5, NaN, Infinity, RECORD_AMOUNT_MAX + 1]) assert.equal(isRecordAmount(value), false);
+  for (const value of [1, 37, RECORD_AMOUNT_MAX]) assert.equal(isRecordAmount(value), true);
+  assert.equal(stepRecordAmount(37, 20, 1), 57);
+  assert.equal(stepRecordAmount(37, 20, -1), 17);
+  assert.equal(stepRecordAmount(2, 20, -1), 1);
+  assert.equal(stepRecordAmount(RECORD_AMOUNT_MAX - 1, 20, 1), RECORD_AMOUNT_MAX);
+  assert.equal(stepRecordAmount(3, 2, 1), 5); // 回数Goalも整数・Goal固有の刻み
 });
 
 test('1回の量・日々の記録は分のまま、回のGoalはすべて回で書く', () => {

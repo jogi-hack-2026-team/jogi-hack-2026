@@ -1,9 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
 import { longDate } from '../../copy/date.ts';
 import { ErrorPanel } from '../../ui/components/Notice.tsx';
 import type { Log } from '@contracts';
-import { amountFormat, type AmountFormat } from '../../copy/amount.ts';
+import { amountFormat, RECORD_AMOUNT_MAX, RECORD_AMOUNT_MIN, stepRecordAmount, type AmountFormat } from '../../copy/amount.ts';
 import { todayCopy } from '../../copy/today.ts';
-import { Button } from '../../ui/components/Button.tsx';
+import { Button, IconButton } from '../../ui/components/Button.tsx';
 import { ChoiceButton } from '../../ui/components/ChoiceButton.tsx';
 import { StickyActionBar } from '../../ui/components/StickyActionBar.tsx';
 import { AmountEditor } from './AmountEditor.tsx';
@@ -47,6 +48,30 @@ export function RecordChoiceBar({
 }) {
   const label = fmt.record;
   const currentAmount = current?.status === 'DONE' && current.amount !== null ? current.amount : sessionAmount;
+  const [steppedInitial, setSteppedInitial] = useState<number | null>(null);
+  const amountLink = useRef<HTMLButtonElement>(null);
+  const amountControls = useRef<HTMLSpanElement>(null);
+  const amountEntry = useRef<-1 | 1 | undefined>(undefined);
+  const returnFocus = useRef(false);
+  useEffect(() => {
+    if (!editingAmount && returnFocus.current) {
+      returnFocus.current = false;
+      const label = amountEntry.current === 1 ? todayCopy.amountIncrease : amountEntry.current === -1 ? todayCopy.amountDecrease : undefined;
+      const trigger = label ? [...(amountControls.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])].find(button => button.getAttribute('aria-label')?.startsWith(label)) : amountLink.current;
+      (trigger && !trigger.disabled ? trigger : amountLink.current)?.focus();
+    }
+  }, [editingAmount]);
+  const openAmount = (direction?: -1 | 1) => {
+    if (saver.isSaving || locked) return;
+    amountEntry.current = direction;
+    setSteppedInitial(direction ? stepRecordAmount(currentAmount, sessionAmount, direction) : null);
+    onEditingAmountChange(true);
+  };
+  const closeAmount = () => {
+    returnFocus.current = true;
+    setSteppedInitial(null);
+    onEditingAmountChange(false);
+  };
   // 昨日を訂正している間は、量の入力からも送らない
   const save = (choice: RecordChoice) => (locked ? undefined : saver.save({ localDate: today, choice }));
   const saving = saver.saving?.choice;
@@ -92,12 +117,12 @@ export function RecordChoiceBar({
       <StickyActionBar>
         <AmountEditor
           label={todayCopy.amountTodayLabel}
-          initial={currentAmount}
+          initial={steppedInitial ?? currentAmount}
           sessionAmount={sessionAmount}
           fmt={fmt}
           busy={saver.isSaving || locked}
           onSubmit={(amount) => save({ status: 'DONE', amount })}
-          onCancel={() => onEditingAmountChange(false)}
+          onCancel={closeAmount}
         />
       </StickyActionBar>
     );
@@ -110,9 +135,11 @@ export function RecordChoiceBar({
   ) : (
     <span className="fr-record__note">
       {current ? <span>{todayCopy.changeNote}</span> : null}
-      <span>
+      <span ref={amountControls} className="fr-record__amount-controls">
         {todayCopy.doneAmount(label(current ? currentAmount : sessionAmount))}
-        <Button variant="text" onClick={() => onEditingAmountChange(true)}>
+        <IconButton icon="minus" label={`${todayCopy.amountDecrease}（${label(sessionAmount)}ずつ）`} disabled={currentAmount <= RECORD_AMOUNT_MIN} onClick={() => openAmount(-1)} />
+        <IconButton icon="plus" label={`${todayCopy.amountIncrease}（${label(sessionAmount)}ずつ）`} disabled={currentAmount >= RECORD_AMOUNT_MAX} onClick={() => openAmount(1)} />
+        <Button ref={amountLink} variant="text" onClick={() => openAmount()}>
           {todayCopy.changeAmount}
         </Button>
         {current && onCancelChange ? (

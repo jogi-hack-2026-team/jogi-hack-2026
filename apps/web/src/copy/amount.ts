@@ -13,6 +13,19 @@ export type AmountGoal = { unit: GoalUnit };
 
 const MINUTES_PER_HOUR = 60;
 
+// LogPutのDONE量と同じ整数範囲。ステッパーも分・回の元の値を保つ。
+export const RECORD_AMOUNT_MIN = 1;
+export const RECORD_AMOUNT_MAX = 2_147_483_647;
+
+export function isRecordAmount(value: number | null): value is number {
+  return value !== null && Number.isInteger(value) && value >= RECORD_AMOUNT_MIN && value <= RECORD_AMOUNT_MAX;
+}
+
+/** 既存D1-sheet/E2と同じ「1回の量」刻み。保存や予測計算は行わない。 */
+export function stepRecordAmount(value: number, sessionAmount: number, direction: -1 | 1): number {
+  return Math.min(RECORD_AMOUNT_MAX, Math.max(RECORD_AMOUNT_MIN, value + direction * sessionAmount));
+}
+
 const integer = (n: number) => n.toLocaleString('ja-JP');
 
 /** 整数分を正確な時間＋分にする（0 → 0時間0分、61 → 1時間1分、1240 → 20時間40分）。 */

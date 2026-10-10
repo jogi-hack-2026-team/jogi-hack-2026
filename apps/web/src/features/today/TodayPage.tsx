@@ -293,6 +293,11 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
       </div>
 
       {showChoices && recordGoal && recordDate ? (
+        <section className="fr-today__dock" aria-labelledby="fr-today-record-day">
+          <p id="fr-today-record-day" className="fr-today__record-day">
+            <span>{todaySaver.isStaleDate(recordDate) ? todayCopy.recordTarget : todayCopy.todayRecordTitle}</span>
+            <time dateTime={recordDate}>{longDate(recordDate)}</time>
+          </p>
         <RecordChoiceBar
           // 選び直しを始めたとき・やめたときに、量の入力などを持ち越さない
           key={changing ? 'change' : 'new'}
@@ -315,6 +320,7 @@ function TodayScreen({ goalId, notBefore }: { goalId: string; notBefore: number 
             refresh();
           }}
         />
+        </section>
       ) : null}
       </div>
     </div>
@@ -375,7 +381,7 @@ function TodayContent({
         <>
           {changeHeader ?? (today.todayLog ? <RecordedSummary todayLog={today.todayLog} fmt={fmt} onChange={onChange} /> : null)}
           <div className="fr-today__right">
-            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} />
+            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
             {progress}
           </div>
         </>
@@ -397,7 +403,7 @@ function TodayContent({
             </CoreMetric>
           </section>
           <div className="fr-today__right">
-            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} />
+            <OutlookPanel completion={view.completion} today={today.today} title={outlookTitle} fmt={fmt} targetDate={goal.targetDate} sessionAmount={today.context.sessionAmount} />
             {progress}
           </div>
         </>

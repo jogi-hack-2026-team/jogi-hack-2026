@@ -1,4 +1,5 @@
 import { Band } from '../../ui/components/Section.tsx';
+import { ResponsiveDetails } from './ResponsiveDetails.tsx';
 import { InsufficientNotice } from '../../ui/components/Notice.tsx';
 import type { AmountFormat } from '../../copy/amount.ts';
 import { completionNoteFor, todayCopy } from '../../copy/today.ts';
@@ -17,6 +18,7 @@ export function OutlookPanel({
   title,
   fmt,
   targetDate = null,
+  sessionAmount,
 }: {
   completion: CompletionPresentation;
   today: string;
@@ -24,6 +26,7 @@ export function OutlookPanel({
   fmt: AmountFormat;
   /** 到達予定日（#157、B案）。設定がなければ null で、A案と同じ表示。 */
   targetDate?: string | null;
+  sessionAmount: number;
 }) {
   return (
     <Band labelledBy="fr-outlook-title">
@@ -33,7 +36,7 @@ export function OutlookPanel({
       {/* 材料が足りないときも、到達予定日だけは出す（ずれは出さない） */}
       {targetDate ? <TargetDateRow targetDate={targetDate} /> : null}
       {completion.kind === 'estimate' ? (
-        <Estimate completion={completion} today={today} targetDate={targetDate} />
+        <Estimate completion={completion} today={today} targetDate={targetDate} session={fmt.record(sessionAmount)} />
       ) : completion.kind === 'insufficient' ? (
         <InsufficientNotice>{completion.message}</InsufficientNotice>
       ) : (
@@ -44,8 +47,8 @@ export function OutlookPanel({
   );
 }
 
-function Estimate({ completion, today, targetDate }: { completion: Extract<CompletionPresentation, { kind: 'estimate' }>; today: string; targetDate: string | null }) {
-  const label = completion.scenario === 'TODAY_DONE' ? todayCopy.completionLabelTodayDone : todayCopy.completionLabelCurrent;
+function Estimate({ completion, today, targetDate, session }: { completion: Extract<CompletionPresentation, { kind: 'estimate' }>; today: string; targetDate: string | null; session: string }) {
+  const label = completion.scenario === 'TODAY_DONE' ? todayCopy.completionLabelTodayDone(session) : todayCopy.completionLabelCurrent;
   return (
     <>
       <div className="fr-outlook__estimate">
@@ -55,10 +58,10 @@ function Estimate({ completion, today, targetDate }: { completion: Extract<Compl
         <p className="fr-outlook__p80">{completion.p80Label ? todayCopy.completionP80(completion.p80Label) : todayCopy.completionP80Over3Years}</p>
         {targetDate ? <GapLine today={today} days={completion.p80Days} targetDate={targetDate} /> : null}
       </div>
+      <p className="fr-note fr-outlook__assumption">{todayCopy.completionAssumption(session)}</p>
       <EstimateNote completion={completion} />
       <SourceRows sources={completion.sources} />
-      <details className="fr-today__detail" aria-label={todayCopy.outlookLabel}>
-        <summary>{todayCopy.whyTitle}<Icon name="chevronDown" size={16} /></summary>
+      <ResponsiveDetails summary={todayCopy.completionWhyTitle} ariaLabel={todayCopy.outlookLabel}>
         {completion.p50Days !== null ? (
           <AxisChart today={today} p50Days={completion.p50Days} p80Days={completion.p80Days} sameWeek={completion.p50Label === completion.p80Label} targetDate={targetDate} />
         ) : null}
@@ -67,7 +70,7 @@ function Estimate({ completion, today, targetDate }: { completion: Extract<Compl
           {todayCopy.axisNote}
           {targetDate ? todayCopy.targetGapNote : null}
         </p>
-      </details>
+      </ResponsiveDetails>
     </>
   );
 }
