@@ -45,4 +45,16 @@ APIは.5CPU/320MiB。以下は同じ所有DBでbaselineの後にcandidateを測�
 
 現Reactの実DOMとPNGは新HTTP正常DTO／安全な500エラーの別fixture replayで確認し、正常な予測と計算エラー時の記録ボタン、自動書込0件を照合した。安全500の原因は合成保存snapshot不正でありRESOURCE_LIMITの実HTTP誘発ではない。予算エラーの接続はtyped境界unit testで確認する。所有3container／network／tmpfsDBを撤去し、既存37containerのID/image/status/start time/exit code、通常checkoutのHEAD／変更2ファイルhash／status、旧比較ZIP3本のSHA不変を照合した。詳細harness・旧FAIL・snapshot／DOM／独立レビューはIssue #203の別Library証拠bundleへ保存する。
 
-実APIの量・判定・認可／DB不変と、有限fixtureでのHTTP待ち時間、単体T-14を分ける。ブラウザは実HTTPの正常DTOと安全エラーを隔離fixture replayで現Reactへ渡し、予測表示と記録可否を確認する。これは実ブラウザの全HTTP認証フローやRESOURCE_LIMITの実HTTP誘発ではない。公開runtime・負荷限界・SCA全件・校正・merge/deployは未実施。今回の完了は独立した敵対的セルフレビュー・検証結果・最終SHAのCI確認と残余リスクの記録で判定し、Human Approve／チームdocs採択を追加完了条件にしない。GitHub設定上のmerge条件は設定状態として記録し、main merge/deployは本人操作として実施しない。
+実APIの量・判定・認可／DB不変と、有限fixtureでのHTTP待ち時間、単体T-14を分ける。ブラウザは実HTTPの正常DTOと安全エラーを隔離fixture replayで現Reactへ渡し、予測表示と記録可否を確認する。これは実ブラウザの全HTTP認証フローやRESOURCE_LIMITの実HTTP誘発ではない。公開runtime・負荷限界・SCA全件・校正・merge/deployは未実施。技術検証の完了は独立した敵対的セルフレビュー・検証結果・最終SHAのCI確認と残余リスクの記録で判定し、方式の採択は下記の本人判断として分ける。GitHubのreview状態・merge条件は変更せず、main merge/deployは実施しない。
+
+## 2026-10-10の採択とレビュー対応
+
+Kaito-Iwaseの明示判断で、[PR #204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204)の計算方式を採用する。正式状態とD-22の部分置換は[Architecture D-31](../../docs/architecture.md#d-31-同一モデルの完了cdf統合候補203)に記録する。同じMarkov/Betaモデルの有限Kによる数値近似差を減らし、範囲外・数値gate・明示`sampled`を残して公開DTOを維持する判断である。チーム全員の合意・Human APPROVED review・現実の予測精度・mainへのMerge・公開配置の確認とは区別する。
+
+[レビュー #5478076801](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204#pullrequestreview-5478076801)のBlockingは採択状態と旧Decisionの対応であり、数式修正は求められていない。レビュー担当者241205008は独自Gauss–Legendre oracleの8ケースで最大CDF誤差2.45e-14・分位点不一致0件を報告した。本追補ではそのoracleを実行しておらず、上記の作者側検証と混同しない。
+
+`NUMERICAL_MARGIN=1e-10`は既存の有限fixtureで観測した最大CDF誤差5.77e-15より広く、近傍の整数比較へ送る幅である。全入力の厳密な誤差上界を証明した値ではなく、`MAX_CLOSED_*`や漸化式の変更時には独立oracle・閾値境界・数値gateを再確認する。
+
+gの短積はalphaに比例する整数積を持つため、この版は検証したalpha<=32に限定し、alpha>32の逐日積には1000日／32768bitの資源保護を残す。旧方式なら有限値が出る入力も`RESOURCE_LIMIT`になりうる。これはgの定義や完了horizonの変更ではない。全alphaへの短積拡張や上限変更は今回行わず、HTTPで極端posteriorの資源失敗を誘発したとは報告しない。
+
+表示粒度は変更しない。上記の合成実HTTPでは旧P80=183日が193日へ変わった例があり、同じ週に収まる場合と週境界をまたぐ場合がある。有限Kの近似差が減っても、モデル上の将来行動・有限記録の不確実性は残るため、既存の週表示を維持する。sampling由来のseed差という当初の理由は[追加比較案の補足](../../docs/prediction/action-scenarios-proposal.md)で過去と現行を分ける。レビュー担当者の7ケースがすべて早めだった観測を、全入力の偏りや実ユーザー精度の改善へ一般化しない。

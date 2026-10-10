@@ -45,6 +45,10 @@ export function recoveryQuantiles(alpha: number, beta: number): { g50: number; g
     };
     return { g50: find(2n), g80: find(5n) };
   }
+  // 短積を全alphaへ広げるとalpha個のBigInt積が必要になるため、この版は
+  // 検証したalpha<=32だけを短積にし、alpha>32は逐日積のworkを有限に保つ。
+  // 旧方式で値が出る入力も予算超過でRESOURCE_LIMITになりうる。1000日は
+  // gの定義や完了horizonではなく資源保護で、全入力への性能保証ではない。
   // t日後の生存確率P(G>t)=積_{i=0..t-1}(beta+i)/(alpha+beta+i)を整数比で保持する。
   // t=0ではまだ再開していない確率が1で、下のループで1日分ずつ更新する。
   let numerator = 1n;

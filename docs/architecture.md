@@ -468,7 +468,7 @@ interface PredictionResult {
      ```
 
    - `requiredFutureDone > H`なら、DPをせずに両方`null`。
-   - [D-31](#d-31-同一モデルの完了cdf統合候補203)の統合候補では、正整数shape<=1,000,000、`N<=H<=1095`の通常経路で独立Beta事後分布を積分した同一MarkovモデルのCDFを使う。閾値の近傍だけ共通整数分母による比較を行う。質量・単調性等のgate、範囲外、明示`sampled`は下記のsampling経路を残す。浮動小数点誤差・有限sampling近似・モデルの不確実性を解消したとは扱わない。
+   - [D-31](#d-31-同一モデルの完了cdf統合候補203)で採択した既定の`auto`では、正整数shape<=1,000,000、`N<=H<=1095`の通常経路で独立Beta事後分布を積分した同一MarkovモデルのCDFを使う。閾値の近傍だけ共通整数分母による比較を行う。質量・単調性等のgate、範囲外、明示`sampled`は下記のsampling経路を残す。浮動小数点誤差・有限sampling近似・モデルの不確実性を解消したとは扱わない。
    - **sampling経路**では`m = 0 … K−1`について、[乱数の仕様](#乱数とサンプラーの仕様)に従い`a_m`、次に`b_m`を事後分布から抽選する。
    - 各`(a_m, b_m)`で、状態（DONE / SKIPPED）×`futureDoneCount`の確率を、明日（`d = 1`）から1日ずつ進める。`requiredFutureDone`回目のDONEが起きた日`d`（`1 ≤ d ≤ H`）の確率を`1/K`倍して混合分布に加える。
    - **確率の大きさで計算を打ち切らない。** 微小な確率でも、累積確率が閾値の近くにあると分位点を変えうる（PR #86レビュー：打ち切りでP50が3日から5日に変わる例。[Evidence](prediction/evidence.md#dpの微小確率の打ち切りpr-86レビュー対応)）。
@@ -632,7 +632,7 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-19 | 2026-09-30 | DECIDED | [予測モデルにM1（2状態Bayesian Markov）を採用、M0・M2は不採用](#d-19)（ADR-001） |
 | D-20 | 2026-09-30 | DECIDED（旧predictの共通prior。R-11の依頼者承認範囲はD-26へ分離） | [事前分布をBeta(2,2)とする範囲と変更案](#d-20)（ADR-002） |
 | D-21 | 2026-09-30 | DECIDED | [中心指標をBeta-Geometric分布の中央値とする](#d-21)（ADR-003） |
-| D-22 | 2026-09-30 | DECIDED | [将来の日々のMonte Carloをやめ、DPで計算する](#d-22)（ADR-004） |
+| D-22 | 2026-09-30 → 2026-10-10 | PARTIALLY SUPERSEDED by D-31（完了の既定計算のみ） | [将来の日々のMonte Carlo／CRNを使わない判断は維持](#d-22)（ADR-004）。K=200の事後サンプル＋DPは範囲外・数値gate・明示`sampled`の経路として残る |
 | D-23 | 2026-09-30 → 2026-10-03（2026-10-05・10-06追加） | DECIDED（基本構成、[FE報告・BE本人記録](#2026-10-03の技術構成合意)） | [言語・FE／API・DB・単一コンテナ・独立計算コアを採用](#d-23)。[npm workspacesと`pg`を追加採択](#2026-10-05の追加採択)。[版・runner・起動構成を固定](#2026-10-06の版固定と起動構成)。[migration方式を固定](#2026-10-06のmigration方式74)。既存方式の[Docker一式起動補完](#docker一式起動の補完130)は#130でレビュー |
 | D-24 | 2026-09-30 → 2026-10-03（2026-10-06実装） | RECOMMENDED / CONDITIONAL（第一候補、最終採択待ち） | [Better Authは検証・運用条件付き](#d-24)。[#74で版固定、#75で実装](#2026-10-06の認証実装75)。公開HTTPS・運用担当は残条件 |
 | D-25 | 2026-09-30 → 2026-10-03 → 2026-10-08 | RECOMMENDED / CONDITIONAL（第一候補、最終受入待ち） | [FE・BEともVercel Hobby＋Neon Free、ローカルDocker。厳密0円・非商用・検証条件付き](#d-25)。Cloud Runの旧候補記録を保持 |
@@ -641,17 +641,19 @@ resetは同ユーザーの初回にも効くtransaction advisory lock→認証us
 | D-28 | 2026-10-09 | DECIDED（依頼者の方針変更・敵対的セルフレビューを根拠に同期維持と再検討条件を採択） | [予測計算はMVPでは同期実行を維持し、worker化は再検討条件付きで見送る](#d-28) |
 | D-29 | 2026-10-09 | 依頼者の実装指示・チームレビュー対象 | [量・設定版・作成操作の保全](#d-29-量と作成操作の保全148) |
 | D-30 | 2026-10-10 | 依頼者判断（Code Freeze前のため文書のチーム事前承諾なし。コードはHuman Review対象） | [Todayの同一owner再確認で入力を保つ](#d-30-todayの同一owner再確認で入力を保つ190)。D-29・#155の別owner・失敗時の境界は維持 |
-| D-31 | 2026-10-10 | 依頼者の統合候補実装指示・公開metadata非追加の案1指定。コードはHuman Review対象 | [同一モデルの完了CDF統合候補](#d-31-同一モデルの完了cdf統合候補203)。モデル・実績・表示を維持し、数値方式と有限work保護を個別に検証する |
+| D-31 | 2026-10-10 | DECIDED（Kaito-Iwaseの明示判断、PR #204） | [同一モデルの完了CDF積分](#d-31-同一モデルの完了cdf統合候補203)を標準整数域の既定に採用。D-22の完了計算のみ置換し、範囲外・数値gate・明示`sampled`、公開DTO非追加を維持 |
 
 ### D-31 同一モデルの完了CDF統合候補（#203）
 
+2026-10-10 / **DECIDED（Kaito-Iwaseの明示判断）** / [PR #204](https://github.com/jogi-hack-2026-team/jogi-hack-2026/pull/204)の計算方式を採用する。見出しは候補実装時の参照先として保持する。判断の出所はKaito-Iwaseであり、チーム全員の合意・Human APPROVED review・mainへのMerge・公開配置・実ユーザー検証を済みとする記録ではない。
+
 Context: 同じBeta事後分布の完了CDFを有限Kで近似する差と、同期計算が記録等を待たせる条件を区別する。T-14・D-19〜D-22・D-26・D-28を対象に、依頼者が所有合成環境での実装・実API検証・Draft PRを指示した。実ユーザー校正や公開SLOの検証ではない。
 
-Decision（依頼者指定の候補範囲、Human Review対象）: 同一MarkovモデルのBeta-binomial積分、閾値近傍の限定整数比較、sampling／中心指標の有限work保護を追加する。gの定義・H非適用、入力prior・全履歴・量・今日の仮実行・状態判定は維持する。公開metadataを追加しない案1を指定し、実方式は内部診断へ保持する。configは要求設定であり実抽選を偽らない。
+Decision: 同一MarkovモデルのBeta-binomial積分を標準整数域の既定`auto`に採用し、閾値近傍の限定整数比較、sampling／中心指標の有限work保護を保持する。D-22の完了の目安の既定計算だけを置換し、範囲外・数値gate・明示`sampled`には事後サンプル＋DPを残す。gの定義・H非適用、入力prior・全履歴・量・今日の仮実行・状態判定は維持する。公開metadataを追加しない案1を採用し、実方式は内部診断へ保持する。configは要求設定であり実抽選を偽らない。
 
 Alternatives: 案2の明示した新表現版は外部consumerに方式情報を提供する必要が生じた場合に再検討する。案3の同版field追加＋API/FE同時更新＋旧タブfull reloadは、現FEがmetadataを使わない一方で旧strict readerを拒否するため今回選ばない。初期の追加DTOを拒否した証拠とD-22の旧sampling記録は当時の方式として保持する。現在の公開field集合／`r11-v1`は維持する。
 
-Consequences: 同seedの再現性と全事後分布の積分を区別する。範囲外／数値gateのsamplingは有限Kの近似を残し、資源上限はtyped計算エラーとして既存の安全なHTTP失敗へ接続する。代表入力の成功だけで全域の速度・精度を保証しない。公開runtimeと校正は未検証。依頼者方針により独立した敵対的セルフレビュー・検証・最終SHAのCI確認で本作業の完了を判定し、Human Approve／チームdocs採択を追加条件にしない。設定上のmerge条件は別に記録し、merge/deployは本人操作とする。理由・不変条件・再検討条件・実測は[#203検証資料](../experiments/completion-cdf-integration/README.md)を参照する。
+Consequences: 同seedの再現性と全事後分布の積分を区別する。同じ確率法則に対する有限Kの近似差を減らす採択であり、現実の行動予測精度の改善ではない。範囲外／数値gateのsamplingは有限Kの近似を残し、資源上限はtyped計算エラーとして既存の安全なHTTP失敗へ接続する。代表入力の成功だけで全域の速度・精度を保証しない。公開runtimeと校正は未検証。採択は上記のKaito-Iwaseの明示判断、技術検証は独立した敵対的セルフレビュー・検証・最終SHAのCIで区別して記録する。GitHubのreview状態・merge条件は変更せず、merge/deployは未実施とする。理由・不変条件・再検討条件・実測は[#203検証資料](../experiments/completion-cdf-integration/README.md)を参照する。
 
 ### D-27
 
@@ -708,6 +710,8 @@ Consequences / Invariants: marker用の最小tableと複合unique制約を追加
 2026-09-30 / **DECIDED（依頼者判断）** / ADR-003。中心指標を「今日サボった場合に遠ざかる日数G」のBeta-Geometric事後予測分布の中央値`g50`とする。期待値（発散しうる）、完了日P50の差（分位点の差・打ち切りの影響）、期日到達確率の差（期日が必要）は不採用。[詳細](prediction/decision-log.md#adr-003-中心指標はbeta-geometric分布の中央値)。
 
 ### D-22
+
+2026-10-10 / **完了の既定計算のみD-31で部分置換**。標準整数域の`auto`はBeta事後積分を使い、事後サンプル＋DPは範囲外・数値gate・明示`sampled`で残す。将来の日々のMonte Carlo／CRNを使わない判断と中心指標の定義は維持する。以下は2026-09-30の判断理由であり、当時の方式・測定を保持する。
 
 2026-09-30 / **DECIDED（依頼者判断）** / ADR-004。将来の日々のMonte Carloと共通乱数法（CRN）を使わない。中心指標は閉形式、完了の目安は事後サンプル（K=200）ごとに到達日分布をDPで厳密に計算する。決定的・再現可能で、シミュレーションノイズとCRNが不要になり、テストが書きやすい。[詳細](prediction/decision-log.md#adr-004-将来のmonte-carloをやめてdpで計算)。
 
