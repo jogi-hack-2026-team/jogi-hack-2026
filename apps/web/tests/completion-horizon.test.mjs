@@ -154,7 +154,7 @@ test('実APIの純粋変換でも、未回答・不明・片方回答の材料�
   }
   const dto = dtoFor({ a: 'HIGH', b: 'HIGH' });
   assert.equal(Value.Check(TodayR11, dto), true);
-  assert.deepEqual(dto.prediction.completion, { status: 'available', scenario: 'TODAY_DONE', p50Days: null, p80Days: null });
+  assert.deepEqual(dto.prediction.completion, { status: 'available', scenario: 'TODAY_DONE', p50Days: null, p80Days: null, computation: { method: 'BOUNDARY', samples: null, seed: null, fallbackReason: null } });
   assert.deepEqual(dto.provenance, { a: 'QUESTION', b: 'QUESTION' });
   assert.equal(dto.plan, null);
   const view = toForecastView(dto.prediction, context.unit, { provenance: dto.provenance, plan: dto.plan, sessionAmount: context.sessionAmount });
