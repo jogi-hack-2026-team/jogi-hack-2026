@@ -19,6 +19,8 @@ export function useConfirmedGoalSave(current: PrivateEpoch, generation: number, 
   const [saved, setSaved] = useState<{ owner: string; generation: number; scope: string; token: object; complete?: () => boolean }>();
   const [failedCompletion, setFailedCompletion] = useState<{ receipt: typeof saved; error: unknown }>();
   const delivered = useRef<typeof saved>(undefined);
+  // 確定成功を採用できず（K2へ置換済みなど）フォームへ戻すとき、確認中に保っていたFormを保存済みの操作から作り直す（#185）
+  const [formReset, setFormReset] = useState(0);
   useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   // 同routeのGoal1→Goal2→Goal1でも親は再利用される。commit前の離脱開始も旧訪問を失効させる。
   useLayoutEffect(() => router.subscribe('onBeforeNavigate', ({ pathChanged }) => {
@@ -37,11 +39,11 @@ export function useConfirmedGoalSave(current: PrivateEpoch, generation: number, 
       // 確認中の一時unmountでも、この訪問の確定成功を採用するときは該当操作を終了する。
       // 離脱/owner変更後の旧成功では呼ばない。K2へ置換済みならK2を残してそのフォームへ戻す。
       try {
-        if (saved.complete && !saved.complete()) { setSaved(undefined); return; }
+        if (saved.complete && !saved.complete()) { setSaved(undefined); setFormReset(n => n + 1); return; }
       } catch (error) { setFailedCompletion({ receipt: saved, error }); return; }
       delivered.current = saved;
       void navigate({ to: '/goals' });
     }
   }, [confirmed, error, saved, scope, navigate]);
-  return { onSaved, confirmed, error, operationVisit: [instance, visit.current.generation] as const };
+  return { onSaved, confirmed, error, formReset, operationVisit: [instance, visit.current.generation] as const };
 }

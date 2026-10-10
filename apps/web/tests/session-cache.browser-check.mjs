@@ -104,6 +104,12 @@ test('Better Auth 1.7.7: visibility refetch failure masks draft and successful r
   t.diagnostic(JSON.stringify(result));
 });
 
+test('#185 Goal form: failure context survives a healthy same-owner check; saves wait and failed/foreign checks discard', { timeout: 180000 }, async (t) => {
+  const result = await runBrowser(t, './session-goal-failure.browser.tsx', false, true);
+  assert.equal(result.results.length, 8);
+  t.diagnostic(JSON.stringify(result));
+});
+
 test('#190 Today: same-owner visibility check keeps input, holds saves until confirmed, and discards on B/failure', { timeout: 180000 }, async (t) => {
   const result = await runBrowser(t, './session-today.browser.tsx', false);
   assert.equal(result.results.length, 4);
