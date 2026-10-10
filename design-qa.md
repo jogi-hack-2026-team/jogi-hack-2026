@@ -19,11 +19,15 @@
 - スマホ操作帯の初回表示の重なりを通常フロー化で解消。390/960/1440pxで操作帯×見通しの重なり面積0、量の編集中も重なり0。
 - Enter/ArrowDown/Escapeのメニュー操作とfocus返却、昨日の量37の開閉保持、今日の量49の取消、昨日と根拠の開閉を確認。独立UI確認のGoal/Log書込0。
 - 別の合成Goalで実UIの「やった」→実API PUT200→記録済み表示を確認。DONE20分が保存され、保存後の見出しへfocusが戻る。専用環境への書込はGoal作成1件・Log保存1件のみ。通常の4プレビュー状態は維持。
-- Web単体テスト102 pass / 1 skip（ブラウザ検証の別入口）、専用Chrome回帰6 pass / 0 skip。owner切替、同一人再確認、Today保存日付、昨日の日跨ぎ入力境界を含む。
+- PR201統合後のWeb単体テスト103 pass / 1 skip（ブラウザ検証の別入口）、専用Chrome回帰6 pass / 0 skip。owner切替、同一人再確認、Today保存日付、昨日の日跨ぎ入力境界を含む。
 - Web型チェックと本番Vite buildが成功。既存JSチャンクの500kB警告が出るが、ビルド失敗はない。依存追加・lock更新なし。
 
 ローカル証跡名: reference-comparison-390.png、forecast-unrecorded-390-viewport.png、forecast-unrecorded-1280-viewport.png、visual-qa.json、typecheck-final.log、web-tests.log、browser-regressions.log、build.log。専用タスクのdawn-ui-evidenceに保管。資格情報・ランタイムファイルはPRに含めない。
 
+## 代表画像
+
+[390pxスマホ](docs/ui/today-dawn/preview-mobile-390.png)、[1440pxデスクトップ](docs/ui/today-dawn/preview-desktop-1440.png)、[390px参照比較](docs/ui/today-dawn/reference-comparison-390.png)。未記録・予測availableの実API画像。
+
 ## 範囲と残る確認
 
-独立レビューのBlocking/Should Fixは修正済み。初回プレビューについて依頼者の見た目・操作感のフィードバックを待つ。自然の日跨ぎ・本番・iOS/Safari・実端末は未検証（実hook/Chromeの日付回帰は実施）。API、Engine、権限、owner/answerRevision/settingsRevision/保存判定をこのUI差分で変更していない。PR197とPR195を指定ベースへ通常mergeしたため、main向けDraftでは未merge依存の差分も含まれ得る。UI固有差分は統合ベースf20da95から区別する。
+独立レビューのBlocking/Should Fixは修正済み。初回プレビューについて依頼者の見た目・操作感のフィードバックを待つ。自然の日跨ぎ・本番・iOS/Safari・実端末は未検証（実hook/Chromeの日付回帰は実施）。API、Engine、権限、owner/answerRevision/settingsRevision/保存判定をこのUI差分で変更していない。PR197、PR195（bd9288de）、PR201（cefecf62）を指定ベースへ通常mergeしたため、main向けDraftでは未merge依存の差分も含まれ得る。UI固有差分は統合ベースf20da95からの970e5b5で区別する。PR201はmainのSquash履歴との競合3件を統合済みPR197の境界テストへ揃え、統合差分がcopy・回帰・仕様・対応表の4ファイルだけであることを確認した。統合後に型・build・103件のWeb・6件のChrome回帰・16画面を再実行して成功。
