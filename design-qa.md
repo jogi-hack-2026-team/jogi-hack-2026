@@ -1,8 +1,24 @@
 # Future ROI 朝焼け・山並み案と全画面UXの実装QA（#199）
 
-**Final result: passed** — 修正後の独立視覚比較と操作回帰が成功。人間のUX受入・製品完成とは区別する。
+**最新の技術QA: passed** — 以下の再開後検証を参照。人間のUX受入・Human Approval・製品完成とは区別する。
 
-## 最新：全画面統一と3点の情報整理（2026-10-10）
+## 最新：既存Core復帰と昨日訂正の取消focus（2026-10-10）
+
+公開レビューと訂正に基づき、Hero「今日サボると、ゴールは何日遠ざかる？」と既存Coreを復帰した。未完了Goal・同じ継続傾向と設定量・再開後の経路共有というモデル条件で、g50は再開待ちの中央値と完了が遅れる日数の中央値を兼ねる。周辺の完了日P50どうしの差、実際の因果効果、任意の今日量や設定変更の効果とは区別する。共通posteriorから共有θを引く場合も条件付き経路共有は成立し、混合後のT_doneとGは一般に依存する。前段の「完了遅延として解釈できない」という全面否定と、それに基づくCore改訂は撤回した。新しいチーム合意やHuman Approvalは主張しない。API・Engine・保存hookの契約変更はない。
+
+YesterdayCorrectionの編集で元入口が消えるため、取消後にBODYへfocusが落ちる実Chrome再現を3入口で確認した。TodayScreenが同日・同画面の取消intentを持ち、有効な元入口へ戻す。Recent／menuなど入口が消えた場合は再表示された同日のsummary「変更」へ戻す。owner/Goal/draft世代のremountでintentを破棄し、対象日・private epoch・connected/disabled境界を確認する。成功保存の復帰は変更していない。境界guardはソースレビュー、同日復帰は実画面とnative回帰で検証した。
+
+独立Chrome最終QAは46観測で成功、今回範囲のMust/Shouldは0。390/1440pxで公開トップ→認証→一覧→Today→履歴の月移動→編集・戻り、未記録/記録済み/条件付き/達成済み、昨日summary/Recent/menuの取消6件を確認した。Homeは320/390/1440pxで意味の切れ目に折り返し、「遠ざ／かる」の語中分断を解消。390pxでは問い・g50・完了brief・累計・バーが初期表示に収まる。320pxのバーは初期表示外だがnative wheel150で全体へ到達し、horizontal overflowはない。既存GET/PUTの合成503、保存中とSPA離脱も確認した。全SPA離脱後の古い保存失敗が新hookへ残らない既存制約は#185の証跡と区別し、今回の保存契約へ範囲を広げない。
+
+実Goal書込0。4fixtureのGoal/Today/Log GETは前後完全一致。合成PUT attempt4は実APIへ転送していない。最終source hashは20d8fa4948bc9cdf655d6ae1f6bd7b3f77b829483e62a4294ab650ced34f56a1で前後一致し、229ファイルの現在byteも照合した。QAはd2fd574からの最終未コミットsourceで実行したため、commitとexactHEAD CIはPRで別途照合する。
+
+最終root typecheckとbuild成功。Webは112 pass/1 skip（ブラウザを別実行するentry）、全ブラウザ回帰は17 pass/fail0/skip0。YesterdayCorrectionの実TodayPage/useTodayData/useSaveLog native回帰は390/1440px×DONE/SKIPPEDで取消focus/PUT0/pageErrors0を確認し、関連suiteは10 pass/fail0/skip0。独立関連回帰38 pass/fail0/skip0。固定θと共通posterior混合の条件付き畳み込みは独立モデル検算で照合したが、実Engine統合や因果効果の証明とは呼ばない。新fixtureの最初のmount failureはauth/router mock設定の診断であり、実ChromeのBODY再現とは別。最初のtypecheckのoptional refエラーはentryRef ?? nullで修正し、最終型検証が成功した。既存500kB chunk警告は残る。
+
+タスク内mergeprep202-evidenceにbrowser-qa.json、browser-qa-verdict.json、browser-source-bridge.json、masked PNG、focus-implementation.md、adversarial-review.md、adversarial-model-check.json、最終typecheck/build/Web/browserログを保持する。runtime資格情報とこれらの実行データはcommitしない。前段の画像とLibraryは履歴で、復帰したHeroの最終画面とは区別する。
+
+未検証は本人の最終UX受入、Human Approval、iOS/Safari実機、ソフトkeyboard/safe-area、読み上げ音声、本番、実daycross。実API昨日訂正はDONEのfixtureで検証し、SKIPPEDは実hook native回帰で検証した。通常checkoutの未コミットEngine/.vscode、既存worktree・container・ユーザーデータとpreviewは保全する。merge/deployは行わない。
+
+## 前段の履歴：全画面統一と3点の情報整理（2026-10-10）
 
 本人の追加指示と「いいね」「やろう」の承認に沿い、既存画面の用途・次操作が伝わる表示へ統一した。公開トップ、ログイン、登録、Goal一覧、作成/編集、履歴、アカウントの明るい空/森色、書体、角丸、余白、フォームをそろえる。OS暗色指定も同じ配色。トップは用途と登録/ログインを先に置き、同じ提供背景を装飾として使う。認証や戻り先の判定を変更せず、予測サンプル、認証不要Today、アカウント追加、API機能追加は行わない。Goalの3区分、今日の記録への導線、履歴の実Goal名、アカウントの短高スクロールを確認した。
 

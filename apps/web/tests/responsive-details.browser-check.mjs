@@ -67,7 +67,14 @@ test('Today responsive details: real viewport, native keyboard and preserved use
     await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   });
   const bundle = await build({
-    configFile: false, logLevel: 'silent', define: { 'process.env.NODE_ENV': '"development"' }, plugins: [react()],
+    configFile: false, logLevel: 'silent', define: { 'process.env.NODE_ENV': '"development"' },
+    resolve: { alias: { '@contracts': fileURLToPath(new URL('../../api/src/contracts/index.ts', import.meta.url)), '@tanstack/react-router': 'test:router' } },
+    plugins: [react(), { name: 'native-correction-router', enforce: 'pre',
+      resolveId: id => id === 'test:router' ? '\0test:router' : id.endsWith('/auth/client.ts') ? '\0test:auth' : null,
+      load: id => id === '\0test:auth' ? 'export const authClient = {}; export const describeAuthError = (_code, fallback) => fallback;' : id === '\0test:router' ? `import {createElement} from 'react';
+        export const Link=({to,params,search,children,...props})=>createElement('a',{href:to,...props},children);
+        export const useNavigate=()=>()=>{}; export const useRouter=()=>({subscribe:()=>()=>{}}); export const useLocation=()=>({href:'/goals'});` : null,
+    }],
     build: { write: false, minify: false, lib: {
       entry: fileURLToPath(new URL('./responsive-details.browser.tsx', import.meta.url)), formats: ['iife'], name: 'ResponsiveDetailsTests',
     } },
@@ -238,6 +245,29 @@ test('Today responsive details: real viewport, native keyboard and preserved use
     await evaluate('window.__responsiveFixture.mountYesterday("failed")'); await state(true, 'failure must reveal after a collapsed save');
     await evaluate('window.__responsiveFixture.mountYesterday("failed", true)'); await state(true, 'failure remount must reveal');
     evidence.push({ scenario: 'native yesterday save/failure visibility', ...(await view()) });
+  });
+  await t.test('actual Today hooks: native yesterday DONE/SKIPPED cancellation restores its entry with no save', async () => {
+    for (const width of [390, 1440]) for (const status of ['DONE', 'SKIPPED']) {
+      await resize(width); await evaluate('window.__responsiveFixture.mountCorrection(' + JSON.stringify(status) + ')');
+      await until(view, value => value?.correctionSummary, 'recorded yesterday did not mount');
+      await evaluate('document.querySelector(".fr-yesterday--summary button").focus()');
+      await press('Enter', 'Enter', 13);
+      await until(view, value => value?.correctionVisible, 'native edit entry did not open');
+      if (status === 'DONE') {
+        const value = await until(view, value => value?.focused?.role === 'group', 'correction amount group did not receive focus');
+        assert.equal(value.focused.name, '昨日やった量');
+        await evaluate('document.querySelector(".fr-yesterday input").focus();document.querySelector(".fr-yesterday input").select()');
+        await cdp.send('Input.insertText', { text: '37' });
+        await until(view, value => value?.correctionInput === '37', 'native correction draft did not change');
+      }
+      await evaluate('[...document.querySelectorAll(".fr-yesterday button")].find(b => b.textContent.trim() === "キャンセル").focus()');
+      await press('Enter', 'Enter', 13);
+      const value = await until(view, value => value?.correctionSummary, 'cancel did not restore recorded summary');
+      assert.equal(value.focused.tag, 'BUTTON', 'cancel lost focus to BODY');
+      assert.equal(await evaluate('document.activeElement === document.querySelector(".fr-yesterday--summary button")'), true, 'cancel did not return to remounted original entry');
+      assert.equal(value.puts, 0, 'cancellation sent a PUT');
+      evidence.push({ scenario: 'actual Today native yesterday cancel', status, ...value });
+    }
   });
   t.diagnostic(JSON.stringify({ browserEndpointSource: endpointSource, results: evidence }));
 });
