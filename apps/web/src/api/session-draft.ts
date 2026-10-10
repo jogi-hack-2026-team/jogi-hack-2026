@@ -13,6 +13,9 @@ const snapshot = () => continuity;
 export const getPrivateGeneration = () => continuity.queryGeneration;
 /** 通常確認を越える確定結果も、owner/連続性が変わった後は別画面へ持ち越さない。 */
 export const isDraftOwner = (owner: string, generation: number) => continuity.owner === owner && continuity.generation === generation;
+/** 入力者の連続性の世代。認証操作・owner変更・確認失敗で進み、正常な同一owner確認では進まない。 */
+export const getDraftGeneration = () => continuity.generation;
+export const useDraftGeneration = () => useSyncExternalStore(subscribe, snapshot).generation;
 export const usePrivateGeneration = () => useSyncExternalStore(subscribe, snapshot).queryGeneration;
 function invalidate(owner = continuity.owner) {
   continuity = { owner, generation: continuity.generation + 1, queryGeneration: continuity.queryGeneration + 1 };

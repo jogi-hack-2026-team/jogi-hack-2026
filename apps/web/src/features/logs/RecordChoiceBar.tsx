@@ -52,8 +52,8 @@ export function RecordChoiceBar({
   const saving = saver.saving?.choice;
 
   // 失敗した保存の再試行は、その variables の日付も検査する（表示が翌日へ更新された後も）。
-  const staleDate = !saver.canSaveDate(today) ? today
-    : saver.failure?.vars && !saver.canSaveDate(saver.failure.vars.localDate) ? saver.failure.vars.localDate : undefined;
+  const staleDate = saver.isStaleDate(today) ? today
+    : saver.failure?.vars && saver.isStaleDate(saver.failure.vars.localDate) ? saver.failure.vars.localDate : undefined;
   if (staleDate && !saver.isSaving) {
     return (
       <StickyActionBar>
