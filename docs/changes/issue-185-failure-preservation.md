@@ -45,3 +45,15 @@ main `86b396d5ae15e1b3e735a4df310e9e4216a086e4`（#202/#209/#206を含む）を�
 恒久回帰は4件の復元後往復と対照4件を追加して42ケースへ拡張した。旧入力だけが戻らず、失敗文脈のない旧入力を保存できないこと、param commit前のGoal往復、送信数不変を検査する。修正後は42/42成功（wrapper 1 pass、0 fail、0 skip、26.085秒）、fingerprintは実行前後とも`eedc6ed2aeeea3481a09d083dc1d07183847a70980d2d34eee6cbc9ac6a586a4`。727観測で確認中private DOMは不検出、auth write0、合成Goal送信47回だった。既存の全項目訂正・明示latest読込成功後の通常draft復帰と、新明示保存の送信中保全も維持する。
 
 修正後の全browser18/18（0 fail、0 skip、82.793秒）、全workspace型/build、Web通常112 pass（0 fail、1 skipは別実行済みbrowserのラッパー）も成功した。独立レビュー・Foundation・新HEAD CIの最終結果はPRへ記録する。実API/DB・公開環境・人のUX受入は上記と同じく未確認。
+
+## 追加レビュー：保存準備と操作終了のstorage失敗
+
+GitHubのP2レビューで、mutation開始前のsessionStorage.setItem例外ではprepareErrorだけが子に残り、親の失敗snapshotへ入らない経路を確認した。先行HEAD `484cf7559659dcbfeddfdd93c02229ee81072aef`の実ブラウザ47ケースで、正常確認後・同batch確認後の準備失敗と422のremoveItem失敗の3件を再現し、既存42件とowner／訪問破棄対照2件は成功した。実行前後fingerprintは`bf38261add19e4100a51d2f50453041018c39ebbbd070fe836bf8ce526c33a7a`で一致した。
+
+prepareErrorをmutationエラーと別に同訪問snapshotへ保持し、案内・CreateRecoveryErrorによる保存禁止状態を復元する。準備catchと422／410終了失敗は同batchのunmount前にも親へ失敗receiptを渡す。全prepareErrorを通常draftから除外し、新明示保存で旧observerをresetする。準備失敗は現在attemptだけを採用し、復元422の全訂正後に旧K1を借りて新しい準備失敗を捨てる経路を防ぐ。成功completionやraw／ownerの照合契約は変えない。
+
+恒久回帰は49ケース（既存42件＋7件）へ拡張し、49/49成功、wrapper 1 pass／0 fail／0 skip、35.002秒。準備正常確認・同batch確認・owner／訪問失効・復元422訂正後の次準備失敗・422終了失敗・410明示再開の同batch終了失敗を検査する。storage回復後は明示操作でのみ再送し、凍結済みkey/body/rawの保全または確定422後の新keyを区別する。fingerprintは実行前後とも`864d4e5d33d12adec4107693b4ff41b55772a836b33d7e71c6e21c507eb539d0`。確認中private DOMは882観測で不検出、auth write0、捕捉Goal送信55回は全て合成だった。
+
+途中の48ケースは全scenario成功でも、410修正を実行中に加えたためfingerprint不一致でwrapperが失敗した。ログを保全し最終成功には数えず、ソースを固定した49ケースで再検証した。型／全workspace build、Web通常112 pass（0 fail、1 skipは別実行済みbrowser wrapper）、全browser18/18（0 fail、0 skip、83.164秒）が成功した。独立レビューで422終了失敗時の項目エラー併存assertを明示追加することとし、追加後の49件および新exactHEAD CIの最終結果はPRへ記録する。Foundation・独立レビューの最終確認もPRに記録する。実API/DB・公開環境・人のUX受入は未実施。
+
+422終了失敗のbefore／after項目エラーとstorage回復禁止の併存assertを追加し、最終49件を再実行した。49/49成功、wrapper 1 pass／0 fail／0 skip、53.133秒。fingerprintは実行前後とも`dc1848c24ffe7620f6bf873efe7a13692e3ef586de15843a3ee3258f0eb64782`。追加assert以外は上記固定版と同じで、auth write0・自動再送0・実API/DB書込0。全18の先行ローカル成功はassert追加前であり、新exactHEAD CIでこのassertを含む全体実行を確認する。

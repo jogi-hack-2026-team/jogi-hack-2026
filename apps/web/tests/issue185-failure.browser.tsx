@@ -50,6 +50,7 @@ const view = () => ({ title: input()?.value, total: host.querySelector<HTMLInput
   submitText: submit()?.textContent, conflict: host.textContent?.includes('ほかの画面で内容が変わりました') ?? false,
   failed: host.textContent?.includes('保存できませんでした') ?? false,
   unknown: host.textContent?.includes('作成結果を確認できませんでした') ?? false,
+  recoveryBlockedNotice: host.textContent?.includes('作成の回復情報を確認できません') ?? false,
   totalInvalid: host.querySelector('#goal-totalRequired')?.getAttribute('aria-invalid'),
   unitInvalid: host.querySelector('[aria-labelledby="goal-unit-label"]')?.getAttribute('aria-invalid'),
   initialDisabled: host.querySelector<HTMLInputElement>('#goal-initialProgress')?.disabled });
@@ -63,10 +64,11 @@ const clickSave = async () => { await act(async () => { submit()!.click(); await
 const realNow = Date.now; let advance = 0, visibility = 'visible';
 Date.now = () => realNow() + advance;
 Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility });
-const visible = async () => act(async () => {
+const startVisibility = () => {
   advance += 6000; visibility = 'hidden'; document.dispatchEvent(new Event('visibilitychange'));
-  visibility = 'visible'; document.dispatchEvent(new Event('visibilitychange')); await tick();
-});
+  visibility = 'visible'; document.dispatchEvent(new Event('visibilitychange'));
+};
+const visible = async () => act(async () => { startVisibility(); await tick(); });
 const release = async () => { transport.hold = false; transport.held.splice(0).forEach((resolve: () => void) => resolve()); await settle(); };
 const api = (status: number, code: string) => new ApiError(status, { error: { code, message: 'synthetic rejection',
   ...(status === 422 ? { fields: [{ path: 'body/title', message: 'synthetic invalid title' }] } : {}) } });
@@ -300,6 +302,141 @@ async function run() {
     const count = writes.length; await act(async () => { rejectOld(api(409, 'GOAL_SETTINGS_CONFLICT')); await tick(); }); await settle();
     ensure(input(), boundary + ': form blocked after stale result'); absentOldFailure('late409/' + boundary);
     ensure(writes.length === count, 'stale409 automatic resend'); record('late409/departure/' + boundary);
+  }
+  for (const boundary of ['healthy', 'healthy-batched', 'owner', 'visit']) {
+    const label = 'create/prepare-quota/' + boundary;
+    await reset('create'); const count = writes.length;
+    const originalSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key: string, value: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') throw new DOMException('synthetic quota exceeded', 'QuotaExceededError');
+      return originalSet.call(this, key, value);
+    };
+    let before: ReturnType<typeof view>, after: ReturnType<typeof view>, preserved: boolean;
+    try {
+      if (boundary === 'healthy-batched') {
+        before = view(); transport.hold = true;
+        await act(async () => { submit()!.click(); startVisibility(); await tick(); }); await settle();
+        hidden(label); ensure(current.checking, label + ': same-batch check not started');
+        ensure(writes.length === count && sessionStorage.getItem('future-roi:create-attempt:A') === null, label + ': same-batch POST/raw before prepare');
+        await release(); after = view();
+        preserved = after.title === before.title && after.total === before.total && after.amount === before.amount
+          && after.failed && after.submitText === 'もう一度保存' && !after.disabled && !after.submitDisabled;
+      } else {
+      await clickSave(); before = view();
+      ensure(before.title === 'A-PRIVATE-185-DRAFT' && before.failed && before.submitText === 'もう一度保存', label + ': preparation failure absent');
+      ensure(writes.length === count && sessionStorage.getItem('future-roi:create-attempt:A') === null, label + ': POST/raw before durable prepare');
+      if (boundary === 'healthy') {
+        transport.hold = true; await visible(); await settle(); hidden(label); await release();
+        after = view();
+        preserved = after.title === before.title && after.total === before.total && after.amount === before.amount
+          && after.failed && after.submitText === 'もう一度保存' && !after.disabled && !after.submitDisabled;
+      } else {
+        if (boundary === 'owner') { transport.owner = 'B'; await check(); transport.owner = 'A'; await check(); }
+        else { await navigate('/'); await navigate('/goals/new'); }
+        after = view();
+        preserved = after.title === '' && !after.failed && !after.recoveryBlockedNotice && !after.disabled && !after.submitDisabled;
+      }
+      }
+      ensure(current.owner === 'A' && writes.length === count, label + ': wrong owner/automatic POST');
+    } finally { Storage.prototype.setItem = originalSet; }
+    if (!preserved!) failures.push(label);
+    results.push({ label, preserved: preserved!, owner: current.owner, before: before!, after: after!,
+      writesBeforeExplicitRetry: writes.length - count, rawBeforeExplicitRetry: sessionStorage.getItem('future-roi:create-attempt:A') } as any);
+    if (boundary === 'healthy' || boundary === 'healthy-batched') {
+      saveError = null; await clickSave();
+      ensure(writes.length === count + 1 && location.pathname === '/goals' && sessionStorage.getItem('future-roi:create-attempt:A') === null,
+        label + ': explicit retry after available storage did not complete once');
+    }
+  }
+  {
+    const label = 'create/422-restored-corrected-next-prepare-quota';
+    await reset('create'); await failed(api(422, 'VALIDATION_ERROR'));
+    const rejectedKey = writes.at(-1)!.key; await check();
+    ensure(view().invalid === 'true' && !view().disabled && sessionStorage.getItem('future-roi:create-attempt:A') === null,
+      label + ': rejected operation not ended/restored');
+    await set('#goal-title', 'A-PRIVATE-CORRECTED-NEXT');
+    ensure(view().invalid !== 'true', label + ': definitive field correction absent');
+    const count = writes.length, originalSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key: string, value: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') throw new DOMException('synthetic next quota exceeded', 'QuotaExceededError');
+      return originalSet.call(this, key, value);
+    };
+    let before: ReturnType<typeof view>, after: ReturnType<typeof view>, preserved: boolean;
+    try {
+      await clickSave(); before = view();
+      ensure(before.failed && before.title === 'A-PRIVATE-CORRECTED-NEXT', label + ': next preparation failure absent');
+      transport.hold = true; await visible(); await settle(); hidden(label); await release(); after = view();
+      preserved = after.title === before.title && after.total === before.total && after.amount === before.amount
+        && after.failed && after.submitText === 'もう一度保存' && !after.disabled && !after.submitDisabled && after.invalid !== 'true';
+      ensure(writes.length === count && sessionStorage.getItem('future-roi:create-attempt:A') === null, label + ': POST/raw before explicit retry');
+    } finally { Storage.prototype.setItem = originalSet; }
+    if (!preserved!) failures.push(label);
+    results.push({ label, preserved: preserved!, before: before!, after: after!, writesBeforeExplicitRetry: writes.length - count } as any);
+    saveError = null; await clickSave();
+    ensure(writes.length === count + 1 && writes.at(-1)!.key !== rejectedKey
+      && (writes.at(-1)!.body as any).title === 'A-PRIVATE-CORRECTED-NEXT'
+      && sessionStorage.getItem('future-roi:create-attempt:A') === null && location.pathname === '/goals',
+    label + ': explicit retry reused rejected K1 or lost corrected body');
+  }
+  {
+    const label = 'create/422-cleanup-removeItem-gate';
+    await reset('create'); const count = writes.length;
+    const originalRemove = Storage.prototype.removeItem;
+    Storage.prototype.removeItem = function(key: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') throw new Error('synthetic cleanup storage unavailable');
+      return originalRemove.call(this, key);
+    };
+    let before: ReturnType<typeof view>, after: ReturnType<typeof view>, raw: string, sent: typeof writes[number], preserved: boolean;
+    try {
+      await failed(api(422, 'VALIDATION_ERROR')); before = view();
+      raw = sessionStorage.getItem('future-roi:create-attempt:A')!; sent = writes.at(-1)!;
+      ensure(raw && writes.length === count + 1 && before.invalid === 'true' && before.recoveryBlockedNotice && before.disabled && before.submitDisabled,
+        label + ': cleanup failure did not block recovery');
+      transport.hold = true; await visible(); await settle(); hidden(label); await release(); after = view();
+      preserved = after.invalid === 'true' && after.recoveryBlockedNotice && after.disabled === true && after.submitDisabled === true
+        && after.title === 'A-PRIVATE-185-DRAFT' && sessionStorage.getItem('future-roi:create-attempt:A') === raw;
+      ensure(writes.length === count + 1, label + ': automatic resend');
+    } finally { Storage.prototype.removeItem = originalRemove; }
+    if (!preserved!) failures.push(label);
+    results.push({ label, preserved: preserved!, before: before!, after: after!, rawUnchanged: sessionStorage.getItem('future-roi:create-attempt:A') === raw!, automaticResend: false } as any);
+    // Leaving through the recovery list and reopening is explicit; the old raw
+    // remains frozen until its matching key/body receives a confirmed result.
+    await navigate('/goals'); await navigate('/goals/new');
+    ensure(view().disabled && !view().submitDisabled && sessionStorage.getItem('future-roi:create-attempt:A') === raw!, label + ': explicit recovery lost operation');
+    saveError = null; await clickSave();
+    ensure(writes.length === count + 2 && JSON.stringify(writes.at(-1)) === JSON.stringify(sent!)
+      && sessionStorage.getItem('future-roi:create-attempt:A') === null && location.pathname === '/goals', label + ': explicit recovery changed operation or did not finish');
+  }
+  {
+    const label = 'create/410-restart-cleanup-samebatch-gate';
+    await reset('create'); await failed(api(410, 'CREATE_RESULT_DELETED'));
+    const count = writes.length, raw = sessionStorage.getItem('future-roi:create-attempt:A')!, sent = writes.at(-1)!;
+    const restart = () => [...host.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === '新しいGoalとして作成');
+    ensure(raw && restart() && view().disabled && view().submitDisabled, label + ': deleted result/restart absent');
+    const originalRemove = Storage.prototype.removeItem;
+    Storage.prototype.removeItem = function(key: string) {
+      if (this === sessionStorage && key === 'future-roi:create-attempt:A') throw new Error('synthetic restart cleanup unavailable');
+      return originalRemove.call(this, key);
+    };
+    let after: ReturnType<typeof view>, preserved: boolean;
+    try {
+      transport.hold = true;
+      await act(async () => { restart()!.click(); startVisibility(); await tick(); }); await settle();
+      hidden(label); ensure(current.checking, label + ': same-batch check absent');
+      await release(); after = view();
+      preserved = after.recoveryBlockedNotice && after.disabled === true && after.submitDisabled === true
+        && after.title === 'A-PRIVATE-185-DRAFT' && sessionStorage.getItem('future-roi:create-attempt:A') === raw;
+      ensure(writes.length === count, label + ': restart/check automatically posted');
+    } finally { Storage.prototype.removeItem = originalRemove; }
+    if (!preserved!) failures.push(label);
+    results.push({ label, preserved: preserved!, after: after!, rawUnchanged: sessionStorage.getItem('future-roi:create-attempt:A') === raw, writesDuringCheck: writes.length - count } as any);
+    // Recover the stored operation explicitly, then only the visible restart
+    // may end this deleted result and permit a new operation.
+    await navigate('/goals'); await navigate('/goals/new'); await clickSave();
+    ensure(writes.length === count + 1 && JSON.stringify(writes.at(-1)) === JSON.stringify(sent) && restart(), label + ': explicit deleted confirmation changed operation');
+    await act(async () => { restart()!.click(); await tick(); }); await settle();
+    ensure(sessionStorage.getItem('future-roi:create-attempt:A') === null && !view().disabled && !view().submitDisabled
+      && writes.length === count + 1, label + ': available-storage restart did not end matching raw or posted a new operation');
   }
   ensure(!captures.some(c => c.checking && c.privateDom), 'private DOM was observed during session check');
   ensure(transport.writes === 0, 'unexpected auth/private transport writes');
