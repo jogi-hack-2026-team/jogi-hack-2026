@@ -91,6 +91,7 @@ export const goalsCopy = {
       deletedBody: 'この作成操作のGoalは復元できません。入力は保持しています。新しいGoalとして始める場合は、上の操作を選んでから保存してください。',
     },
     noChanges: '変更はありません。',
+    failedInputRetained: '入力と保存失敗の案内は保持しています。再読み込みが成功すると、元の入力を確認できます。',
     summary: (count: number) => `${count}つの項目を確認してください`,
     saveFailed: {
       title: '保存できませんでした',

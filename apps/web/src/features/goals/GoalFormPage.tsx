@@ -108,7 +108,10 @@ export function GoalEditPage({ goalId }: { goalId: string }) {
     return (
       <FormShell
         title={isNotFound(query.error) ? c.notFound.heading : f.editTitle}
-        body={isNotFound(query.error) ? <GoalNotFoundPanel /> : <LoadErrorPanel error={query.error} onRetry={() => void query.refetch()} />}
+        body={isNotFound(query.error) ? <GoalNotFoundPanel /> : <>
+          {failure.restored && !isUnauthenticated(query.error) ? <p role="status">{f.failedInputRetained}</p> : null}
+          <LoadErrorPanel error={query.error} onRetry={() => void query.refetch()} />
+        </>}
       />
     );
   }
@@ -237,7 +240,8 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
   const [retainedError, setRetainedError] = useState<unknown>(recoveredFailure?.error ?? null);
   const [retainedOperation] = useState(recoveredFailure?.operation ?? null);
   const [discardedDraft] = useState(Boolean(goal && draft && !restored));
-  const [values, setValues] = useState<FormValues>(() => restored?.values ?? (goal ? valuesFromGoal(goal) : recoveryValues ?? emptyValues(browserTimezone())));
+  // 未確定作成の入力は表示snapshotより元bodyを優先する。disabled欄への合成変更も回復操作へ混ぜない。
+  const [values, setValues] = useState<FormValues>(() => (attempt ? recoveryValues : restored?.values) ?? (goal ? valuesFromGoal(goal) : emptyValues(browserTimezone())));
   // 保存を押すまでは項目のエラーを出さない。押した後は入力のたびに検査し直す
   const [submitted, setSubmitted] = useState(restored?.submitted ?? false);
   const [serverErrors, setServerErrors] = useState<FieldErrors>(recoveredFailure?.serverErrors ?? {});
@@ -419,7 +423,8 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
   const saveFailure = prepareError ?? (failedSave !== null && (apiFieldErrors === null || errorCount(apiFieldErrors) === 0) ? failedSave : null);
   const deletedAttempt = mode === 'create' && isCreateResultDeleted(saveFailure) &&
     (save.variables?.operation ?? retainedOperation)?.owner === owner && (save.variables?.operation ?? retainedOperation)?.raw === attempt?.raw ? attempt : null;
-  const showSaveFailure = saveFailure !== null && (count === 0 || prepareError instanceof CreateRecoveryError);
+  // 最新GETで単位ロック等の項目エラーが増えても、409を解除する明示的な再読込は残す。
+  const showSaveFailure = saveFailure !== null && (count === 0 || isEditConflict(saveFailure) || prepareError instanceof CreateRecoveryError);
   // 通信・サーバーの失敗は「もう一度保存」。ログイン切れはログインし直すまで同じ文言のままにする
   const canRetry = showSaveFailure && !isUnauthenticated(saveFailure) && !isEditConflict(saveFailure) && createFailureKind(saveFailure) === null;
   const restartCreate = () => {
