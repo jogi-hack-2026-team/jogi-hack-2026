@@ -33,3 +33,15 @@ ENGINEERING：固定版Better Auth 1.7.7、実React／QueryClient／PrivateCache
 正確なcommit HEADでの全体確認とCIはPRの検証欄へ記録する。先行コード・文書の独立レビューでは確認済みBlocking／Should Fix指摘なし。独立レビュー担当はブラウザを実行していない。
 
 公開環境、人による別タブ操作・視覚受入、実DBへの保存結果は未確認。合成通知の境界テストは本番での到達性やpixel描画の証明ではない。
+
+## 追加レビュー：復元した失敗を通常draftへ混入させない
+
+main `86b396d5ae15e1b3e735a4df310e9e4216a086e4`（#202/#209/#206を含む）を通常mergeで取り込んだ。先行HEAD `fc766f8`の34ケース・全18browser・初回CI成功は先行証拠として保全する。
+
+親の独立レビューの仮説を既存ハーネスから実Chromeで追加確認した。409/503/network/422の失敗を正常同owner確認で復元してから、未commit Goal1→Goal2→Goal1を行うと4/4で古い入力だけが戻り、409禁止・失敗案内・項目エラーは消えた。同じ確認を挟まない対照4件では復活しない。自動送信0、auth write0で、DB損失や別owner漏洩を確認したものではない。
+
+復元後は新mutation observerのsave.isErrorがfalseでもretainedErrorが失敗を表す。通常draftの除外条件がsave.isErrorだけだったため失敗入力を通常draftにも退避し、failureの訪問token失効後に入力だけを戻せた。除外条件とeffect依存をfailedSaveへ合わせる最小修正を行う。全field訂正・明示latest読込成功・新明示保存による失敗終了は維持する。新しい送信中はsaving/isPendingで通常draft退避を止める。
+
+恒久回帰は4件の復元後往復と対照4件を追加して42ケースへ拡張した。旧入力だけが戻らず、失敗文脈のない旧入力を保存できないこと、param commit前のGoal往復、送信数不変を検査する。修正後は42/42成功（wrapper 1 pass、0 fail、0 skip、26.085秒）、fingerprintは実行前後とも`eedc6ed2aeeea3481a09d083dc1d07183847a70980d2d34eee6cbc9ac6a586a4`。727観測で確認中private DOMは不検出、auth write0、合成Goal送信47回だった。既存の全項目訂正・明示latest読込成功後の通常draft復帰と、新明示保存の送信中保全も維持する。
+
+修正後の全browser18/18（0 fail、0 skip、82.793秒）、全workspace型/build、Web通常112 pass（0 fail、1 skipは別実行済みbrowserのラッパー）も成功した。独立レビュー・Foundation・新HEAD CIの最終結果はPRへ記録する。実API/DB・公開環境・人のUX受入は上記と同じく未確認。

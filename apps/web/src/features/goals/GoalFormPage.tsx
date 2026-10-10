@@ -345,10 +345,10 @@ function GoalForm({ mode, owner, goal, draft, onDraftChange, operationKey, onSav
   });
 
   useLayoutEffect(() => {
-    // 送信/結果不明/回復中の状態はdraftと別責務。mutationやcallbackを復元しない。
-    onDraftChange?.(attempt !== null || prepareError instanceof CreateRecoveryError || saving.current || deleting.current || reloadInFlight.current || save.isPending || save.isError || remove.isPending || remove.isError || reloadingLatest
+    // 復元後は新mutationのisErrorがfalseでも失敗表示は残る。訪問失効後に入力だけ戻らないよう、通常draftには退避しない。
+    onDraftChange?.(attempt !== null || prepareError instanceof CreateRecoveryError || saving.current || deleting.current || reloadInFlight.current || save.isPending || failedSave !== null || remove.isPending || remove.isError || reloadingLatest
       ? undefined : { values, baseline, sourceGoal: goal, submitted, priorOpen, latestAnswers });
-  }, [values, baseline, goal, submitted, priorOpen, latestAnswers, reloadingLatest, save.isPending, save.isError, remove.isPending, remove.isError, attempt, prepareError, onDraftChange]);
+  }, [values, baseline, goal, submitted, priorOpen, latestAnswers, reloadingLatest, save.isPending, failedSave, remove.isPending, remove.isError, attempt, prepareError, onDraftChange]);
   useLayoutEffect(() => {
     if (failedSave !== null && !save.isPending && !saving.current && !deleting.current && !remove.isPending && !remove.isError)
       onFailureChange({ values, baseline, sourceGoal: goal, submitted, priorOpen, latestAnswers, error: failedSave,

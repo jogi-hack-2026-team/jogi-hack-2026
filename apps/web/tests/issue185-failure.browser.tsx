@@ -178,6 +178,37 @@ async function run() {
     ensure(input(), boundary + ': fresh form missing'); absentOldFailure(boundary);
     ensure(writes.length === count, boundary + ': automatic resend'); record('departure/' + boundary, { writesDuringCheck: 0 });
   }
+  // A restored failure belongs to its visit; it must never become an ordinary
+  // idle draft merely because its new mutation observer has isError=false.
+  for (const restored of [false, true]) {
+    for (const scenario of cases.filter(c => c.mode === 'edit' && !c.getFails)) {
+      const label = `${restored ? 'normal-check-restored' : 'direct-control'}/${scenario.label}`;
+      await reset(); await failed(scenario.error); const count = writes.length;
+      if (restored) {
+        transport.hold = true; await visible(); await settle(); hidden(label + '/checking');
+        ensure(current.checking, label + ': normal owner check did not start');
+        await release();
+      }
+      const beforeNavigation = view();
+      ensure(current.owner === 'A' && !current.checking && privateDataReady(current.epoch), label + ': A not confirmed');
+      ensure(beforeNavigation.title === 'A-PRIVATE-185-DRAFT' && beforeNavigation.total === '123' && beforeNavigation.amount === '17', label + ': initial/restored failure input absent');
+      ensure(scenario.label === 'edit409' ? beforeNavigation.conflict && beforeNavigation.submitDisabled
+        : scenario.label === 'edit422' ? beforeNavigation.invalid === 'true' : beforeNavigation.failed,
+      label + ': initial/restored failure semantics absent');
+      await act(async () => {
+        void router.navigate({ to: '/goals/goal2/edit' });
+        ensure(router.state.matches.at(-1)?.params.goalId === 'goal', label + ': Goal2 unexpectedly committed before return');
+        void router.navigate({ to: '/goals/goal/edit' }); await tick();
+      }); await settle();
+      const afterNavigation = view();
+      const discarded = afterNavigation.title === 'A-PRIVATE-GOAL' && afterNavigation.total === '100' && afterNavigation.amount === '10'
+        && !afterNavigation.conflict && !afterNavigation.failed && afterNavigation.invalid !== 'true';
+      ensure(current.owner === 'A' && writes.length === count, label + ': owner changed or automatic resend');
+      if (!discarded) failures.push(label);
+      results.push({ label, preserved: discarded, owner: current.owner, beforeNavigation, afterNavigation,
+        privateDomRemoved: restored ? true : null, writesDuringNavigation: writes.length - count } as any);
+    }
+  }
   for (const mode of ['edit', 'create']) {
     await reset(mode); await failed(api(422, 'VALIDATION_ERROR')); await set('#goal-title', 'A-PRIVATE-CORRECTED');
     const count = writes.length; await check();
