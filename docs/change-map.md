@@ -26,6 +26,8 @@
 5. [buildR11Today](../apps/api/src/prediction/r11.ts)が保存mappingと実ログを渡す → [engine.ts](../apps/api/src/prediction/engine.ts)の`runQuestionPrediction` → [predictWithQuestionPrior](../packages/prediction/src/question-prior.ts)。`question-prior-adapter-candidate.ts`は名前にcandidateが残るが、現公開wrapperが呼ぶ内部実装であり、未使用の実験として除外しない。queryなしの旧GETは`runPrediction` → `predict`という別入口。
 6. APIの`prediction`・`provenance`・`plan` → [forecast-view.ts](../apps/web/src/features/today/forecast-view.ts)の`toForecastView` → `TodayPage.tsx`内の`TodayContent` → 表示部品。FEは予測を再計算しない。
 
+[#203の統合候補](architecture.md#d-31-同一モデルの完了cdf統合候補203)は[completion-integrated.ts](../packages/prediction/src/completion-integrated.ts)の同一モデルCDFと閾値近傍整数比較、[recovery.ts](../packages/prediction/src/recovery.ts)の同じgの短い積、配列確保前の有限work保護を追加する。内部方式metadataを既存公開DTOへ加えず、[wire互換回帰](../apps/api/tests/prediction-wire-compatibility.test.ts)で閉形式／sampling／fallback × legacy／R11を確認する。[数値回帰](../packages/prediction/tests/completion-integrated.test.mjs)・[typed失敗の境界](../apps/api/tests/prediction-budget.test.ts)・[実API/DB/DOMの限定記録](../experiments/completion-cdf-integration/README.md)を参照する。FEの表示・保存契約は変更せず、Human Review・公開runtime・校正は別に扱う。
+
 FEの「整合snapshot」は別GET間の日付・設定・回答版・累計・今日のログ・昨日の有無等、**重複するfieldsが一致した組**を指す。#192でGoalR11の`answerRevision`とToday contextの同snapshot回答版を照合し、回答のみの変更・撤回でも旧予測との組合せを拒否する（[HTTP並行更新回帰](../apps/api/tests/question-prior-http.test.ts)、[FE照合回帰](../apps/web/tests/today-data.test.mjs)）。`isSameSnapshot`のtrueは全fieldsの一致や同一DB transactionの証明ではない。不一致時は最後に一致した組を保持して取り直す。APIの単一`loadTodaySnapshot`の保証とは分ける。
 
 ### 回答revisionの409から再保存まで

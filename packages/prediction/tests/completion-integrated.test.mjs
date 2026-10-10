@@ -93,3 +93,20 @@ test('explicit sampled and domain fallbacks expose actual draws; threshold ties 
   for (const result of [horizon,shape]) assert.deepEqual(
     [result.computation.method,result.computation.samples,result.computation.seed], ['POSTERIOR_SAMPLING',200,20261012]);
 });
+
+test('work budgets reject before huge sampled allocations; trivial completion retains no-draw paths', () => {
+  const limited = changes => assert.throws(() => completionQuantiles(posterior, 'DONE', 1, { ...config, ...changes }),
+    error => error instanceof PredictionConfigError && error.reason === 'RESOURCE_LIMIT' && error.path[0] === 'completion');
+  limited({ horizonDays: Number.MAX_SAFE_INTEGER });
+  limited({ samples: Number.MAX_SAFE_INTEGER, completionMethod: 'sampled' });
+  for (const N of [0,Number.MAX_SAFE_INTEGER]) {
+    const result = completionQuantiles(posterior, 'DONE', N, { ...config, samples: Number.MAX_SAFE_INTEGER });
+    assert.deepEqual(result.computation, { method: 'BOUNDARY', samples: null, seed: null, fallbackReason: null });
+  }
+  assert.throws(() => recoveryQuantiles(33,1_000_000), error => error instanceof PredictionConfigError && error.reason === 'RESOURCE_LIMIT');
+  assert.throws(() => recoveryQuantiles(1,Number.MAX_SAFE_INTEGER), error => error instanceof PredictionConfigError && error.reason === 'RESOURCE_LIMIT');
+  assert.deepEqual(recoveryQuantiles(1,1_000_000), { g50: 1_000_000, g80: 4_000_000 });
+  assert.ok(recoveryQuantiles(2,10000).g80 > 1095);
+  assert.throws(() => predict({ goal: { totalRequired: 1, initialProgress: 1, sessionAmount: 1 }, logs: [], today: '2026-10-10' },
+    { ...config, completionMethod: 'unknown' }), error => error.reason === 'UNSUPPORTED_METHOD');
+});

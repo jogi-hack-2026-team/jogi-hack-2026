@@ -1,3 +1,4 @@
+import { PredictionConfigError } from './errors.js';
 import { mixtureCompletionQuantiles } from './completion.js';
 import { samplePosterior } from './random.js';
 import type { CompletionComputation, Posterior, PredictionConfig } from './types.js';
@@ -187,6 +188,12 @@ export function completionQuantiles(posterior: Posterior, initialState: 'DONE' |
         fallbackReason = 'NUMERICAL_UNCERTAINTY';
       }
     }
+  }
+  // 既存のsampled計算を残すが、巨大な公開設定を配列確保前に拒否する。
+  // これは有限workの保護であって500msやHTTP応答時間の保証ではない。
+  if (H > 10_000 || config.samples > 12_800 ||
+      BigInt(config.samples) * BigInt(N) * BigInt(H) > 1_000_000_000n) {
+    throw new PredictionConfigError('RESOURCE_LIMIT', ['completion'], 'Sampled completion exceeds work budget');
   }
   const result = mixtureCompletionQuantiles(samplePosterior(posterior, config.samples, config.seed), initialState, N, H);
   return { ...result, computation: { method: 'POSTERIOR_SAMPLING', samples: config.samples,
