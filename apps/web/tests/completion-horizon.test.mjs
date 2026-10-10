@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
+import { Value } from '@sinclair/typebox/value';
 import { mixtureCompletionQuantiles } from '../../../packages/prediction/src/completion.ts';
 
 // 実部品のHTMLと読み上げを検査する。SSRではCSS・幅の測定は実行せず、実ブラウザ確認とは区別する。
@@ -26,11 +27,17 @@ const { toForecastView } = await import('../src/features/today/forecast-view.ts'
 const { assertForecastPresentation, PriorForecast } = await import('../src/features/prior/PriorForecast.tsx');
 const { todayCopy, completionNoteFor } = await import('../src/copy/today.ts');
 const { amountFormat } = await import('../src/copy/amount.ts');
+const { buildR11Today } = await import('../../api/src/prediction/r11.ts');
+const { makeQuestionSnapshot } = await import('../../api/src/questions/snapshot.ts');
+const { TodayR11 } = await import('../../api/src/contracts/r11.ts');
 const examples = JSON.parse(readFileSync(new URL('./fixtures/engine-examples.json', import.meta.url), 'utf8'));
 const base = examples.cases.find(({ prediction }) => prediction.todayStatus === 'UNRECORDED' && prediction.completion.status === 'available').prediction;
 const today = '2026-10-09';
 const horizon = 1095;
 const outsideText = '10回中8回の完了時期の目安は、計算範囲の約3年以内には収まりません。';
+const p50OutsideText = '約3年以内の目安なし';
+const p50Reason = '約3年の計算範囲内で、完了する見込みが50%（半分）に届かないためです。材料不足や、将来も完了できないという意味ではありません。';
+const p80Reason = '約3年の計算範囲内で、完了する見込みが80%に届かないためです。材料不足や、将来も完了できないという意味ではありません。';
 const quantiles = (a) => mixtureCompletionQuantiles([{ a, b: 0 }], 'DONE', 1, horizon);
 
 function present(q, provenance, recorded = false, date = today) {
@@ -54,6 +61,8 @@ test('F(H)=0.79では有限P50を保持し、P80の範囲外を期間外80%と�
   const html = render(view.completion);
   assert.match(html, /fr-outlook__p50">10月5日の週ごろ/);
   assert.ok(html.includes(outsideText));
+  assert.ok(html.includes(p80Reason));
+  assert.ok(!html.includes(p50Reason));
   assert.match(html, /aria-label="日付の軸。目安の日付に印。10回中8回の完了時期の目安は、計算範囲/);
   assert.doesNotMatch(html, /10回中8回は3年以上先|10回中8回の日付は3年以上先/);
   assert.equal(todayCopy.completionP80Over3Years, outsideText);
@@ -65,7 +74,9 @@ test('F(H)=0.20では両方nullを有限P50の場合と区別する', () => {
   const view = present(q);
   assert.equal(view.completion.p50Label, null);
   const html = render(view.completion);
-  assert.match(html, /fr-outlook__p50">3年以上先/);
+  assert.ok(html.includes('fr-outlook__p50">' + p50OutsideText));
+  assert.ok(html.includes(p50Reason));
+  assert.ok(!html.includes(p80Reason));
   assert.ok(html.includes(outsideText));
   assert.doesNotMatch(html, /日付の軸|10回中8回は3年以上先/);
 });
@@ -106,8 +117,52 @@ test('質問・実記録・両者併用と記録済みでも、P80の意味と�
       assert.ok(html.includes(outsideText));
       assert.ok(html.includes(completionNoteFor(provenance)));
       if (provenance.a === 'QUESTION' || provenance.a === 'QUESTION_AND_RECORDS') assert.match(html, /初期の回答は仮定です/);
+      const bothOutside = render(present(quantiles(0.20), provenance, recorded).completion);
+      assert.ok(bothOutside.includes(p50Reason));
+      assert.ok(bothOutside.includes(completionNoteFor(provenance)));
+      assert.doesNotMatch(bothOutside, /今の記録の傾向|3年より先になる見込み|3年以上先/);
     }
   }
+});
+
+test('実APIの純粋変換でも、未回答・不明・片方回答の材料不足と範囲外を区別する', () => {
+  // 必要回数1500はH=1095より多い。範囲外の実Engine出力を得る合成条件であり、実ユーザーの発生頻度ではない。
+  const context = { unit: 'minutes', sessionAmount: 10, recordStartDate: '2026-10-01' };
+  const goal = { ...context, id: 'synthetic-reason-goal', timezone: 'UTC', totalRequired: 15000, initialProgress: 0, goalSettingsRevision: 0, unitLocked: false };
+  const dtoFor = (answers) => buildR11Today({
+    goal,
+    question: { question_prior: answers, answer_revision: '0', question_prior_snapshot: makeQuestionSnapshot(answers, context) },
+    logs: [], now: new Date('2026-10-09T12:00:00Z'),
+  });
+  for (const { answers, provenance, reason, text } of [
+    { answers: { a: null, b: null }, provenance: { a: 'NONE', b: 'NONE' }, reason: 'NO_DONE_ORIGIN_TRANSITION', text: '「取り組めた日の翌日」と「休んだ日の翌日」の材料が不足しています。' },
+    { answers: { a: 'UNKNOWN', b: 'UNKNOWN' }, provenance: { a: 'NONE', b: 'NONE' }, reason: 'NO_DONE_ORIGIN_TRANSITION', text: '「取り組めた日の翌日」と「休んだ日の翌日」の材料が不足しています。' },
+    { answers: { a: 'MID', b: null }, provenance: { a: 'QUESTION', b: 'NONE' }, reason: 'NO_SKIP_ORIGIN_TRANSITION', text: '「休んだ日の翌日」の材料が不足しています。' },
+    { answers: { a: null, b: 'HIGH' }, provenance: { a: 'NONE', b: 'QUESTION' }, reason: 'NO_DONE_ORIGIN_TRANSITION', text: '「取り組めた日の翌日」の材料が不足しています。' },
+  ]) {
+    const dto = dtoFor(answers);
+    assert.equal(Value.Check(TodayR11, dto), true);
+    assert.deepEqual(dto.prediction.completion, { status: 'insufficient', reason });
+    assert.deepEqual(dto.provenance, provenance);
+    const view = toForecastView(dto.prediction, context.unit, { provenance: dto.provenance, plan: dto.plan, sessionAmount: context.sessionAmount });
+    assertForecastPresentation(view);
+    assert.equal(view.completion.kind, 'conditional');
+    const html = render(view.completion);
+    assert.ok(html.includes(text));
+    assert.match(html, /日数の予測ではありません/);
+    assert.ok(!html.includes(p50OutsideText) && !html.includes(outsideText));
+  }
+  const dto = dtoFor({ a: 'HIGH', b: 'HIGH' });
+  assert.equal(Value.Check(TodayR11, dto), true);
+  assert.deepEqual(dto.prediction.completion, { status: 'available', scenario: 'TODAY_DONE', p50Days: null, p80Days: null });
+  assert.deepEqual(dto.provenance, { a: 'QUESTION', b: 'QUESTION' });
+  assert.equal(dto.plan, null);
+  const view = toForecastView(dto.prediction, context.unit, { provenance: dto.provenance, plan: dto.plan, sessionAmount: context.sessionAmount });
+  assertForecastPresentation(view);
+  assert.equal(view.completion.kind, 'estimate');
+  const html = render(view.completion);
+  assert.ok(html.includes(p50OutsideText) && html.includes(p50Reason));
+  assert.doesNotMatch(html, /今の記録の傾向|材料が不足しています|日数の予測ではありません/);
 });
 
 test('達成済み・不足・条件付き計画はP80 nullの説明と混同しない', () => {
